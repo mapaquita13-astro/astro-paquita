@@ -948,6 +948,7 @@ select.champ-input, select.profils-select {
       <div id="compte-promo-msg" style="font-size:0.82rem;min-height:1.2em;margin-bottom:1rem;"></div>
 
       <button onclick="deconnexionCompte()" style="width:100%;padding:0.6rem;border:none;border-radius:8px;background:transparent;color:#f87171;font-weight:600;cursor:pointer;">Se déconnecter</button>
+      <button onclick="supprimerCompte()" style="width:100%;padding:0.5rem;border:none;background:transparent;color:#c0b4e0;font-size:0.78rem;text-decoration:underline;cursor:pointer;margin-top:0.4rem;">Supprimer définitivement mon compte</button>
     </div>
   </div>
 </div>
@@ -1586,6 +1587,30 @@ function deconnexionCompte() {
   majVueCompte();
   rafraichirVerrousFenetre();
   rafraichirLockSynastrie();
+}
+
+async function supprimerCompte() {
+  const confirmation = confirm(
+    "Es-tu sûre de vouloir supprimer définitivement ton compte ? Cette action est irréversible : ton abonnement Premium (s'il y en a un) sera annulé et toutes tes données de compte seront effacées. (Tes profils astro enregistrés localement sur cet appareil ne seront pas touchés.)"
+  );
+  if (!confirmation) return;
+
+  try {
+    const resp = await fetch(BACKEND_URL + '/api/me', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    });
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}));
+      alert(data.erreur || 'Erreur lors de la suppression. Réessaie ou contacte le support.');
+      return;
+    }
+    alert('Ton compte a bien été supprimé.');
+    deconnexionCompte();
+    fermerCompte();
+  } catch (e) {
+    alert('Connexion au serveur impossible. Réessaie dans un instant.');
+  }
 }
 
 async function validerCodePromo() {
