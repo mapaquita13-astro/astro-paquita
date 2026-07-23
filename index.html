@@ -900,6 +900,43 @@ select.champ-input, select.profils-select {
   .grand-titre { font-size: 2rem; }
   .grand-sous { letter-spacing: 0.18em; }
 }
+
+
+/* ══ PATCH v29 — menus déroulants lisibles Windows / Edge / Chrome / Safari ══
+select.champ-input,
+select.profils-select {
+  color: var(--texte) !important;
+  background-color: rgba(255,255,255,0.12) !important;
+  border-color: rgba(180,120,255,0.45) !important;
+  color-scheme: dark;
+}
+
+select.champ-input option,
+select.profils-select option,
+.champ-input option,
+.profils-select option {
+  background-color: #2f2863 !important;
+  color: #f0ecff !important;
+}
+
+select.champ-input option:checked,
+select.profils-select option:checked {
+  background-color: #7c3aed !important;
+  color: #ffffff !important;
+}
+
+select.champ-input option:disabled,
+select.profils-select option:disabled {
+  color: #c0b4e0 !important;
+  background-color: #211a4d !important;
+}
+
+/* Repère technique pour vérifier que la v29 est bien chargée */
+body::after {
+  content: '';
+  display: none;
+}
+
 </style>
 </head>
 <body>
