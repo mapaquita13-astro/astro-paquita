@@ -1366,10 +1366,10 @@ select.champ-input, select.profils-select {
         <input type="hidden" id="y-tz" value="Europe/Paris"/>
       </div>
       <div class="bloc">
-        <div class="bloc-titre">☽ Prévisions du couple</div>
-        <p style="font-size:0.93rem;color:var(--texte-doux);line-height:1.7;margin-bottom:1rem">Analyse le climat relationnel entre les deux thèmes : périodes de rapprochement, tensions possibles, dates sensibles et conseils concrets.</p>
+        <div class="bloc-titre">☽ Prévisions relationnelles</div>
+        <p style="font-size:0.93rem;color:var(--texte-doux);line-height:1.7;margin-bottom:1rem">Analyse adaptée au type de lien choisi : couple, rencontre, amitié, famille, ex, relation compliquée ou relation professionnelle. Le vocabulaire et les conseils doivent changer selon le cadre sélectionné.</p>
         <label class="champ-label">Type de relation</label>
-        <select class="champ-input" id="y-type-relation">
+        <select class="champ-input" id="y-type-relation" onchange="actualiserSynastrieSelonType(); majInfoPeriodeSynastrie();">
           <option value="couple">Couple / relation existante</option>
           <option value="rencontre">Rencontre / début de relation</option>
           <option value="ex">Ex / relation passée</option>
@@ -1378,6 +1378,7 @@ select.champ-input, select.profils-select {
           <option value="famille">Famille</option>
           <option value="pro">Relation professionnelle</option>
         </select>
+        <div class="periode-info" id="syn-v28-type-active" style="margin-top:0.65rem;border-color:rgba(74,222,128,0.45);color:#d9fbe3">TYPE D’ANALYSE ACTIF v28 — sélectionne un type de relation pour adapter toute la synastrie.</div>
         <label class="champ-label">Période à analyser</label>
         <select class="champ-input" id="y-periode" onchange="majDateCibleSynastrie(); majInfoPeriodeSynastrie();">
           <option value="30">30 prochains jours</option>
@@ -1399,8 +1400,8 @@ select.champ-input, select.profils-select {
         <div class="progress-label" id="y-pl">Analyse en cours…</div>
         <div class="progress-bg"><div class="progress-bar" id="y-pb"></div></div>
       </div>
-      <button class="btn-principal" id="y-btn" onclick="analyserSynastrie()">♥ Analyser notre compatibilité</button>
-      <button class="btn-principal" id="y-prev-btn" onclick="analyserPrevisionsSynastrie()" style="margin-top:0.7rem;background:linear-gradient(135deg,#c9a84c,#a855f7)">☽ Prévisions du couple</button>
+      <button class="btn-principal" id="y-btn" onclick="analyserSynastrie()">☽ Analyser la synastrie</button>
+      <button class="btn-principal" id="y-prev-btn" onclick="analyserPrevisionsSynastrie()" style="margin-top:0.7rem;background:linear-gradient(135deg,#c9a84c,#a855f7)">☽ Prévisions relationnelles</button>
       <div class="erreur" id="y-err"></div>
     </div>
     <div class="resultats" id="y-res">
@@ -1411,7 +1412,7 @@ select.champ-input, select.profils-select {
       </div>
       <div id="y-fenetres"></div>
       <div class="rapport-bloc">
-        <div class="rapport-bloc-titre" id="y-rapport-titre">Votre synastrie</div>
+        <div class="rapport-bloc-titre" id="y-rapport-titre">Synastrie relationnelle</div>
         <div class="rapport-texte" id="y-rapport"></div>
       </div>
       <button class="btn-retour" onclick="exporterPDF('y-res','Synastrie')">⬇ Télécharger en PDF</button>
@@ -6312,6 +6313,252 @@ window.addEventListener('appinstalled', () => {
   const btn = document.getElementById('btn-install-pwa');
   if (btn) btn.style.display = 'none';
 });
+
+
+/* =====================================================================
+   PATCH V28 — SYNastrie vraiment adaptée au TYPE DE RELATION
+   Remplace les anciens textes sentimentaux dans les cartes + prompts.
+   ===================================================================== */
+const SYN_V28_TYPES = {
+  couple: {
+    label:'Couple / relation existante', short:'couple', title:'Synastrie de couple', prev:'Prévisions du couple', icon:'💜', forbidden:[],
+    intro:'Lecture amoureuse/relationnelle : lien, désir, dialogue, proximité, tensions et construction du couple.',
+    system:'Tu es astrologue spécialisé en synastrie de couple. Tu analyses une relation amoureuse existante, en français clair, concret et nuancé.'
+  },
+  rencontre: {
+    label:'Rencontre / début de relation', short:'rencontre', title:'Synastrie de rencontre', prev:'Prévisions de rencontre', icon:'✨',
+    intro:'Lecture d’un début de lien : rythme, ouverture, prudence, projections, conversation et signaux concrets.',
+    system:'Tu es astrologue spécialisé dans les débuts de relation. Tu ne dois pas écrire comme si les deux personnes étaient déjà en couple. Analyse le rythme, les signaux, la prudence, la curiosité et les projections.'
+  },
+  ex: {
+    label:'Ex / relation passée', short:'lien passé', title:'Synastrie d’un lien passé', prev:'Prévisions du lien passé', icon:'☽',
+    intro:'Lecture d’un ancien lien : recul, frontières, clarification, mémoire du passé, risque de réactivation.',
+    system:'Tu es astrologue spécialisé dans les liens passés. Tu ne dois jamais écrire comme si les personnes formaient un couple actuel. Analyse recul, frontières, clarification, mémoire émotionnelle, ce qui est clos ou encore sensible.'
+  },
+  compliquee: {
+    label:'Relation compliquée', short:'relation compliquée', title:'Synastrie d’une relation compliquée', prev:'Prévisions de clarification', icon:'⚖️',
+    intro:'Lecture d’un lien ambigu : non-dits, limites, cadre, clarification, zones de tension, prudence.',
+    system:'Tu es astrologue spécialisé dans les relations ambiguës ou compliquées. Ne romantise pas. Analyse limites, non-dits, clarification, contradictions, besoin de cadre et prudence concrète.'
+  },
+  amitie: {
+    label:'Amitié', short:'amitié', title:'Synastrie amicale', prev:'Prévisions amicales', icon:'🤝',
+    intro:'Lecture amicale : complicité, soutien, disponibilité, loyauté, malentendus, respect du rythme.',
+    system:'Tu es astrologue spécialisé dans les liens d’amitié. Interdiction d’utiliser un vocabulaire amoureux, sexuel ou de couple. Analyse complicité, soutien, disponibilité, loyauté, malentendus, rythme et respect mutuel.'
+  },
+  famille: {
+    label:'Famille', short:'famille', title:'Synastrie familiale', prev:'Prévisions familiales', icon:'🏠',
+    intro:'Lecture familiale : rôles, responsabilités, place de chacun, schémas anciens, organisation, apaisement.',
+    system:'Tu es astrologue spécialisé dans les dynamiques familiales. Interdiction d’utiliser un vocabulaire amoureux, sexuel ou de couple. Analyse rôles, responsabilités, place de chacun, schémas familiaux, apaisement, limites et organisation.'
+  },
+  pro: {
+    label:'Relation professionnelle', short:'professionnel', title:'Synastrie professionnelle', prev:'Prévisions professionnelles', icon:'🟢',
+    intro:'Lecture professionnelle stricte : collaboration, communication, méthode, responsabilités, délais, hiérarchie, stratégie, rapport de force.',
+    system:'Tu es astrologue spécialisé en synastrie professionnelle. INTERDICTION ABSOLUE : amour, amoureux, couple, affectif, désir, attirance, séduction, passion, tendresse, jalousie sentimentale, rupture amoureuse, rapprochement affectif, plaisir de se retrouver. Tu analyses uniquement collaboration, travail, communication professionnelle, méthode, consignes, responsabilités, délais, hiérarchie éventuelle, stratégie, rôles, rapport de force professionnel, confiance de travail et opportunités professionnelles.'
+  }
+};
+function synModeV28(v){
+  let raw = v == null ? '' : String(v).toLowerCase();
+  if (!raw) { const s=document.getElementById('y-type-relation'); raw=s?String(s.value||'').toLowerCase():'couple'; }
+  if (raw.includes('pro') || raw.includes('travail') || raw.includes('profession')) return 'pro';
+  if (raw.includes('amiti') || raw.includes('ami')) return 'amitie';
+  if (raw.includes('famille') || raw.includes('famil')) return 'famille';
+  if (raw.includes('compli')) return 'compliquee';
+  if (raw.includes('rencontre') || raw.includes('debut') || raw.includes('début')) return 'rencontre';
+  if (raw === 'ex' || raw.includes('pass')) return 'ex';
+  return 'couple';
+}
+function synCfgV28(m){ return SYN_V28_TYPES[synModeV28(m)] || SYN_V28_TYPES.couple; }
+function synIsProV28(m){ return synModeV28(m) === 'pro'; }
+function synEscV28(v){ return String(v == null ? '' : v).replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c] || c)); }
+function synDateV28(d){ return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function synShortDateV28(d){ return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
+
+function actualiserSynastrieSelonType(){
+  const mode = synModeV28(); const cfg = synCfgV28(mode);
+  const blocTitre = [...document.querySelectorAll('#mod-synastrie .bloc-titre')].find(x => /Prévisions|couple|relation/i.test(x.textContent || ''));
+  if (blocTitre) blocTitre.textContent = '☽ ' + (mode === 'pro' ? 'Prévisions professionnelles' : 'Prévisions relationnelles');
+  const intro = document.querySelector('#mod-synastrie .bloc:nth-of-type(2) p');
+  if (intro) intro.textContent = cfg.intro;
+  const marker = document.getElementById('syn-v28-type-active');
+  if (marker) {
+    marker.style.display = 'block';
+    marker.style.borderColor = mode === 'pro' ? 'rgba(74,222,128,0.65)' : 'rgba(192,132,252,0.55)';
+    marker.style.color = mode === 'pro' ? '#d9fbe3' : 'var(--or-clair)';
+    marker.innerHTML = mode === 'pro'
+      ? '<strong>TYPE D’ANALYSE ACTIF v28 : RELATION PROFESSIONNELLE</strong><br>Le site doit parler travail, collaboration, rôles, consignes, délais, responsabilités, hiérarchie, stratégie et rapport de force professionnel. Aucun vocabulaire amoureux.'
+      : '<strong>TYPE D’ANALYSE ACTIF v28 : '+synEscV28(cfg.label).toUpperCase()+'</strong><br>'+synEscV28(cfg.intro);
+  }
+  const btn1=document.getElementById('y-btn'); if(btn1) btn1.textContent = (mode==='couple'?'♥ ':'☽ ') + 'Analyser la ' + cfg.title.toLowerCase();
+  const btn2=document.getElementById('y-prev-btn'); if(btn2) btn2.textContent = '☽ ' + cfg.prev;
+}
+function majInfoPeriodeSynastrie(){
+  const per=document.getElementById('y-periode'), info=document.getElementById('y-periode-info');
+  if(!per || !info) return; actualiserSynastrieSelonType();
+  const mode=synModeV28(), cfg=synCfgV28(mode), v=per.value;
+  const sujet = mode==='pro' ? 'professionnelles' : mode==='amitie' ? 'amicales' : mode==='famille' ? 'familiales' : mode==='ex' ? 'du lien passé' : mode==='rencontre' ? 'de rencontre' : 'relationnelles';
+  if(v==='date') info.innerHTML = 'Date précise : analyse centrée sur 31 jours avec fenêtres '+sujet+' et points de vigilance adaptés au type « '+synEscV28(cfg.label)+' ».';
+  else if(Number(v)>=1095) info.innerHTML = 'Cycles longs : analyse sur plusieurs années, avec <strong>tendances par semestre</strong>, fenêtres '+sujet+' et points sensibles.';
+  else if(Number(v)>=730) info.innerHTML = 'Cycles longs : analyse sur 2 ans, avec <strong>tendances par trimestre</strong>, fenêtres '+sujet+' et points sensibles.';
+  else if(Number(v)>=365) info.innerHTML = 'Vision annuelle adaptée au type « '+synEscV28(cfg.label)+' ».';
+  else info.innerHTML = 'Mode court : dates utiles et sensibles adaptées au type « '+synEscV28(cfg.label)+' ».';
+}
+function synInitV28(){
+  const sel=document.getElementById('y-type-relation');
+  if(sel && !sel.dataset.v28){ sel.dataset.v28='1'; sel.addEventListener('change',()=>{actualiserSynastrieSelonType(); majInfoPeriodeSynastrie();}); }
+  actualiserSynastrieSelonType(); majInfoPeriodeSynastrie();
+}
+setTimeout(synInitV28, 0);
+setTimeout(synInitV28, 400);
+
+function synFmtDegV28(d){ const S=['Bélier','Taureau','Gémeaux','Cancer','Lion','Vierge','Balance','Scorpion','Sagittaire','Capricorne','Verseau','Poissons']; d=((d%360)+360)%360; const s=Math.floor(d/30), r=d%30, deg=Math.floor(r), min=Math.floor((r-deg)*60); return `${deg}°${String(min).padStart(2,'0')} ${S[s]}`; }
+function synPointLabelV28(label, mode){
+  const m=synModeV28(mode), p=String(label||'').toLowerCase();
+  if(m==='pro'){
+    if(p.includes('désir')||p.includes('réaction')) return 'initiative / réactivité opérationnelle';
+    if(p.includes('affectif')) return 'coopération et qualité d’échange';
+    if(p.includes('émotion')) return 'climat humain au travail';
+    if(p.includes('lien')) return 'mode de collaboration';
+    if(p.includes('présence')) return 'posture professionnelle';
+    if(p.includes('identité')) return 'rôle et positionnement';
+    return 'axe professionnel';
+  }
+  if(m==='amitie') { if(p.includes('désir')) return 'élan amical'; if(p.includes('affectif')) return 'attachement amical'; if(p.includes('émotion')) return 'sensibilité amicale'; if(p.includes('lien')) return 'mode d’amitié'; }
+  if(m==='famille') { if(p.includes('désir')) return 'réactivité familiale'; if(p.includes('affectif')) return 'attachement familial'; if(p.includes('émotion')) return 'climat familial'; if(p.includes('lien')) return 'place familiale'; }
+  if(m==='ex') { if(p.includes('désir')) return 'réactivité du lien passé'; if(p.includes('affectif')) return 'mémoire du lien'; if(p.includes('lien')) return 'frontière du lien passé'; }
+  return label;
+}
+function synPointsV28(part, mode){
+  const a=USER,b=part; const pt=(qui,cle,label,lon,sensible)=>({qui,cle,label:synPointLabelV28(label,mode),lon,sensible});
+  return [
+    pt(a.prenom,'Soleil','identité',a.pos.Soleil,2), pt(a.prenom,'Lune','émotionnel',a.pos.Lune,3), pt(a.prenom,'Venus','affectif',a.pos.Venus,3), pt(a.prenom,'Mars','désir / réaction',a.pos.Mars,2), pt(a.prenom,'Ascendant','présence',a.AS,2), pt(a.prenom,'Descendant','lien à l’autre',((a.AS+180)%360+360)%360,3),
+    pt(b.prenom2,'Soleil','identité',b.pos2.Soleil,2), pt(b.prenom2,'Lune','émotionnel',b.pos2.Lune,3), pt(b.prenom2,'Venus','affectif',b.pos2.Venus,3), pt(b.prenom2,'Mars','désir / réaction',b.pos2.Mars,2), pt(b.prenom2,'Ascendant','présence',b.AS2,2), pt(b.prenom2,'Descendant','lien à l’autre',((b.AS2+180)%360+360)%360,3)
+  ];
+}
+function synThemeTransitV28(trCle, nature, delta, mode){
+  const m=synModeV28(mode); const neg=delta<0 || nature==='tension' || nature==='face-a-face';
+  const map={
+    pro:{Venus:['coopération professionnelle','désaccord à formuler'],Mars:['initiative et exécution','tension opérationnelle'],Mercure:['communication professionnelle','consignes à clarifier'],Saturne:['cadre, responsabilités et délais','cadre lourd / délai à sécuriser'],Jupiter:['opportunité et appui professionnel','engagement excessif'],Uranus:['changement et autonomie','instabilité organisationnelle'],Neptune:['souplesse de coopération','flou à clarifier'],Pluton:['réorganisation stratégique','rapport de force professionnel'],Lune:['climat humain au travail','climat humain sensible'],Soleil:['place, rôle et reconnaissance','ego professionnel à cadrer']},
+    amitie:{Venus:['complicité amicale','attente d’attention'],Mars:['activité partagée','agacement passager'],Mercure:['échange amical fluide','malentendu amical'],Saturne:['fiabilité amicale','distance amicale'],Jupiter:['joie partagée','promesse trop large'],Uranus:['nouveauté amicale','besoin d’air'],Neptune:['écoute et soutien','flou dans les attentes'],Pluton:['amitié qui évolue','tension de contrôle'],Lune:['présence amicale','susceptibilité'],Soleil:['place de chacun','ego amical']},
+    famille:{Venus:['apaisement familial','attente de reconnaissance'],Mars:['action familiale concrète','tension familiale'],Mercure:['dialogue familial','malentendu familial'],Saturne:['cadre familial','poids des responsabilités'],Jupiter:['soutien familial','excès d’attente'],Uranus:['changement familial','imprévu familial'],Neptune:['écoute et compassion','flou familial'],Pluton:['sujet familial profond','rapport de force familial'],Lune:['sécurité familiale','sensibilité familiale'],Soleil:['rôle familial','ego familial']},
+    ex:{Venus:['apaisement du lien passé','nostalgie à clarifier'],Mars:['initiative de clarification','réaction à chaud'],Mercure:['conversation de mise au point','malentendu ancien'],Saturne:['frontière saine','poids du passé'],Jupiter:['recul constructif','fausse réouverture'],Uranus:['prise de distance libératrice','retour imprévisible'],Neptune:['pardon possible','flou nostalgique'],Pluton:['transformation du lien','emprise ancienne'],Lune:['mémoire émotionnelle','sensibilité du passé'],Soleil:['clarification des places','ego blessé']},
+    rencontre:{Venus:['ouverture à la rencontre','attente trop rapide'],Mars:['initiative pour se voir','précipitation'],Mercure:['conversation facilitée','malentendu de départ'],Saturne:['rythme à respecter','frein ou distance'],Jupiter:['envie de découvrir','projection excessive'],Uranus:['surprise stimulante','instabilité du début'],Neptune:['charme et idéalisation','flou ou illusion'],Pluton:['intensité à canaliser','jeu de pouvoir'],Lune:['sécurité émotionnelle','susceptibilité'],Soleil:['mise en valeur','ego à doser']},
+    compliquee:{Venus:['apaisement relationnel','attente floue'],Mars:['initiative de clarification','tension à cadrer'],Mercure:['mise au point utile','communication sensible'],Saturne:['cadre nécessaire','blocage ou froideur'],Jupiter:['ouverture prudente','promesse excessive'],Uranus:['changement libérateur','instabilité'],Neptune:['écoute intuitive','confusion'],Pluton:['vérité profonde','rapport de force'],Lune:['besoin de sécurité','réactivité émotionnelle'],Soleil:['positionnement clair','ego à maîtriser']},
+    couple:{Venus:['rapprochement affectif','tension affective'],Mars:['désir et élan','réactivité / friction'],Mercure:['dialogue facilité','malentendus à clarifier'],Saturne:['consolidation','pression ou distance'],Jupiter:['ouverture et confiance','excès d’attente'],Uranus:['nouveauté stimulante','instabilité / besoin d’air'],Neptune:['douceur et inspiration','flou émotionnel'],Pluton:['transformation profonde','intensité / rapport de force'],Lune:['réceptivité émotionnelle','sensibilité accrue'],Soleil:['mise en lumière','ego à cadrer']}
+  };
+  const pair=(map[m]||map.couple)[trCle] || (m==='pro'?['dynamique professionnelle','point professionnel sensible']:['climat relationnel','point sensible']);
+  return neg ? pair[1] : pair[0];
+}
+function synScoreV28(posT, points, mode){
+  const transits=[{cle:'Soleil',nom:'Soleil',poids:1.1},{cle:'Lune',nom:'Lune',poids:0.7},{cle:'Mercure',nom:'Mercure',poids:0.9},{cle:'Venus',nom:'Vénus',poids:2.3},{cle:'Mars',nom:'Mars',poids:1.8},{cle:'Jupiter',nom:'Jupiter',poids:2.1},{cle:'Saturne',nom:'Saturne',poids:2.5},{cle:'Uranus',nom:'Uranus',poids:2.0},{cle:'Neptune',nom:'Neptune',poids:1.8},{cle:'Pluton',nom:'Pluton',poids:2.1}];
+  let score=0; const themes=[], touches=[];
+  for(const tr of transits){ const lonT=posT[tr.cle]; if(lonT===undefined) continue; for(const pt of points){ const asp=yAspect(lonT,pt.lon,tr.cle==='Lune'?2.5:1.5); if(!asp) continue;
+      const cibleRelation=['Lune','Venus','Mars','Descendant','Ascendant'].includes(pt.cle), cibleNoyau=['Soleil','Lune','Ascendant','Descendant'].includes(pt.cle); let delta=0;
+      if(['Venus','Jupiter'].includes(tr.cle)) delta=(asp.nature==='tension'?0.8:2.0)*tr.poids*(cibleRelation?1.15:1);
+      else if(tr.cle==='Soleil') delta=(asp.nature==='tension'?0.4:1.0)*tr.poids;
+      else if(tr.cle==='Mercure') delta=(asp.nature==='tension'?-0.4:1.0)*tr.poids;
+      else if(tr.cle==='Mars') delta=(asp.nature==='tension'?-1.5:1.4)*tr.poids*(cibleRelation?1.2:1);
+      else if(tr.cle==='Saturne') delta=(asp.nature==='tension'||asp.nature==='face-a-face'?-2.0:0.8)*tr.poids*(cibleNoyau?1.2:1);
+      else if(tr.cle==='Uranus') delta=(asp.nature==='tension'||asp.nature==='face-a-face'?-1.6:0.9)*tr.poids;
+      else if(tr.cle==='Neptune') delta=(asp.nature==='tension'||asp.nature==='face-a-face'?-1.4:0.8)*tr.poids*(cibleRelation?1.2:1);
+      else if(tr.cle==='Pluton') delta=(asp.nature==='tension'||asp.nature==='face-a-face'?-1.8:0.9)*tr.poids*(cibleRelation?1.25:1);
+      else if(tr.cle==='Lune') delta=(asp.nature==='tension'?-0.7:0.8)*tr.poids;
+      const precision=Math.max(0.35,1.6-asp.orb)/1.6; delta*=precision; const theme=synThemeTransitV28(tr.cle,asp.nature,delta,mode); score+=delta; themes.push(theme); touches.push({tr:tr.nom,trCle:tr.cle,qui:pt.qui,point:pt.label,delta,theme});
+  }}
+  return {score,themes:[...new Set(themes)],touches:touches.sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta))};
+}
+async function synScanV28(part,debut,jours,onProg,mode){
+  const points=synPointsV28(part,mode), res=[], jd0=julianDay(debut.getFullYear(),debut.getMonth()+1,debut.getDate(),12);
+  for(let j=0;j<jours;j++){ const jd=jd0+j, date=jdVersDate(jd), posT=calcPos(jd), sc=synScoreV28(posT,points,mode); res.push({date,jd,score:sc.score,themes:sc.themes,touches:sc.touches}); if(j%10===0&&onProg){ onProg(j/jours); await new Promise(r=>setTimeout(r,0)); }} if(onProg) onProg(1); return res;
+}
+function synSelectPicsV28(liste,positif,nb,ecartMin){ const src=liste.filter(x=>positif?x.score>1.2:x.score<-1.2).sort((a,b)=>positif?b.score-a.score:a.score-b.score), out=[]; for(const r of src){ if(out.every(o=>Math.abs((o.date-r.date)/86400000)>=ecartMin)) out.push(r); if(out.length>=nb) break; } return out.sort((a,b)=>a.date-b.date); }
+function synClimatV28(score,mode){ const m=synModeV28(mode); if(m==='pro'){ if(score>=2.5) return {label:'très favorable professionnellement',icone:'🟢'}; if(score>=0.8) return {label:'constructif / utile',icone:'✅'}; if(score>=-0.8) return {label:'neutre / à cadrer',icone:'⚪'}; if(score>=-2.5) return {label:'sensible professionnellement',icone:'🟠'}; return {label:'tendu / à sécuriser',icone:'🔴'}; } if(score>=2.5) return {label:'très favorable',icone:'💜'}; if(score>=0.8) return {label:'favorable',icone:'✨'}; if(score>=-0.8) return {label:'neutre / évolutif',icone:'☽'}; if(score>=-2.5) return {label:'à manier avec tact',icone:'⚠️'}; return {label:'sensible',icone:'⚡'}; }
+function synAddThemesV28(map,themes,poids){ (themes||[]).forEach(t=>map[t]=(map[t]||0)+(poids||1)); }
+function synDominantsV28(map,max){ return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,max).map(x=>x[0]); }
+function synThemePrincipalV28(r){ return (r.themes&&r.themes[0]) || (r.touches&&r.touches[0]&&r.touches[0].theme) || 'climat général'; }
+function synTouchV28(r){ return r && r.touches && r.touches[0] ? r.touches[0] : null; }
+function synCleThemeV28(theme){ const t=String(theme||'').toLowerCase(); if(t.includes('coopération')||t.includes('désaccord')) return 'venus'; if(t.includes('initiative')||t.includes('exécution')||t.includes('opération')||t.includes('tension')) return 'mars'; if(t.includes('communication')||t.includes('consigne')||t.includes('clarifier')) return 'mercure'; if(t.includes('cadre')||t.includes('responsabil')||t.includes('délai')) return 'saturne'; if(t.includes('opportunité')||t.includes('appui')||t.includes('engagement')) return 'jupiter'; if(t.includes('changement')||t.includes('autonomie')||t.includes('instabilité')) return 'uranus'; if(t.includes('flou')||t.includes('souplesse')) return 'neptune'; if(t.includes('rapport de force')||t.includes('stratég')) return 'pluton'; if(t.includes('climat humain')) return 'lune'; if(t.includes('rôle')||t.includes('reconnaissance')||t.includes('ego')) return 'soleil'; return 'general'; }
+function synTexteThemeV28(theme,positif,mode){
+  const m=synModeV28(mode), c=synCleThemeV28(theme);
+  if(m==='pro'){
+    const T={
+      venus:{pos:'La période facilite la coopération : échanges plus souples, meilleure écoute, capacité à trouver un terrain d’entente. Utile pour apaiser une relation de travail, demander un appui ou reprendre un dossier ensemble.',neg:'Un désaccord peut devoir être formulé clairement. Le risque n’est pas sentimental : il concerne la qualité d’échange, la diplomatie professionnelle et la capacité à poser un point sans froisser inutilement.'},
+      mars:{pos:'L’énergie favorise l’action : relance, initiative, exécution rapide, décision concrète. Bonne fenêtre pour avancer sur une tâche, à condition de cadrer les priorités et les responsabilités.',neg:'Risque de tension opérationnelle : impatience, réponse trop directe, pression sur les délais ou conflit de méthode. Il faut ralentir la réaction et revenir aux faits.'},
+      mercure:{pos:'La communication professionnelle est favorisée : réunion, mail important, clarification de consignes, négociation, compte rendu ou validation écrite. C’est une bonne fenêtre pour mettre les choses au clair.',neg:'Les consignes peuvent être mal comprises. Il faut reformuler, demander confirmation, écrire les décisions et éviter les sous-entendus professionnels.'},
+      saturne:{pos:'La période sert à poser un cadre solide : responsabilités, délais, méthode, suivi, engagement réaliste. Ce n’est pas léger, mais c’est utile pour structurer la collaboration.',neg:'Le cadre peut sembler lourd : délai, distance hiérarchique, blocage administratif ou responsabilité mal répartie. Il faut sécuriser par écrit et éviter les décisions floues.'},
+      jupiter:{pos:'Une opportunité professionnelle peut s’ouvrir : soutien, confiance, proposition, appui ou possibilité d’élargir un projet. Bon moment pour présenter une demande structurée.',neg:'Attention aux engagements trop larges : promesse excessive, périmètre mal défini, optimisme sans moyens. Il faut vérifier la faisabilité.'},
+      uranus:{pos:'La période favorise changement, autonomie et méthode nouvelle. Utile pour proposer une amélioration ou sortir d’une routine inefficace.',neg:'Risque d’instabilité organisationnelle : changement brusque, consigne modifiée, réaction imprévisible. Il faut prévoir une marge et confirmer les nouvelles règles.'},
+      neptune:{pos:'La coopération peut gagner en souplesse si chacun explicite mieux ses attentes. Utile pour désamorcer un climat confus sans attaquer directement.',neg:'Le flou doit être clarifié : objectif, rôle, délai, personne responsable. Sans trace écrite, le malentendu peut s’installer.'},
+      pluton:{pos:'La période peut servir à réorganiser une stratégie, traiter un sujet de fond ou clarifier un pouvoir de décision. À utiliser avec calme et méthode.',neg:'Risque de rapport de force professionnel : contrôle, pression, stratégie implicite, résistance. Il faut rester factuel et éviter l’escalade.'},
+      lune:{pos:'Le climat humain au travail est plus disponible : meilleure écoute, attention au contexte, sensibilité aux conditions de travail. Utile pour aborder un sujet avec tact.',neg:'Le climat humain peut être sensible : fatigue, susceptibilité, ambiance lourde. Il faut éviter de personnaliser le problème et revenir au cadre.'},
+      soleil:{pos:'La place et le rôle de chacun peuvent être reconnus plus clairement. Bon moment pour clarifier qui porte quoi et valoriser une contribution.',neg:'L’ego professionnel peut prendre trop de place : besoin d’avoir raison, rivalité, difficulté à reconnaître la place de l’autre. Il faut revenir à l’objectif commun.'},
+      general:{pos:'La période est utile pour avancer avec méthode, clarifier un point de travail ou renforcer la coopération.',neg:'La période demande de la prudence professionnelle : mieux vaut documenter, vérifier et éviter les réactions impulsives.'}
+    }; const it=T[c]||T.general; return positif?it.pos:it.neg;
+  }
+  if(m==='amitie') return positif?'Cette fenêtre soutient la complicité amicale, l’échange simple, la disponibilité et le soutien mutuel.':'Point de vigilance amical : malentendu, disponibilité différente ou attente implicite. Il faut parler simplement, sans pression.';
+  if(m==='famille') return positif?'Cette fenêtre peut aider l’organisation familiale, l’apaisement, le dialogue ou la répartition des rôles.':'Point de vigilance familial : responsabilités, susceptibilités anciennes ou place de chacun. Il faut revenir au concret.';
+  if(m==='ex') return positif?'Cette fenêtre peut servir à clarifier un ancien lien avec recul, sans forcément rouvrir la relation.':'Point de vigilance du lien passé : réactivation, nostalgie, réaction à chaud ou confusion sur les limites.';
+  if(m==='rencontre') return positif?'Cette fenêtre facilite un début de lien : conversation, curiosité, occasion simple, rythme plus naturel.':'Point de vigilance au début du lien : projection trop rapide, attente floue ou réaction disproportionnée.';
+  if(m==='compliquee') return positif?'Cette fenêtre peut servir à clarifier un sujet précis, poser une limite ou sortir d’un non-dit.':'Point de vigilance : ambiguïté, tension ou discussion trop globale. Il faut cadrer un seul sujet.';
+  return yTexteTheme ? yTexteTheme(theme, positif, '') : (positif?'Fenêtre favorable.':'Point sensible.');
+}
+function synConseilV28(theme,positif,mode){
+  const m=synModeV28(mode), c=synCleThemeV28(theme);
+  if(m==='pro'){
+    const P={venus:['Utiliser cette fenêtre pour chercher un accord, demander un appui ou apaiser un échange professionnel.','Formuler le désaccord avec diplomatie et proposer une solution concrète.'],mars:['Faire avancer une tâche concrète : action, relance, décision, échéance.','Ne pas répondre à chaud ; revenir au planning, au périmètre et aux faits.'],mercure:['Envoyer un mail clair, demander une validation écrite ou organiser une réunion courte.','Reformuler les consignes et demander confirmation écrite.'],saturne:['Poser le cadre : responsabilités, délais, méthode, suivi.','Sécuriser le dossier avec traces écrites et calendrier.'],jupiter:['Présenter une demande ou une proposition avec bénéfice et faisabilité.','Limiter l’engagement à ce qui est validé et réaliste.'],uranus:['Proposer une amélioration en expliquant le cadre du changement.','Prévoir une marge d’adaptation et confirmer les nouvelles règles.'],neptune:['Clarifier l’objectif, les critères et la personne responsable.','Demander des faits, des écrits et des échéances.'],pluton:['Garder une stratégie calme et factuelle.','Ne pas entrer dans le rapport de force ; documenter chaque point.'],lune:['Tenir compte du climat humain sans perdre le cadre professionnel.','Attendre avant d’écrire si le climat est chargé.'],soleil:['Clarifier le rôle de chacun et la contribution attendue.','Revenir à l’objectif commun, pas à la fierté personnelle.'],general:['Avancer avec méthode et traces écrites.','Rester cadré, factuel et prudent.']}; const a=P[c]||P.general; return positif?a[0]:a[1];
+  }
+  if(m==='amitie') return positif?'Proposer simplement, sans pression.' : 'Reformuler calmement et respecter la disponibilité de l’autre.';
+  if(m==='famille') return positif?'Utiliser la fenêtre pour organiser, apaiser ou clarifier un rôle.' : 'Revenir aux faits et éviter les reproches anciens.';
+  if(m==='ex') return positif?'Clarifier avec recul, sans rouvrir automatiquement le lien.' : 'Attendre avant de répondre sous l’émotion.';
+  if(m==='rencontre') return positif?'Créer une occasion simple, sans forcer le rythme.' : 'Ne pas demander trop vite une définition.';
+  if(m==='compliquee') return positif?'Clarifier un seul sujet précis.' : 'Éviter les discussions explosives ou trop globales.';
+  return yConseilTheme ? yConseilTheme(theme, positif) : 'Agir avec nuance.';
+}
+function synCleanV28(html,mode){
+  let out=String(html||''); if(!synIsProV28(mode)) return out;
+  const rules=[[/Prévisions du couple/gi,'Prévisions professionnelles'],[/Fenêtres favorables au couple/gi,'Fenêtres professionnelles utiles'],[/rapprochement affectif/gi,'coopération professionnelle'],[/désir et élan/gi,'initiative et exécution'],[/tonalité affective/gi,'dynamique professionnelle'],[/La tonalité est affective/gi,'La dynamique professionnelle est'],[/parole affective/gi,'échange professionnel'],[/invitation/gi,'point de travail'],[/plaisir de se retrouver/gi,'possibilité de travailler efficacement'],[/gestes doux/gi,'échanges cordiaux'],[/réconciliation/gi,'apaisement professionnel'],[/créer du lien/gi,'améliorer la coopération'],[/désir/gi,'initiative'],[/affectif/gi,'professionnel'],[/affective/gi,'professionnelle'],[/amour/gi,'cadre professionnel'],[/amoureux/gi,'professionnel'],[/amoureuse/gi,'professionnelle'],[/couple/gi,'relation professionnelle'],[/tendresse/gi,'souplesse professionnelle'],[/séduction/gi,'diplomatie professionnelle'],[/attirance/gi,'intérêt professionnel'],[/sortie, projet court, action, mouvement/gi,'réunion, dossier, relance, décision'],[/voyager, se projeter/gi,'élargir le projet, demander un appui']];
+  rules.forEach(([re,val])=>out=out.replace(re,val)); return out;
+}
+function synHtmlPicsV28(titre,liste,positif,mode){ const cfg=synCfgV28(mode); if(!liste.length) return ''; const label=positif?(mode==='pro'?'Fenêtre professionnelle utile':cfg.label):(mode==='pro'?'Vigilance professionnelle':'Vigilance'); return `<div class="ev-section-titre">${synEscV28(titre)}</div>`+liste.map((r,idx)=>{ const theme=synThemePrincipalV28(r), tags=(r.themes||[]).slice(0,4).map(t=>`<span class="fenetre-tag">${synEscV28(t)}</span>`).join(''), touch=synTouchV28(r); const activation=touch?`<p style="margin-top:0.35rem"><strong>Pourquoi cette date ressort :</strong> ${synEscV28(touch.tr)} active le plan ${synEscV28(touch.point)} de ${synEscV28(touch.qui)}.</p>`:''; return `<div class="fenetre-card"><div class="fenetre-rang">${idx+1} · ${synEscV28(label)}</div><div class="fenetre-date">${synDateV28(r.date)}</div><div class="fenetre-periode">Axe ${mode==='pro'?'professionnel':'dominant'} : ${synEscV28(theme)} · score ${r.score.toFixed(1)}</div><div class="ev-card-desc"><p>${synEscV28(synTexteThemeV28(theme,positif,mode))}</p>${activation}<p style="margin-top:0.35rem"><strong>Conseil :</strong> ${synEscV28(synConseilV28(theme,positif,mode))}</p></div><div class="fenetre-planetes">${tags}</div></div>`; }).join(''); }
+function synRegrouperGrandesV28(liste,jours,mode){ if(jours<=90) return []; const taille=jours>=1095?182:(jours>=730?91:30), res=[]; for(let i=0;i<liste.length;i+=taille){ const bloc=liste.slice(i,i+taille); if(!bloc.length) continue; const map={}, score=bloc.reduce((s,r)=>s+r.score,0)/bloc.length; bloc.forEach(r=>synAddThemesV28(map,r.themes,Math.abs(r.score||0)||1)); res.push({label:`${synShortDateV28(bloc[0].date)} → ${synShortDateV28(bloc[bloc.length-1].date)}`,score,themes:synDominantsV28(map,4),top:synTouchV28(bloc.slice().sort((a,b)=>Math.abs(b.score)-Math.abs(a.score))[0])}); } return res; }
+function synHtmlGrandesV28(periodes,jours,mode){ if(!periodes||!periodes.length) return ''; const titre=jours>730?'☽ Tendances par semestre':(jours>365?'☽ Tendances par trimestre':'☽ Tendances par mois'); return `<div class="ev-section-titre">${titre}</div>`+periodes.map(p=>{ const c=synClimatV28(p.score,mode), theme=(p.themes&&p.themes[0])||'climat général', tags=(p.themes||[]).slice(0,3).map(t=>`<span class="fenetre-tag">${synEscV28(t)}</span>`).join(''); const top=p.top?`<p><strong>Activation repérée :</strong> ${synEscV28(p.top.tr)} active ${synEscV28(p.top.point)} de ${synEscV28(p.top.qui)}.</p>`:''; return `<div class="ev-cycle"><div class="ev-cycle-titre">${synEscV28(p.label)} — ${synEscV28(c.icone)} ${synEscV28(c.label)}</div><div class="ev-cycle-barre-bg"><div class="ev-cycle-barre" style="width:${Math.max(8,Math.min(100,50+p.score*8))}%"></div></div><div class="ev-cycle-desc"><p><strong>Axe dominant :</strong> ${synEscV28(theme)}. Score moyen : ${p.score.toFixed(1)}</p><p>${synEscV28(synTexteThemeV28(theme,p.score>=0,mode))}</p>${top}<div class="fenetre-planetes">${tags}</div></div></div>`; }).join(''); }
+function synSynthAxesV28(liste,max){ const map={}; (liste||[]).forEach(r=>synAddThemesV28(map,r.themes,Math.max(1,Math.abs(r.score||0)))); return synDominantsV28(map,max||3); }
+function synRapportLocalV28(part,mode,debut,fin,moyenne,pos,neg,jours){ const cfg=synCfgV28(mode), c=synClimatV28(moyenne,mode), best=pos[0]?synDateV28(pos[0].date):'aucune date dominante', warn=neg[0]?synDateV28(neg[0].date):'aucune alerte forte', axes=synSynthAxesV28(pos,3).join(', ')||'aucun axe dominant', alertes=synSynthAxesV28(neg,3).join(', ')||'aucun axe sensible', rythme=jours>730?'par semestre':(jours>365?'par trimestre':(jours>90?'par mois':'par dates clés'));
+  if(mode==='pro') return `1. CLIMAT PROFESSIONNEL\nEntre ${USER.prenom} et ${part.prenom2}, la période du ${synShortDateV28(debut)} au ${synShortDateV28(fin)} ressort comme ${c.label}. Cette lecture concerne uniquement le travail : collaboration, communication professionnelle, méthode, responsabilités, délais, rôles et rapports de force éventuels. L’analyse est organisée ${rythme}.\n\n2. FENÊTRES PROFESSIONNELLES UTILES\nMeilleure fenêtre repérée : ${best}. Axes utiles : ${axes}. Ces dates servent à planifier une réunion, demander une validation, clarifier une consigne, présenter une proposition, relancer un dossier ou sécuriser un accord.\n\n3. POINTS DE VIGILANCE PROFESSIONNELS\nPériode sensible : ${warn}. Axes à cadrer : ${alertes}. La priorité est de rester factuel, de confirmer par écrit et de clarifier le périmètre de responsabilité.\n\n4. CONSEIL OPÉRATIONNEL\nAvec ${part.prenom2}, choisis les dates selon le sujet : Mercure pour écrire ou négocier, Saturne pour cadrer, Mars pour agir, Jupiter pour demander un appui, Neptune pour clarifier le flou, Pluton pour gérer une pression ou un rapport de force.`;
+  if(mode==='amitie') return `1. CLIMAT AMICAL\nEntre ${USER.prenom} et ${part.prenom2}, la période concerne l’amitié : complicité, soutien, disponibilité et loyauté.\n\n2. FENÊTRES AMICALES\nMeilleure fenêtre : ${best}. Axes : ${axes}.\n\n3. VIGILANCE\nPériode sensible : ${warn}. Points à surveiller : ${alertes}.\n\n4. CONSEIL\nProposer simplement, respecter le rythme et reformuler sans pression.`;
+  if(mode==='famille') return `1. CLIMAT FAMILIAL\nEntre ${USER.prenom} et ${part.prenom2}, la période concerne les rôles, responsabilités, habitudes familiales et possibilités d’apaisement.\n\n2. FENÊTRES FAMILIALES\nMeilleure fenêtre : ${best}. Axes : ${axes}.\n\n3. VIGILANCE\nPériode sensible : ${warn}. Points à surveiller : ${alertes}.\n\n4. CONSEIL\nRevenir aux faits, répartir clairement les responsabilités et éviter les reproches anciens.`;
+  return `${cfg.prev}\n\n1. CLIMAT GÉNÉRAL\nPériode du ${synShortDateV28(debut)} au ${synShortDateV28(fin)} : ${c.label}.\n\n2. FENÊTRES UTILES\nMeilleure fenêtre : ${best}. Axes : ${axes}.\n\n3. VIGILANCE\nPériode sensible : ${warn}. Points à surveiller : ${alertes}.\n\n4. CONSEIL\nUtiliser chaque date selon son thème et selon le type de relation choisi : ${cfg.label}.`;
+}
+async function analyserPrevisionsSynastrie(){
+  const err=document.getElementById('y-err'); if(err) err.style.display='none'; actualiserSynastrieSelonType();
+  const part=yLirePartenaireSynastrie(); if(!part) return; const mode=synModeV28(); const cfg=synCfgV28(mode); const per=document.getElementById('y-periode').value;
+  let debut=new Date(); debut.setHours(12,0,0,0); let jours=parseInt(per,10)||30;
+  if(per==='date'){ const cible=yParseDateFr(document.getElementById('y-date-cible').value.trim()); if(!cible){ affErr('y-err','Indiquez une date précise valide. Ex : 14/02/2027'); return; } debut=new Date(cible.getFullYear(),cible.getMonth(),cible.getDate()-15,12); jours=31; }
+  const fin=new Date(debut.getFullYear(),debut.getMonth(),debut.getDate()+jours-1,12), btn1=document.getElementById('y-btn'), btn2=document.getElementById('y-prev-btn'), pw=document.getElementById('y-pw'),pb=document.getElementById('y-pb'),pl=document.getElementById('y-pl');
+  if(btn1)btn1.disabled=true; if(btn2)btn2.disabled=true; if(pw)pw.style.display='block'; if(pb)pb.style.width='10%'; if(pl)pl.textContent='Scan '+cfg.short+' v28…';
+  const liste=await synScanV28(part,debut,jours,p=>{ if(pb)pb.style.width=`${10+Math.round(p*70)}%`; if(pl)pl.textContent=jours>365?'Analyse des cycles longs '+cfg.short+'…':'Analyse des dates '+cfg.short+'…'; },mode);
+  const moyenne=liste.reduce((s,r)=>s+r.score,0)/Math.max(1,liste.length), params=yParametresLongueur(jours,per), pos=synSelectPicsV28(liste,true,params.pos,params.ecart), neg=synSelectPicsV28(liste,false,params.neg,params.ecart), grandes=synRegrouperGrandesV28(liste,jours,mode), climat=synClimatV28(moyenne,mode), cycle=jours>730?'Cycles longs · tendances par semestre':(jours>365?'Cycles longs · tendances par trimestre':'Prévision court / moyen terme');
+  if(pb)pb.style.width='88%'; if(pl)pl.textContent='Rédaction '+cfg.short+' v28…';
+  const typeBlock=`<div class="rapport-bloc" style="border-color:${mode==='pro'?'rgba(74,222,128,0.65)':'var(--bordure)'};margin-bottom:1rem"><div class="rapport-bloc-titre">${synEscV28(cfg.icon)} Type d’analyse actif v28</div><div class="rapport-texte"><p><strong>${synEscV28(cfg.label)}</strong>${mode==='pro'?' — moteur professionnel séparé : collaboration, méthode, responsabilités, communication, délais, hiérarchie éventuelle.':' — les cartes et le rapport sont adaptés à ce type de lien.'}</p></div></div>`;
+  const entete=`<div class="rapport-bloc" style="margin-bottom:1rem"><div class="rapport-bloc-titre">Synthèse rapide</div><div class="rapport-texte"><p><strong>${synEscV28(mode==='pro'?'Climat professionnel':'Climat général')} :</strong> ${synEscV28(climat.icone)} ${synEscV28(climat.label)} — score moyen ${moyenne.toFixed(1)}</p><p><strong>Période analysée :</strong> du ${synShortDateV28(debut)} au ${synShortDateV28(fin)}</p><p><strong>Type de relation :</strong> ${synEscV28(cfg.label)}</p><div class="mode-cycle-badge">${synEscV28(cycle)}</div></div></div>`;
+  let html=typeBlock+entete+synHtmlGrandesV28(grandes,jours,mode)+synHtmlPicsV28(mode==='pro'?'🟢 Fenêtres professionnelles utiles':'✨ Fenêtres favorables',pos,true,mode)+synHtmlPicsV28(mode==='pro'?'🟠 Points de vigilance professionnels':'⚠️ Dates de vigilance',neg,false,mode);
+  let rapport=formatRapport(synRapportLocalV28(part,mode,debut,fin,moyenne,pos,neg,jours)); html=synCleanV28(html,mode); rapport=synCleanV28(rapport,mode);
+  document.getElementById('y-fenetres').innerHTML=html; document.getElementById('y-rapport').innerHTML=rapport; document.getElementById('y-rapport-titre').textContent=cfg.prev; document.getElementById('y-res-titre').textContent=`${USER.prenom} & ${part.prenom2}`; document.getElementById('y-res-sous').textContent=`${cfg.label} · ${synShortDateV28(debut)} → ${synShortDateV28(fin)}`; document.getElementById('y-form').style.display='none'; document.getElementById('y-res').style.display='block'; if(pb)pb.style.width='100%'; setTimeout(()=>{if(pw)pw.style.display='none';},800); if(btn1)btn1.disabled=false; if(btn2)btn2.disabled=false;
+}
+async function analyserSynastrie(){
+  const err=document.getElementById('y-err'); if(err)err.style.display='none'; actualiserSynastrieSelonType(); const part=yLirePartenaireSynastrie(); if(!part)return; const mode=synModeV28(); const cfg=synCfgV28(mode), btn=document.getElementById('y-btn'), pw=document.getElementById('y-pw'),pb=document.getElementById('y-pb'),pl=document.getElementById('y-pl'); if(btn)btn.disabled=true; if(pw)pw.style.display='block'; if(pb)pb.style.width='35%'; if(pl)pl.textContent='Calcul synastrie '+cfg.short+'…';
+  const listeA=Object.entries(USER.pos).map(([n,d])=>`${n} : ${synFmtDegV28(d)}`).join('\n'), listeB=Object.entries(part.pos2).map(([n,d])=>`${n} : ${synFmtDegV28(d)}`).join('\n');
+  let consignes='';
+  if(mode==='pro') consignes=`\nRédige une SYNastrie PROFESSIONNELLE uniquement. Ne parle jamais d’amour, de couple, de désir, d’attirance, de séduction, de rapprochement affectif ou de relation amoureuse.\nPARTIES : 1. Dynamique de collaboration 2. Communication et méthode 3. Points de friction professionnels 4. Conseil opérationnel.\nVocabulaire obligatoire : travail, collaboration, consignes, responsabilités, délais, rôle, hiérarchie éventuelle, méthode, validation, rapport de force professionnel, stratégie, confiance de travail.`;
+  else if(mode==='amitie') consignes=`\nRédige une synastrie AMICALE. Interdiction du vocabulaire amoureux/sexuel/de couple. Parties : complicité, soutien, malentendus, conseil amical.`;
+  else if(mode==='famille') consignes=`\nRédige une synastrie FAMILIALE. Interdiction du vocabulaire amoureux/sexuel/de couple. Parties : rôles, responsabilités, schémas familiaux, apaisement, limites.`;
+  else if(mode==='ex') consignes=`\nRédige une synastrie d’un LIEN PASSÉ. Ne fais pas comme s’ils étaient en couple actuel. Analyse recul, frontières, mémoire, risques de réactivation.`;
+  else if(mode==='rencontre') consignes=`\nRédige une synastrie de RENCONTRE / début de lien. Ne suppose pas un couple actuel. Analyse rythme, curiosité, signaux, projections, prudence.`;
+  else if(mode==='compliquee') consignes=`\nRédige une synastrie de RELATION COMPLIQUÉE. Ne romantise pas. Analyse limites, non-dits, clarifications, zones à cadrer.`;
+  else consignes=`\nRédige une synastrie de COUPLE / relation amoureuse existante.`;
+  const prompt=`Compare les thèmes astrologiques de ${USER.prenom} et ${part.prenom2}.\nTYPE DE RELATION EXACT : ${cfg.label}.\n${consignes}\n\nThème de ${USER.prenom} :\nAscendant : ${synFmtDegV28(USER.AS)} · MC : ${synFmtDegV28(USER.MC)}\n${listeA}\n\nThème de ${part.prenom2} :\nAscendant : ${synFmtDegV28(part.AS2)} · MC : ${synFmtDegV28(part.MC2)}\n${listeB}\n\nRÈGLES : français clair, concret, sans jargon technique, tutoyer ${USER.prenom}, 4 parties avec 3 à 5 phrases chacune.`;
+  try{ if(pb)pb.style.width='65%'; if(pl)pl.textContent='Rédaction '+cfg.title+'…'; const data=await appelerClaude({model:'claude-sonnet-4-6',max_tokens:1800,premiumRequis:true,system:cfg.system,messages:[{role:'user',content:prompt}]}); let texte=formatRapport(texteClaude(data)||'Erreur'); texte=synCleanV28(texte,mode); document.getElementById('y-fenetres').innerHTML=`<div class="rapport-bloc" style="border-color:${mode==='pro'?'rgba(74,222,128,0.65)':'var(--bordure)'}"><div class="rapport-bloc-titre">${synEscV28(cfg.icon)} Type d’analyse actif v28</div><div class="rapport-texte"><p><strong>${synEscV28(cfg.label)}</strong>${mode==='pro'?' — synastrie professionnelle stricte, pas une lecture de couple.':' — synastrie adaptée au type choisi.'}</p></div></div>`; document.getElementById('y-rapport').innerHTML=texte; document.getElementById('y-rapport-titre').textContent=cfg.title; document.getElementById('y-res-titre').textContent=`${USER.prenom} & ${part.prenom2}`; document.getElementById('y-res-sous').textContent=`${cfg.label} · ${part.dateRaw2} · ${part.heure2} · ${part.ville2}`; document.getElementById('y-form').style.display='none'; document.getElementById('y-res').style.display='block'; } catch(e){ affErr('y-err','Erreur API : '+messageErreurApiIOS(e)); }
+  if(pb)pb.style.width='100%'; setTimeout(()=>{if(pw)pw.style.display='none';},800); if(btn)btn.disabled=false;
+}
 </script>
 </body>
 </html>
