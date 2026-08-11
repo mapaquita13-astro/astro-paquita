@@ -904,6 +904,112 @@ select.champ-input, select.profils-select {
 .per-btn.premium-verrouille { opacity:0.48; position:relative; }
 .per-btn.premium-verrouille::after { content:' 🔒'; font-size:0.72rem; }
 .question-credit-box { margin:0 0 1rem; padding:0.75rem 0.9rem; border:1px solid rgba(201,168,76,0.35); border-radius:10px; background:rgba(201,168,76,0.08); color:#e8c97a; font-size:0.9rem; line-height:1.5; }
+
+
+/* ═══════════════════════════════════════════════════════════
+   ASTRO PAQUITA — MOBILE PRO 2026
+   Refonte ergonomique sans modification des calculs astro
+   ═══════════════════════════════════════════════════════════ */
+.mobile-home-kicker,.mobile-welcome,.mobile-module-head,.mobile-bottom-nav{display:none}
+.ev-hero-title{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--texte);text-align:center;margin:.2rem 0 .25rem}
+.ev-hero-sub{font-size:.88rem;color:var(--texte-doux);text-align:center;line-height:1.55;max-width:560px;margin:0 auto 1.25rem}
+.ev-timeline-help{font-size:.82rem;color:var(--texte-doux);line-height:1.5;margin:-.3rem 0 1rem}
+.ev-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin:.75rem 0 .85rem}
+.ev-meta-pill{background:rgba(255,255,255,.045);border:1px solid var(--bordure);border-radius:10px;padding:.65rem .75rem}
+.ev-meta-pill small{display:block;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--texte-doux);margin-bottom:.22rem}
+.ev-meta-pill strong{font-size:.86rem;color:var(--texte);font-weight:700}
+.ev-trend{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.28rem .65rem;font-size:.69rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.ev-trend.favorable{background:rgba(74,222,128,.12);color:#7ee2a0;border:1px solid rgba(74,222,128,.28)}
+.ev-trend.mixte{background:rgba(251,191,36,.12);color:#f6cf65;border:1px solid rgba(251,191,36,.28)}
+.ev-trend.difficile{background:rgba(248,113,113,.12);color:#fb9292;border:1px solid rgba(248,113,113,.28)}
+.ev-timeline{position:relative;margin:.4rem 0 1.25rem;padding-left:1.2rem}
+.ev-timeline:before{content:'';position:absolute;left:.28rem;top:.4rem;bottom:.4rem;width:1px;background:linear-gradient(var(--violet-cl),rgba(192,132,252,.1))}
+.ev-timeline-item{position:relative;padding:0 0 1rem .8rem}
+.ev-timeline-dot{position:absolute;left:-1.16rem;top:.25rem;width:.64rem;height:.64rem;border-radius:50%;background:var(--violet-cl);box-shadow:0 0 0 4px rgba(192,132,252,.10)}
+.ev-timeline-dot.pic{background:#e8c97a;box-shadow:0 0 0 4px rgba(232,201,122,.12)}
+.ev-timeline-dot.fin{background:#8b7fa6;box-shadow:0 0 0 4px rgba(139,127,166,.10)}
+.ev-timeline-date{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--violet-cl);font-weight:800}
+.ev-timeline-title{font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--texte);margin:.18rem 0}
+.ev-timeline-kind{font-size:.76rem;color:var(--texte-doux)}
+
+@media (max-width: 700px){
+  body{padding-bottom:calc(76px + env(safe-area-inset-bottom));background:#090716}
+  .header{height:56px!important;background:rgba(9,7,22,.94)!important;border-bottom:1px solid rgba(192,132,252,.12)!important}
+  .logo img{width:34px!important;height:34px!important}
+  .logo-nom{font-size:.92rem!important;letter-spacing:.16em!important}
+  .header-actions{gap:.35rem}
+  .header-btn{border-radius:10px!important;padding:.48rem .65rem!important}
+
+  .hero{min-height:auto!important;padding:92px 1.25rem 1.5rem!important;background:radial-gradient(circle at 50% 0%,rgba(124,58,237,.20),transparent 52%)!important}
+  .hero-logo{width:86px!important;height:86px!important;margin-bottom:.65rem!important}
+  .hero-nom{font-size:1.55rem!important;letter-spacing:.22em!important;margin-bottom:.28rem!important}
+  .hero-tagline{font-size:.64rem!important;letter-spacing:.23em!important}
+  .hero-sep{margin:1rem auto!important}
+  .hero-intro{font-size:1rem!important;line-height:1.55!important;margin-bottom:1.1rem!important;max-width:320px!important}
+  .hero-cta{padding:.82rem 1.4rem!important;font-size:.76rem!important;width:min(100%,320px)!important;box-shadow:0 6px 22px rgba(124,58,237,.30)!important}
+  .apercu{display:none!important}
+
+  .services{padding:1.15rem .9rem 2rem!important;background:transparent!important}
+  .mobile-home-kicker{display:block;text-align:left;max-width:560px;margin:0 auto .25rem;font-size:.62rem;letter-spacing:.18em;color:var(--violet-cl);font-weight:800}
+  .services-titre{text-align:left!important;max-width:560px;margin:0 auto .8rem!important;font-family:'Cormorant Garamond',serif!important;font-size:1.42rem!important;letter-spacing:0!important;text-transform:none!important;color:var(--texte)!important}
+  .mobile-welcome{display:block;max-width:560px;margin:0 auto .9rem;background:linear-gradient(145deg,rgba(124,58,237,.17),rgba(255,255,255,.035));border:1px solid rgba(192,132,252,.22);border-radius:18px;padding:1rem;box-shadow:0 12px 34px rgba(0,0,0,.16)}
+  .mobile-welcome-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem}
+  .mobile-welcome-eyebrow{font-size:.58rem;letter-spacing:.18em;color:var(--violet-cl);font-weight:800;margin-bottom:.25rem}
+  .mobile-welcome-title{font-family:'Cormorant Garamond',serif;font-size:1.25rem;color:var(--texte);line-height:1.1}
+  .mobile-plan-badge{font-size:.58rem;letter-spacing:.08em;padding:.28rem .48rem;border-radius:999px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.30);color:#e8c97a;font-weight:800;white-space:nowrap}
+  .mobile-welcome-text{font-size:.82rem;color:var(--texte-doux);line-height:1.5;margin:.65rem 0 .8rem}
+  .mobile-today-btn{width:100%;display:flex;align-items:center;gap:.72rem;text-align:left;border:1px solid rgba(255,255,255,.08);background:rgba(7,5,20,.43);color:var(--texte);padding:.75rem .8rem;border-radius:13px;cursor:pointer}
+  .mobile-today-btn>span:first-child{font-size:1.35rem;color:var(--violet-cl)}
+  .mobile-today-btn>span:nth-child(2){display:flex;flex-direction:column;flex:1;gap:.12rem}
+  .mobile-today-btn strong{font-size:.84rem}
+  .mobile-today-btn small{font-size:.69rem;color:var(--texte-doux)}
+  .mobile-today-btn b{font-size:1.4rem;color:var(--violet-cl);font-weight:300}
+
+  .services-grille{display:flex!important;flex-direction:column!important;gap:.6rem!important;max-width:560px!important}
+  .service-card,.service-card[style]{display:grid!important;grid-template-columns:42px minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;column-gap:.72rem!important;row-gap:.1rem!important;align-items:center!important;text-align:left!important;padding:.84rem .8rem!important;border-radius:15px!important;min-height:78px!important;background:rgba(255,255,255,.035)!important;border:1px solid rgba(192,132,252,.13)!important;box-shadow:none!important}
+  .service-card:active{transform:scale(.985)!important;background:rgba(124,58,237,.10)!important}
+  .service-icone{grid-column:1;grid-row:1/3;margin:0!important;width:42px;height:42px;display:flex!important;align-items:center;justify-content:center;border-radius:12px;background:rgba(124,58,237,.12);font-size:1.35rem!important;color:var(--violet-cl)}
+  .service-nom{grid-column:2;grid-row:1;font-size:1rem!important;margin:0!important;line-height:1.15}
+  .service-desc{grid-column:2;grid-row:2;font-size:.76rem!important;line-height:1.35!important;margin:0!important;padding-right:.2rem}
+  .service-badge{position:static!important;grid-column:3;grid-row:1/3;align-self:center;font-size:.52rem!important;letter-spacing:.05em!important;padding:.22rem .38rem!important;max-width:76px;text-align:center}
+  .service-lien{display:none!important}
+  .confiance{font-size:.68rem!important;margin-top:1rem!important;padding:0 .3rem}
+
+  .section-saisie{padding:1.2rem .9rem 2rem!important}
+  .section-modules{padding:68px .9rem 1.4rem!important;min-height:100dvh;background:#090716!important}
+  .modules-onglets{display:none!important}
+  .mobile-module-head{display:flex;position:sticky;top:56px;z-index:20;align-items:center;gap:.75rem;margin:-12px -.9rem 1rem;padding:.7rem .9rem;background:rgba(9,7,22,.94);border-bottom:1px solid rgba(192,132,252,.10);backdrop-filter:blur(12px)}
+  .mobile-back{width:38px;height:38px;border-radius:12px;border:1px solid rgba(192,132,252,.18);background:rgba(255,255,255,.04);color:var(--texte);font-size:1.6rem;line-height:1;cursor:pointer}
+  .mobile-module-kicker{font-size:.54rem;letter-spacing:.18em;color:var(--violet-cl);font-weight:800}
+  .mobile-module-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--texte);line-height:1.1;margin-top:.12rem}
+  .bloc,.profils-bloc,.rapport-bloc,.planetes-tableau,.resultats{border-radius:15px!important;padding:.95rem!important}
+  .grand-titre{font-size:1.65rem!important}
+  .grand-sous{font-size:.68rem!important}
+  .btn-principal{min-height:48px;border-radius:13px!important;font-size:.78rem!important;letter-spacing:.08em!important;padding:.82rem 1rem!important}
+  .btn-retour{min-height:44px;border-radius:12px!important;letter-spacing:.07em!important;width:100%;margin-top:.55rem!important}
+  .champ-input,select.champ-input,textarea.champ-input{min-height:46px;border-radius:12px!important;font-size:16px!important}
+
+  .mobile-bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:1000;height:calc(64px + env(safe-area-inset-bottom));padding:5px 5px env(safe-area-inset-bottom);background:rgba(8,6,20,.97);border-top:1px solid rgba(192,132,252,.14);box-shadow:0 -10px 30px rgba(0,0,0,.25);backdrop-filter:blur(18px)}
+  .mobile-nav-item{border:0;background:transparent;color:#817892;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:12px;cursor:pointer;font-family:'Lato',sans-serif}
+  .mobile-nav-item>span{font-size:1.18rem;line-height:1}
+  .mobile-nav-item small{font-size:.55rem;font-weight:700;letter-spacing:.02em}
+  .mobile-nav-item.actif{color:#d8b4fe;background:rgba(124,58,237,.10)}
+
+  .ev-hero-title{font-size:1.65rem;text-align:left;margin-top:0}
+  .ev-hero-sub{text-align:left;font-size:.79rem;margin-bottom:1rem}
+  .ev-section-titre{text-align:left!important;font-size:.72rem!important;letter-spacing:.12em!important;margin-top:1.1rem!important}
+  .ev-card{border-radius:16px!important;padding:.95rem!important;margin-bottom:.75rem!important}
+  .ev-card-header{align-items:flex-start!important;gap:.55rem!important;flex-wrap:wrap}
+  .ev-card-titre{font-size:1.05rem!important;line-height:1.2;flex:1 1 180px}
+  .ev-meta-grid{grid-template-columns:1fr 1fr}
+  .ev-card-desc{font-size:.84rem!important;line-height:1.55!important}
+  .ev-cycle{border-radius:14px!important;padding:.85rem!important}
+  .footer{display:none!important}
+}
+
+@media (min-width:701px){
+  .mobile-bottom-nav{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -980,20 +1086,31 @@ select.champ-input, select.profils-select {
 
 <!-- SERVICES -->
 <section class="services" id="section-services">
-  <div class="services-titre">Ce que vous découvrez</div>
+  <div class="mobile-home-kicker">VOTRE ESPACE PERSONNEL</div><div class="services-titre">Que souhaitez-vous explorer ?</div>
+  <div class="mobile-welcome" id="mobile-welcome">
+    <div class="mobile-welcome-top">
+      <div>
+        <div class="mobile-welcome-eyebrow">ASTRO PAQUITA</div>
+        <div class="mobile-welcome-title" id="mobile-welcome-title">Votre espace astrologique</div>
+      </div>
+      <span class="mobile-plan-badge" id="mobile-plan-badge">GRATUIT</span>
+    </div>
+    <div class="mobile-welcome-text" id="mobile-welcome-text">Votre portrait, votre journée et vos grandes périodes au même endroit.</div>
+    <button class="mobile-today-btn" onclick="mobileOuvrirAujourdhui()"><span>☽</span><span><strong>Ma prévision du jour</strong><small>Voir le climat d’aujourd’hui</small></span><b>›</b></button>
+  </div>
   <div class="services-grille">
     <div class="service-card" onclick="irVersModule('natal')">
       <span class="service-badge badge-gratuit">Gratuit</span>
       <span class="service-icone">☉</span>
-      <div class="service-nom">Portrait natal</div>
-      <div class="service-desc">Qui vous êtes vraiment, dès votre naissance.</div>
+      <div class="service-nom">Mon portrait</div>
+      <div class="service-desc">Vos forces, vos besoins et votre fonctionnement profond.</div>
       <div class="service-lien">Découvrir →</div>
     </div>
     <div class="service-card" onclick="irVersModule('prev')">
       <span class="service-badge badge-gratuit">Gratuit aujourd'hui</span>
       <span class="service-icone">☽</span>
       <div class="service-nom">Prévisions</div>
-      <div class="service-desc">Semaine, mois, année : ce qui vous attend.</div>
+      <div class="service-desc">Aujourd’hui gratuitement, puis vos périodes futures.</div>
       <div class="service-lien">Découvrir →</div>
     </div>
     <div class="service-card" onclick="irVersModule('fenetre')">
@@ -1006,8 +1123,8 @@ select.champ-input, select.profils-select {
     <div class="service-card" onclick="irVersModule('evenements')">
       <span class="service-badge badge-premium">Premium</span>
       <span class="service-icone">⚡</span>
-      <div class="service-nom">Événements</div>
-      <div class="service-desc">Les grands cycles qui marquent votre vie.</div>
+      <div class="service-nom">Grands événements</div>
+      <div class="service-desc">Les périodes structurantes de vos 24 prochains mois.</div>
       <div class="service-lien">Découvrir →</div>
     </div>
     <div class="service-card" style="grid-column: 1 / -1;" onclick="irVersModule('question')">
@@ -1020,8 +1137,8 @@ select.champ-input, select.profils-select {
     <div class="service-card" style="grid-column: 1 / -1;" onclick="irVersModule('synastrie')">
       <span class="service-badge badge-premium">Premium</span>
       <span class="service-icone">♥</span>
-      <div class="service-nom">Synastrie</div>
-      <div class="service-desc">Comparez vos deux thèmes et repérez les périodes fortes de votre relation.</div>
+      <div class="service-nom">Mes relations</div>
+      <div class="service-desc">Couple, famille, amitié ou professionnel : analysez un lien sans mélange de contexte.</div>
       <div class="service-lien">Découvrir →</div>
     </div>
   </div>
@@ -1092,6 +1209,13 @@ select.champ-input, select.profils-select {
 
 <!-- SECTION MODULES -->
 <section class="section-modules" id="section-modules">
+  <div class="mobile-module-head">
+    <button class="mobile-back" onclick="retourAccueil()" aria-label="Retour à l’accueil">‹</button>
+    <div>
+      <div class="mobile-module-kicker">ASTRO PAQUITA</div>
+      <div class="mobile-module-title" id="mobile-module-title">Mon espace</div>
+    </div>
+  </div>
   <div class="modules-onglets">
     <div class="modules-onglets-row">
       <button class="mod-onglet" onclick="switchMod('natal',this)">
@@ -1322,11 +1446,14 @@ select.champ-input, select.profils-select {
       <div class="erreur" id="ev-err"></div>
     </div>
     <div id="ev-res" style="display:none">
-      <div class="ev-section-titre">⚡ Prochains événements majeurs</div>
+      <div class="ev-hero-title">Mes grands événements</div>
+      <div class="ev-hero-sub">Les périodes structurantes des 24 prochains mois — sans répétition mensuelle.</div>
+      <div class="ev-section-titre">⚡ Événements majeurs</div>
       <div id="ev-alertes"></div>
       <div class="ev-section-titre">🌀 Mes grands cycles actuels</div>
       <div id="ev-cycles"></div>
-      <div class="ev-section-titre">📅 Les 24 prochains mois</div>
+      <div class="ev-section-titre">📍 Repères dans le temps</div>
+      <div class="ev-timeline-help">Seuls le début, les pics et la fin de chaque grande période sont affichés.</div>
       <div id="ev-calendrier"></div>
       <div class="rapport-bloc" style="margin-top:1rem">
         <div class="rapport-bloc-titre">Lecture globale de ta période</div>
@@ -1780,6 +1907,52 @@ async function gererRetourPackQuestions() {
   history.replaceState({}, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
 }
 
+
+// ============================================================
+// ASTRO PAQUITA — NAVIGATION MOBILE PRO
+// ============================================================
+const MOBILE_TITRES = {
+  natal:'Mon portrait', prev:'Mes prévisions', fenetre:'Fenêtre idéale',
+  evenements:'Grands événements', question:'Ma question', synastrie:'Mes relations'
+};
+
+function majMobileAccueil() {
+  const titre = document.getElementById('mobile-welcome-title');
+  const txt = document.getElementById('mobile-welcome-text');
+  const badge = document.getElementById('mobile-plan-badge');
+  if (!titre || !txt || !badge) return;
+  const prenom = (USER && USER.prenom) || (USER_CONNECTE && USER_CONNECTE.prenom) || '';
+  titre.textContent = prenom ? `Bonjour ${prenom} ✦` : 'Votre espace astrologique';
+  badge.textContent = PREMIUM ? 'PREMIUM' : 'GRATUIT';
+  const credits = USER_CONNECTE ? Number(USER_CONNECTE.question_credits || 0) : null;
+  txt.textContent = credits === null
+    ? 'Votre portrait, votre journée et vos grandes périodes au même endroit.'
+    : `Votre portrait, vos prévisions et vos grandes périodes au même endroit · ${credits} question${credits===1?'':'s'} disponible${credits===1?'':'s'}.`;
+}
+
+function majMobileNav(id='home') {
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.toggle('actif', b.dataset.mobileNav === id));
+}
+
+function majMobileTitreModule(id) {
+  const el = document.getElementById('mobile-module-title');
+  if (el) el.textContent = MOBILE_TITRES[id] || 'Mon espace';
+}
+
+function mobileNaviguer(id) {
+  if (id === 'home') { retourAccueil(); return; }
+  if (id === 'compte') { majMobileNav('compte'); ouvrirCompte(); return; }
+  irVersModule(id);
+}
+
+function mobileOuvrirAujourdhui() {
+  irVersModule('prev');
+  setTimeout(() => {
+    const btn = document.querySelector('#p-form .per-btn[onclick*="aujourdhui"]');
+    if (btn) selP('p','aujourdhui',btn);
+  }, 120);
+}
+
 // ============================================================
 // NAVIGATION
 // ============================================================
@@ -1906,6 +2079,8 @@ function irVersModule(id) {
     document.getElementById('section-modules').scrollIntoView({ behavior: 'smooth' });
     const onglet = document.querySelector(`.mod-onglet[onclick*="'${id}'"]`);
     switchMod(id, onglet);
+    majMobileTitreModule(id);
+    majMobileNav(['prev','synastrie','question'].includes(id) ? id : 'home');
   } else {
     scrollVersSaisie();
   }
@@ -1926,6 +2101,13 @@ function afficherVitrine() {
 }
 
 function retourAccueil() {
+  afficherVitrine();
+  const modules = document.getElementById('section-modules');
+  const saisie = document.getElementById('section-saisie');
+  if (modules) modules.classList.remove('visible');
+  if (saisie) saisie.classList.remove('visible');
+  majMobileNav('home');
+  majMobileAccueil();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1938,6 +2120,8 @@ function modifierSaisie() {
 
 function switchMod(id, el) {
   if (!verifierAccesModulePremium(id)) return;
+  majMobileTitreModule(id);
+  majMobileNav(['prev','synastrie','question'].includes(id) ? id : 'home');
   document.querySelectorAll('.mod-panneau').forEach(p => p.classList.remove('actif'));
   document.querySelectorAll('.mod-onglet').forEach(o => o.classList.remove('actif'));
   document.getElementById('mod-' + id).classList.add('actif');
@@ -6419,6 +6603,15 @@ async function analyserPrevisionsSynastrie() {
 }
 
 
+function evTendance(e) {
+  if (e.type === 'positif') return {classe:'favorable', icone:'🟢', label:'Favorable'};
+  if (e.type === 'negatif') return {classe:'difficile', icone:'🔴', label:'Difficile / vigilance'};
+  return {classe:'mixte', icone:'🟠', label:'Mixte / transformation'};
+}
+function evIntensite(force) {
+  return force >= 9 ? 'Majeure' : force >= 7 ? 'Forte' : 'Modérée';
+}
+
 async function genererEvenements() {
   if (!USER) return;
   if (!PREMIUM) { ouvrirCompte(); return; }
@@ -6702,14 +6895,21 @@ async function genererEvenements() {
     alertes.forEach(e => {
       const joursStr = e.joursRestants === 0 ? 'Influence déjà active ou démarrant aujourd’hui' : e.joursRestants <= 30 ? `Début dans ${e.joursRestants} jours` : `Début dans environ ${Math.round(e.joursRestants/30)} mois`;
       const picsTxt = (e.pics || [e.date]).map(fmtDate).join(' · ');
+      const tendance = evTendance(e);
+      const intensite = evIntensite(e.force);
       alertesEl.innerHTML += `<div class="ev-card ${e.type}">
         <div class="ev-card-header">
           <div class="ev-card-titre">${e.nom}</div>
-          <span class="ev-card-badge badge-${e.type}">${e.type === 'positif' ? '✦ FAVORABLE' : e.type === 'critique' ? '⚡ MAJEUR' : '⚠ VIGILANCE'}</span>
+          <span class="ev-trend ${tendance.classe}">${tendance.icone} ${tendance.label}</span>
         </div>
-        <div class="ev-card-date"><strong>Début :</strong> ${fmtDate(e.dateDebut)} &nbsp;→&nbsp; <strong>Fin :</strong> ${fmtDate(e.dateFin)}</div>
+        <div class="ev-meta-grid">
+          <div class="ev-meta-pill"><small>Intensité</small><strong>${intensite}</strong></div>
+          <div class="ev-meta-pill"><small>Domaine</small><strong>${e.domaine}</strong></div>
+          <div class="ev-meta-pill"><small>Début</small><strong>${fmtDate(e.dateDebut)}</strong></div>
+          <div class="ev-meta-pill"><small>Fin</small><strong>${fmtDate(e.dateFin)}</strong></div>
+        </div>
         <div class="ev-card-date"><strong>${(e.pics||[]).length > 1 ? 'Pics' : 'Pic'} :</strong> ${picsTxt}</div>
-        <div class="ev-card-desc"><strong>${e.domaine}</strong> — ${e.desc}</div>
+        <div class="ev-card-desc">${e.desc}</div>
         <div class="ev-card-compte">${joursStr}</div>
       </div>`;
     });
@@ -6736,26 +6936,37 @@ async function genererEvenements() {
 
   const calEl = document.getElementById('ev-calendrier');
   calEl.innerHTML = '';
-  const moisTries = Object.keys(moisEv).sort();
-  if (!moisTries.length) {
-    calEl.innerHTML = '<div class="ev-card neutre"><div class="ev-card-desc">Aucun pic majeur repéré sur l’horizon analysé.</div></div>';
+  const jalons = [];
+  alertes.forEach(e => {
+    jalons.push({date:e.dateDebut, kind:'debut', nom:e.nom, tendance:evTendance(e)});
+    (e.pics || [e.date]).forEach(pic => jalons.push({date:pic, kind:'pic', nom:e.nom, tendance:evTendance(e)}));
+    jalons.push({date:e.dateFin, kind:'fin', nom:e.nom, tendance:evTendance(e)});
+  });
+  jalons.sort((a,b)=>a.date-b.date || ({debut:0,pic:1,fin:2}[a.kind]-{debut:0,pic:1,fin:2}[b.kind]));
+  // Dédupliquer les repères strictement identiques (même événement, même date, même nature)
+  const vus = new Set();
+  const uniques = jalons.filter(j => {
+    const k = `${j.nom}|${j.kind}|${j.date.toISOString().slice(0,10)}`;
+    if (vus.has(k)) return false;
+    vus.add(k); return true;
+  });
+  if (!uniques.length) {
+    calEl.innerHTML = '<div class="ev-card neutre"><div class="ev-card-desc">Aucun repère majeur sur l’horizon analysé.</div></div>';
   } else {
-    moisTries.forEach(cle => {
-      const evs = moisEv[cle];
-      const [annee, moisNum] = cle.split('-').map(Number);
-      const labelMois = new Date(annee, moisNum-1, 1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-      const plusForce = [...evs].sort((a,b)=>b.force-a.force)[0];
-      calEl.innerHTML += `<div class="ev-card ${plusForce.type}" style="margin-bottom:0.5rem">
-        <div class="ev-card-date" style="font-size:0.95rem;font-weight:700">${labelMois.charAt(0).toUpperCase()+labelMois.slice(1)}</div>
-        ${[...new Map(evs.map(e=>[e.nom,e])).values()].map(e=>`<div class="ev-card-titre" style="margin-bottom:0.2rem">· ${e.nom}</div>`).join('')}
-      </div>`;
-    });
+    const libKind = {debut:'Début de l’influence', pic:'Pic de l’influence', fin:'Fin de l’influence'};
+    calEl.innerHTML = '<div class="ev-timeline">' + uniques.map(j => `
+      <div class="ev-timeline-item">
+        <span class="ev-timeline-dot ${j.kind === 'pic' ? 'pic' : j.kind === 'fin' ? 'fin' : ''}"></span>
+        <div class="ev-timeline-date">${fmtDate(j.date)}</div>
+        <div class="ev-timeline-title">${j.nom}</div>
+        <div class="ev-timeline-kind">${libKind[j.kind]} · ${j.tendance.icone} ${j.tendance.label}</div>
+      </div>`).join('') + '</div>';
   }
 
   // ── 5. PROMPT IA ──────────────────────────────────────────────
   const resumeEv = alertes.slice(0,6).map(e => {
     const pics = (e.pics || [e.date]).map(fmtDate).join(', ');
-    return `${e.nom} — influence du ${fmtDate(e.dateDebut)} au ${fmtDate(e.dateFin)} — pic(s) : ${pics} — ${e.desc}`;
+    return `${e.nom} — tendance : ${evTendance(e).label} — intensité : ${evIntensite(e.force)} — influence du ${fmtDate(e.dateDebut)} au ${fmtDate(e.dateFin)} — pic(s) : ${pics} — ${e.desc}`;
   }).join('\n');
   const prompt = `Voici les événements astrologiques majeurs qui touchent ${USER.prenom} dans les 24 prochains mois :
 
@@ -6769,9 +6980,9 @@ Cycles actuels :
 Rédige une lecture globale en 5-7 phrases qui :
 1. Résume le ton général des 24 prochains mois pour ${USER.prenom}
 2. Met en avant les 2 ou 3 événements les plus importants
-3. Pour chacun, cite clairement le début, le ou les pics et la fin de l'influence
-4. Explique concrètement ce que ces périodes peuvent représenter dans la vie réelle
-5. Donne le conseil le plus utile pour traverser ou exploiter ces périodes
+3. Pour chacun, indique clairement s'il est favorable, difficile ou mixte/transformation, ainsi que son intensité
+4. Cite clairement le début, le ou les pics et la fin de l'influence
+5. Explique concrètement ce que ces périodes peuvent représenter dans la vie réelle et donne le conseil le plus utile pour les traverser ou les exploiter
 
 Parle directement à ${USER.prenom} en "tu". Aucun jargon astrologique. Ne transforme jamais une possibilité astrologique en certitude factuelle.`;
 
@@ -7196,6 +7407,19 @@ try {
   }
 } catch(e) {}
 
+
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => { majMobileAccueil(); majMobileNav('home'); }, 250);
+});
 </script>
+
+<nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Navigation principale">
+  <button class="mobile-nav-item actif" data-mobile-nav="home" onclick="mobileNaviguer('home')"><span>⌂</span><small>Accueil</small></button>
+  <button class="mobile-nav-item" data-mobile-nav="prev" onclick="mobileNaviguer('prev')"><span>☽</span><small>Prévisions</small></button>
+  <button class="mobile-nav-item" data-mobile-nav="synastrie" onclick="mobileNaviguer('synastrie')"><span>♡</span><small>Relations</small></button>
+  <button class="mobile-nav-item" data-mobile-nav="question" onclick="mobileNaviguer('question')"><span>✦</span><small>Question</small></button>
+  <button class="mobile-nav-item" data-mobile-nav="compte" onclick="mobileNaviguer('compte')"><span>◎</span><small>Compte</small></button>
+</nav>
 </body>
 </html>
