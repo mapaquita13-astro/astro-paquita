@@ -1,4 +1,5 @@
-const CACHE_NAME = 'astro-paquita-v33';
-self.addEventListener('install', event => { self.skipWaiting(); });
-self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
-self.addEventListener('fetch', event => { if (event.request.mode === 'navigate') { event.respondWith(fetch(event.request, {cache:'no-store'}).catch(() => caches.match(event.request))); return; } event.respondWith(fetch(event.request).catch(() => caches.match(event.request))); });
+/* ASTRO PAQUITA V34 — cache refresh */
+const VERSION='astro-paquita-luxe-v34-20260811';
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',event=>event.waitUntil((async()=>{const names=await caches.keys();await Promise.all(names.map(n=>caches.delete(n)));await self.clients.claim();})()));
+self.addEventListener('fetch',event=>{const r=event.request;if(r.method!=='GET')return;if(r.mode==='navigate'||r.destination==='document'){event.respondWith(fetch(r,{cache:'no-store'}).catch(()=>caches.match(r)));return;}event.respondWith(fetch(r).catch(()=>caches.match(r)));});
