@@ -1086,7 +1086,7 @@ select.champ-input, select.profils-select {
 
 <!-- SERVICES -->
 <section class="services" id="section-services">
-  <div class="mobile-home-kicker">VOTRE ESPACE PERSONNEL</div><div class="services-titre">Que souhaitez-vous explorer ?</div>
+  <div class="mobile-home-kicker">ASTRO PAQUITA · MOBILE PRO V27</div><div class="services-titre">Que souhaitez-vous explorer ?</div>
   <div class="mobile-welcome" id="mobile-welcome">
     <div class="mobile-welcome-top">
       <div>
@@ -7368,10 +7368,13 @@ function annulerSuppression() {
 chargerStatutCompte().then(() => gererRetourPackQuestions()).catch(() => {});
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch((err) => {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js?v=mobile-pro-v27', { updateViaCache: 'none' });
+      await reg.update();
+    } catch (err) {
       console.warn('Service worker non enregistré :', err);
-    });
+    }
   });
 }
 

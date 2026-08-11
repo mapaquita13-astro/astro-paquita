@@ -1,56 +1,33 @@
-// Service Worker — Astro Paquita
-// Stratégie : cache-first pour l'app shell, avec mise à jour en arrière-plan.
+/* ASTRO PAQUITA — Service Worker Mobile Pro V27
+   Objectif : éviter qu'une ancienne version de index.html reste figée sur mobile. */
+const VERSION = 'astro-paquita-mobile-pro-v27-20260811';
 
-const CACHE_NAME = 'astro-paquita-v1';
-const APP_SHELL = [
-  './index.html',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-512-maskable.png',
-  './icons/apple-touch-icon.png'
-];
-
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const names = await caches.keys();
+    await Promise.all(names.map((name) => caches.delete(name)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
+  const request = event.request;
+  if (request.method !== 'GET') return;
 
-  // Ne pas intercepter les requêtes vers d'autres domaines (CDN polices, luxon, API backend)
-  const url = new URL(request.url);
-  if (url.origin !== self.location.origin) {
-    return; // laisse passer normalement (réseau), pas de cache
+  // Toujours aller au réseau pour les pages HTML/navigation afin de récupérer la dernière version.
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' }).catch(() => caches.match(request))
+    );
+    return;
   }
 
+  // Pour les autres ressources : réseau d'abord, cache uniquement en secours.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached); // hors-ligne : retombe sur le cache
-
-      return cached || network;
-    })
+    fetch(request).catch(() => caches.match(request))
   );
 });
