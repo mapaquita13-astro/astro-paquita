@@ -1461,6 +1461,145 @@ a{color:var(--cab-plum2)}
   .section-saisie{background:var(--m30-cream)!important;padding:22px 16px 82px!important}.section-saisie .bloc,.section-saisie .profils-bloc{background:var(--m30-paper)!important;border:1px solid var(--m30-line)!important;border-radius:12px!important;box-shadow:var(--m30-shadow)!important}
 }
 </style>
+
+<style id="astro-paquita-v33-css">
+/* ============================================================
+   ASTRO PAQUITA V33 — ERGONOMIE GLOBALE PC + MOBILE
+   Profils visibles, navigation directe, textes lisibles
+   ============================================================ */
+:root{
+  --v33-plum:#4a1a63;
+  --v33-plum-dark:#35103f;
+  --v33-gold:#c89c55;
+  --v33-cream:#f7efe3;
+  --v33-paper:#fffaf3;
+  --v33-ink:#3d2b39;
+  --v33-muted:#76656f;
+  --v33-line:#dfcfbb;
+}
+html{font-size:18px!important}
+body{font-size:17px!important;line-height:1.62!important}
+button,input,select,textarea{font-size:17px!important;line-height:1.35!important}
+.header-btn{font-size:.78rem!important;letter-spacing:.08em!important}
+.service-nom,.bloc-titre,.rapport-bloc-titre,.ev-card-titre{font-size:1.08rem!important}
+.service-desc,.rapport-texte,.ev-card-desc,.coords-info,.profils-msg,.progress-label,.hist-item-question{font-size:.92rem!important;line-height:1.62!important}
+.champ-label{font-size:.88rem!important;letter-spacing:.02em!important}
+.champ-input,.profils-select,select.champ-input,textarea.champ-input{font-size:1rem!important;min-height:50px!important}
+.btn-principal,.btn-profil,.btn-retour,.dom-btn,.per-btn,.f-btn,.genre-btn{font-size:.9rem!important;min-height:48px!important}
+.grand-sous,.res-sous{font-size:.84rem!important}
+.mod-onglet-label{font-size:.82rem!important}
+.service-lien{opacity:1!important;font-size:.72rem!important}
+
+/* Barre permanente sous le header */
+#v33-topbar{
+  position:sticky;top:56px;z-index:1900;
+  background:rgba(255,250,243,.985);
+  border-bottom:1px solid var(--v33-line);
+  box-shadow:0 5px 18px rgba(59,31,49,.08);
+  color:var(--v33-ink);
+}
+.v33-profile-strip,.v33-main-nav{
+  width:min(1400px,100%);margin:0 auto;display:flex;align-items:center;
+  gap:9px;padding:8px 16px;overflow-x:auto;scrollbar-width:thin;
+}
+.v33-profile-strip{border-bottom:1px solid rgba(201,166,114,.24)}
+.v33-strip-label{font-family:'Cormorant Garamond',Georgia,serif;font-size:1rem;font-weight:700;color:var(--v33-plum);white-space:nowrap;margin-right:2px}
+.v33-profile-chips{display:flex;align-items:center;gap:7px;min-width:max-content}
+.v33-profile-chip{
+  border:1px solid #d7c2a4;background:#fffdf8;color:#4c3948;border-radius:999px;
+  padding:7px 12px;min-height:40px;font-family:'Lato',sans-serif;font-size:.82rem!important;font-weight:700;cursor:pointer;white-space:nowrap;
+}
+.v33-profile-chip.actif{background:var(--v33-plum);color:#fff8ed;border-color:var(--v33-plum);box-shadow:0 3px 10px rgba(74,26,99,.18)}
+.v33-profile-chip.add{background:#fff3dc;color:#754f1e;border-color:#d9b276;font-size:.9rem!important}
+.v33-main-nav{padding-top:7px;padding-bottom:8px}
+.v33-nav-btn{
+  border:0;background:transparent;color:#554450;border-radius:10px;padding:7px 11px;
+  font-family:'Cormorant Garamond',Georgia,serif;font-size:.92rem!important;font-weight:700;cursor:pointer;white-space:nowrap;min-height:42px;
+}
+.v33-nav-btn:hover,.v33-nav-btn.actif{background:#f0e2cf;color:var(--v33-plum)}
+.v33-nav-btn.premium::after{content:' ✦';color:var(--v33-gold)}
+#quick-profile-chip{display:none!important}
+.modules-onglets{display:none!important}
+
+/* Tableau de bord de l'espace : aucune génération obligatoire */
+#v33-space-dashboard{display:none;padding:18px 18px 28px;max-width:1100px;margin:0 auto;color:var(--v33-ink)}
+#v33-space-dashboard.visible{display:block}
+.v33-space-head{background:linear-gradient(135deg,var(--v33-plum-dark),var(--v33-plum));color:#fff8ef;border-radius:18px;padding:22px 24px;margin-bottom:16px;box-shadow:0 10px 24px rgba(65,27,68,.15)}
+.v33-space-kicker{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#e9c98d;font-weight:700}
+.v33-space-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:2rem;line-height:1.08;margin-top:4px}
+.v33-space-sub{font-size:.92rem;color:#f0dfec;margin-top:6px}
+.v33-space-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v33-space-card{border:1px solid var(--v33-line);background:var(--v33-paper);border-radius:15px;padding:17px;text-align:left;color:var(--v33-ink);cursor:pointer;box-shadow:0 4px 12px rgba(60,34,47,.06);min-height:135px}
+.v33-space-card:hover{transform:translateY(-1px);border-color:#c69e66}
+.v33-space-icon{width:43px;height:43px;border-radius:12px;background:var(--v33-plum);color:#f2d39a;display:grid;place-items:center;font-size:1.25rem;margin-bottom:9px}
+.v33-space-card strong{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.18rem;color:var(--v33-plum-dark);margin-bottom:4px}
+.v33-space-card span{display:block;font-size:.84rem;line-height:1.45;color:var(--v33-muted)}
+.v33-space-note{margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff7e9;border:1px solid #e4cda8;color:#694e61;font-size:.83rem}
+.v33-edit-profile{margin-top:14px;border:1px solid #cba770;background:#fffaf2;color:#5b334e;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+
+/* Formulaire de profil : plus clair */
+#section-saisie .grand-titre{font-size:2.25rem!important}
+#section-saisie .bloc,#section-saisie .profils-bloc{padding:1.25rem!important}
+#section-saisie .profils-titre{font-size:.9rem!important}
+#section-saisie .profils-row-btns{gap:.7rem}
+
+/* La maquette mobile reste élégante mais devient lisible */
+.v30-brand-name{font-size:1.35rem!important}
+.v30-brand-sub{font-size:.78rem!important;line-height:1.35!important}
+.v30-pred-title{font-size:1.45rem!important}
+.v30-pred-text{font-size:.92rem!important;line-height:1.55!important}
+.v30-gold-btn{font-size:.86rem!important;min-height:46px!important}
+.v30-home-card h3{font-size:1.18rem!important}
+.v30-home-card p{font-size:.86rem!important;line-height:1.45!important}
+.v30-nav-btn,.v30-nav-btn small{font-size:.72rem!important}
+.v30-event-row,.v30-event-link,.v30-profile-sub,.v30-rel-card small{font-size:.78rem!important;line-height:1.45!important}
+.v30-table{font-size:.72rem!important}
+.v30-table th,.v30-table td{padding:10px 7px!important}
+.v32-profile-meta,.v32-avenir-item small{font-size:.78rem!important}
+.v32-profile-name,.v32-avenir-item strong{font-size:1.08rem!important}
+
+@media print{#v33-topbar,#v33-space-dashboard{display:none!important}}
+@media(max-width:900px){
+  html{font-size:17px!important}
+  body{font-size:16.5px!important}
+  .v33-profile-strip,.v33-main-nav{padding-left:10px;padding-right:10px}
+  .v33-strip-label{font-size:.92rem}
+  .v33-profile-chip{font-size:.8rem!important;padding:7px 10px}
+  .v33-main-nav{gap:5px}
+  .v33-nav-btn{font-size:.88rem!important;padding:7px 9px}
+  .v33-space-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  html{font-size:17px!important}
+  body{font-size:17px!important}
+  #v33-topbar{top:56px}
+  .v33-profile-strip{padding-top:7px;padding-bottom:6px}
+  .v33-main-nav{padding-top:5px;padding-bottom:6px}
+  .v33-strip-label{display:none}
+  .v33-profile-chip{min-height:38px;font-size:.8rem!important}
+  .v33-nav-btn{min-height:40px;font-size:.82rem!important;background:#fffaf3;border:1px solid #eadcc9}
+  #v33-space-dashboard{padding:12px 11px calc(88px + env(safe-area-inset-bottom))}
+  .v33-space-head{padding:18px;border-radius:15px}
+  .v33-space-title{font-size:1.75rem}
+  .v33-space-sub{font-size:.88rem}
+  .v33-space-grid{grid-template-columns:1fr;gap:9px}
+  .v33-space-card{min-height:0;padding:14px;display:grid;grid-template-columns:46px 1fr;column-gap:11px;align-items:center}
+  .v33-space-icon{grid-row:1/3;margin:0}
+  .v33-space-card strong{font-size:1.08rem}
+  .v33-space-card span{font-size:.84rem}
+  .section-modules{padding-top:0!important}
+  .mobile-module-head{top:160px!important;padding-right:.9rem!important}
+  .grand-titre{font-size:1.9rem!important}
+  .grand-sous{font-size:.82rem!important}
+  .service-desc,.rapport-texte,.ev-card-desc,.coords-info,.hist-item-question{font-size:.94rem!important}
+  .ev-card-date,.ev-card-compte{font-size:.82rem!important}
+  .champ-label{font-size:.9rem!important}
+  .btn-principal,.btn-profil,.btn-retour,.dom-btn,.per-btn,.f-btn,.genre-btn{font-size:.92rem!important}
+  #v30-nav{z-index:1850!important}
+  .v30-pred-text{font-size:.96rem!important}
+  .v30-home-card p{font-size:.9rem!important}
+}
+</style>
 </head>
 <body>
 
@@ -1475,14 +1614,64 @@ a{color:var(--cab-plum2)}
   </div>
   <button class="header-btn" id="btn-compte" onclick="ouvrirCompte()" style="background:linear-gradient(135deg,#a8792e,#c9a84c)">🔑 Connexion</button>
   <button class="header-btn" id="btn-install-pwa" onclick="installerAppPWA()" style="display:none">📲 Installer</button>
-  <button class="header-btn" onclick="scrollVersSaisie()">✦ Commencer</button>
+  <button class="header-btn" onclick="v33AccederEspace()">✦ Mon espace</button>
 </header>
+<div id="v33-topbar" aria-label="Navigation et profils">
+  <div class="v33-profile-strip">
+    <div class="v33-strip-label">Profils</div>
+    <div class="v33-profile-chips" id="v33-profile-chips"></div>
+  </div>
+  <nav class="v33-main-nav" aria-label="Accès direct">
+    <button class="v33-nav-btn" data-v33="home" onclick="retourAccueil()">Accueil</button>
+    <button class="v33-nav-btn" data-v33="space" onclick="v33AccederEspace()">Mon espace</button>
+    <button class="v33-nav-btn" data-v33="natal" onclick="v33OuvrirModule('natal')">Portrait</button>
+    <button class="v33-nav-btn" data-v33="prev" onclick="v33OuvrirModule('prev')">Prévisions</button>
+    <button class="v33-nav-btn premium" data-v33="evenements" onclick="v33OuvrirModule('evenements')">Événements</button>
+    <button class="v33-nav-btn premium" data-v33="fenetre" onclick="v33OuvrirModule('fenetre')">Fenêtre 10 ans</button>
+    <button class="v33-nav-btn premium" data-v33="synastrie" onclick="v33OuvrirModule('synastrie')">Relations</button>
+    <button class="v33-nav-btn" data-v33="question" onclick="v33OuvrirModule('question')">Question</button>
+  </nav>
+</div>
+
+
+<button class="quick-profile-chip" id="quick-profile-chip" onclick="ouvrirProfilsRapides()" aria-label="Changer de profil">
+  <span class="qp-avatar" id="qp-avatar">✦</span>
+  <span class="qp-copy"><span class="qp-label">Profil actif</span><span class="qp-name" id="qp-name">Choisir un profil</span></span>
+  <span class="qp-arrow">⌄</span>
+</button>
+
+<div class="v32-sheet-overlay" id="v32-profile-overlay" onclick="if(event.target===this)fermerProfilsRapides()">
+  <div class="v32-sheet" role="dialog" aria-modal="true" aria-label="Changer de profil">
+    <button class="v32-sheet-close" onclick="fermerProfilsRapides()">×</button>
+    <div class="v32-sheet-handle"></div>
+    <div class="v32-sheet-title">Changer de profil</div>
+    <div class="v32-sheet-sub">Touchez un profil pour l'utiliser immédiatement</div>
+    <div class="v32-profile-list" id="v32-profile-list"></div>
+    <button class="v32-new-profile" onclick="nouveauProfilRapide()">＋ Ajouter un nouveau profil</button>
+  </div>
+</div>
+
+<div class="v32-sheet-overlay" id="v32-avenir-overlay" onclick="if(event.target===this)fermerAvenirRapide()">
+  <div class="v32-sheet" role="dialog" aria-modal="true" aria-label="Mon avenir">
+    <button class="v32-sheet-close" onclick="fermerAvenirRapide()">×</button>
+    <div class="v32-sheet-handle"></div>
+    <div class="v32-sheet-title">Mon avenir</div>
+    <div class="v32-sheet-sub">Choisissez ce que vous voulez explorer</div>
+    <div class="v32-avenir-grid">
+      <button class="v32-avenir-item" onclick="choisirAvenirRapide('prev')"><span class="v32-avenir-icon">☽</span><span><strong>Mes prévisions</strong><small>Aujourd'hui, semaine, mois, trimestre, année ou date précise</small></span><span class="v32-avenir-arrow">›</span></button>
+      <button class="v32-avenir-item" onclick="choisirAvenirRapide('evenements')"><span class="v32-avenir-icon">✦</span><span><strong>Mes grands événements</strong><small>Les tournants majeurs des 24 prochains mois</small></span><span class="v32-avenir-arrow">›</span></button>
+      <button class="v32-avenir-item" onclick="choisirAvenirRapide('fenetre')"><span class="v32-avenir-icon">◎</span><span><strong>Fenêtre idéale</strong><small>Les meilleures périodes sur les 10 prochaines années</small></span><span class="v32-avenir-arrow">›</span></button>
+    </div>
+  </div>
+</div>
+
 <div class="cabinet-menu-overlay" id="cabinet-menu-overlay" onclick="toggleCabinetMenu(false)"></div>
 <aside class="cabinet-menu-drawer" id="cabinet-menu-drawer" aria-label="Navigation Astro Paquita">
   <div class="cabinet-menu-head">
     <div><span>ASTRO</span><strong>PAQUITA</strong></div>
     <button onclick="toggleCabinetMenu(false)" aria-label="Fermer">×</button>
   </div>
+  <button onclick="ouvrirProfilsRapides();toggleCabinetMenu(false)">☽ Changer de profil</button>
   <button onclick="retourAccueil();toggleCabinetMenu(false)">⌂ Accueil</button>
   <button onclick="irVersModule('natal');toggleCabinetMenu(false)">☉ Votre thème</button>
   <button onclick="irVersModule('prev');toggleCabinetMenu(false)">☽ Vos prévisions</button>
@@ -1653,8 +1842,8 @@ a{color:var(--cab-plum2)}
   </div>
 
   <div class="bloc">
-    <button class="btn-principal" onclick="validerSaisie()">✦ Accéder à mon espace →</button>
-    <button class="btn-profil btn-profil-charger" style="width:100%;margin-top:0.6rem;padding:0.75rem;border-radius:30px" onclick="sauvegarderProfil()">☽ Sauvegarder ce profil</button>
+    <button class="btn-principal" onclick="v33EnregistrerEtOuvrir()">✦ Enregistrer et ouvrir mon espace →</button>
+    <button class="btn-profil btn-profil-charger" style="width:100%;margin-top:0.6rem;padding:0.75rem;border-radius:30px" onclick="sauvegarderProfil();v33RafraichirProfils();">☽ Enregistrer les modifications du profil</button>
   </div>
   <div class="erreur" id="s-erreur"></div>
 </section>
@@ -1668,7 +1857,25 @@ a{color:var(--cab-plum2)}
       <div class="mobile-module-title" id="mobile-module-title">Mon espace</div>
     </div>
   </div>
-  <div class="modules-onglets">
+  
+<div id="v33-space-dashboard">
+  <div class="v33-space-head">
+    <div class="v33-space-kicker">ASTRO PAQUITA · MON ESPACE</div>
+    <div class="v33-space-title" id="v33-space-title">Votre espace astrologique</div>
+    <div class="v33-space-sub" id="v33-space-sub">Choisissez simplement ce que vous souhaitez consulter. Aucun portrait n'est généré automatiquement.</div>
+  </div>
+  <div class="v33-space-grid">
+    <button class="v33-space-card" onclick="v33OuvrirModule('natal')"><span class="v33-space-icon">☉</span><strong>Mon portrait</strong><span>Générer ou consulter votre portrait natal lorsque vous le souhaitez.</span></button>
+    <button class="v33-space-card" onclick="v33OuvrirModule('prev')"><span class="v33-space-icon">☽</span><strong>Mes prévisions</strong><span>Aujourd'hui, semaine, mois, année ou date précise.</span></button>
+    <button class="v33-space-card" onclick="v33OuvrirModule('evenements')"><span class="v33-space-icon">⚡</span><strong>Mes grands événements</strong><span>Les périodes structurantes des 24 prochains mois.</span></button>
+    <button class="v33-space-card" onclick="v33OuvrirModule('fenetre')"><span class="v33-space-icon">◎</span><strong>Fenêtre idéale</strong><span>Rechercher les meilleures périodes sur les 10 prochaines années.</span></button>
+    <button class="v33-space-card" onclick="v33OuvrirModule('synastrie')"><span class="v33-space-icon">♡</span><strong>Mes relations</strong><span>Couple, famille, amitié ou relation professionnelle.</span></button>
+    <button class="v33-space-card" onclick="v33OuvrirModule('question')"><span class="v33-space-icon">✦</span><strong>Ma question</strong><span>Poser une question personnelle à partir de votre thème.</span></button>
+  </div>
+  <div class="v33-space-note">Le changement de profil se fait directement dans la barre <strong>Profils</strong> en haut de l'écran, sur ordinateur comme sur téléphone.</div>
+  <button class="v33-edit-profile" onclick="modifierSaisie()">Modifier les données du profil actif</button>
+</div>
+<div class="modules-onglets">
     <div class="modules-onglets-row">
       <button class="mod-onglet" onclick="switchMod('natal',this)">
         <span class="mod-onglet-icone">☉</span>
@@ -1800,7 +2007,7 @@ a{color:var(--cab-plum2)}
     <div id="f-form">
       <div class="bloc">
         <div class="bloc-titre">✦ Meilleur moment pour…</div>
-        <p style="font-size:0.93rem;color:var(--texte-doux);line-height:1.7;margin-bottom:1rem">Choisissez votre intention. Astro Paquita scanne les 5 prochaines années pour trouver vos fenêtres idéales.</p>
+        <p style="font-size:0.93rem;color:var(--texte-doux);line-height:1.7;margin-bottom:1rem">Choisissez votre intention. Astro Paquita scanne les 10 prochaines années pour trouver vos fenêtres idéales.</p>
         <div class="f-limite-msg" id="f-limite-msg">🔒 La Fenêtre idéale est réservée aux profils Premium.</div>
         <div class="f-intentions" id="f-intentions">
           <button class="f-btn" onclick="selIntent('argent',this)"><span class="f-icone">🎰</span><span class="f-label">Jeux d'argent</span></button>
@@ -2383,7 +2590,9 @@ function majMobileAccueil() {
 }
 
 function majMobileNav(id='home') {
-  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.toggle('actif', b.dataset.mobileNav === id));
+  const map = {prev:'avenir', evenements:'avenir', fenetre:'avenir', synastrie:'relations', compte:'profil'};
+  const cible = map[id] || id;
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.toggle('actif', b.dataset.mobileNav === cible));
 }
 
 function majMobileTitreModule(id) {
@@ -2393,7 +2602,10 @@ function majMobileTitreModule(id) {
 
 function mobileNaviguer(id) {
   if (id === 'home') { retourAccueil(); return; }
-  if (id === 'compte') { majMobileNav('compte'); ouvrirCompte(); return; }
+  if (id === 'avenir') { majMobileNav('avenir'); ouvrirAvenirRapide(); return; }
+  if (id === 'relations') { majMobileNav('relations'); irVersModule('synastrie'); return; }
+  if (id === 'question') { majMobileNav('question'); irVersModule('question'); return; }
+  if (id === 'profil') { majMobileNav('profil'); ouvrirProfilsRapides(); return; }
   irVersModule(id);
 }
 
@@ -2405,6 +2617,119 @@ function mobileOuvrirAujourdhui() {
   }, 120);
 }
 
+
+
+function echapperHTML(s='') {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function majProfilRapideUI() {
+  const nomEl = document.getElementById('qp-name');
+  const avEl = document.getElementById('qp-avatar');
+  if (!nomEl || !avEl) return;
+  const nom = USER && USER.prenom ? USER.prenom : 'Choisir un profil';
+  nomEl.textContent = nom;
+  avEl.textContent = USER && USER.prenom ? USER.prenom.trim().charAt(0).toUpperCase() : '✦';
+}
+
+function ouvrirProfilsRapides() {
+  const overlay = document.getElementById('v32-profile-overlay');
+  const liste = document.getElementById('v32-profile-list');
+  if (!overlay || !liste) return;
+  const profils = getProfils();
+  const noms = Object.keys(profils).sort((a,b)=>a.localeCompare(b,'fr'));
+  if (!noms.length) {
+    liste.innerHTML = '<div style="padding:14px;text-align:center;color:#8b7580;font-size:.82rem">Aucun profil enregistré pour le moment.</div>';
+  } else {
+    liste.innerHTML = noms.map(cle => {
+      const p = profils[cle] || {};
+      const actif = USER && p.prenom === USER.prenom && p.date === USER.dateRaw;
+      const initiale = (p.prenom || '?').trim().charAt(0).toUpperCase();
+      const meta = [p.date, p.ville].filter(Boolean).join(' · ');
+      return `<button class="v32-profile-item ${actif?'actif':''}" onclick="changerProfilRapide(${JSON.stringify(cle).replace(/"/g,'&quot;')})">`
+        + `<span class="v32-profile-avatar">${echapperHTML(initiale)}</span>`
+        + `<span><span class="v32-profile-name">${echapperHTML(p.prenom || cle)}</span><span class="v32-profile-meta">${echapperHTML(meta)}</span></span>`
+        + `<span class="v32-profile-check">${actif?'ACTIF':'›'}</span></button>`;
+    }).join('');
+  }
+  overlay.classList.add('ouvert');
+  document.body.style.overflow='hidden';
+}
+
+function fermerProfilsRapides() {
+  const overlay = document.getElementById('v32-profile-overlay');
+  if (overlay) overlay.classList.remove('ouvert');
+  document.body.style.overflow='';
+}
+
+function appliquerProfilAuxChamps(p) {
+  document.getElementById('s-prenom').value = p.prenom || '';
+  document.getElementById('s-date').value = p.date || '';
+  document.getElementById('s-heure').value = p.heure || '';
+  document.getElementById('s-ville').value = p.ville || '';
+  document.getElementById('s-lat').value = p.lat || '';
+  document.getElementById('s-lon').value = p.lon || '';
+  document.getElementById('s-tz').value = p.tz || 'Europe/Paris';
+  document.getElementById('s-genre').value = p.genre || '';
+  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('actif'));
+  if (p.genre==='F') document.getElementById('g-femme')?.classList.add('actif');
+  else if (p.genre==='H') document.getElementById('g-homme')?.classList.add('actif');
+  else if (p.genre==='N') document.getElementById('g-autre')?.classList.add('actif');
+  if (p.lat && p.lon) {
+    const info = document.getElementById('s-coords');
+    if (info) { info.textContent = 'Lat ' + p.lat + ' · Lon ' + p.lon + ' · Fuseau : ' + (p.tz || 'Europe/Paris'); info.style.display='block'; }
+  }
+}
+
+function changerProfilRapide(cle) {
+  const profils = getProfils();
+  const p = profils[cle];
+  if (!p) return;
+  const actifAvant = document.querySelector('.mod-panneau.actif');
+  const moduleAvant = actifAvant ? actifAvant.id.replace('mod-','') : null;
+  appliquerProfilAuxChamps(p);
+  fermerProfilsRapides();
+  // Changement immédiat : aucun bouton « Charger » ni « Accéder à mon espace » à presser.
+  validerSaisie();
+  majProfilRapideUI();
+  setTimeout(() => {
+    if (moduleAvant && moduleAvant !== 'natal') {
+      const onglet = document.querySelector(`.mod-onglet[onclick*="'${moduleAvant}'"]`);
+      switchMod(moduleAvant, onglet);
+      majMobileTitreModule(moduleAvant);
+    }
+    majProfilRapideUI();
+  }, 80);
+}
+
+function nouveauProfilRapide() {
+  fermerProfilsRapides();
+  USER = null;
+  ['s-prenom','s-date','s-heure','s-ville','s-lat','s-lon'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  const tz=document.getElementById('s-tz'); if(tz) tz.value='Europe/Paris';
+  const genre=document.getElementById('s-genre'); if(genre) genre.value='';
+  document.querySelectorAll('.genre-btn').forEach(b=>b.classList.remove('actif'));
+  modifierSaisie();
+  setTimeout(()=>document.getElementById('s-prenom')?.focus(),120);
+  majProfilRapideUI();
+}
+
+function ouvrirAvenirRapide() {
+  const el = document.getElementById('v32-avenir-overlay');
+  if (!el) return;
+  el.classList.add('ouvert');
+  document.body.style.overflow='hidden';
+}
+function fermerAvenirRapide() {
+  const el = document.getElementById('v32-avenir-overlay');
+  if (el) el.classList.remove('ouvert');
+  document.body.style.overflow='';
+}
+function choisirAvenirRapide(id) {
+  fermerAvenirRapide();
+  irVersModule(id);
+  majMobileNav('avenir');
+}
 
 function toggleCabinetMenu(force) {
   const drawer = document.getElementById('cabinet-menu-drawer');
@@ -2690,10 +3015,50 @@ body{background:var(--v29-cream)!important;color:var(--v29-ink)!important}
   .cabinet-main-cards{max-width:720px!important}
   .service-card.cabinet-main-card{min-height:132px!important;background:#fffaf3!important;border:1px solid #dcc49e!important}
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   V32 — NAVIGATION + CHANGEMENT DE PROFIL SIMPLIFIÉS
+   ═══════════════════════════════════════════════════════════ */
+.quick-profile-chip{display:none}
+.v32-sheet-overlay{display:none;position:fixed;inset:0;z-index:2600;background:rgba(38,19,35,.42);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center}
+.v32-sheet-overlay.ouvert{display:flex}
+.v32-sheet{width:min(100%,560px);max-height:76vh;overflow:auto;background:#fffaf2;border-radius:22px 22px 0 0;border:1px solid #e2d1ba;box-shadow:0 -18px 50px rgba(53,29,44,.20);padding:14px 16px calc(18px + env(safe-area-inset-bottom));color:#3a2538}
+.v32-sheet-handle{width:42px;height:4px;border-radius:99px;background:#d9c8b4;margin:0 auto 12px}
+.v32-sheet-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.55rem;color:#3e1848;text-align:center;margin-bottom:2px}
+.v32-sheet-sub{font-size:.78rem;color:#856f78;text-align:center;margin-bottom:14px}
+.v32-sheet-close{position:absolute;right:18px;margin-top:-2px;border:0;background:transparent;color:#5a3c52;font-size:1.4rem;cursor:pointer}
+.v32-profile-list{display:flex;flex-direction:column;gap:8px}
+.v32-profile-item{width:100%;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;border:1px solid #e6d6c1;background:#fffefb;border-radius:13px;padding:10px 11px;text-align:left;color:#3a2538;cursor:pointer}
+.v32-profile-item.actif{border-color:#b98239;background:#fff7e8;box-shadow:0 0 0 1px rgba(185,130,57,.12)}
+.v32-profile-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#4b1a5c;color:#fff;font-family:'Cormorant Garamond',serif;font-size:1.15rem;border:2px solid #d4a35a}
+.v32-profile-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#3d2042}
+.v32-profile-meta{font-size:.68rem;color:#8b7580;margin-top:2px}
+.v32-profile-check{font-size:.75rem;color:#a56f27;font-weight:700}
+.v32-new-profile{width:100%;margin-top:10px;border:1px dashed #c9aa7f;background:#fff8ed;color:#5a334d;border-radius:12px;padding:11px;font-family:'Cormorant Garamond',serif;font-size:1rem;cursor:pointer}
+.v32-avenir-grid{display:grid;gap:9px}
+.v32-avenir-item{width:100%;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;border:1px solid #e5d4bd;background:#fffefb;border-radius:13px;padding:11px;text-align:left;color:#3a2538;cursor:pointer}
+.v32-avenir-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#4b1a5c;color:#f4d6a2;font-size:1.2rem}
+.v32-avenir-item strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#3d2042}
+.v32-avenir-item small{display:block;font-size:.67rem;color:#8a7480;margin-top:2px;line-height:1.25}
+.v32-avenir-arrow{font-size:1.35rem;color:#b47c32}
+
+@media(max-width:700px){
+  .quick-profile-chip{display:flex;position:fixed;z-index:1750;top:60px;right:10px;max-width:54vw;align-items:center;gap:7px;border:1px solid rgba(190,144,73,.55);background:rgba(255,250,242,.96);color:#4a2944;border-radius:999px;padding:6px 9px 6px 7px;box-shadow:0 4px 14px rgba(58,31,47,.10);font-family:'Lato',sans-serif;cursor:pointer}
+  .quick-profile-chip .qp-avatar{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#4b1a5c;color:#fff;font-family:'Cormorant Garamond',serif;font-size:.82rem;flex:none}
+  .quick-profile-chip .qp-copy{min-width:0;text-align:left}
+  .quick-profile-chip .qp-label{display:block;font-size:.49rem;letter-spacing:.08em;text-transform:uppercase;color:#9b805f;line-height:1}
+  .quick-profile-chip .qp-name{display:block;font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:2px}
+  .quick-profile-chip .qp-arrow{font-size:.72rem;color:#a36c2b}
+  .mobile-module-head{padding-right:44vw!important}
+  #v30-nav,.mobile-bottom-nav{grid-template-columns:repeat(5,1fr)!important}
+}
 </style>
 </head><body>
   <div class="en-tete-pdf"><div>ASTRO PAQUITA</div></div>
   ${clone.innerHTML}
+
+<style>@media(max-width:700px){#v30-nav{grid-template-columns:repeat(5,1fr)!important}.v30-nav-btn small{font-size:9px!important}}</style>
 </body></html>`);
   w.document.close();
   setTimeout(() => { w.focus(); w.print(); }, 400);
@@ -2714,7 +3079,7 @@ function irVersModule(id) {
     const onglet = document.querySelector(`.mod-onglet[onclick*="'${id}'"]`);
     switchMod(id, onglet);
     majMobileTitreModule(id);
-    majMobileNav(id==='evenements'?'evenements':id==='fenetre'?'fenetre':'home');
+    majMobileNav(id);
   } else {
     scrollVersSaisie();
   }
@@ -2755,7 +3120,7 @@ function modifierSaisie() {
 function switchMod(id, el) {
   if (!verifierAccesModulePremium(id)) return;
   majMobileTitreModule(id);
-  majMobileNav(id==='evenements'?'evenements':id==='fenetre'?'fenetre':'home');
+  majMobileNav(id);
   document.querySelectorAll('.mod-panneau').forEach(p => p.classList.remove('actif'));
   document.querySelectorAll('.mod-onglet').forEach(o => o.classList.remove('actif'));
   document.getElementById('mod-' + id).classList.add('actif');
@@ -2920,7 +3285,9 @@ function validerSaisie() {
 
   // Activer premier onglet
   switchMod('natal', document.querySelector('.mod-onglet'));
+  majProfilRapideUI();
 }
+
 
 // ============================================================
 // ÉPHÉMÉRIDES
@@ -5813,7 +6180,7 @@ async function lancerFenetre() {
   const intent = INTENTIONS[intentionF];
   const today = new Date();
   const jdAujourdhui = julianDay(today.getFullYear(), today.getMonth()+1, today.getDate(), 12);
-  const nbJours = 365 * 5;
+  const nbJours = 365 * 10;
 
   const resultats = [];
   const CHUNK = 30;
@@ -5888,7 +6255,7 @@ async function lancerFenetre() {
   ).join('\n');
 
   const genreLabel = USER.genre==='F'?', femme':USER.genre==='H'?', homme':'';
-  const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenetre pour : ' + intent.label + '.\n\nCalcul sur 5 ans — Top 5 fenetres identifiees :\n' + topResume + '\n\nRedige une analyse en 3 paragraphes :\n1. Pourquoi la fenetre n1 est particulierement puissante pour cette intention\n2. Ce que ' + USER.prenom + ' devrait concretement preparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nTon : confiant, direct, chaleureux. Parle a ' + USER.prenom + ' en "tu".';
+  const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenetre pour : ' + intent.label + '.\n\nCalcul sur 10 ans — Top 5 fenetres identifiees :\n' + topResume + '\n\nRedige une analyse en 3 paragraphes :\n1. Pourquoi la fenetre n1 est particulierement puissante pour cette intention\n2. Ce que ' + USER.prenom + ' devrait concretement preparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nTon : confiant, direct, chaleureux. Parle a ' + USER.prenom + ' en "tu".';
 
   try {
     const data = await appelerClaude({ feature:'window', model:'claude-sonnet-4-6', max_tokens:1000,
@@ -5904,7 +6271,7 @@ async function lancerFenetre() {
   const niv0 = niveau(scoreMax5);
   document.getElementById('f-res-icone').textContent = intent.icone;
   document.getElementById('f-res-titre').textContent = intent.label + ' — ' + USER.prenom;
-  document.getElementById('f-res-sous').textContent = 'Meilleure fenetre : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 5 ans';
+  document.getElementById('f-res-sous').textContent = 'Meilleure fenetre : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 10 ans';
   document.getElementById('f-form').style.display = 'none';
   document.getElementById('f-res').style.display = 'block';
   document.getElementById('f-btn').disabled = false;
@@ -7942,7 +8309,9 @@ function sauvegarderProfil() {
   // Sélectionner le profil qu'on vient de sauvegarder
   document.getElementById('profils-select').value = cle;
   msgProfil('Profil "' + cle + '" sauvegardé.', true);
+  majProfilRapideUI();
 }
+
 
 function chargerProfil() {
   const sel = document.getElementById('profils-select');
@@ -8047,7 +8416,7 @@ try {
 
 
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => { majMobileAccueil(); majMobileNav('home'); }, 250);
+  setTimeout(() => { majMobileAccueil(); majMobileNav('home'); majProfilRapideUI(); }, 250);
 });
 </script>
 
@@ -8139,10 +8508,11 @@ window.addEventListener('DOMContentLoaded', () => {
   </section>
 </div>
 <nav id="v30-nav" aria-label="Navigation principale">
-  <button class="v30-nav-btn actif" data-v30="home" onclick="v30ShowScreen('home')"><span>⌂</span>Accueil</button>
-  <button class="v30-nav-btn" data-v30="avenir" onclick="v30ShowScreen('avenir')"><span>▣</span>Avenir</button>
-  <button class="v30-nav-btn" data-v30="relations" onclick="v30ShowScreen('relations')"><span>♡</span>Relations</button>
-  <button class="v30-nav-btn" data-v30="profil" onclick="v30ShowScreen('profil')"><span>♙</span>Profil</button>
+  <button class="v30-nav-btn actif mobile-nav-item" data-mobile-nav="home" onclick="mobileNaviguer('home')"><span>⌂</span><small>Accueil</small></button>
+  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="avenir" onclick="mobileNaviguer('avenir')"><span>☽</span><small>Avenir</small></button>
+  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="relations" onclick="mobileNaviguer('relations')"><span>♡</span><small>Relations</small></button>
+  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="question" onclick="mobileNaviguer('question')"><span>?</span><small>Question</small></button>
+  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="profil" onclick="mobileNaviguer('profil')"><span>♙</span><small>Profil</small></button>
 </nav>
 
 <script id="astro-paquita-v30-js">
@@ -8205,6 +8575,144 @@ window.addEventListener('DOMContentLoaded', () => {
     v30RefreshProfile();v30Sync();
   });
   window.addEventListener('resize',v30Sync);
+})();
+</script>
+
+<script id="astro-paquita-v33-js">
+(function(){
+  const ACTIVE_KEY='astra_profil_actif';
+  const oldSwitch=window.switchMod;
+
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+  window.v33RafraichirProfils=function(){
+    const box=document.getElementById('v33-profile-chips');
+    if(!box || typeof getProfils!=='function') return;
+    const profils=getProfils();
+    const keys=Object.keys(profils).sort((a,b)=>String(profils[a]?.prenom||a).localeCompare(String(profils[b]?.prenom||b),'fr'));
+    const active=localStorage.getItem(ACTIVE_KEY)||'';
+    box.innerHTML=keys.map(k=>{
+      const p=profils[k]||{};
+      const actif=(active===k)||(!active && window.USER && p.prenom===USER.prenom && p.date===USER.dateRaw);
+      const label=p.prenom||k;
+      return `<button class="v33-profile-chip ${actif?'actif':''}" onclick="v33ChoisirProfil(${JSON.stringify(k).replace(/"/g,'&quot;')})" title="${esc([p.date,p.ville].filter(Boolean).join(' · '))}">${esc(label)}</button>`;
+    }).join('') + '<button class="v33-profile-chip add" onclick="nouveauProfilRapide()">＋ Nouveau</button>';
+    if(typeof rafraichirSelectProfils==='function') try{rafraichirSelectProfils();}catch(e){}
+  };
+
+  function buildUserFromFields(showErrors=true){
+    try{
+      const prenom=document.getElementById('s-prenom').value.trim();
+      const dateRaw=document.getElementById('s-date').value.trim();
+      const heureRaw=document.getElementById('s-heure').value.trim();
+      const lat=parseFloat(document.getElementById('s-lat').value);
+      const lon=parseFloat(document.getElementById('s-lon').value);
+      const tz=document.getElementById('s-tz').value;
+      const ville=document.getElementById('s-ville').value.trim();
+      const heureMatch=heureRaw.match(/^(\d{1,2}):(\d{2})$/);
+      const dateISO=parseDate(dateRaw);
+      const fail=(msg)=>{if(showErrors && typeof affErr==='function') affErr('s-erreur',msg); return false;};
+      if(!prenom) return fail('Veuillez saisir votre prénom.');
+      if(!dateISO) return fail('Format de date invalide. Ex : 18/12/1971');
+      if(!heureMatch) return fail("Format d'heure invalide. Ex : 03:30");
+      if(isNaN(lat)||isNaN(lon)) return fail('Veuillez choisir votre ville de naissance dans la liste.');
+      const heure=`${heureMatch[1].padStart(2,'0')}:${heureMatch[2]}`;
+      const u=convUTC(dateISO,heure,tz); const jd=julianDay(u.y,u.m,u.d,u.h); const pos=calcPos(jd); const axes=calcASMC(jd,lat,lon);
+      const genre=document.getElementById('s-genre').value||'N';
+      USER={prenom,dateISO,dateRaw,heure,lat,lon,tz,ville,jd,pos,AS:axes.AS,MC:axes.MC,genre};
+      domaineGratuitFenetre=null;
+      const mNom=document.getElementById('m-nom'); if(mNom)mNom.textContent=prenom;
+      const mInfo=document.getElementById('m-info'); if(mInfo)mInfo.textContent=`${dateRaw} · ${heure} · ${ville}`;
+      const err=document.getElementById('s-erreur'); if(err)err.style.display='none';
+      if(typeof majProfilRapideUI==='function') majProfilRapideUI();
+      return true;
+    }catch(e){console.error('V33 profil:',e); if(showErrors && typeof affErr==='function') affErr('s-erreur','Impossible de charger ce profil.'); return false;}
+  }
+
+  function showDashboard(){
+    if(typeof masquerVitrine==='function') masquerVitrine();
+    const saisie=document.getElementById('section-saisie'); if(saisie)saisie.classList.remove('visible');
+    const mods=document.getElementById('section-modules'); if(mods)mods.classList.add('visible');
+    document.querySelectorAll('.mod-panneau').forEach(p=>p.classList.remove('actif'));
+    document.querySelectorAll('.mod-onglet').forEach(p=>p.classList.remove('actif'));
+    const dash=document.getElementById('v33-space-dashboard'); if(dash)dash.classList.add('visible');
+    const title=document.getElementById('v33-space-title'); if(title)title.textContent=USER&&USER.prenom?`Espace de ${USER.prenom}`:'Votre espace astrologique';
+    const sub=document.getElementById('v33-space-sub'); if(sub)sub.textContent=USER?`${USER.dateRaw} · ${USER.heure} · ${USER.ville} — choisissez un module, sans génération automatique.`:'Choisissez simplement ce que vous souhaitez consulter.';
+    document.querySelectorAll('.v33-nav-btn').forEach(b=>b.classList.toggle('actif',b.dataset.v33==='space'));
+    window.scrollTo({top:document.getElementById('v33-topbar')?.offsetTop||0,behavior:'smooth'});
+  }
+
+  window.v33AccederEspace=function(){
+    if(!USER){
+      const profils=typeof getProfils==='function'?getProfils():{};
+      let key=localStorage.getItem(ACTIVE_KEY);
+      if(!key || !profils[key]) key=Object.keys(profils)[0]||'';
+      if(key && profils[key]){
+        if(typeof appliquerProfilAuxChamps==='function') appliquerProfilAuxChamps(profils[key]);
+        if(buildUserFromFields(false)){localStorage.setItem(ACTIVE_KEY,key);v33RafraichirProfils();showDashboard();return;}
+      }
+      if(typeof scrollVersSaisie==='function')scrollVersSaisie();
+      setTimeout(()=>document.getElementById('s-prenom')?.focus(),120);
+      return;
+    }
+    showDashboard();
+  };
+
+  window.v33EnregistrerEtOuvrir=function(){
+    if(!buildUserFromFields(true))return;
+    try{
+      if(typeof sauvegarderProfil==='function') sauvegarderProfil();
+      const key=`${USER.prenom} (${USER.dateRaw})`;
+      localStorage.setItem(ACTIVE_KEY,key);
+    }catch(e){}
+    v33RafraichirProfils();
+    showDashboard();
+  };
+
+  window.v33ChoisirProfil=function(key){
+    const profils=typeof getProfils==='function'?getProfils():{}; const p=profils[key]; if(!p)return;
+    const current=document.querySelector('.mod-panneau.actif'); const moduleId=current?current.id.replace('mod-',''):null;
+    if(typeof appliquerProfilAuxChamps==='function') appliquerProfilAuxChamps(p);
+    if(!buildUserFromFields(true))return;
+    localStorage.setItem(ACTIVE_KEY,key);
+    v33RafraichirProfils();
+    if(typeof fermerProfilsRapides==='function')fermerProfilsRapides();
+    if(moduleId){v33OuvrirModule(moduleId);}else{showDashboard();}
+  };
+
+  // Remplace le changement rapide V32 : même comportement sur tous les écrans.
+  window.changerProfilRapide=function(key){v33ChoisirProfil(key);};
+
+  window.v33OuvrirModule=function(id){
+    if(!USER){v33AccederEspace(); if(!window.USER)return;}
+    const dash=document.getElementById('v33-space-dashboard'); if(dash)dash.classList.remove('visible');
+    document.querySelectorAll('.v33-nav-btn').forEach(b=>b.classList.toggle('actif',b.dataset.v33===id));
+    if(typeof irVersModule==='function')irVersModule(id);
+  };
+
+  if(typeof oldSwitch==='function'){
+    window.switchMod=function(id,el){
+      const dash=document.getElementById('v33-space-dashboard'); if(dash)dash.classList.remove('visible');
+      document.querySelectorAll('.v33-nav-btn').forEach(b=>b.classList.toggle('actif',b.dataset.v33===id));
+      return oldSwitch(id,el);
+    };
+  }
+
+  // Le bouton historique validerSaisie ouvre désormais l'espace, pas le portrait.
+  window.validerSaisie=function(){return v33EnregistrerEtOuvrir();};
+
+  function init(){
+    v33RafraichirProfils();
+    const profils=typeof getProfils==='function'?getProfils():{};
+    let key=localStorage.getItem(ACTIVE_KEY);
+    if(!key || !profils[key]) key=Object.keys(profils)[0]||'';
+    if(key && profils[key] && !USER){
+      try{appliquerProfilAuxChamps(profils[key]);if(buildUserFromFields(false)){localStorage.setItem(ACTIVE_KEY,key);v33RafraichirProfils();}}catch(e){}
+    }
+    // Agrandir également les intitulés du compte qui étaient très petits.
+    document.querySelectorAll('.v30-profile-sub,.v30-event-row,.v30-rel-card small').forEach(el=>el.style.removeProperty('font-size'));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,80)); else setTimeout(init,80);
 })();
 </script>
 </body>
