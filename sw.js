@@ -1,5 +1,5 @@
-/* Astro Paquita V41 — événements dédupliqués + périodes d'influence + network-first */
-const VERSION='astro-paquita-v41-20260812';
+/* Astro Paquita V42 — événements dédupliqués + périodes d'influence + network-first */
+const VERSION='astro-paquita-v42-20260812';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const n of await caches.keys()) await caches.delete(n);await self.clients.claim();})()));
 self.addEventListener('fetch',event=>{

@@ -1,4 +1,4 @@
-<!-- ASTRO PAQUITA V41 - Grands événements sélectifs --><!DOCTYPE html>
+<!-- ASTRO PAQUITA V42 - Grands événements sélectifs --><!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -1517,6 +1517,35 @@ a{color:var(--cab-plum2)}
   #mobile-bottom-nav{display:none!important;pointer-events:none!important}
 }
 </style>
+
+<style id="astro-paquita-v42-events-life">
+/* V42 — Grands événements : langage concret, un seul bloc par tournant */
+#mod-evenements .ev-hero-sub{font-size:1rem!important;line-height:1.5!important;max-width:760px}
+.ev-life-card{background:linear-gradient(145deg,#fffdf8,#fbf1e7);border:1px solid #dfc9a7;border-radius:18px;padding:20px;margin:0 0 18px;box-shadow:0 8px 24px rgba(67,26,54,.08);overflow:hidden}
+.ev-life-domain{font-family:'Lato',Arial,sans-serif;font-size:.78rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#9a6b27;margin-bottom:8px}
+.ev-life-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.72rem;line-height:1.08;color:#3a1738;font-weight:700;margin-bottom:12px}
+.ev-life-dates{background:#fff9ef;border:1px solid #ead7b9;border-radius:12px;padding:11px 13px;margin:10px 0 13px;font-size:.98rem;line-height:1.5;color:#513a4f}
+.ev-life-dates strong{color:#35102f}
+.ev-life-score-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:11px 0 14px}
+.ev-life-score{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 12px;background:#f4e7cc;border:1px solid #ddc397;color:#402039;font-weight:800;font-size:.91rem}
+.ev-life-impact{font-size:.92rem;font-weight:700;color:#675264}
+.ev-life-scenarios-title{font-size:.9rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#4e3349;margin:13px 0 8px}
+.ev-life-scenario{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px solid #eadcca;color:#3f2e3d;line-height:1.4}
+.ev-life-scenario:first-of-type{border-top:0}
+.ev-life-proba{font-weight:900;color:#9a641e;font-size:.9rem;white-space:nowrap}
+.ev-life-note{font-size:.78rem;line-height:1.4;color:#8a7a86;margin-top:10px;font-style:italic}
+.ev-v42-summary .rapport-texte{font-size:1.02rem!important;line-height:1.65!important}
+@media(max-width:700px){
+  #mod-evenements .ev-hero-title{font-size:2rem!important;line-height:1.05!important}
+  #mod-evenements .ev-hero-sub{font-size:1rem!important;line-height:1.45!important}
+  .ev-life-card{padding:17px 15px;border-radius:15px;margin-bottom:15px}
+  .ev-life-title{font-size:1.55rem}
+  .ev-life-domain{font-size:.76rem}
+  .ev-life-dates{font-size:.94rem}
+  .ev-life-scenario{grid-template-columns:66px 1fr;font-size:.96rem}
+  .ev-life-proba{font-size:.84rem}
+}
+</style>
 </head>
 <body>
 
@@ -1965,17 +1994,14 @@ a{color:var(--cab-plum2)}
       <div class="erreur" id="ev-err"></div>
     </div>
     <div id="ev-res" style="display:none">
-      <div class="ev-hero-title">Grands événements</div>
-      <div class="ev-hero-sub">Horizon : 24 mois</div>
-      <div class="ev-section-titre">Tournants de vie réellement majeurs</div>
+      <div class="ev-hero-title">Ce qui peut vraiment changer dans ta vie</div>
+      <div class="ev-hero-sub">Les tournants les plus importants des 24 prochains mois, expliqués sans jargon</div>
+      <div class="ev-section-titre">Les changements à surveiller</div>
       <div id="ev-alertes"></div>
-      <div class="ev-section-titre">🌀 Mes grands cycles actuels</div>
-      <div id="ev-cycles"></div>
-      <div class="ev-section-titre">Chronologie clé</div>
-      <div class="ev-timeline-help">Le module n’affiche que les périodes suffisamment rares ou confirmées par plusieurs techniques. Début, pic(s) et fin sont les repères d’une même influence.</div>
-      <div id="ev-calendrier"></div>
-      <div class="rapport-bloc" style="margin-top:1rem">
-        <div class="rapport-bloc-titre">Lecture globale de ta période</div>
+      <div id="ev-cycles" style="display:none"></div>
+      <div id="ev-calendrier" style="display:none"></div>
+      <div class="rapport-bloc ev-v42-summary" style="margin-top:1rem">
+        <div class="rapport-bloc-titre">Ce qu’il faut retenir</div>
         <div class="rapport-texte" id="ev-rapport"></div>
       </div>
       <button class="btn-retour" onclick="exporterPDF('ev-res','Événements')">⬇ Télécharger en PDF</button>
@@ -7313,6 +7339,111 @@ function evIntensite(force) {
   return force >= 9 ? 'Majeure' : force >= 7 ? 'Forte' : 'Modérée';
 }
 
+
+/* V42 — traduction des calculs en conséquences de vie compréhensibles */
+function evV42Domaine(e) {
+  if (e && e.impact && e.impact.domaine) return e.impact.domaine;
+  const d = String((e&&e.domaine)||'').toLowerCase();
+  if (/travail|carri|profession/.test(d)) return 'Travail / carrière';
+  if (/famille|foyer|intime|émotion/.test(d)) return 'Famille / foyer';
+  if (/relation|amour/.test(d)) return 'Vie affective / relations';
+  if (/argent|finance/.test(d)) return 'Finances / patrimoine';
+  if (/identité|direction|trajectoire/.test(d)) return 'Direction de vie / identité';
+  if (/responsabil|structure/.test(d)) return 'Engagements / responsabilités / cadre de vie';
+  return 'Direction générale de la vie';
+}
+function evV42Titre(e) {
+  const d = evV42Domaine(e);
+  const tech = String((e&&e.technique)||'').toLowerCase();
+  if (/travail|carrière/.test(d)) {
+    if (/uranus/.test(tech)) return 'Un changement professionnel rapide ou inattendu devient possible';
+    if (/pluton/.test(tech)) return 'Une transformation profonde de ta vie professionnelle se prépare';
+    if (/saturne/.test(tech)) return 'Une restructuration importante de ta vie professionnelle se prépare';
+    return 'Une étape professionnelle importante peut changer ta trajectoire';
+  }
+  if (/famille|foyer/.test(d)) return 'Une étape importante peut modifier ton foyer ou ta vie familiale';
+  if (/affective|relations/.test(d)) return 'Une relation importante peut changer de statut ou de direction';
+  if (/finances|patrimoine/.test(d)) return 'Une décision importante peut modifier durablement ta situation matérielle';
+  if (/engagements|responsabilités/.test(d) || /retour de saturne/.test(tech)) return 'Une décision durable peut restructurer une partie importante de ta vie';
+  return 'Un changement de cap important peut modifier durablement ta vie';
+}
+function evV42Indice(e) {
+  const force = Number(e&&e.force||8);
+  const sig = Math.max(1,Number(e&&e.signatures||1));
+  const sources = Math.max(1,Number(e&&e.sourcesCount||1));
+  const orbe = Number(e&&e.orbeMin);
+  let score = 58 + Math.max(0,force-7.5)*8 + Math.max(0,sig-1)*6 + Math.max(0,sources-1)*5;
+  if (Number.isFinite(orbe)) score += Math.max(0,10-Math.min(10,orbe*6));
+  if (e&&e.niveau==='A') score += 4;
+  return Math.max(58,Math.min(94,Math.round(score)));
+}
+function evV42Impact(e) {
+  const tech=String((e&&e.technique)||'').toLowerCase();
+  if (/pluton/.test(tech)) return 'Impact durable : plusieurs années possibles';
+  if (/uranus/.test(tech)) return 'Impact fort : changement visible sur plusieurs mois à plusieurs années';
+  if (/saturne/.test(tech)) return 'Impact durable : décisions et conséquences à long terme';
+  if (/éclipse|eclipse/.test(tech)) return 'Impact concentré : effets possibles sur les mois qui suivent';
+  if (/arc solaire/.test(tech)) return 'Impact structurant : période charnière autour du point fort';
+  return 'Impact potentiellement durable';
+}
+function evV42Scenarios(e) {
+  const d=evV42Domaine(e);
+  const tech=String((e&&e.technique)||'').toLowerCase();
+  const score=evV42Indice(e);
+  let textes=[];
+  if (/travail|carrière/.test(d)) {
+    if (/uranus/.test(tech)) textes=[
+      'Changement de poste, de secteur, d’organisation ou de façon de travailler',
+      'Rupture avec une situation professionnelle devenue trop contraignante',
+      'Nouveau projet plus autonome, plus libre ou très différent de l’ancien'
+    ];
+    else if (/pluton/.test(tech)) textes=[
+      'Reconversion, changement de statut ou transformation profonde des responsabilités',
+      'Fin d’un ancien cycle professionnel et entrée dans une nouvelle phase',
+      'Montée en influence, prise de pouvoir ou repositionnement important'
+    ];
+    else textes=[
+      'Nouvelles responsabilités, changement de fonction ou réorganisation importante',
+      'Décision de rester et consolider, ou au contraire de quitter une structure devenue trop étroite',
+      'Stabilisation d’une nouvelle position professionnelle après une période exigeante'
+    ];
+  } else if (/famille|foyer/.test(d)) {
+    textes=[
+      'Déménagement, achat/vente, travaux importants ou changement concret de lieu de vie',
+      'Réorganisation familiale : arrivée, départ, rapprochement ou nouvelle responsabilité',
+      'Décision durable concernant le foyer, les proches ou la façon de vivre ensemble'
+    ];
+  } else if (/affective|relations/.test(d)) {
+    textes=[
+      'Officialisation, engagement ou redéfinition importante d’une relation',
+      'Rencontre qui prend rapidement une place importante, ou changement décisif dans une relation existante',
+      'Séparation ou prise de distance si le lien ne correspond plus à la nouvelle direction de vie'
+    ];
+  } else if (/finances|patrimoine/.test(d)) {
+    textes=[
+      'Décision patrimoniale importante : achat, vente, investissement ou réorganisation financière',
+      'Changement notable des ressources lié au travail, au foyer ou à un nouvel engagement',
+      'Nécessité de sécuriser durablement la situation matérielle'
+    ];
+  } else if (/engagements|responsabilités/.test(d) || /retour de saturne/.test(tech)) {
+    textes=[
+      'Prise d’une responsabilité durable : travail, couple, famille, logement ou engagement personnel',
+      'Fin d’une situation qui n’est plus tenable et choix d’un cadre plus solide',
+      'Décision structurante qui modifie le quotidien pour plusieurs années'
+    ];
+  } else {
+    textes=[
+      'Changement important de direction personnelle ou de projet de vie',
+      'Fin d’une situation devenue incompatible avec la nouvelle étape de vie',
+      'Nouveau statut, nouveau mode de vie ou décision qui réorganise plusieurs domaines à la fois'
+    ];
+  }
+  const p1=Math.max(45,Math.min(88,score-5));
+  const p2=Math.max(35,Math.min(78,score-16));
+  const p3=Math.max(25,Math.min(68,score-27));
+  return [{p:p1,txt:textes[0]},{p:p2,txt:textes[1]},{p:p3,txt:textes[2]}];
+}
+
 async function genererEvenements() {
   if (!USER) return;
   if (!PREMIUM) { ouvrirCompte(); return; }
@@ -7366,20 +7497,42 @@ async function genererEvenements() {
   const orbAspect = (v,t,aspects=[0,90,180]) => Math.min(...aspects.map(a => Math.abs(delta(v,t)-a)));
   const minOrbCibles = (v,cibles,aspects=[0,90,180]) => Math.min(...cibles.map(t => orbAspect(v,t,aspects)));
   const ciblesMajeures = [AS, MC, posN.Soleil, posN.Lune];
-  const progressionDuJour = (jd) => calcProgressions(USER.jd, calcAnneeVieExacte(USER.jd,jd));
-  const orbArcSolaireMajeur = (jd) => {
-    const arc = calcArcSoleil(USER.jd, calcAnneeVieExacte(USER.jd,jd));
-    const pts = {AS,MC,Soleil:posN.Soleil,Lune:posN.Lune};
-    let best = 999;
-    for (const [nom,deg] of Object.entries(pts)) {
-      const dirige = (deg + arc + 360) % 360;
-      for (const [nom2,cible] of Object.entries(pts)) {
-        if (nom === nom2) continue;
-        best = Math.min(best, orbAspect(dirige,cible,[0,90,180]));
-      }
-    }
+  const CIBLES_VIE = [
+    {key:'AS',deg:AS,domaine:'Direction de vie / identité'},
+    {key:'MC',deg:MC,domaine:'Travail / carrière'},
+    {key:'Soleil',deg:posN.Soleil,domaine:'Direction de vie / identité'},
+    {key:'Lune',deg:posN.Lune,domaine:'Famille / foyer'}
+  ];
+  const cibleVieProche = (v,aspects=[0,90,180]) => {
+    let best={orb:999,key:'',domaine:'Direction générale de la vie',aspect:0};
+    CIBLES_VIE.forEach(c=>aspects.forEach(a=>{const o=Math.abs(delta(v,c.deg)-a);if(o<best.orb)best={orb:o,key:c.key,domaine:c.domaine,aspect:a};}));
     return best;
   };
+  const arcSolaireInfo = (jd) => {
+    const arc=calcArcSoleil(USER.jd,calcAnneeVieExacte(USER.jd,jd));
+    let best={orb:999,key:'',domaine:'Direction de vie / identité'};
+    CIBLES_VIE.forEach(src=>CIBLES_VIE.forEach(dst=>{if(src.key===dst.key)return;const dirige=(src.deg+arc+360)%360;[0,90,180].forEach(a=>{const o=Math.abs(delta(dirige,dst.deg)-a);if(o<best.orb)best={orb:o,key:dst.key,domaine:dst.domaine};});}));
+    return best;
+  };
+  const impactPourDetection = (det,posT,jd) => {
+    try {
+      const t=String(det.technique||'').toLowerCase();
+      if (t.includes('retour de saturne')) return {domaine:'Engagements / responsabilités / cadre de vie'};
+      if (t.includes('saturne sur')) return cibleVieProche(posT.Saturne);
+      if (t.includes('uranus')) return cibleVieProche(posT.Uranus);
+      if (t.includes('pluton')) return cibleVieProche(posT.Pluton);
+      if (t.includes('neptune')) return cibleVieProche(posT.Neptune);
+      if (t.includes('jupiter')) return cibleVieProche(posT.Jupiter,[0]);
+      if (t.includes('éclipse') || t.includes('eclipse')) { const ec=eclipseMajeureDuJour(jd); return ec?cibleVieProche(ec.lon,[0]):null; }
+      if (t.includes('soleil progressé')) return cibleVieProche(progressionDuJour(jd).Soleil);
+      if (t.includes('lune progressée')) return cibleVieProche(progressionDuJour(jd).Lune);
+      if (t.includes('nœuds') || t.includes('noeuds')) { const a=cibleVieProche(posT.Noeud,[0]); const b=cibleVieProche((posT.Noeud+180)%360,[0]); return a.orb<=b.orb?a:b; }
+      if (t.includes('arc solaire')) return arcSolaireInfo(jd);
+    } catch(err) {}
+    return null;
+  };
+  const progressionDuJour = (jd) => calcProgressions(USER.jd, calcAnneeVieExacte(USER.jd,jd));
+  const orbArcSolaireMajeur = (jd) => arcSolaireInfo(jd).orb;
   const orbNoeudsMajeurs = (posT) => {
     const nord = posT.Noeud, sud = (nord+180)%360;
     return Math.min(...ciblesMajeures.flatMap(t => [delta(nord,t),delta(sud,t)]));
@@ -7461,7 +7614,8 @@ async function genererEvenements() {
         try {
           if (det.test(posT, jdJ)) {
             const exactitude = typeof det.orbe === 'function' ? Number(det.orbe(posT,jdJ)) : 999;
-            activations[idx].push({ jd: jdJ, date: dateJ, k, orbe: Number.isFinite(exactitude) ? exactitude : 999 });
+            const impact = impactPourDetection(det,posT,jdJ);
+            activations[idx].push({ jd: jdJ, date: dateJ, k, orbe: Number.isFinite(exactitude) ? exactitude : 999, impact });
           }
         } catch (e) {}
       });
@@ -7519,6 +7673,8 @@ async function genererEvenements() {
         dateDebut: jdVersDate(debutJD),
         dateFin: jdVersDate(finJD),
         pics: g.pics.map(x => x.date),
+        impact: picPrincipal.impact || null,
+        orbeMin: Math.min(...g.pics.map(x => Number.isFinite(x.orbe)?x.orbe:999)),
         joursRestants: Math.max(0, Math.round(debutJD - jdNow))
       });
     });
@@ -7595,7 +7751,10 @@ async function genererEvenements() {
     const renfort = uniq.length>1
       ? ` Cette période ressort avec une convergence forte de ${uniq.length} signatures astrologiques (${techniques.join(' · ')}). Cela augmente son importance potentielle, sans permettre de prédire à l’avance la forme exacte que prendra l’événement.`
       : ' Cette signature est suffisamment rare et structurante pour être retenue seule par le module.';
-    return {...leader, type, force, dateDebut:debut, dateFin:fin, date:allPics[0]||leader.date, pics:allPics, domaine:domaines.join(' · '), desc:descBase+renfort, signatures:uniq.length, sourcesCount:sources.length, techniques, joursRestants:Math.max(0,Math.round((debut.getTime()-today.getTime())/MS_JOUR))};
+    const impactLeader = leader.impact || uniq.map(x=>x.impact).find(Boolean) || null;
+    const orbeMin = Math.min(...uniq.map(x=>Number.isFinite(x.orbeMin)?x.orbeMin:999));
+    const domaineVie = impactLeader && impactLeader.domaine ? impactLeader.domaine : domaines.join(' · ');
+    return {...leader, type, force, dateDebut:debut, dateFin:fin, date:allPics[0]||leader.date, pics:allPics, domaine:domaineVie, impact:impactLeader, orbeMin, desc:descBase+renfort, signatures:uniq.length, sourcesCount:sources.length, techniques, joursRestants:Math.max(0,Math.round((debut.getTime()-today.getTime())/MS_JOUR))};
   }
 
   const candidats=[...evenementsNettoyes].filter(e=>e.force>=7.5).sort((a,b)=>{
@@ -7631,7 +7790,7 @@ async function genererEvenements() {
   // On conserve donc les groupes séparés plutôt que de fusionner artificiellement deux périodes éloignées.
   const evenementsMajeurs=majeurs.sort((a,b)=>a.dateDebut-b.dateDebut);
 
-  pb.style.width = '78%'; pl.textContent = 'Calcul des cycles de vie…';
+  pb.style.width = '78%'; pl.textContent = 'Préparation des changements les plus importants…';
   await new Promise(r=>setTimeout(r,0));
 
   // ── 2. CYCLES DE VIE ──────────────────────────────────────────
@@ -7686,113 +7845,62 @@ async function genererEvenements() {
   const alertesEl = document.getElementById('ev-alertes');
   alertesEl.innerHTML = '';
   if (!alertes.length) {
-    alertesEl.innerHTML = '<div class="ev-card neutre"><div class="ev-card-titre">Aucun tournant de vie exceptionnel ne ressort dans les 24 prochains mois</div><div class="ev-card-desc">Le moteur n’a trouvé aucune signature suffisamment rare ou aucune convergence assez forte pour classer une période comme véritable grand événement. Les prévisions ordinaires restent disponibles dans les autres modules.</div></div>';
+    alertesEl.innerHTML = '<div class="ev-life-card"><div class="ev-life-domain">24 prochains mois</div><div class="ev-life-title">Aucun tournant de vie exceptionnel ne ressort actuellement</div><div class="ev-life-dates">Cela ne signifie pas qu’il ne se passera rien : simplement qu’aucun changement assez rare, précis et durable ne ressort pour être classé ici comme événement majeur.</div></div>';
   } else {
     alertes.forEach(e => {
-      const joursStr = e.joursRestants === 0 ? 'Influence déjà active ou démarrant aujourd’hui' : e.joursRestants <= 30 ? `Début dans ${e.joursRestants} jours` : `Début dans environ ${Math.round(e.joursRestants/30)} mois`;
-      const picsTxt = (e.pics || [e.date]).map(fmtDate).join(' · ');
-      const tendance = evTendance(e);
-      const intensite = evIntensite(e.force);
-      alertesEl.innerHTML += `<div class="ev-card ${e.type}">
-        <div class="ev-card-header">
-          <div class="ev-card-titre">${e.nom}</div>
-          <span class="ev-trend ${tendance.classe}">${tendance.icone} ${tendance.label}</span>
-        </div>
-        <div class="ev-meta-grid">
-          <div class="ev-meta-pill"><small>Intensité</small><strong>${intensite}</strong></div>
-          <div class="ev-meta-pill"><small>Domaine</small><strong>${e.domaine}</strong></div>
-          <div class="ev-meta-pill"><small>Début</small><strong>${fmtDate(e.dateDebut)}</strong></div>
-          <div class="ev-meta-pill"><small>Fin</small><strong>${fmtDate(e.dateFin)}</strong></div>
-          ${e.signatures>1 ? `<div class="ev-meta-pill"><small>Convergence</small><strong>${e.signatures} signatures</strong></div>` : ''}
-        </div>
-        <div class="ev-card-date"><strong>${(e.pics||[]).length > 1 ? 'Pics' : 'Pic'} :</strong> ${picsTxt}</div>
-        <div class="ev-card-desc">${e.desc}</div>
-        <div class="ev-card-compte">${joursStr}</div>
+      const domaineVie=evV42Domaine(e);
+      const titreVie=evV42Titre(e);
+      const indice=evV42Indice(e);
+      const scenarios=evV42Scenarios(e);
+      const pics=(e.pics||[e.date]);
+      const picsTxt=pics.map(fmtDate).join(' · ');
+      const pointFort=pics.length>1?`Points forts : ${picsTxt}`:`Point fort : ${picsTxt}`;
+      const scenariosHtml=scenarios.map(sc=>`<div class="ev-life-scenario"><div class="ev-life-proba">≈ ${sc.p}%</div><div>${sc.txt}</div></div>`).join('');
+      alertesEl.innerHTML += `<div class="ev-life-card">
+        <div class="ev-life-domain">${domaineVie}</div>
+        <div class="ev-life-title">${titreVie}</div>
+        <div class="ev-life-dates"><strong>Période :</strong> ${fmtDate(e.dateDebut)} → ${fmtDate(e.dateFin)}<br><strong>${pointFort}</strong></div>
+        <div class="ev-life-score-row"><div class="ev-life-score">Fiabilité astrologique : ${indice}/100</div><div class="ev-life-impact">${evV42Impact(e)}</div></div>
+        <div class="ev-life-scenarios-title">Ce qui est le plus susceptible de se produire</div>
+        ${scenariosHtml}
+        <div class="ev-life-note">Les pourcentages sont un indice astrologique interne fondé sur la précision et la convergence des indicateurs ; ce ne sont pas des probabilités statistiques. Plusieurs scénarios peuvent se combiner.</div>
       </div>`;
     });
   }
 
-  // Cycles
+  // Les cycles techniques restent calculés en interne mais ne sont plus affichés : l'utilisateur voit uniquement les conséquences concrètes.
   const cyclesEl = document.getElementById('ev-cycles');
-  cyclesEl.innerHTML = `
-    <div class="ev-cycle">
-      <div class="ev-cycle-titre">♃ Cycle Jupiter — Phase : ${phaseJup} (${Math.round(cycleJup*100)}%)</div>
-      <div class="ev-cycle-barre-bg"><div class="ev-cycle-barre" style="width:${Math.round(cycleJup*100)}%"></div></div>
-      <div class="ev-cycle-desc">${descJup}</div>
-    </div>
-    <div class="ev-cycle">
-      <div class="ev-cycle-titre">♄ Cycle Saturne — Phase : ${phaseSat} (${Math.round(cycleSat*100)}%)</div>
-      <div class="ev-cycle-barre-bg"><div class="ev-cycle-barre" style="width:${Math.round(cycleSat*100)}%;background:linear-gradient(90deg,#6b7280,#9ca3af)"></div></div>
-      <div class="ev-cycle-desc">${descSat}</div>
-    </div>
-    <div class="ev-cycle">
-      <div class="ev-cycle-titre">⭐ Année de Profection — Maison ${maison} (${seigneur})</div>
-      <div class="ev-cycle-barre-bg"><div class="ev-cycle-barre" style="width:${Math.round(((anneeVie%1))*100)}%;background:linear-gradient(90deg,#c9a84c,#e8c97a)"></div></div>
-      <div class="ev-cycle-desc">Cette année met l'accent sur <strong>${theme}</strong>. ${seigneur} est ta planète de l'année — ses transits sont particulièrement importants pour toi.</div>
-    </div>`;
+  if (cyclesEl) { cyclesEl.innerHTML = ''; cyclesEl.style.display = 'none'; }
 
   const calEl = document.getElementById('ev-calendrier');
-  calEl.innerHTML = '';
-  const jalons = [];
-  alertes.forEach(e => {
-    jalons.push({date:e.dateDebut, kind:'debut', nom:e.nom, tendance:evTendance(e)});
-    (e.pics || [e.date]).forEach(pic => jalons.push({date:pic, kind:'pic', nom:e.nom, tendance:evTendance(e)}));
-    jalons.push({date:e.dateFin, kind:'fin', nom:e.nom, tendance:evTendance(e)});
-  });
-  jalons.sort((a,b)=>a.date-b.date || ({debut:0,pic:1,fin:2}[a.kind]-{debut:0,pic:1,fin:2}[b.kind]));
-  // Une date ne doit jamais répéter trois fois le même événement.
-  // Si début/pic/fin coïncident, on garde un seul repère (priorité au pic).
-  const parDateEvt = new Map();
-  const prioriteKind = {debut:1, fin:2, pic:3};
-  jalons.forEach(j => {
-    const k = `${j.nom}|${j.date.toISOString().slice(0,10)}`;
-    const precedent = parDateEvt.get(k);
-    if (!precedent || prioriteKind[j.kind] > prioriteKind[precedent.kind]) parDateEvt.set(k,j);
-  });
-  const uniques = [...parDateEvt.values()].sort((a,b)=>a.date-b.date || prioriteKind[b.kind]-prioriteKind[a.kind]);
-  if (!uniques.length) {
-    calEl.innerHTML = '<div class="ev-card neutre"><div class="ev-card-desc">Aucun repère majeur sur l’horizon analysé.</div></div>';
-  } else {
-    const libKind = {debut:'Début de l’influence', pic:'Pic de l’influence', fin:'Fin de l’influence'};
-    calEl.innerHTML = '<div class="ev-timeline">' + uniques.map(j => `
-      <div class="ev-timeline-item">
-        <span class="ev-timeline-dot ${j.kind === 'pic' ? 'pic' : j.kind === 'fin' ? 'fin' : ''}"></span>
-        <div class="ev-timeline-date">${fmtDate(j.date)}</div>
-        <div class="ev-timeline-title">${j.nom}</div>
-        <div class="ev-timeline-kind">${libKind[j.kind]} · ${j.tendance.icone} ${j.tendance.label}</div>
-      </div>`).join('') + '</div>';
-  }
+  if (calEl) { calEl.innerHTML = ''; calEl.style.display = 'none'; }
 
   // ── 5. PROMPT IA ──────────────────────────────────────────────
-  const resumeEv = alertes.slice(0,6).map(e => {
-    const pics = (e.pics || [e.date]).map(fmtDate).join(', ');
-    return `${e.nom} — tendance : ${evTendance(e).label} — intensité : ${evIntensite(e.force)} — influence du ${fmtDate(e.dateDebut)} au ${fmtDate(e.dateFin)} — pic(s) : ${pics} — ${e.desc}`;
-  }).join('\n');
-  const prompt = `Le moteur astrologique a déjà effectué un filtre très strict des véritables tournants de vie potentiels de ${USER.prenom} sur les 24 prochains mois.
+  const resumeEv = alertes.slice(0,4).map(e => {
+    const pics=(e.pics||[e.date]).map(fmtDate).join(', ');
+    const sc=evV42Scenarios(e).map(x=>`${x.p}% : ${x.txt}`).join(' | ');
+    return `DOMAINE : ${evV42Domaine(e)}\nPÉRIODE : ${fmtDate(e.dateDebut)} au ${fmtDate(e.dateFin)} ; point(s) fort(s) : ${pics}\nSCÉNARIOS : ${sc}`;
+  }).join('\n\n');
+  const prompt = `Voici uniquement les tournants de vie retenus après filtrage strict pour ${USER.prenom} sur les 24 prochains mois :
 
-ÉVÉNEMENTS RETENUS APRÈS FILTRAGE :
-${resumeEv || 'Aucun tournant de vie exceptionnel retenu par le moteur.'}
+${resumeEv || 'Aucun tournant de vie exceptionnel retenu.'}
 
-Contexte de cycles (informatif seulement, ne crée PAS un événement à lui seul) :
-- Jupiter : ${phaseJup} (${Math.round(cycleJup*100)}% du cycle de 12 ans)
-- Saturne : ${phaseSat} (${Math.round(cycleSat*100)}% du cycle de 29 ans)
-- Année de profection : Maison ${maison} — thème de ${theme}
-
+Rédige seulement une synthèse utile de 3 à 5 phrases, maximum 100 mots.
 RÈGLES ABSOLUES :
-1. N'INVENTE AUCUN événement qui n'est pas présent dans la liste filtrée ci-dessus.
-2. Si la liste est vide, dis clairement qu'aucun tournant de vie exceptionnel ne ressort sur cet horizon ; ne cherche pas à remplir artificiellement la période.
-3. Un grand événement est une période structurante susceptible d'avoir un impact durable sur la trajectoire de vie. Ne transforme pas une simple bonne période, une humeur, une opportunité ponctuelle ou une difficulté ordinaire en « grand événement ».
-4. Si plusieurs signatures sont regroupées dans une même carte, décris UN SEUL tournant renforcé, jamais plusieurs événements identiques.
-5. Le début ouvre la période, le ou les pics indiquent l'intensité maximale, la fin clôt l'influence. Un pic ne signifie jamais que tout se joue en une seule journée.
-6. Ne prédis jamais comme certitude une grossesse, un décès, une rupture, un licenciement, un accident ou tout autre fait précis. Présente seulement des catégories possibles de changements selon le domaine concerné.
-7. Distingue clairement favorable / difficile / mixte-transformation et l'intensité, mais rappelle implicitement que l'astrologie décrit des périodes et non des faits garantis.
-8. Cite les dates seulement pour les événements effectivement retenus. Ne répète pas les mêmes dates.
+- parle de la VIE CONCRÈTE : travail, couple, famille, logement, argent, changement de statut ou de direction ;
+- commence par le ou les domaines réellement concernés ;
+- cite les 1 ou 2 scénarios les plus plausibles, sans inventer d’événement absent de la liste ;
+- ne parle jamais de module, technique, transit, planète, cycle, maison, profection, signature, aspect, orbe ou astrologue ;
+- ne fais aucun discours général sur « consolider », « se transformer », « grandir » ou « évoluer » sans dire concrètement DANS QUEL DOMAINE et ce que cela peut vouloir dire ;
+- ne répète pas les dates déjà affichées sur les cartes sauf si une date est indispensable pour comprendre la synthèse ;
+- ne présente jamais grossesse, décès, rupture, licenciement ou accident comme une certitude ;
+- si aucun tournant n’est retenu, dis simplement qu’aucun changement exceptionnel n’est suffisamment marqué sur les 24 mois.
 
-Rédige une lecture globale de 6 à 9 phrases, directe, claire, sans jargon astrologique, en parlant à ${USER.prenom} en "tu".`
+Ton langage doit être celui d’une personne qui veut savoir ce qui risque de changer dans sa vie, pas celui d’un astrologue.`;
 
   try {
     const data = await appelerClaude({feature:'events',model:'claude-sonnet-4-6',max_tokens:600,
-        system:'Tu es un astrologue bienveillant et précis. Tu donnes des lectures de vie équilibrées — honnêtes sur les défis, enthousiastes sur les opportunités. Ton direct, chaleureux, sans jargon.',
+        system:"Tu traduis une analyse astrologique déjà calculée en conséquences de vie concrètes. Tu n’emploies aucun jargon astrologique, aucun discours abstrait et aucun remplissage. Tu dis quels domaines sont concernés et quels changements concrets sont les plus plausibles, avec prudence sur les faits sensibles.",
         messages:[{role:'user',content:prompt}]});
     document.getElementById('ev-rapport').innerHTML = formatRapport(texteClaude(data)||'');
   } catch(e) {}
