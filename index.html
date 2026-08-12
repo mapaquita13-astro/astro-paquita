@@ -1462,241 +1462,66 @@ a{color:var(--cab-plum2)}
 }
 </style>
 
-<style id="astro-paquita-v33-css">
-/* ============================================================
-   ASTRO PAQUITA V33 — ERGONOMIE GLOBALE PC + MOBILE
-   Profils visibles, navigation directe, textes lisibles
-   ============================================================ */
-:root{
-  --v33-plum:#4a1a63;
-  --v33-plum-dark:#35103f;
-  --v33-gold:#c89c55;
-  --v33-cream:#f7efe3;
-  --v33-paper:#fffaf3;
-  --v33-ink:#3d2b39;
-  --v33-muted:#76656f;
-  --v33-line:#dfcfbb;
+<style id="astro-paquita-v37-clean-ui">
+/* V37 — correction structurelle : aucun overlay pour le choix du profil */
+#v37-profile-dock{
+  position:sticky;top:0;z-index:5000;min-height:58px;display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:8px 14px;background:linear-gradient(90deg,#2f0d2d,#481642 52%,#2f0d2d);
+  border-bottom:1px solid rgba(229,184,110,.48);box-shadow:0 4px 18px rgba(40,12,35,.16);
+  font-family:'Lato',Arial,sans-serif;box-sizing:border-box
 }
-html{font-size:18px!important}
-body{font-size:17px!important;line-height:1.62!important}
-button,input,select,textarea{font-size:17px!important;line-height:1.35!important}
-.header-btn{font-size:.78rem!important;letter-spacing:.08em!important}
-.service-nom,.bloc-titre,.rapport-bloc-titre,.ev-card-titre{font-size:1.08rem!important}
-.service-desc,.rapport-texte,.ev-card-desc,.coords-info,.profils-msg,.progress-label,.hist-item-question{font-size:.92rem!important;line-height:1.62!important}
-.champ-label{font-size:.88rem!important;letter-spacing:.02em!important}
-.champ-input,.profils-select,select.champ-input,textarea.champ-input{font-size:1rem!important;min-height:50px!important}
-.btn-principal,.btn-profil,.btn-retour,.dom-btn,.per-btn,.f-btn,.genre-btn{font-size:.9rem!important;min-height:48px!important}
-.grand-sous,.res-sous{font-size:.84rem!important}
-.mod-onglet-label{font-size:.82rem!important}
-.service-lien{opacity:1!important;font-size:.72rem!important}
+.v37-profile-brand{color:#e9bd70;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.05rem;white-space:nowrap}
+.v37-profile-brand span{color:#fff7ea;margin-left:4px}
+#v37-profile-select{
+  min-width:210px;max-width:310px;height:40px;padding:0 38px 0 14px;border-radius:999px;
+  border:1px solid rgba(231,190,119,.70);background:#fffaf2;color:#3d1b3a;font-size:16px;font-weight:700;
+  outline:none;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.10)
+}
+#v37-profile-select:focus{border-color:#efc97e;box-shadow:0 0 0 3px rgba(239,201,126,.18)}
+.v37-space-btn,.v37-new-btn{height:40px;border-radius:999px;border:1px solid rgba(231,190,119,.58);cursor:pointer;font-weight:700}
+.v37-space-btn{padding:0 17px;background:rgba(255,255,255,.08);color:#fff8eb;font-size:.9rem}
+.v37-new-btn{width:40px;background:#e5b967;color:#351131;font-size:1.25rem}
+.v37-space-btn:hover,.v37-new-btn:hover{filter:brightness(1.07)}
 
-/* Barre permanente sous le header */
-#v33-topbar{
-  position:sticky;top:56px;z-index:1900;
-  background:rgba(255,250,243,.985);
-  border-bottom:1px solid var(--v33-line);
-  box-shadow:0 5px 18px rgba(59,31,49,.08);
-  color:var(--v33-ink);
-}
-.v33-profile-strip,.v33-main-nav{
-  width:min(1400px,100%);margin:0 auto;display:flex;align-items:center;
-  gap:9px;padding:8px 16px;overflow-x:auto;scrollbar-width:thin;
-}
-.v33-profile-strip{border-bottom:1px solid rgba(201,166,114,.24)}
-.v33-strip-label{font-family:'Cormorant Garamond',Georgia,serif;font-size:1rem;font-weight:700;color:var(--v33-plum);white-space:nowrap;margin-right:2px}
-.v33-profile-chips{display:flex;align-items:center;gap:7px;min-width:max-content}
-.v33-profile-chip{
-  border:1px solid #d7c2a4;background:#fffdf8;color:#4c3948;border-radius:999px;
-  padding:7px 12px;min-height:40px;font-family:'Lato',sans-serif;font-size:.82rem!important;font-weight:700;cursor:pointer;white-space:nowrap;
-}
-.v33-profile-chip.actif{background:var(--v33-plum);color:#fff8ed;border-color:var(--v33-plum);box-shadow:0 3px 10px rgba(74,26,99,.18)}
-.v33-profile-chip.add{background:#fff3dc;color:#754f1e;border-color:#d9b276;font-size:.9rem!important}
-.v33-main-nav{padding-top:7px;padding-bottom:8px}
-.v33-nav-btn{
-  border:0;background:transparent;color:#554450;border-radius:10px;padding:7px 11px;
-  font-family:'Cormorant Garamond',Georgia,serif;font-size:.92rem!important;font-weight:700;cursor:pointer;white-space:nowrap;min-height:42px;
-}
-.v33-nav-btn:hover,.v33-nav-btn.actif{background:#f0e2cf;color:var(--v33-plum)}
-.v33-nav-btn.premium::after{content:' ✦';color:var(--v33-gold)}
-#quick-profile-chip{display:none!important}
-.modules-onglets{display:none!important}
+/* Lisibilité : augmentation modérée, sans déformer la maquette */
+.service-desc,.cabinet-main-card .service-desc{font-size:.92rem!important;line-height:1.4!important}
+.cabinet-main-card .service-nom{font-size:1.34rem!important}
+.champ-label{font-size:.94rem!important}
+.champ-input,.profils-select,textarea.champ-input,select.champ-input{font-size:16px!important}
+.mod-panneau,.rapport-texte,.ev-card-desc{font-size:1rem}
 
-/* Tableau de bord de l'espace : aucune génération obligatoire */
-#v33-space-dashboard{display:none;padding:18px 18px 28px;max-width:1100px;margin:0 auto;color:var(--v33-ink)}
-#v33-space-dashboard.visible{display:block}
-.v33-space-head{background:linear-gradient(135deg,var(--v33-plum-dark),var(--v33-plum));color:#fff8ef;border-radius:18px;padding:22px 24px;margin-bottom:16px;box-shadow:0 10px 24px rgba(65,27,68,.15)}
-.v33-space-kicker{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#e9c98d;font-weight:700}
-.v33-space-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:2rem;line-height:1.08;margin-top:4px}
-.v33-space-sub{font-size:.92rem;color:#f0dfec;margin-top:6px}
-.v33-space-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.v33-space-card{border:1px solid var(--v33-line);background:var(--v33-paper);border-radius:15px;padding:17px;text-align:left;color:var(--v33-ink);cursor:pointer;box-shadow:0 4px 12px rgba(60,34,47,.06);min-height:135px}
-.v33-space-card:hover{transform:translateY(-1px);border-color:#c69e66}
-.v33-space-icon{width:43px;height:43px;border-radius:12px;background:var(--v33-plum);color:#f2d39a;display:grid;place-items:center;font-size:1.25rem;margin-bottom:9px}
-.v33-space-card strong{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.18rem;color:var(--v33-plum-dark);margin-bottom:4px}
-.v33-space-card span{display:block;font-size:.84rem;line-height:1.45;color:var(--v33-muted)}
-.v33-space-note{margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff7e9;border:1px solid #e4cda8;color:#694e61;font-size:.83rem}
-.v33-edit-profile{margin-top:14px;border:1px solid #cba770;background:#fffaf2;color:#5b334e;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-
-/* Formulaire de profil : plus clair */
-#section-saisie .grand-titre{font-size:2.25rem!important}
-#section-saisie .bloc,#section-saisie .profils-bloc{padding:1.25rem!important}
-#section-saisie .profils-titre{font-size:.9rem!important}
-#section-saisie .profils-row-btns{gap:.7rem}
-
-/* La maquette mobile reste élégante mais devient lisible */
-.v30-brand-name{font-size:1.35rem!important}
-.v30-brand-sub{font-size:.78rem!important;line-height:1.35!important}
-.v30-pred-title{font-size:1.45rem!important}
-.v30-pred-text{font-size:.92rem!important;line-height:1.55!important}
-.v30-gold-btn{font-size:.86rem!important;min-height:46px!important}
-.v30-home-card h3{font-size:1.18rem!important}
-.v30-home-card p{font-size:.86rem!important;line-height:1.45!important}
-.v30-nav-btn,.v30-nav-btn small{font-size:.72rem!important}
-.v30-event-row,.v30-event-link,.v30-profile-sub,.v30-rel-card small{font-size:.78rem!important;line-height:1.45!important}
-.v30-table{font-size:.72rem!important}
-.v30-table th,.v30-table td{padding:10px 7px!important}
-.v32-profile-meta,.v32-avenir-item small{font-size:.78rem!important}
-.v32-profile-name,.v32-avenir-item strong{font-size:1.08rem!important}
-
-@media print{#v33-topbar,#v33-space-dashboard{display:none!important}}
-@media(max-width:900px){
-  html{font-size:17px!important}
-  body{font-size:16.5px!important}
-  .v33-profile-strip,.v33-main-nav{padding-left:10px;padding-right:10px}
-  .v33-strip-label{font-size:.92rem}
-  .v33-profile-chip{font-size:.8rem!important;padding:7px 10px}
-  .v33-main-nav{gap:5px}
-  .v33-nav-btn{font-size:.88rem!important;padding:7px 9px}
-  .v33-space-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
 @media(max-width:700px){
-  html{font-size:17px!important}
-  body{font-size:17px!important}
-  #v33-topbar{top:56px}
-  .v33-profile-strip{padding-top:7px;padding-bottom:6px}
-  .v33-main-nav{padding-top:5px;padding-bottom:6px}
-  .v33-strip-label{display:none}
-  .v33-profile-chip{min-height:38px;font-size:.8rem!important}
-  .v33-nav-btn{min-height:40px;font-size:.82rem!important;background:#fffaf3;border:1px solid #eadcc9}
-  #v33-space-dashboard{padding:12px 11px calc(88px + env(safe-area-inset-bottom))}
-  .v33-space-head{padding:18px;border-radius:15px}
-  .v33-space-title{font-size:1.75rem}
-  .v33-space-sub{font-size:.88rem}
-  .v33-space-grid{grid-template-columns:1fr;gap:9px}
-  .v33-space-card{min-height:0;padding:14px;display:grid;grid-template-columns:46px 1fr;column-gap:11px;align-items:center}
-  .v33-space-icon{grid-row:1/3;margin:0}
-  .v33-space-card strong{font-size:1.08rem}
-  .v33-space-card span{font-size:.84rem}
-  .section-modules{padding-top:0!important}
-  .mobile-module-head{top:160px!important;padding-right:.9rem!important}
-  .grand-titre{font-size:1.9rem!important}
+  #v37-profile-dock{min-height:54px;padding:7px 9px;gap:7px;justify-content:stretch}
+  .v37-profile-brand{display:none}
+  #v37-profile-select{min-width:0;max-width:none;flex:1;height:40px;font-size:16px;padding-left:12px}
+  .v37-space-btn{height:40px;padding:0 11px;font-size:.78rem;white-space:nowrap}
+  .v37-new-btn{height:40px;width:40px;flex:none}
+  .v30-brand-name{font-size:29px!important}
+  .v30-brand-sub{font-size:13.5px!important;line-height:1.35!important}
+  .v30-pred-title{font-size:24px!important}
+  .v30-pred-text{font-size:13.5px!important;line-height:1.5!important}
+  .v30-home-card h3{font-size:22px!important}
+  .v30-home-card p{font-size:13px!important;line-height:1.42!important}
+  .v30-nav-btn{font-size:12px!important}
+  .mobile-module-title{font-size:1.42rem!important}
+  .grand-titre{font-size:2rem!important}
   .grand-sous{font-size:.82rem!important}
-  .service-desc,.rapport-texte,.ev-card-desc,.coords-info,.hist-item-question{font-size:.94rem!important}
-  .ev-card-date,.ev-card-compte{font-size:.82rem!important}
-  .champ-label{font-size:.9rem!important}
-  .btn-principal,.btn-profil,.btn-retour,.dom-btn,.per-btn,.f-btn,.genre-btn{font-size:.92rem!important}
-  #v30-nav{z-index:1850!important}
-  .v30-pred-text{font-size:.96rem!important}
-  .v30-home-card p{font-size:.9rem!important}
 }
-</style>
-
-<style id="astro-paquita-v34-css">
-/* ============================================================
-   ASTRO PAQUITA V34 — MAQUETTE LUXE VALIDÉE
-   Un seul profil déroulant / PC + téléphone / textes lisibles
-   ============================================================ */
-:root{
-  --v34-plum:#3b0d38;--v34-plum2:#57156c;--v34-purple:#6b2384;
-  --v34-gold:#d9ae58;--v34-gold2:#f0d17e;--v34-cream:#fbf5ec;
-  --v34-paper:#fffdf8;--v34-ink:#3b173d;--v34-muted:#765d75;--v34-line:#ead8bf;
-  --v34-shadow:0 12px 28px rgba(67,29,54,.09);
-}
-html{font-size:17px!important}
-body{font-size:17px!important;line-height:1.55!important}
-
-/* En-tête : élégant et non superposé au contenu */
-.header{
-  position:relative!important;top:auto!important;left:auto!important;right:auto!important;
-  height:104px!important;padding:0 30px!important;display:flex!important;align-items:center!important;
-  justify-content:flex-start!important;overflow:visible!important;
-  background:
-    radial-gradient(circle at 34% 34%,rgba(240,209,126,.16) 0 1px,transparent 1.5px),
-    radial-gradient(circle at 72% 63%,rgba(240,209,126,.20) 0 1px,transparent 1.5px),
-    radial-gradient(circle at 91% 24%,rgba(240,209,126,.17) 0 1px,transparent 1.5px),
-    linear-gradient(110deg,#230520 0%,#421047 56%,#260622 100%)!important;
-  border-bottom:1px solid rgba(233,197,115,.35)!important;box-shadow:none!important;backdrop-filter:none!important;
-}
-.header .logo{gap:13px!important;z-index:2}
-.header .logo-icon{width:64px!important;height:64px!important;filter:sepia(.3) saturate(1.25) brightness(1.08)}
-.header .logo-nom{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:2.05rem!important;letter-spacing:.05em!important;font-weight:500!important;background:none!important;-webkit-text-fill-color:var(--v34-gold2)!important;color:var(--v34-gold2)!important;line-height:1!important}
-.header .logo-tagline{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:.95rem!important;letter-spacing:0!important;text-transform:none!important;font-style:italic!important;color:#fff7ef!important;-webkit-text-fill-color:#fff7ef!important;margin-top:5px!important}
-.header-btn{position:absolute!important;top:31px!important;min-height:42px!important;border-radius:11px!important;padding:9px 15px!important;font-size:.76rem!important;letter-spacing:.04em!important;text-transform:none!important;background:rgba(255,255,255,.075)!important;border:1px solid rgba(233,197,115,.35)!important;box-shadow:none!important;color:#fff8ef!important}
-#btn-compte{right:170px!important}
-#btn-install-pwa{display:none!important}
-.header>.header-btn:last-of-type{right:24px!important}
-
-/* Sélecteur de profil unique */
-.v34-profile-control{position:absolute;left:50%;top:23px;transform:translateX(-50%);z-index:4100;width:250px;font-family:'Lato',sans-serif}
-.v34-profile-button{width:100%;height:54px;display:grid;grid-template-columns:32px 1fr 24px;align-items:center;gap:8px;padding:0 14px;border-radius:16px;border:1px solid rgba(240,209,126,.75);background:rgba(55,11,56,.78);color:#fffaf2;box-shadow:0 9px 24px rgba(11,0,13,.18);cursor:pointer;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.18rem!important;text-align:left}
-.v34-profile-symbol{font-family:Georgia,serif;font-size:1.35rem;color:var(--v34-gold2);text-align:center}.v34-profile-chevron{font-size:1rem;color:var(--v34-gold2);text-align:right;transition:transform .2s}.v34-profile-control.ouvert .v34-profile-chevron{transform:rotate(180deg)}
-.v34-profile-menu{display:none;position:absolute;left:0;right:0;top:62px;background:#fffdf9;color:var(--v34-ink);border:1px solid #e7d8c3;border-radius:15px;box-shadow:0 20px 46px rgba(44,15,37,.22);padding:10px;max-height:430px;overflow:auto}
-.v34-profile-control.ouvert .v34-profile-menu{display:block;animation:v34pop .16s ease-out}@keyframes v34pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.v34-menu-caption{padding:6px 9px 8px;font-size:.65rem;font-weight:800;letter-spacing:.12em;color:#8f6390}
-.v34-profile-list{display:grid;gap:3px}.v34-profile-option,.v34-add-profile{width:100%;border:0;background:transparent;color:#402441;border-radius:9px;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;padding:9px 10px;text-align:left;cursor:pointer;font-size:.92rem!important}
-.v34-profile-option:hover{background:#f7ecf4}.v34-profile-option.actif{background:#f5ebd9;color:#4a194c;font-weight:700}.v34-profile-option .init{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#4b1653;color:#f1d27c;font-family:'Cormorant Garamond',serif}.v34-profile-option .check{color:#6c237b;font-weight:900}.v34-profile-meta{font-size:.67rem;color:#9b8598;display:block;margin-top:1px}.v34-add-profile{grid-template-columns:30px 1fr;margin-top:8px;border-top:1px solid #eadfd2;border-radius:0;padding-top:12px;color:#6c3470;font-weight:700}
-
-/* Ancienne bande de profils supprimée visuellement ; on garde le DOM pour la compatibilité */
-.v33-profile-strip{display:none!important}.v33-profile-chips{display:none!important}#quick-profile-chip{display:none!important}
-#v33-topbar{position:sticky!important;top:0!important;z-index:1800!important;background:rgba(255,252,247,.985)!important;border-bottom:1px solid #eadcc8!important;box-shadow:0 4px 15px rgba(62,31,49,.06)!important}
-.v33-main-nav{width:min(1450px,100%)!important;min-height:62px!important;margin:0 auto!important;padding:8px 25px!important;display:flex!important;justify-content:center!important;gap:11px!important;overflow-x:auto!important}
-.v33-nav-btn{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:1rem!important;font-weight:700!important;color:#4d2a4d!important;padding:9px 14px!important;border-radius:10px!important;min-height:44px!important}
-.v33-nav-btn:hover,.v33-nav-btn.actif{background:#f5eadb!important;color:#641b70!important}.v33-nav-btn.premium::after{color:#c99437!important}
-.v33-nav-btn[data-v33="home"]::before{content:'⌂  '}.v33-nav-btn[data-v33="space"]::before{content:'♙  '}.v33-nav-btn[data-v33="natal"]::before{content:'☉  '}.v33-nav-btn[data-v33="prev"]::before{content:'♄  '}.v33-nav-btn[data-v33="evenements"]::before{content:'□  '}.v33-nav-btn[data-v33="fenetre"]::before{content:'★  '}.v33-nav-btn[data-v33="synastrie"]::before{content:'♥  '}.v33-nav-btn[data-v33="question"]::before{content:'?  '}
-
-/* Tableau de bord */
-.section-modules{background:linear-gradient(180deg,#fffaf4,#f8efe4)!important;color:var(--v34-ink)!important;min-height:calc(100vh - 166px)!important}
-#v33-space-dashboard{display:none!important;width:min(1480px,100%)!important;max-width:none!important;margin:0 auto!important;padding:32px 30px 34px!important;color:var(--v34-ink)!important}
-#v33-space-dashboard.visible{display:block!important}
-.v34-welcome-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:20px;padding:0!important;background:transparent!important;box-shadow:none!important}
-.v34-welcome-kicker{font-size:.72rem;letter-spacing:.14em;font-weight:800;color:#a1703e;margin-bottom:3px}.v33-space-title{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:2.65rem!important;line-height:1.05!important;color:#45134d!important;margin:0!important}.v33-space-sub{font-size:1rem!important;color:#715b70!important;margin-top:7px!important}
-.v33-edit-profile{margin:3px 0 0!important;border:1px solid #7a2b87!important;background:linear-gradient(135deg,#6b237e,#50155f)!important;color:#fffaf3!important;border-radius:10px!important;padding:11px 16px!important;min-height:46px!important;font-size:.84rem!important;box-shadow:0 5px 13px rgba(83,25,94,.13)!important}
-.v34-dashboard-layout{display:grid;grid-template-columns:minmax(0,1fr) 365px;gap:26px;align-items:start}
-.v33-space-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important}
-.v33-space-card{position:relative!important;min-height:244px!important;border:1px solid var(--v34-line)!important;background:linear-gradient(145deg,#fffefa,#fff9f2)!important;border-radius:16px!important;padding:24px 22px 18px!important;text-align:center!important;color:var(--v34-ink)!important;box-shadow:var(--v34-shadow)!important;display:flex!important;flex-direction:column!important;align-items:center!important;cursor:pointer!important;transition:transform .18s,box-shadow .18s,border-color .18s!important}
-.v33-space-card:hover{transform:translateY(-3px)!important;border-color:#d5b374!important;box-shadow:0 17px 34px rgba(67,29,54,.12)!important}.v33-space-icon{width:76px!important;height:76px!important;border-radius:50%!important;display:grid!important;place-items:center!important;margin:0 auto 14px!important;font-family:'Cormorant Garamond',Georgia,serif!important;font-size:2rem!important;background:#efe5fb!important;color:#65229a!important;box-shadow:inset 0 0 0 1px rgba(97,44,121,.08)!important}.v34-card-prev .v33-space-icon{background:#e6f3fb!important;color:#2b79a9!important}.v34-card-events .v33-space-icon{background:#e8f3e9!important;color:#3f9467!important}.v34-card-window .v33-space-icon{background:#fff0d6!important;color:#d48b22!important}.v34-card-rel .v33-space-icon{background:#fde5eb!important;color:#cc4774!important}.v34-card-question .v33-space-icon{background:#fff0d2!important;color:#c78419!important}
-.v34-card-copy{display:block!important;flex:1}.v33-space-card strong{display:block!important;font-family:'Cormorant Garamond',Georgia,serif!important;font-size:1.35rem!important;line-height:1.08!important;color:#421744!important;text-transform:uppercase!important;margin-bottom:9px!important}.v33-space-card .v34-card-copy>span{display:block!important;font-size:.88rem!important;line-height:1.5!important;color:#705b70!important;max-width:280px!important;margin:auto!important}.v34-card-action{width:100%;display:block!important;margin-top:17px!important;background:linear-gradient(135deg,#6d2383,#4d155e)!important;color:#fffaf3!important;border-radius:9px!important;padding:10px 8px!important;font-family:'Cormorant Garamond',Georgia,serif!important;font-size:1rem!important;font-weight:700!important}
-.v34-side-card{border:1px solid #e3cfb4;background:#fffdf8;border-radius:17px;overflow:hidden;box-shadow:var(--v34-shadow)}.v34-side-head{background:linear-gradient(135deg,#51135d,#6c1f79);color:#fff9f1;padding:16px 19px;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.14rem;font-weight:700;letter-spacing:.03em}.v34-side-head span{color:#e8c46b;margin-right:7px}.v34-side-body{padding:0 15px}.v34-side-link{width:100%;display:grid;grid-template-columns:52px 1fr 18px;align-items:center;gap:12px;text-align:left;border:0;border-bottom:1px solid #ede1d3;background:transparent;padding:16px 0;color:#472347;cursor:pointer}.v34-side-link:last-child{border-bottom:0}.v34-side-link strong{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.05rem;color:#431844;display:block}.v34-side-link small{display:block;font-size:.76rem;line-height:1.35;color:#806b7e;margin-top:2px}.v34-side-link b{font-size:1.35rem;font-weight:400;color:#8b4786}.v34-side-icon{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;font-size:1.25rem;color:white}.v34-side-icon.rose{background:linear-gradient(135deg,#e85f7f,#c94770)}.v34-side-icon.bleu{background:linear-gradient(135deg,#58b8df,#378bbd)}.v34-side-icon.vert{background:linear-gradient(135deg,#68c58e,#43a36d)}.v34-side-icon.or{background:linear-gradient(135deg,#f3b34c,#dc8b21)}
-
-/* Modules et formulaires : lisibles et cohérents */
-.mobile-module-head{display:none!important}.mod-panneau{max-width:1150px!important;margin:0 auto!important;padding:32px 24px 45px!important}.bloc,.profils-bloc,.rapport-bloc,.planetes-tableau,.resultats,.fenetre-card,.y-card{border-radius:15px!important;background:#fffdf9!important;border:1px solid #ead8bf!important;box-shadow:0 8px 22px rgba(68,32,52,.07)!important;padding:1.25rem!important}.grand-titre,.res-titre,.bloc-titre,.rapport-bloc-titre,.profils-titre,.ev-hero-title,.ev-section-titre{font-family:'Cormorant Garamond',Georgia,serif!important;color:#45164b!important}.grand-titre{font-size:2.35rem!important}.bloc-titre,.rapport-bloc-titre,.profils-titre,.ev-card-titre{font-size:1.2rem!important}.grand-sous,.res-sous,.rapport-texte,.coords-info,.profils-msg,.progress-label,.ev-card-desc{font-size:.96rem!important;line-height:1.62!important}.champ-label{font-size:.93rem!important}.champ-input,.profils-select,select.champ-input,textarea.champ-input{font-size:1rem!important;min-height:52px!important;border-radius:10px!important}.btn-principal,.btn-profil,.btn-retour,.dom-btn,.per-btn,.f-btn,.genre-btn{font-size:.93rem!important;min-height:49px!important}.modules-onglets{display:none!important}
-
-.v34-mobile-nav{display:none}
-
-/* Téléphone : même identité, vraie interface mobile */
-@media(max-width:700px){
-  html{font-size:17px!important}body{font-size:16px!important;padding-bottom:72px!important;background:#fbf4eb!important}
-  .header{height:284px!important;padding:24px 18px 24px!important;display:block!important;text-align:center!important;border-bottom:1px solid #d9ae58!important;border-radius:0 0 48% 48% / 0 0 12% 12%!important;background:
-    radial-gradient(circle at 13% 22%,rgba(240,209,126,.65) 0 1px,transparent 1.4px),radial-gradient(circle at 73% 17%,rgba(240,209,126,.55) 0 1px,transparent 1.4px),radial-gradient(circle at 84% 54%,rgba(240,209,126,.45) 0 1px,transparent 1.4px),linear-gradient(155deg,#1f041d,#461049 60%,#240521)!important
-  }
-  .header .logo{justify-content:center!important;gap:10px!important;margin-top:26px!important}.header .logo-icon{width:76px!important;height:76px!important}.header .logo-nom{font-size:2rem!important;letter-spacing:.03em!important}.header .logo-tagline{font-size:1rem!important;max-width:260px!important;line-height:1.25!important;text-align:left!important}.header-btn{display:none!important}#btn-compte{display:grid!important;place-items:center!important;right:19px!important;top:24px!important;width:47px!important;height:47px!important;min-height:47px!important;border-radius:50%!important;padding:0!important;font-size:0!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(235,201,119,.55)!important}#btn-compte::before{content:'⚙';font-size:1.28rem;color:#f1d374}
-  .v34-profile-control{top:176px!important;left:50%!important;width:min(304px,78vw)!important}.v34-profile-button{height:58px!important;border-radius:18px!important;font-size:1.2rem!important;background:rgba(42,7,43,.74)!important}.v34-profile-menu{top:66px!important;max-height:360px!important;text-align:left!important;z-index:5000!important}.v34-profile-option,.v34-add-profile{font-size:1rem!important;padding:11px!important}
-  #v33-topbar{display:none!important}
-  .section-modules{min-height:0!important;background:#fbf4eb!important}.section-modules.visible{padding:0 0 82px!important}
-  #v33-space-dashboard{padding:30px 14px 22px!important;background:radial-gradient(circle at 102% 7%,rgba(223,174,73,.12),transparent 22%),#fbf4eb!important}.v34-welcome-row{display:block!important;margin-bottom:20px!important;padding:0 7px!important}.v34-welcome-kicker{display:none!important}.v33-space-title{font-size:2.45rem!important}.v33-space-sub{font-size:1.03rem!important}.v33-edit-profile{display:none!important}
-  .v34-dashboard-layout{display:block!important}.v33-space-grid{display:flex!important;flex-direction:column!important;gap:13px!important}.v33-space-card{min-height:134px!important;border-radius:18px!important;padding:15px 16px!important;display:grid!important;grid-template-columns:82px minmax(0,1fr) 19px!important;grid-template-rows:auto auto!important;column-gap:14px!important;align-items:center!important;text-align:left!important;box-shadow:0 10px 24px rgba(83,48,59,.075)!important}.v33-space-card:hover{transform:none!important}.v33-space-icon{grid-column:1!important;grid-row:1/3!important;width:76px!important;height:76px!important;margin:0!important;font-size:2rem!important}.v34-card-copy{grid-column:2!important;grid-row:1/3!important;align-self:center!important}.v33-space-card strong{font-size:1.25rem!important;text-align:left!important;margin-bottom:6px!important}.v33-space-card .v34-card-copy>span{font-size:.95rem!important;line-height:1.45!important;text-align:left!important;margin:0!important;max-width:none!important}.v34-card-action{grid-column:3!important;grid-row:1/3!important;width:auto!important;margin:0!important;padding:0!important;background:transparent!important;color:#6d2a72!important;font-size:0!important}.v34-card-action::after{content:'›';font-size:2rem!important;font-family:Georgia,serif!important;font-weight:400!important}.v34-side-card{display:none!important}
-  .mod-panneau{padding:18px 13px 90px!important}.mobile-module-head{display:grid!important;grid-template-columns:44px 1fr 44px!important;align-items:center!important;position:sticky!important;top:0!important;z-index:1600!important;background:linear-gradient(135deg,#421047,#5a1563)!important;padding:7px 9px!important;min-height:58px!important;margin:0!important}.mobile-module-title{font-size:1.24rem!important;color:#fffaf2!important;text-align:center!important}.mobile-back{font-size:1.8rem!important;color:#fff!important}.mobile-module-head:after{content:'✦';color:#e5c36d;text-align:center}.bloc,.profils-bloc,.rapport-bloc,.planetes-tableau,.resultats,.fenetre-card,.y-card{padding:1.05rem!important}.grand-titre{font-size:2rem!important}.grand-sous,.res-sous,.rapport-texte,.coords-info,.profils-msg,.progress-label,.ev-card-desc{font-size:.98rem!important}.champ-label{font-size:.95rem!important}.champ-input,.profils-select,select.champ-input,textarea.champ-input{font-size:16px!important;min-height:52px!important}.btn-principal,.btn-profil,.btn-retour,.dom-btn,.per-btn,.f-btn,.genre-btn{font-size:.95rem!important;min-height:50px!important}
-  .v34-mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:3500;height:72px;padding:5px 12px max(5px,env(safe-area-inset-bottom));display:grid!important;grid-template-columns:repeat(4,1fr);background:linear-gradient(100deg,#2d082d,#4b104b,#270726);border-top:1px solid rgba(229,195,109,.35);box-shadow:0 -7px 20px rgba(36,8,31,.18)}.v34-mobile-nav button{border:0;background:transparent;color:#ddcedb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:'Cormorant Garamond',Georgia,serif}.v34-mobile-nav button span{font-size:1.5rem;line-height:1;color:#f0d271}.v34-mobile-nav button small{font-size:.76rem!important;color:#efe4ed}
-  /* L'ancien nav mobile est masqué pour éviter les doublons */
-  #v30-nav,.mobile-bottom-nav{display:none!important}
-}
-@media(min-width:701px) and (max-width:1180px){.v34-dashboard-layout{grid-template-columns:1fr 310px}.v33-space-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.v33-main-nav{justify-content:flex-start!important}.header .logo-nom{font-size:1.7rem!important}.header .logo-tagline{font-size:.82rem!important}}
-@media(max-width:1000px) and (min-width:701px){#btn-compte{display:none!important}.header>.header-btn:last-of-type{right:20px!important}.v34-profile-control{left:58%!important}}
-@media print{.header,#v33-topbar,.v34-mobile-nav,.v34-profile-control{display:none!important}}
 </style>
 
 </head>
 <body>
+
+<!-- V37 — sélecteur de profil unique, sans popup -->
+<div id="v37-profile-dock" role="navigation" aria-label="Profil actif">
+  <div class="v37-profile-brand">✦ <span>Profil</span></div>
+  <select id="v37-profile-select" aria-label="Choisir un profil" onchange="v37ChangerProfil(this.value)">
+    <option value="">Choisir un profil</option>
+  </select>
+  <button type="button" class="v37-space-btn" onclick="v37OuvrirMonEspace()">Mon espace</button>
+  <button type="button" class="v37-new-btn" onclick="v37NouveauProfil()" aria-label="Nouveau profil">＋</button>
+</div>
+
 
 <!-- HEADER -->
 <header class="header">
@@ -1709,77 +1534,14 @@ body{font-size:17px!important;line-height:1.55!important}
   </div>
   <button class="header-btn" id="btn-compte" onclick="ouvrirCompte()" style="background:linear-gradient(135deg,#a8792e,#c9a84c)">🔑 Connexion</button>
   <button class="header-btn" id="btn-install-pwa" onclick="installerAppPWA()" style="display:none">📲 Installer</button>
-  <button class="header-btn" onclick="v33AccederEspace()">✦ Mon espace</button>
-
-  <div id="v34-profile-control" class="v34-profile-control">
-    <button id="v34-profile-button" class="v34-profile-button" type="button" onclick="v34ToggleProfileMenu()" aria-haspopup="true" aria-expanded="false">
-      <span class="v34-profile-symbol">♙</span>
-      <span id="v34-profile-name">Choisir un profil</span>
-      <span class="v34-profile-chevron">⌄</span>
-    </button>
-    <div id="v34-profile-menu" class="v34-profile-menu" role="menu">
-      <div class="v34-menu-caption">PROFIL ACTIF</div>
-      <div id="v34-profile-list" class="v34-profile-list"></div>
-      <button type="button" class="v34-add-profile" onclick="v34AddProfile()"><span>＋</span> Ajouter un profil</button>
-    </div>
-  </div>
+  <button class="header-btn" onclick="scrollVersSaisie()">✦ Commencer</button>
 </header>
-<div id="v33-topbar" aria-label="Navigation et profils">
-  <div class="v33-profile-strip">
-    <div class="v33-strip-label">Profils</div>
-    <div class="v33-profile-chips" id="v33-profile-chips"></div>
-  </div>
-  <nav class="v33-main-nav" aria-label="Accès direct">
-    <button class="v33-nav-btn" data-v33="home" onclick="retourAccueil()">Accueil</button>
-    <button class="v33-nav-btn" data-v33="space" onclick="v33AccederEspace()">Mon espace</button>
-    <button class="v33-nav-btn" data-v33="natal" onclick="v33OuvrirModule('natal')">Portrait</button>
-    <button class="v33-nav-btn" data-v33="prev" onclick="v33OuvrirModule('prev')">Prévisions</button>
-    <button class="v33-nav-btn premium" data-v33="evenements" onclick="v33OuvrirModule('evenements')">Événements</button>
-    <button class="v33-nav-btn premium" data-v33="fenetre" onclick="v33OuvrirModule('fenetre')">Fenêtre 10 ans</button>
-    <button class="v33-nav-btn premium" data-v33="synastrie" onclick="v33OuvrirModule('synastrie')">Relations</button>
-    <button class="v33-nav-btn" data-v33="question" onclick="v33OuvrirModule('question')">Question</button>
-  </nav>
-</div>
-
-
-<button class="quick-profile-chip" id="quick-profile-chip" onclick="ouvrirProfilsRapides()" aria-label="Changer de profil">
-  <span class="qp-avatar" id="qp-avatar">✦</span>
-  <span class="qp-copy"><span class="qp-label">Profil actif</span><span class="qp-name" id="qp-name">Choisir un profil</span></span>
-  <span class="qp-arrow">⌄</span>
-</button>
-
-<div class="v32-sheet-overlay" id="v32-profile-overlay" onclick="if(event.target===this)fermerProfilsRapides()">
-  <div class="v32-sheet" role="dialog" aria-modal="true" aria-label="Changer de profil">
-    <button class="v32-sheet-close" onclick="fermerProfilsRapides()">×</button>
-    <div class="v32-sheet-handle"></div>
-    <div class="v32-sheet-title">Changer de profil</div>
-    <div class="v32-sheet-sub">Touchez un profil pour l'utiliser immédiatement</div>
-    <div class="v32-profile-list" id="v32-profile-list"></div>
-    <button class="v32-new-profile" onclick="nouveauProfilRapide()">＋ Ajouter un nouveau profil</button>
-  </div>
-</div>
-
-<div class="v32-sheet-overlay" id="v32-avenir-overlay" onclick="if(event.target===this)fermerAvenirRapide()">
-  <div class="v32-sheet" role="dialog" aria-modal="true" aria-label="Mon avenir">
-    <button class="v32-sheet-close" onclick="fermerAvenirRapide()">×</button>
-    <div class="v32-sheet-handle"></div>
-    <div class="v32-sheet-title">Mon avenir</div>
-    <div class="v32-sheet-sub">Choisissez ce que vous voulez explorer</div>
-    <div class="v32-avenir-grid">
-      <button class="v32-avenir-item" onclick="choisirAvenirRapide('prev')"><span class="v32-avenir-icon">☽</span><span><strong>Mes prévisions</strong><small>Aujourd'hui, semaine, mois, trimestre, année ou date précise</small></span><span class="v32-avenir-arrow">›</span></button>
-      <button class="v32-avenir-item" onclick="choisirAvenirRapide('evenements')"><span class="v32-avenir-icon">✦</span><span><strong>Mes grands événements</strong><small>Les tournants majeurs des 24 prochains mois</small></span><span class="v32-avenir-arrow">›</span></button>
-      <button class="v32-avenir-item" onclick="choisirAvenirRapide('fenetre')"><span class="v32-avenir-icon">◎</span><span><strong>Fenêtre idéale</strong><small>Les meilleures périodes sur les 10 prochaines années</small></span><span class="v32-avenir-arrow">›</span></button>
-    </div>
-  </div>
-</div>
-
 <div class="cabinet-menu-overlay" id="cabinet-menu-overlay" onclick="toggleCabinetMenu(false)"></div>
 <aside class="cabinet-menu-drawer" id="cabinet-menu-drawer" aria-label="Navigation Astro Paquita">
   <div class="cabinet-menu-head">
     <div><span>ASTRO</span><strong>PAQUITA</strong></div>
     <button onclick="toggleCabinetMenu(false)" aria-label="Fermer">×</button>
   </div>
-  <button onclick="ouvrirProfilsRapides();toggleCabinetMenu(false)">☽ Changer de profil</button>
   <button onclick="retourAccueil();toggleCabinetMenu(false)">⌂ Accueil</button>
   <button onclick="irVersModule('natal');toggleCabinetMenu(false)">☉ Votre thème</button>
   <button onclick="irVersModule('prev');toggleCabinetMenu(false)">☽ Vos prévisions</button>
@@ -1950,8 +1712,8 @@ body{font-size:17px!important;line-height:1.55!important}
   </div>
 
   <div class="bloc">
-    <button class="btn-principal" onclick="v33EnregistrerEtOuvrir()">✦ Enregistrer et ouvrir mon espace →</button>
-    <button class="btn-profil btn-profil-charger" style="width:100%;margin-top:0.6rem;padding:0.75rem;border-radius:30px" onclick="sauvegarderProfil();v33RafraichirProfils();">☽ Enregistrer les modifications du profil</button>
+    <button class="btn-principal" onclick="v37OuvrirEspaceDepuisSaisie()">✦ Accéder à mon espace →</button>
+    <button class="btn-profil btn-profil-charger" style="width:100%;margin-top:0.6rem;padding:0.75rem;border-radius:30px" onclick="sauvegarderProfil()">☽ Sauvegarder ce profil</button>
   </div>
   <div class="erreur" id="s-erreur"></div>
 </section>
@@ -1965,59 +1727,7 @@ body{font-size:17px!important;line-height:1.55!important}
       <div class="mobile-module-title" id="mobile-module-title">Mon espace</div>
     </div>
   </div>
-  
-<div id="v33-space-dashboard">
-  <div class="v34-welcome-row">
-    <div>
-      <div class="v34-welcome-kicker">VOTRE ESPACE ASTROLOGIQUE</div>
-      <div class="v33-space-title" id="v33-space-title">Bonjour !</div>
-      <div class="v33-space-sub" id="v33-space-sub">Bienvenue dans votre espace personnel.</div>
-    </div>
-    <button class="v33-edit-profile" onclick="modifierSaisie()">✎ Modifier mes informations</button>
-  </div>
-
-  <div class="v34-dashboard-layout">
-    <div class="v33-space-grid">
-      <button class="v33-space-card v34-card-portrait" onclick="v33OuvrirModule('natal')">
-        <span class="v33-space-icon">♙</span><span class="v34-card-copy"><strong>Mon portrait</strong><span>Découvrez votre thème natal et votre carte du ciel.</span></span><span class="v34-card-action">Voir mon portrait&nbsp; →</span>
-      </button>
-      <button class="v33-space-card v34-card-prev" onclick="v33OuvrirModule('prev')">
-        <span class="v33-space-icon">↗</span><span class="v34-card-copy"><strong>Mes prévisions</strong><span>Vos prévisions détaillées jour par jour, trimestre, année…</span></span><span class="v34-card-action">Voir mes prévisions&nbsp; →</span>
-      </button>
-      <button class="v33-space-card v34-card-events" onclick="v33OuvrirModule('evenements')">
-        <span class="v33-space-icon">✦</span><span class="v34-card-copy"><strong>Mes grands événements</strong><span>Les moments clés et tournants des 24 prochains mois.</span></span><span class="v34-card-action">Voir mes événements&nbsp; →</span>
-      </button>
-      <button class="v33-space-card v34-card-window" onclick="v33OuvrirModule('fenetre')">
-        <span class="v33-space-icon">⌛</span><span class="v34-card-copy"><strong>Fenêtre idéale 10 ans</strong><span>Les meilleures périodes sur les 10 prochaines années.</span></span><span class="v34-card-action">Voir ma fenêtre idéale&nbsp; →</span>
-      </button>
-      <button class="v33-space-card v34-card-rel" onclick="v33OuvrirModule('synastrie')">
-        <span class="v33-space-icon">♡</span><span class="v34-card-copy"><strong>Mes relations</strong><span>Analysez vos relations amoureuses, amicales ou professionnelles.</span></span><span class="v34-card-action">Voir mes relations&nbsp; →</span>
-      </button>
-      <button class="v33-space-card v34-card-question" onclick="v33OuvrirModule('question')">
-        <span class="v33-space-icon">?</span><span class="v34-card-copy"><strong>Ma question</strong><span>Posez une question précise à l’astrologue.</span></span><span class="v34-card-action">Poser une question&nbsp; →</span>
-      </button>
-    </div>
-
-    <aside class="v34-side-card">
-      <div class="v34-side-head"><span>✦</span> À explorer</div>
-      <div class="v34-side-body">
-        <button onclick="v33OuvrirModule('evenements')" class="v34-side-link">
-          <span class="v34-side-icon rose">♡</span><span><strong>Grands événements</strong><small>Les périodes structurantes des 24 prochains mois</small></span><b>›</b>
-        </button>
-        <button onclick="v33OuvrirModule('fenetre')" class="v34-side-link">
-          <span class="v34-side-icon bleu">✦</span><span><strong>Fenêtre idéale</strong><small>Recherchez vos meilleures périodes sur 10 ans</small></span><b>›</b>
-        </button>
-        <button onclick="v33OuvrirModule('prev')" class="v34-side-link">
-          <span class="v34-side-icon vert">☽</span><span><strong>Prévisions</strong><small>Aujourd’hui, semaine, mois, année ou date précise</small></span><b>›</b>
-        </button>
-        <button onclick="v33OuvrirModule('synastrie')" class="v34-side-link">
-          <span class="v34-side-icon or">♡</span><span><strong>Relations</strong><small>Couple, famille, amitié et professionnel</small></span><b>›</b>
-        </button>
-      </div>
-    </aside>
-  </div>
-</div>
-<div class="modules-onglets">
+  <div class="modules-onglets">
     <div class="modules-onglets-row">
       <button class="mod-onglet" onclick="switchMod('natal',this)">
         <span class="mod-onglet-icone">☉</span>
@@ -2732,9 +2442,7 @@ function majMobileAccueil() {
 }
 
 function majMobileNav(id='home') {
-  const map = {prev:'avenir', evenements:'avenir', fenetre:'avenir', synastrie:'relations', compte:'profil'};
-  const cible = map[id] || id;
-  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.toggle('actif', b.dataset.mobileNav === cible));
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.toggle('actif', b.dataset.mobileNav === id));
 }
 
 function majMobileTitreModule(id) {
@@ -2744,10 +2452,7 @@ function majMobileTitreModule(id) {
 
 function mobileNaviguer(id) {
   if (id === 'home') { retourAccueil(); return; }
-  if (id === 'avenir') { majMobileNav('avenir'); ouvrirAvenirRapide(); return; }
-  if (id === 'relations') { majMobileNav('relations'); irVersModule('synastrie'); return; }
-  if (id === 'question') { majMobileNav('question'); irVersModule('question'); return; }
-  if (id === 'profil') { majMobileNav('profil'); ouvrirProfilsRapides(); return; }
+  if (id === 'compte') { majMobileNav('compte'); ouvrirCompte(); return; }
   irVersModule(id);
 }
 
@@ -2759,119 +2464,6 @@ function mobileOuvrirAujourdhui() {
   }, 120);
 }
 
-
-
-function echapperHTML(s='') {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function majProfilRapideUI() {
-  const nomEl = document.getElementById('qp-name');
-  const avEl = document.getElementById('qp-avatar');
-  if (!nomEl || !avEl) return;
-  const nom = USER && USER.prenom ? USER.prenom : 'Choisir un profil';
-  nomEl.textContent = nom;
-  avEl.textContent = USER && USER.prenom ? USER.prenom.trim().charAt(0).toUpperCase() : '✦';
-}
-
-function ouvrirProfilsRapides() {
-  const overlay = document.getElementById('v32-profile-overlay');
-  const liste = document.getElementById('v32-profile-list');
-  if (!overlay || !liste) return;
-  const profils = getProfils();
-  const noms = Object.keys(profils).sort((a,b)=>a.localeCompare(b,'fr'));
-  if (!noms.length) {
-    liste.innerHTML = '<div style="padding:14px;text-align:center;color:#8b7580;font-size:.82rem">Aucun profil enregistré pour le moment.</div>';
-  } else {
-    liste.innerHTML = noms.map(cle => {
-      const p = profils[cle] || {};
-      const actif = USER && p.prenom === USER.prenom && p.date === USER.dateRaw;
-      const initiale = (p.prenom || '?').trim().charAt(0).toUpperCase();
-      const meta = [p.date, p.ville].filter(Boolean).join(' · ');
-      return `<button class="v32-profile-item ${actif?'actif':''}" onclick="changerProfilRapide(${JSON.stringify(cle).replace(/"/g,'&quot;')})">`
-        + `<span class="v32-profile-avatar">${echapperHTML(initiale)}</span>`
-        + `<span><span class="v32-profile-name">${echapperHTML(p.prenom || cle)}</span><span class="v32-profile-meta">${echapperHTML(meta)}</span></span>`
-        + `<span class="v32-profile-check">${actif?'ACTIF':'›'}</span></button>`;
-    }).join('');
-  }
-  overlay.classList.add('ouvert');
-  document.body.style.overflow='hidden';
-}
-
-function fermerProfilsRapides() {
-  const overlay = document.getElementById('v32-profile-overlay');
-  if (overlay) overlay.classList.remove('ouvert');
-  document.body.style.overflow='';
-}
-
-function appliquerProfilAuxChamps(p) {
-  document.getElementById('s-prenom').value = p.prenom || '';
-  document.getElementById('s-date').value = p.date || '';
-  document.getElementById('s-heure').value = p.heure || '';
-  document.getElementById('s-ville').value = p.ville || '';
-  document.getElementById('s-lat').value = p.lat || '';
-  document.getElementById('s-lon').value = p.lon || '';
-  document.getElementById('s-tz').value = p.tz || 'Europe/Paris';
-  document.getElementById('s-genre').value = p.genre || '';
-  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('actif'));
-  if (p.genre==='F') document.getElementById('g-femme')?.classList.add('actif');
-  else if (p.genre==='H') document.getElementById('g-homme')?.classList.add('actif');
-  else if (p.genre==='N') document.getElementById('g-autre')?.classList.add('actif');
-  if (p.lat && p.lon) {
-    const info = document.getElementById('s-coords');
-    if (info) { info.textContent = 'Lat ' + p.lat + ' · Lon ' + p.lon + ' · Fuseau : ' + (p.tz || 'Europe/Paris'); info.style.display='block'; }
-  }
-}
-
-function changerProfilRapide(cle) {
-  const profils = getProfils();
-  const p = profils[cle];
-  if (!p) return;
-  const actifAvant = document.querySelector('.mod-panneau.actif');
-  const moduleAvant = actifAvant ? actifAvant.id.replace('mod-','') : null;
-  appliquerProfilAuxChamps(p);
-  fermerProfilsRapides();
-  // Changement immédiat : aucun bouton « Charger » ni « Accéder à mon espace » à presser.
-  validerSaisie();
-  majProfilRapideUI();
-  setTimeout(() => {
-    if (moduleAvant && moduleAvant !== 'natal') {
-      const onglet = document.querySelector(`.mod-onglet[onclick*="'${moduleAvant}'"]`);
-      switchMod(moduleAvant, onglet);
-      majMobileTitreModule(moduleAvant);
-    }
-    majProfilRapideUI();
-  }, 80);
-}
-
-function nouveauProfilRapide() {
-  fermerProfilsRapides();
-  USER = null;
-  ['s-prenom','s-date','s-heure','s-ville','s-lat','s-lon'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
-  const tz=document.getElementById('s-tz'); if(tz) tz.value='Europe/Paris';
-  const genre=document.getElementById('s-genre'); if(genre) genre.value='';
-  document.querySelectorAll('.genre-btn').forEach(b=>b.classList.remove('actif'));
-  modifierSaisie();
-  setTimeout(()=>document.getElementById('s-prenom')?.focus(),120);
-  majProfilRapideUI();
-}
-
-function ouvrirAvenirRapide() {
-  const el = document.getElementById('v32-avenir-overlay');
-  if (!el) return;
-  el.classList.add('ouvert');
-  document.body.style.overflow='hidden';
-}
-function fermerAvenirRapide() {
-  const el = document.getElementById('v32-avenir-overlay');
-  if (el) el.classList.remove('ouvert');
-  document.body.style.overflow='';
-}
-function choisirAvenirRapide(id) {
-  fermerAvenirRapide();
-  irVersModule(id);
-  majMobileNav('avenir');
-}
 
 function toggleCabinetMenu(force) {
   const drawer = document.getElementById('cabinet-menu-drawer');
@@ -3157,50 +2749,10 @@ body{background:var(--v29-cream)!important;color:var(--v29-ink)!important}
   .cabinet-main-cards{max-width:720px!important}
   .service-card.cabinet-main-card{min-height:132px!important;background:#fffaf3!important;border:1px solid #dcc49e!important}
 }
-
-
-/* ═══════════════════════════════════════════════════════════
-   V32 — NAVIGATION + CHANGEMENT DE PROFIL SIMPLIFIÉS
-   ═══════════════════════════════════════════════════════════ */
-.quick-profile-chip{display:none}
-.v32-sheet-overlay{display:none;position:fixed;inset:0;z-index:2600;background:rgba(38,19,35,.42);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center}
-.v32-sheet-overlay.ouvert{display:flex}
-.v32-sheet{width:min(100%,560px);max-height:76vh;overflow:auto;background:#fffaf2;border-radius:22px 22px 0 0;border:1px solid #e2d1ba;box-shadow:0 -18px 50px rgba(53,29,44,.20);padding:14px 16px calc(18px + env(safe-area-inset-bottom));color:#3a2538}
-.v32-sheet-handle{width:42px;height:4px;border-radius:99px;background:#d9c8b4;margin:0 auto 12px}
-.v32-sheet-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.55rem;color:#3e1848;text-align:center;margin-bottom:2px}
-.v32-sheet-sub{font-size:.78rem;color:#856f78;text-align:center;margin-bottom:14px}
-.v32-sheet-close{position:absolute;right:18px;margin-top:-2px;border:0;background:transparent;color:#5a3c52;font-size:1.4rem;cursor:pointer}
-.v32-profile-list{display:flex;flex-direction:column;gap:8px}
-.v32-profile-item{width:100%;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;border:1px solid #e6d6c1;background:#fffefb;border-radius:13px;padding:10px 11px;text-align:left;color:#3a2538;cursor:pointer}
-.v32-profile-item.actif{border-color:#b98239;background:#fff7e8;box-shadow:0 0 0 1px rgba(185,130,57,.12)}
-.v32-profile-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#4b1a5c;color:#fff;font-family:'Cormorant Garamond',serif;font-size:1.15rem;border:2px solid #d4a35a}
-.v32-profile-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#3d2042}
-.v32-profile-meta{font-size:.68rem;color:#8b7580;margin-top:2px}
-.v32-profile-check{font-size:.75rem;color:#a56f27;font-weight:700}
-.v32-new-profile{width:100%;margin-top:10px;border:1px dashed #c9aa7f;background:#fff8ed;color:#5a334d;border-radius:12px;padding:11px;font-family:'Cormorant Garamond',serif;font-size:1rem;cursor:pointer}
-.v32-avenir-grid{display:grid;gap:9px}
-.v32-avenir-item{width:100%;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;border:1px solid #e5d4bd;background:#fffefb;border-radius:13px;padding:11px;text-align:left;color:#3a2538;cursor:pointer}
-.v32-avenir-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#4b1a5c;color:#f4d6a2;font-size:1.2rem}
-.v32-avenir-item strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:#3d2042}
-.v32-avenir-item small{display:block;font-size:.67rem;color:#8a7480;margin-top:2px;line-height:1.25}
-.v32-avenir-arrow{font-size:1.35rem;color:#b47c32}
-
-@media(max-width:700px){
-  .quick-profile-chip{display:flex;position:fixed;z-index:1750;top:60px;right:10px;max-width:54vw;align-items:center;gap:7px;border:1px solid rgba(190,144,73,.55);background:rgba(255,250,242,.96);color:#4a2944;border-radius:999px;padding:6px 9px 6px 7px;box-shadow:0 4px 14px rgba(58,31,47,.10);font-family:'Lato',sans-serif;cursor:pointer}
-  .quick-profile-chip .qp-avatar{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#4b1a5c;color:#fff;font-family:'Cormorant Garamond',serif;font-size:.82rem;flex:none}
-  .quick-profile-chip .qp-copy{min-width:0;text-align:left}
-  .quick-profile-chip .qp-label{display:block;font-size:.49rem;letter-spacing:.08em;text-transform:uppercase;color:#9b805f;line-height:1}
-  .quick-profile-chip .qp-name{display:block;font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:2px}
-  .quick-profile-chip .qp-arrow{font-size:.72rem;color:#a36c2b}
-  .mobile-module-head{padding-right:44vw!important}
-  #v30-nav,.mobile-bottom-nav{grid-template-columns:repeat(5,1fr)!important}
-}
 </style>
 </head><body>
   <div class="en-tete-pdf"><div>ASTRO PAQUITA</div></div>
   ${clone.innerHTML}
-
-<style>@media(max-width:700px){#v30-nav{grid-template-columns:repeat(5,1fr)!important}.v30-nav-btn small{font-size:9px!important}}</style>
 </body></html>`);
   w.document.close();
   setTimeout(() => { w.focus(); w.print(); }, 400);
@@ -3221,7 +2773,7 @@ function irVersModule(id) {
     const onglet = document.querySelector(`.mod-onglet[onclick*="'${id}'"]`);
     switchMod(id, onglet);
     majMobileTitreModule(id);
-    majMobileNav(id);
+    majMobileNav(id==='evenements'?'evenements':id==='fenetre'?'fenetre':'home');
   } else {
     scrollVersSaisie();
   }
@@ -3262,7 +2814,7 @@ function modifierSaisie() {
 function switchMod(id, el) {
   if (!verifierAccesModulePremium(id)) return;
   majMobileTitreModule(id);
-  majMobileNav(id);
+  majMobileNav(id==='evenements'?'evenements':id==='fenetre'?'fenetre':'home');
   document.querySelectorAll('.mod-panneau').forEach(p => p.classList.remove('actif'));
   document.querySelectorAll('.mod-onglet').forEach(o => o.classList.remove('actif'));
   document.getElementById('mod-' + id).classList.add('actif');
@@ -3427,9 +2979,7 @@ function validerSaisie() {
 
   // Activer premier onglet
   switchMod('natal', document.querySelector('.mod-onglet'));
-  majProfilRapideUI();
 }
-
 
 // ============================================================
 // ÉPHÉMÉRIDES
@@ -8451,9 +8001,7 @@ function sauvegarderProfil() {
   // Sélectionner le profil qu'on vient de sauvegarder
   document.getElementById('profils-select').value = cle;
   msgProfil('Profil "' + cle + '" sauvegardé.', true);
-  majProfilRapideUI();
 }
-
 
 function chargerProfil() {
   const sel = document.getElementById('profils-select');
@@ -8510,12 +8058,139 @@ function annulerSuppression() {
   m.classList.remove('vis');
 }
 
+
+
+/* ===== V37 — PROFIL DIRECT + MON ESPACE SANS GENERER LE PORTRAIT ===== */
+const V37_ACTIVE_PROFILE_KEY = 'astro_paquita_profil_actif_v37';
+
+function v37CalculerUserDepuisDonnees(p) {
+  if (!p) return false;
+  const prenom = String(p.prenom || '').trim();
+  const dateRaw = String(p.date || '').trim();
+  const heureRaw = String(p.heure || '').trim();
+  const lat = parseFloat(p.lat);
+  const lon = parseFloat(p.lon);
+  const tz = p.tz || 'Europe/Paris';
+  const ville = p.ville || '';
+  const hm = heureRaw.match(/^(\\d{1,2}):(\\d{2})$/);
+  const dateISO = parseDate(dateRaw);
+  if (!prenom || !dateISO || !hm || isNaN(lat) || isNaN(lon)) return false;
+  const heure = `${hm[1].padStart(2,'0')}:${hm[2]}`;
+  const u = convUTC(dateISO, heure, tz);
+  const jd = julianDay(u.y, u.m, u.d, u.h);
+  const pos = calcPos(jd);
+  const {AS, MC} = calcASMC(jd, lat, lon);
+  USER = { prenom, dateISO, dateRaw, heure, lat, lon, tz, ville, jd, pos, AS, MC, genre:p.genre || 'N' };
+  domaineGratuitFenetre = null;
+  const mNom = document.getElementById('m-nom'); if (mNom) mNom.textContent = prenom;
+  const mInfo = document.getElementById('m-info'); if (mInfo) mInfo.textContent = `${dateRaw} · ${heure} · ${ville}`;
+  try { if (typeof majMobileAccueil === 'function') majMobileAccueil(); } catch(e) {}
+  try { if (typeof v30RefreshProfile === 'function') v30RefreshProfile(); } catch(e) {}
+  return true;
+}
+
+function v37RemplirChampsProfil(p) {
+  if (!p) return;
+  const set = (id,v) => { const el=document.getElementById(id); if(el) el.value=v ?? ''; };
+  set('s-prenom',p.prenom); set('s-date',p.date); set('s-heure',p.heure); set('s-ville',p.ville);
+  set('s-lat',p.lat); set('s-lon',p.lon); set('s-tz',p.tz || 'Europe/Paris'); set('s-genre',p.genre || '');
+  document.querySelectorAll('.genre-btn').forEach(b=>b.classList.remove('actif'));
+  const gid = p.genre==='F'?'g-femme':p.genre==='H'?'g-homme':p.genre==='N'?'g-autre':null;
+  if(gid){const g=document.getElementById(gid);if(g)g.classList.add('actif');}
+  const info=document.getElementById('s-coords');
+  if(info && p.lat && p.lon){info.textContent='Lat '+p.lat+' · Lon '+p.lon+' · Fuseau : '+(p.tz||'Europe/Paris');info.style.display='block';}
+}
+
+function v37RafraichirSelectProfil(selectedKey) {
+  const sel = document.getElementById('v37-profile-select');
+  if (!sel || typeof getProfils !== 'function') return;
+  const profils = getProfils();
+  const keys = Object.keys(profils).sort((a,b)=>a.localeCompare(b,'fr'));
+  const wanted = selectedKey || localStorage.getItem(V37_ACTIVE_PROFILE_KEY) || '';
+  sel.innerHTML = '<option value="">Choisir un profil</option>';
+  keys.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=profils[k].prenom || k;sel.appendChild(o);});
+  if (wanted && profils[wanted]) sel.value = wanted;
+  else if (keys.length===1) sel.value = keys[0];
+}
+
+function v37ChangerProfil(cle) {
+  if (!cle) return;
+  const profils = getProfils();
+  const p = profils[cle];
+  if (!p) return;
+  v37RemplirChampsProfil(p);
+  if (!v37CalculerUserDepuisDonnees(p)) return;
+  localStorage.setItem(V37_ACTIVE_PROFILE_KEY, cle);
+  const sel=document.getElementById('profils-select'); if(sel) sel.value=cle;
+  const top=document.getElementById('v37-profile-select'); if(top) top.value=cle;
+}
+
+function v37UserDepuisChamps() {
+  const get=(id)=>{const el=document.getElementById(id);return el?el.value:''};
+  const p={prenom:get('s-prenom').trim(),date:get('s-date').trim(),heure:get('s-heure').trim(),ville:get('s-ville'),lat:get('s-lat'),lon:get('s-lon'),tz:get('s-tz')||'Europe/Paris',genre:get('s-genre')||'N'};
+  return v37CalculerUserDepuisDonnees(p);
+}
+
+function v37AfficherAccueilPersonnel() {
+  afficherVitrine();
+  const modules=document.getElementById('section-modules'); if(modules) modules.classList.remove('visible');
+  const saisie=document.getElementById('section-saisie'); if(saisie) saisie.classList.remove('visible');
+  if (window.matchMedia('(max-width:700px)').matches && typeof v30ShowScreen==='function') {
+    try { v30ShowScreen('home'); } catch(e) {}
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function v37OuvrirMonEspace() {
+  if (!USER) {
+    const active=localStorage.getItem(V37_ACTIVE_PROFILE_KEY);
+    if(active && getProfils()[active]) v37ChangerProfil(active);
+  }
+  if (!USER) { scrollVersSaisie(); return; }
+  v37AfficherAccueilPersonnel();
+}
+
+function v37OuvrirEspaceDepuisSaisie() {
+  if (!v37UserDepuisChamps()) {
+    const err=document.getElementById('s-erreur');
+    if(err){err.textContent='Vérifiez le prénom, la date, l’heure et la ville de naissance.';err.style.display='block';}
+    return;
+  }
+  const err=document.getElementById('s-erreur'); if(err) err.style.display='none';
+  v37AfficherAccueilPersonnel();
+}
+
+function v37NouveauProfil() {
+  const ids=['s-prenom','s-date','s-heure','s-ville','s-lat','s-lon']; ids.forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const sel=document.getElementById('v37-profile-select');if(sel)sel.value='';
+  document.querySelectorAll('.genre-btn').forEach(b=>b.classList.remove('actif'));
+  USER=null;
+  scrollVersSaisie();
+  setTimeout(()=>{const e=document.getElementById('s-prenom');if(e)e.focus();},250);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{
+    v37RafraichirSelectProfil();
+    const sel=document.getElementById('v37-profile-select');
+    const active=localStorage.getItem(V37_ACTIVE_PROFILE_KEY);
+    const profils=typeof getProfils==='function'?getProfils():{};
+    const cle=(active&&profils[active])?active:(Object.keys(profils).length===1?Object.keys(profils)[0]:'');
+    if(cle){sel.value=cle;v37ChangerProfil(cle);}
+  },50);
+});
+
+// Synchroniser automatiquement le nouveau sélecteur après sauvegarde/suppression
+const _v37SetProfilsOriginal = setProfils;
+setProfils = function(obj){_v37SetProfilsOriginal(obj);setTimeout(()=>v37RafraichirSelectProfil(),0);};
+
+
 chargerStatutCompte().then(() => gererRetourPackQuestions()).catch(() => {});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('sw.js?v=cabinet-v29', { updateViaCache: 'none' });
+      const reg = await navigator.serviceWorker.register('sw.js?v=astro-paquita-v37-clean-20260812', { updateViaCache: 'none' });
       await reg.update();
     } catch (err) {
       console.warn('Service worker non enregistré :', err);
@@ -8558,7 +8233,7 @@ try {
 
 
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => { majMobileAccueil(); majMobileNav('home'); majProfilRapideUI(); }, 250);
+  setTimeout(() => { majMobileAccueil(); majMobileNav('home'); }, 250);
 });
 </script>
 
@@ -8650,11 +8325,10 @@ window.addEventListener('DOMContentLoaded', () => {
   </section>
 </div>
 <nav id="v30-nav" aria-label="Navigation principale">
-  <button class="v30-nav-btn actif mobile-nav-item" data-mobile-nav="home" onclick="mobileNaviguer('home')"><span>⌂</span><small>Accueil</small></button>
-  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="avenir" onclick="mobileNaviguer('avenir')"><span>☽</span><small>Avenir</small></button>
-  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="relations" onclick="mobileNaviguer('relations')"><span>♡</span><small>Relations</small></button>
-  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="question" onclick="mobileNaviguer('question')"><span>?</span><small>Question</small></button>
-  <button class="v30-nav-btn mobile-nav-item" data-mobile-nav="profil" onclick="mobileNaviguer('profil')"><span>♙</span><small>Profil</small></button>
+  <button class="v30-nav-btn actif" data-v30="home" onclick="v30ShowScreen('home')"><span>⌂</span>Accueil</button>
+  <button class="v30-nav-btn" data-v30="avenir" onclick="v30ShowScreen('avenir')"><span>▣</span>Avenir</button>
+  <button class="v30-nav-btn" data-v30="relations" onclick="v30ShowScreen('relations')"><span>♡</span>Relations</button>
+  <button class="v30-nav-btn" data-v30="profil" onclick="v30ShowScreen('profil')"><span>♙</span>Profil</button>
 </nav>
 
 <script id="astro-paquita-v30-js">
@@ -8719,190 +8393,5 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize',v30Sync);
 })();
 </script>
-
-<script id="astro-paquita-v33-js">
-(function(){
-  const ACTIVE_KEY='astra_profil_actif';
-  const oldSwitch=window.switchMod;
-
-  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-  window.v33RafraichirProfils=function(){
-    const box=document.getElementById('v33-profile-chips');
-    if(!box || typeof getProfils!=='function') return;
-    const profils=getProfils();
-    const keys=Object.keys(profils).sort((a,b)=>String(profils[a]?.prenom||a).localeCompare(String(profils[b]?.prenom||b),'fr'));
-    const active=localStorage.getItem(ACTIVE_KEY)||'';
-    box.innerHTML=keys.map(k=>{
-      const p=profils[k]||{};
-      const actif=(active===k)||(!active && window.USER && p.prenom===USER.prenom && p.date===USER.dateRaw);
-      const label=p.prenom||k;
-      return `<button class="v33-profile-chip ${actif?'actif':''}" onclick="v33ChoisirProfil(${JSON.stringify(k).replace(/"/g,'&quot;')})" title="${esc([p.date,p.ville].filter(Boolean).join(' · '))}">${esc(label)}</button>`;
-    }).join('') + '<button class="v33-profile-chip add" onclick="nouveauProfilRapide()">＋ Nouveau</button>';
-    if(typeof rafraichirSelectProfils==='function') try{rafraichirSelectProfils();}catch(e){}
-  };
-
-  function buildUserFromFields(showErrors=true){
-    try{
-      const prenom=document.getElementById('s-prenom').value.trim();
-      const dateRaw=document.getElementById('s-date').value.trim();
-      const heureRaw=document.getElementById('s-heure').value.trim();
-      const lat=parseFloat(document.getElementById('s-lat').value);
-      const lon=parseFloat(document.getElementById('s-lon').value);
-      const tz=document.getElementById('s-tz').value;
-      const ville=document.getElementById('s-ville').value.trim();
-      const heureMatch=heureRaw.match(/^(\d{1,2}):(\d{2})$/);
-      const dateISO=parseDate(dateRaw);
-      const fail=(msg)=>{if(showErrors && typeof affErr==='function') affErr('s-erreur',msg); return false;};
-      if(!prenom) return fail('Veuillez saisir votre prénom.');
-      if(!dateISO) return fail('Format de date invalide. Ex : 18/12/1971');
-      if(!heureMatch) return fail("Format d'heure invalide. Ex : 03:30");
-      if(isNaN(lat)||isNaN(lon)) return fail('Veuillez choisir votre ville de naissance dans la liste.');
-      const heure=`${heureMatch[1].padStart(2,'0')}:${heureMatch[2]}`;
-      const u=convUTC(dateISO,heure,tz); const jd=julianDay(u.y,u.m,u.d,u.h); const pos=calcPos(jd); const axes=calcASMC(jd,lat,lon);
-      const genre=document.getElementById('s-genre').value||'N';
-      USER={prenom,dateISO,dateRaw,heure,lat,lon,tz,ville,jd,pos,AS:axes.AS,MC:axes.MC,genre};
-      domaineGratuitFenetre=null;
-      const mNom=document.getElementById('m-nom'); if(mNom)mNom.textContent=prenom;
-      const mInfo=document.getElementById('m-info'); if(mInfo)mInfo.textContent=`${dateRaw} · ${heure} · ${ville}`;
-      const err=document.getElementById('s-erreur'); if(err)err.style.display='none';
-      if(typeof majProfilRapideUI==='function') majProfilRapideUI();
-      return true;
-    }catch(e){console.error('V33 profil:',e); if(showErrors && typeof affErr==='function') affErr('s-erreur','Impossible de charger ce profil.'); return false;}
-  }
-
-  function showDashboard(){
-    if(typeof masquerVitrine==='function') masquerVitrine();
-    const saisie=document.getElementById('section-saisie'); if(saisie)saisie.classList.remove('visible');
-    const mods=document.getElementById('section-modules'); if(mods)mods.classList.add('visible');
-    document.querySelectorAll('.mod-panneau').forEach(p=>p.classList.remove('actif'));
-    document.querySelectorAll('.mod-onglet').forEach(p=>p.classList.remove('actif'));
-    const dash=document.getElementById('v33-space-dashboard'); if(dash)dash.classList.add('visible');
-    const title=document.getElementById('v33-space-title'); if(title)title.textContent=USER&&USER.prenom?`Bonjour ${USER.prenom} !`:'Bonjour !';
-    const sub=document.getElementById('v33-space-sub'); if(sub)sub.textContent=USER?'Bienvenue dans votre espace personnel.':'Choisissez simplement ce que vous souhaitez consulter.';
-    document.querySelectorAll('.v33-nav-btn').forEach(b=>b.classList.toggle('actif',b.dataset.v33==='space'));
-    window.scrollTo({top:document.getElementById('v33-topbar')?.offsetTop||0,behavior:'smooth'});
-  }
-
-  window.v33AccederEspace=function(){
-    if(!USER){
-      const profils=typeof getProfils==='function'?getProfils():{};
-      let key=localStorage.getItem(ACTIVE_KEY);
-      if(!key || !profils[key]) key=Object.keys(profils)[0]||'';
-      if(key && profils[key]){
-        if(typeof appliquerProfilAuxChamps==='function') appliquerProfilAuxChamps(profils[key]);
-        if(buildUserFromFields(false)){localStorage.setItem(ACTIVE_KEY,key);v33RafraichirProfils();showDashboard();return;}
-      }
-      if(typeof scrollVersSaisie==='function')scrollVersSaisie();
-      setTimeout(()=>document.getElementById('s-prenom')?.focus(),120);
-      return;
-    }
-    showDashboard();
-  };
-
-  window.v33EnregistrerEtOuvrir=function(){
-    if(!buildUserFromFields(true))return;
-    try{
-      if(typeof sauvegarderProfil==='function') sauvegarderProfil();
-      const key=`${USER.prenom} (${USER.dateRaw})`;
-      localStorage.setItem(ACTIVE_KEY,key);
-    }catch(e){}
-    v33RafraichirProfils();
-    showDashboard();
-  };
-
-  window.v33ChoisirProfil=function(key){
-    const profils=typeof getProfils==='function'?getProfils():{}; const p=profils[key]; if(!p)return;
-    const current=document.querySelector('.mod-panneau.actif'); const moduleId=current?current.id.replace('mod-',''):null;
-    if(typeof appliquerProfilAuxChamps==='function') appliquerProfilAuxChamps(p);
-    if(!buildUserFromFields(true))return;
-    localStorage.setItem(ACTIVE_KEY,key);
-    v33RafraichirProfils();
-    if(typeof fermerProfilsRapides==='function')fermerProfilsRapides();
-    if(moduleId){v33OuvrirModule(moduleId);}else{showDashboard();}
-  };
-
-  // Remplace le changement rapide V32 : même comportement sur tous les écrans.
-  window.changerProfilRapide=function(key){v33ChoisirProfil(key);};
-
-  window.v33OuvrirModule=function(id){
-    if(!USER){v33AccederEspace(); if(!window.USER)return;}
-    const dash=document.getElementById('v33-space-dashboard'); if(dash)dash.classList.remove('visible');
-    document.querySelectorAll('.v33-nav-btn').forEach(b=>b.classList.toggle('actif',b.dataset.v33===id));
-    if(typeof irVersModule==='function')irVersModule(id);
-  };
-
-  if(typeof oldSwitch==='function'){
-    window.switchMod=function(id,el){
-      const dash=document.getElementById('v33-space-dashboard'); if(dash)dash.classList.remove('visible');
-      document.querySelectorAll('.v33-nav-btn').forEach(b=>b.classList.toggle('actif',b.dataset.v33===id));
-      return oldSwitch(id,el);
-    };
-  }
-
-  // Le bouton historique validerSaisie ouvre désormais l'espace, pas le portrait.
-  window.validerSaisie=function(){return v33EnregistrerEtOuvrir();};
-
-  function init(){
-    v33RafraichirProfils();
-    const profils=typeof getProfils==='function'?getProfils():{};
-    let key=localStorage.getItem(ACTIVE_KEY);
-    if(!key || !profils[key]) key=Object.keys(profils)[0]||'';
-    if(key && profils[key] && !USER){
-      try{appliquerProfilAuxChamps(profils[key]);if(buildUserFromFields(false)){localStorage.setItem(ACTIVE_KEY,key);v33RafraichirProfils();}}catch(e){}
-    }
-    // Agrandir également les intitulés du compte qui étaient très petits.
-    document.querySelectorAll('.v30-profile-sub,.v30-event-row,.v30-rel-card small').forEach(el=>el.style.removeProperty('font-size'));
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,80)); else setTimeout(init,80);
-})();
-</script>
-
-<nav id="v34-mobile-nav" class="v34-mobile-nav" aria-label="Navigation mobile">
-  <button onclick="v33AccederEspace()"><span>⌂</span><small>Accueil</small></button>
-  <button onclick="ouvrirAvenirRapide()"><span>✦</span><small>Avenir</small></button>
-  <button onclick="v33OuvrirModule('synastrie')"><span>♡</span><small>Relations</small></button>
-  <button onclick="v34ToggleProfileMenu(true)"><span>♙</span><small>Profil</small></button>
-</nav>
-
-
-<script id="astro-paquita-v34-js">
-(function(){
-  const ACTIVE_KEY='astra_profil_actif';
-  const oldRefresh=window.v33RafraichirProfils;
-  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  function activeKey(){
-    const profils=typeof getProfils==='function'?getProfils():{};
-    let k=localStorage.getItem(ACTIVE_KEY)||'';
-    if(k && profils[k]) return k;
-    if(window.USER){
-      const found=Object.keys(profils).find(x=>{const p=profils[x]||{};return p.prenom===USER.prenom && p.date===USER.dateRaw;});
-      if(found)return found;
-    }
-    return '';
-  }
-  window.v34RenderProfiles=function(){
-    const list=document.getElementById('v34-profile-list');
-    const name=document.getElementById('v34-profile-name');
-    if(!list||!name||typeof getProfils!=='function')return;
-    const profils=getProfils(); const keys=Object.keys(profils).sort((a,b)=>String(profils[a]?.prenom||a).localeCompare(String(profils[b]?.prenom||b),'fr'));
-    const active=activeKey(); const ap=profils[active]||null;
-    name.textContent=(window.USER&&USER.prenom)||(ap&&ap.prenom)||'Choisir un profil';
-    if(!keys.length){list.innerHTML='<div style="padding:12px;color:#887184;font-size:.86rem">Aucun profil enregistré.</div>';return;}
-    list.innerHTML=keys.map(k=>{const p=profils[k]||{};const isA=k===active;const meta=[p.date,p.ville].filter(Boolean).join(' · ');const arg=encodeURIComponent(k).replace(/'/g,'%27');return `<button class="v34-profile-option ${isA?'actif':''}" type="button" onclick="v34SelectProfile(decodeURIComponent('${arg}'))"><span class="init">${esc((p.prenom||'?').trim().charAt(0).toUpperCase())}</span><span>${esc(p.prenom||k)}<small class="v34-profile-meta">${esc(meta)}</small></span><span class="check">${isA?'✓':'›'}</span></button>`;}).join('');
-  };
-  window.v34ToggleProfileMenu=function(force){const c=document.getElementById('v34-profile-control');if(!c)return;const open=typeof force==='boolean'?force:!c.classList.contains('ouvert');c.classList.toggle('ouvert',open);document.getElementById('v34-profile-button')?.setAttribute('aria-expanded',String(open));if(open)v34RenderProfiles();};
-  window.v34SelectProfile=function(k){v34ToggleProfileMenu(false);if(typeof v33ChoisirProfil==='function')v33ChoisirProfil(k);setTimeout(v34RenderProfiles,20);};
-  window.v34AddProfile=function(){v34ToggleProfileMenu(false);if(typeof nouveauProfilRapide==='function')nouveauProfilRapide();else if(typeof scrollVersSaisie==='function')scrollVersSaisie();};
-  window.v33RafraichirProfils=function(){if(typeof oldRefresh==='function')try{oldRefresh();}catch(e){};v34RenderProfiles();};
-  document.addEventListener('click',e=>{const c=document.getElementById('v34-profile-control');if(c&&c.classList.contains('ouvert')&&!c.contains(e.target))v34ToggleProfileMenu(false);});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')v34ToggleProfileMenu(false);});
-  function syncModuleHead(){const dash=document.getElementById('v33-space-dashboard');const head=document.querySelector('.mobile-module-head');if(!head)return;if(innerWidth<=700)head.style.setProperty('display',dash&&dash.classList.contains('visible')?'none':'grid','important');else head.style.setProperty('display','none','important');}
-  function init(){v34RenderProfiles();const dash=document.getElementById('v33-space-dashboard');if(dash)new MutationObserver(syncModuleHead).observe(dash,{attributes:true,attributeFilter:['class']});syncModuleHead();}
-  window.addEventListener('resize',syncModuleHead);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,120));else setTimeout(init,120);
-})();
-</script>
-
 </body>
 </html>
