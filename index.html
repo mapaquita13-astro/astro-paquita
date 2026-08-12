@@ -1509,6 +1509,14 @@ a{color:var(--cab-plum2)}
 }
 </style>\n
 <meta name="astro-paquita-version" content="V38-validation-fix">
+
+<style id="astro-paquita-v39-nav-fix">
+@media(max-width:700px){
+  #v30-nav{pointer-events:auto!important;z-index:9000!important}
+  #v30-nav .v30-nav-btn{pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important}
+  #mobile-bottom-nav{display:none!important;pointer-events:none!important}
+}
+</style>
 </head>
 <body>
 
@@ -8379,10 +8387,21 @@ window.addEventListener('DOMContentLoaded', () => {
   window.v30ShowScreen=function(name){
     if(!isMobile()) return;
     const app=document.getElementById('v30-app'); if(!app) return;
+
+    // V39 — navigation basse : ferme le formulaire/module avant de changer d'écran
+    // Quand on vient d'un formulaire ou d'un module, ceux-ci restaient visibles
+    // au-dessus de l'application mobile. On les ferme explicitement avant de
+    // changer d'onglet pour que la navigation du bas réagisse immédiatement.
+    const modules=document.getElementById('section-modules');
+    const saisie=document.getElementById('section-saisie');
+    if(modules) modules.classList.remove('visible');
+    if(saisie) saisie.classList.remove('visible');
+    try { if(typeof masquerVitrine==='function') masquerVitrine(); } catch(e) {}
+
     app.classList.remove('v30-hidden');
     document.querySelectorAll('.v30-screen').forEach(s=>s.classList.toggle('actif',s.id==='v30-'+name));
     document.querySelectorAll('.v30-nav-btn').forEach(b=>b.classList.toggle('actif',b.dataset.v30===name));
-    window.scrollTo({top:0,behavior:'smooth'});
+    requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}));
     if(name==='profil') v30RefreshProfile();
   };
   window.v30Sync=function(){
