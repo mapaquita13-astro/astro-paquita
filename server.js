@@ -564,6 +564,23 @@ app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
 // ============================================================
 // ROUTES : ADMIN
 // ============================================================
+// Premier profil administrateur : amorçage sécurisé par session utilisateur.
+// Cette route ne fonctionne QUE tant qu'aucun administrateur n'existe.
+// Dès que le premier admin est créé, elle est définitivement bloquée.
+app.post('/api/admin/bootstrap', auth, (req, res) => {
+  const users = db.getAllUsers();
+  const admins = users.filter((u) => u && u.role === 'admin');
+  if (admins.length > 0) {
+    return res.status(409).json({ erreur: 'Un administrateur existe déjà. Utilise ce profil administrateur pour gérer les rôles.' });
+  }
+
+  const user = db.setUserRole(req.user.id, 'admin');
+  if (!user) return res.status(404).json({ erreur: 'Compte introuvable.' });
+
+  console.log(`Premier administrateur activé : ${user.email || user.id}`);
+  return res.json({ succes: true, user: reponseCompte(user) });
+});
+
 app.get('/api/admin/maintenance', adminAuth, (req, res) => {
   const settings = db.getSiteSettings();
   res.set('Cache-Control', 'no-store');
@@ -631,7 +648,7 @@ app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
 });
 
 // ============================================================
-app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-13-v45-admin-maintenance' }));
+app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-13-v46-admin-bootstrap' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
