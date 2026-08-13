@@ -1527,8 +1527,9 @@ a{color:var(--cab-plum2)}
   .grand-titre{font-size:2rem!important}
   .grand-sous{font-size:.82rem!important}
 }
-</style>\n
-<meta name="astro-paquita-version" content="V38-validation-fix">
+</style>
+
+<meta name="astro-paquita-version" content="V45-previsions-expertes-admin-maintenance">
 
 <style id="astro-paquita-v40-nav-fix">
 @media(max-width:700px){
@@ -1601,6 +1602,7 @@ a{color:var(--cab-plum2)}
       <p id="compte-email" style="color:#c0b4e0;font-size:0.9rem;"></p>
       <p id="compte-statut" style="font-weight:700;margin:0.5rem 0 0.6rem;"></p>
       <div id="compte-questions" class="question-credit-box">🔮 Questions disponibles : —</div>
+      <button id="btn-administration" onclick="location.href='admin.html'" style="display:none;width:100%;padding:.72rem;border:1px solid #c9a84c;border-radius:9px;background:#35102f;color:#f4dfaa;font-weight:800;cursor:pointer;margin:.6rem 0 1rem;">👑 Ouvrir l’administration</button>
 
 
       <div class="cabinet-premium-panel">
@@ -2151,8 +2153,42 @@ function messageErreurApiIOS(e) {
 // ============================================================
 const BACKEND_URL = 'https://astro-paquita-backend.onrender.com';
 
+// ============================================================
+// MODE MAINTENANCE GLOBAL — piloté depuis admin.html
+// ============================================================
+async function verifierMaintenanceSite(){
+  try{
+    const qs=new URLSearchParams(location.search);
+    if(qs.get('maintenance_preview')==='1') localStorage.setItem('astro-maintenance-bypass','1');
+    const r=await fetch(BACKEND_URL+'/api/status?ts='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const data=await r.json();
+    const m=data&&data.maintenance;
+    if(!m||!m.enabled)return;
+
+    // Un profil Administrateur déjà connecté traverse automatiquement la maintenance.
+    const tok=localStorage.getItem('astro-token');
+    if(tok){
+      try{
+        const me=await fetch(BACKEND_URL+'/api/me',{headers:{Authorization:'Bearer '+tok},cache:'no-store'});
+        if(me.ok){const u=await me.json();if(u&&u.role==='admin')return;}
+      }catch(e){}
+    }
+    if(localStorage.getItem('astro-maintenance-bypass')==='1')return;
+    if(document.getElementById('astro-maintenance-screen'))return;
+    const el=document.createElement('div');
+    el.id='astro-maintenance-screen';
+    el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+    el.innerHTML=`<div style="max-width:620px;padding:42px 30px;text-align:center"><div style="font-size:42px;color:#c9a84c;margin-bottom:10px">✦ ☾ ✦</div><div style="font-family:Georgia,serif;font-size:34px;color:#fff6df;letter-spacing:.04em">ASTRO PAQUITA</div><div style="width:90px;height:1px;background:#c9a84c;margin:22px auto"></div><h1 style="font-family:Georgia,serif;font-size:29px;color:#f4dfaa;margin:0 0 14px">Le cabinet est momentanément fermé</h1><p style="font-size:17px;line-height:1.65;color:#f6edf3">${String(m.message||'Astro Paquita se refait une beauté. Le site sera de retour très bientôt.').replace(/</g,'&lt;')}</p><p style="font-size:13px;color:#cdb8c8;margin-top:28px">Merci pour votre patience.</p></div>`;
+    Object.assign(el.style,{position:'fixed',inset:'0',zIndex:'999999',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at 50% 10%,#5b264f 0,#35102f 42%,#180b19 100%)',fontFamily:'Lato,Arial,sans-serif'});
+    document.documentElement.style.overflow='hidden';document.body.appendChild(el);
+  }catch(e){console.warn('Statut maintenance indisponible',e)}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',verifierMaintenanceSite,{once:true});else verifierMaintenanceSite();
+
+
 let TOKEN = localStorage.getItem('astro-token') || null;
-let USER_CONNECTE = null; // { email, prenom, premium }
+let USER_CONNECTE = null; // { email, prenom, premium, role, is_admin }
 
 function definirToken(token) {
   TOKEN = token;
@@ -2196,6 +2232,7 @@ function majAccesPremiumUI() {
 async function chargerStatutCompte() {
   if (!TOKEN) {
     USER_CONNECTE = null;
+    window.USER_CONNECTE = null;
     PREMIUM = false;
     majBoutonCompte();
     majAccesPremiumUI();
@@ -2208,6 +2245,7 @@ async function chargerStatutCompte() {
     if (!resp.ok) {
       definirToken(null);
       USER_CONNECTE = null;
+      window.USER_CONNECTE = null;
       PREMIUM = false;
       majBoutonCompte();
       majAccesPremiumUI();
@@ -2215,7 +2253,8 @@ async function chargerStatutCompte() {
     }
     const data = await resp.json();
     USER_CONNECTE = data;
-    PREMIUM = !!data.premium;
+    window.USER_CONNECTE = USER_CONNECTE;
+    PREMIUM = !!data.premium || data.role === 'admin';
     majBoutonCompte();
     majVueCompte();
     majAccesPremiumUI();
@@ -2231,7 +2270,7 @@ function majBoutonCompte() {
   const btn = document.getElementById('btn-compte');
   if (!btn) return;
   if (USER_CONNECTE) {
-    btn.textContent = (USER_CONNECTE.premium ? '💎 ' : '👤 ') + (USER_CONNECTE.prenom || USER_CONNECTE.email.split('@')[0]);
+    btn.textContent = (USER_CONNECTE.role==='admin' ? '👑 ' : USER_CONNECTE.premium ? '💎 ' : '👤 ') + (USER_CONNECTE.prenom || USER_CONNECTE.email.split('@')[0]);
   } else {
     btn.textContent = '🔑 Connexion';
   }
@@ -2258,6 +2297,7 @@ async function appelerClaude({ system, messages, max_tokens, model, feature, fea
     if (resp.status === 401) {
       definirToken(null);
       USER_CONNECTE = null;
+      window.USER_CONNECTE = null;
       PREMIUM = false;
       majBoutonCompte();
       ouvrirCompte();
@@ -2287,11 +2327,15 @@ function majVueCompte() {
   if (USER_CONNECTE) {
     document.getElementById('compte-email').textContent = USER_CONNECTE.email;
     const exp = USER_CONNECTE.premium_expires_at ? new Date(USER_CONNECTE.premium_expires_at) : null;
-    document.getElementById('compte-statut').textContent = USER_CONNECTE.premium
-      ? '💎 Premium actif' + (exp && !Number.isNaN(exp.getTime()) ? ' jusqu’au ' + exp.toLocaleDateString('fr-FR') : '')
-      : '🔓 Compte gratuit — portrait + prévision d’aujourd’hui';
+    document.getElementById('compte-statut').textContent = USER_CONNECTE.role === 'admin'
+      ? '👑 Profil Administrateur — accès complet de test'
+      : USER_CONNECTE.premium
+        ? '💎 Premium actif' + (exp && !Number.isNaN(exp.getTime()) ? ' jusqu’au ' + exp.toLocaleDateString('fr-FR') : '')
+        : '🔓 Compte gratuit — portrait + prévision d’aujourd’hui';
+    const btnAdmin = document.getElementById('btn-administration');
+    if (btnAdmin) btnAdmin.style.display = USER_CONNECTE.role === 'admin' ? 'block' : 'none';
     const btnPremium = document.getElementById('btn-passer-premium');
-    if (btnPremium) btnPremium.style.display = USER_CONNECTE.premium ? 'none' : 'block';
+    if (btnPremium) btnPremium.style.display = (USER_CONNECTE.premium || USER_CONNECTE.role === 'admin') ? 'none' : 'block';
     majCreditsQuestionsUI();
   }
 }
@@ -2315,7 +2359,8 @@ async function soumettreConnexion(estInscription) {
     if (!resp.ok) { erreurEl.textContent = data.erreur || 'Erreur.'; return; }
     definirToken(data.token);
     USER_CONNECTE = data;
-    PREMIUM = !!data.premium;
+    window.USER_CONNECTE = USER_CONNECTE;
+    PREMIUM = !!data.premium || data.role === 'admin';
     majBoutonCompte();
     majVueCompte();
     majAccesPremiumUI();
@@ -2328,6 +2373,7 @@ async function soumettreConnexion(estInscription) {
 function deconnexionCompte() {
   definirToken(null);
   USER_CONNECTE = null;
+  window.USER_CONNECTE = null;
   PREMIUM = false;
   majBoutonCompte();
   majVueCompte();
@@ -3523,9 +3569,40 @@ function enrichirAvecProgressions(posT, jdNatal, anneeVie) {
 }
 
 
+function valeurRegleDomaine(r,dom){
+  const v=r.s||{};
+  const avg=()=>Object.values(v).reduce((a,b)=>a+(Number(b)||0),0)/Math.max(1,Object.keys(v).length);
+  if(dom==='amour')return Number(v.amour)||0;
+  if(dom==='travail')return Number(v.travail)||0;
+  if(dom==='finances'||dom==='argent')return Number(v.finances)||0;
+  if(dom==='sante')return Number(v.sante)||0;
+  if(dom==='chance')return Number(v.chance)||0;
+  if(dom==='tous'||dom==='general')return avg();
+
+  let val=0;
+  if(dom==='famille') val=(Number(v.amour)||0)*0.45+(Number(v.chance)||0)*0.20+(Number(v.sante)||0)*0.15+(Number(v.finances)||0)*0.20;
+  else if(dom==='voyage') val=(Number(v.chance)||0)*0.45+(Number(v.finances)||0)*0.15+(Number(v.travail)||0)*0.20+(Number(v.sante)||0)*0.20;
+  else if(dom==='spirituel') val=(Number(v.chance)||0)*0.35+(Number(v.sante)||0)*0.20+(Number(v.amour)||0)*0.15+(Number(v.travail)||0)*0.15+(Number(v.finances)||0)*0.15;
+  else val=avg();
+
+  const t=String(r.t||'').replace(/^P-/,'');
+  const n=String(r.n||'');
+  const concerne = dom==='famille' ? ['Lune','Venus','Jupiter'].includes(t)||['Lune','Venus','AS'].includes(n)
+    : dom==='voyage' ? ['Jupiter','Mercure','Uranus','Noeud'].includes(t)||['Jupiter','Mercure','MC'].includes(n)
+    : dom==='spirituel' ? ['Neptune','Pluton','Uranus','Lune','Noeud'].includes(t)||['Lune','Soleil','AS'].includes(n)
+    : false;
+  if(concerne && Math.abs(val)>0.05) val*=1.22;
+  return val;
+}
+
 function scorer(posT,posN,AS,MC,dom){
   let s=0;const nm={...posN,AS,MC};
-  for(const r of REGLES){const dT=posT[r.t],dN=nm[r.n];if(dT===undefined||dN===undefined)continue;let diff=Math.abs(dT-dN);if(diff>180)diff=360-diff;const ecart=Math.abs(diff-r.a),orbe=ORBES[r.t]||2;if(ecart<=orbe){const poids=1-(ecart/orbe)*0.4,val=dom==='tous'?Object.values(r.s).reduce((a,b)=>a+b,0)/5:(r.s[dom]||0);s+=val*poids;}}
+  for(const r of REGLES){
+    const dT=posT[r.t],dN=nm[r.n];if(dT===undefined||dN===undefined)continue;
+    let diff=Math.abs(dT-dN);if(diff>180)diff=360-diff;
+    const ecart=Math.abs(diff-r.a),orbe=ORBES[r.t]||2;
+    if(ecart<=orbe){const poids=1-(ecart/orbe)*0.4,val=valeurRegleDomaine(r,dom);s+=val*poids;}
+  }
   return s;
 }
 
@@ -3533,28 +3610,43 @@ function scorer(posT,posN,AS,MC,dom){
 // PROFECTIONS ANNUELLES
 // ============================================================
 function calcProfection(jdNatal, jdAnalyse) {
-  const age = calcAnneeVieExacte(jdNatal, jdAnalyse);
-  const maisonProfectee = Math.floor(age % 12);
-  // Seigneurs traditionnels par maison (ordre : AS, H2, H3...)
-  // Simplifié : on retourne la maison activée (0-11) et un bonus/malus
-  return { maisonProfectee, age: Math.floor(age) };
+  const ageExact = calcAnneeVieExacte(jdNatal, jdAnalyse);
+  const age = Math.max(0, Math.floor(ageExact));
+  const maisonProfectee = age % 12; // 0 = maison I, 9 = maison X
+  const signeAsc = Math.floor((((USER && USER.AS !== undefined ? USER.AS : 0) % 360) + 360) % 360 / 30);
+  const signeActive = (signeAsc + maisonProfectee) % 12;
+  // Maîtrises traditionnelles : Bélier→Mars, Taureau→Vénus, etc.
+  const maitres = ['Mars','Venus','Mercure','Lune','Soleil','Mercure','Venus','Mars','Jupiter','Saturne','Saturne','Jupiter'];
+  return { maisonProfectee, age, ageExact, signeActive, maitreAnnee: maitres[signeActive] };
 }
 
-function scoreProfection(posN, AS, MC, dom, profection) {
-  // Bonus si planète bénéfique dans la maison profectée
-  // Malus si planète malveillante
-  // Approximation : on vérifie si Jupiter ou Venus est dans la maison
-  const { maisonProfectee } = profection;
-  const cuspide = (AS + maisonProfectee * 30) % 360;
-  let s = 0;
-  // Jupiter dans la maison profectée = bonus
-  const jupDiff = Math.abs(((posN.Jupiter - cuspide + 540) % 360) - 180);
-  if (jupDiff < 15) s += dom==='chance'||dom==='finances'||dom==='tous' ? 2 : 1;
-  // Saturne ou Mars dans la maison = malus
-  const satDiff = Math.abs(((posN.Saturne - cuspide + 540) % 360) - 180);
-  if (satDiff < 15) s -= dom==='sante'||dom==='tous' ? 2 : 1;
-  const marsDiff = Math.abs(((posN.Mars - cuspide + 540) % 360) - 180);
-  if (marsDiff < 15) s -= 1;
+function scoreProfection(posN, AS, MC, dom, profection, jdAnalyse) {
+  // La profection sert de contexte annuel : elle ne doit jamais dominer seule une prévision.
+  const maisonsParDomaine = {
+    amour:[4,6,7], travail:[5,9,10], finances:[1,7,9], argent:[1,7,9],
+    sante:[0,5], famille:[3,4], voyage:[2,8], spirituel:[8,11], chance:[4,8,10], tous:[0,1,2,3,4,5,6,7,8,9,10,11], general:[0,3,6,9]
+  };
+  let s = (maisonsParDomaine[dom] || maisonsParDomaine.general).includes(profection.maisonProfectee) ? 0.7 : 0;
+  if (!jdAnalyse || !profection.maitreAnnee) return s;
+  try {
+    const t = calcPos(jdAnalyse + 0.5);
+    const deg = t[profection.maitreAnnee];
+    const natal = {Soleil:posN.Soleil,Lune:posN.Lune,AS,MC};
+    if (deg === undefined) return s;
+    for (const cible of Object.values(natal)) {
+      let diff=Math.abs(deg-cible); if(diff>180)diff=360-diff;
+      for (const a of [0,60,90,120,180]) {
+        const ecart=Math.abs(diff-a);
+        if(ecart<=2.2){
+          const harmonique=(a===0||a===60||a===120);
+          const ben=['Jupiter','Venus','Soleil'].includes(profection.maitreAnnee);
+          const dur=['Saturne','Mars'].includes(profection.maitreAnnee);
+          let v=0.45*(1-ecart/2.2);
+          if(harmonique && ben) s+=v; else if(!harmonique && dur) s-=v; else s+=harmonique?v*0.35:-v*0.25;
+        }
+      }
+    }
+  } catch(e) {}
   return s;
 }
 
@@ -3613,39 +3705,27 @@ function scoreRevolutionSolaire(jdNatal, jdAnalyse, posN, AS, MC, dom) {
 // ============================================================
 // ÉCLIPSES (solaires et lunaires)
 // ============================================================
+const ECLIPSES_OFFICIELLES_2025_2030 = [
+  // Dates du maximum d'éclipse — tables NASA/GSFC 2021-2030.
+  ['2025-03-14','lunaire'],['2025-03-29','solaire'],['2025-09-07','lunaire'],['2025-09-21','solaire'],
+  ['2026-02-17','solaire'],['2026-03-03','lunaire'],['2026-08-12','solaire'],['2026-08-28','lunaire'],
+  ['2027-02-06','solaire'],['2027-02-20','lunaire'],['2027-07-18','lunaire'],['2027-08-02','solaire'],['2027-08-17','lunaire'],
+  ['2028-01-12','lunaire'],['2028-01-26','solaire'],['2028-07-06','lunaire'],['2028-07-22','solaire'],['2028-12-31','lunaire'],
+  ['2029-01-14','solaire'],['2029-06-12','solaire'],['2029-06-26','lunaire'],['2029-07-11','solaire'],['2029-12-05','solaire'],['2029-12-20','lunaire'],
+  ['2030-06-01','solaire'],['2030-06-15','lunaire'],['2030-11-25','solaire'],['2030-12-09','lunaire']
+];
+
 function calcEclipses(jdAnalyse) {
-  // Éclipses approximatives : nouvelle lune + nœud proche
-  // Période synodique lunaire : 29.53059 jours
-  const eclipses = [];
-  const jdDebut = jdAnalyse - 365;
-  for (let j = 0; j < 25; j++) { // ~25 nouvelles lunes par an
-    const jdNL = jdDebut + j * 29.53059;
-    const soleil = calcSoleil(jdNL);
-    const lune = calcLune(jdNL);
-    const noeud = calcNoeud(jdNL);
-    // Éclipse solaire si nouvelle lune ET Lune proche du Nœud (< 18°)
-    const diffSL = Math.abs(((lune - soleil + 540) % 360) - 180);
-    const diffLN = Math.abs(((lune - noeud + 540) % 360) - 180);
-    const diffLN2 = Math.abs(((lune - (noeud+180)) % 360 + 360) % 360);
-    const proxNoeud = Math.min(diffLN, diffLN2);
-    if (diffSL < 5 && proxNoeud < 18) { // Nouvelle lune près nœud = éclipse solaire
-      eclipses.push({ jd: jdNL, type: 'solaire', lon: soleil });
-    }
-    // Pleine lune
-    const jdPL = jdNL + 14.765;
-    const soleilPL = calcSoleil(jdPL);
-    const lunePL = calcLune(jdPL);
-    const noeudPL = calcNoeud(jdPL);
-    const diffPL = Math.abs(((lunePL - soleilPL + 540) % 360) - 180);
-    const diffPLN = Math.min(
-      Math.abs(((lunePL - noeudPL + 540) % 360) - 180),
-      Math.abs(((lunePL - (noeudPL+180)) % 360 + 360) % 360)
-    );
-    if (Math.abs(diffPL - 180) < 5 && diffPLN < 18) {
-      eclipses.push({ jd: jdPL, type: 'lunaire', lon: lunePL });
-    }
+  // Une éclipse n'est activée ici que près de sa date réelle ; plus d'estimation par lunaison moyenne.
+  const out=[];
+  for(const [iso,type] of ECLIPSES_OFFICIELLES_2025_2030){
+    const [y,m,d]=iso.split('-').map(Number);
+    const jdE=julianDay(y,m,d,12);
+    if(Math.abs(jdAnalyse-jdE)>1.25) continue;
+    const lon = type==='solaire' ? calcSoleil(jdE) : calcLune(jdE);
+    out.push({jd:jdE,type,lon,dateISO:iso,source:'NASA/GSFC'});
   }
-  return eclipses;
+  return out;
 }
 
 function scoreEclipses(eclipses, posN, AS, MC, dom) {
@@ -3894,7 +3974,7 @@ function scorerJour(jdJour, posN, AS, MC, dom, jdNatal) {
 
   // Profection
   const profection = calcProfection(jdNatal, jdJour);
-  sFixe += scoreProfection(posN, AS, MC, dom, profection);
+  sFixe += scoreProfection(posN, AS, MC, dom, profection, jdJour);
 
   // Révolution solaire (calculée une fois par jour)
   if (USER) sFixe += scoreRevolutionSolaire(jdNatal, jdJour, posN, AS, MC, dom);
@@ -3910,6 +3990,149 @@ function scorerJour(jdJour, posN, AS, MC, dom, jdNatal) {
   if (USER) sFixe += scoreRetourLunaire(jdNatal, jdJour, posN, AS, MC, dom);
 
   return sFixe;
+}
+
+
+function ecartAspectExact(a,b,aspects=[0,60,90,120,180]){
+  let diff=Math.abs(a-b); if(diff>180)diff=360-diff;
+  let best={aspect:null,ecart:999};
+  for(const asp of aspects){const e=Math.abs(diff-asp);if(e<best.ecart)best={aspect:asp,ecart:e};}
+  return best;
+}
+
+function impactConcretCible(cible, dom){
+  if(dom==='travail') return 'travail, responsabilités, statut ou orientation professionnelle';
+  if(dom==='amour') return 'couple, relation, engagement, rapprochement ou prise de distance';
+  if(dom==='finances'||dom==='argent') return 'revenus, dépenses importantes, contrat, achat ou sécurité matérielle';
+  if(dom==='famille') return 'foyer, famille, logement ou organisation familiale';
+  if(dom==='voyage') return 'déplacement, voyage, étranger, formation ou changement d’horizon';
+  if(dom==='sante') return 'énergie, rythme, fatigue, récupération et hygiène de vie';
+  if(dom==='spirituel') return 'priorités intérieures, sens, intuition et changement de regard';
+  const map={MC:'carrière, statut et direction professionnelle',AS:'identité, mode de vie et direction personnelle',Soleil:'affirmation, décisions et cap personnel',Lune:'foyer, famille et sécurité émotionnelle',Venus:'relations, plaisir et finances',Mars:'action, conflit, effort et décisions',Jupiter:'expansion, opportunités et projets',Saturne:'responsabilités, limites et engagements'};
+  return map[cible]||'un domaine important de la vie quotidienne';
+}
+
+function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
+  const jd=jdJour+heure/24;
+  const t=calcPos(jd);
+  const natal={...posN,AS,MC};
+  const age=calcAnneeVieExacte(jdNatal,jdJour);
+  const signatures=[];
+  const ajouter=(famille,poids,texte,cible)=>signatures.push({famille,poids,texte,cible,impact:impactConcretCible(cible,dom)});
+
+  // 1) Transits lents : prioritaires lorsqu'ils touchent un point personnel/angle avec un orbe serré.
+  for(const pl of ['Pluton','Uranus','Saturne','Neptune','Jupiter']){
+    const orbe=pl==='Jupiter'?1.6:1.35;
+    for(const cible of ['Soleil','Lune','AS','MC','Venus']){
+      if(t[pl]===undefined||natal[cible]===undefined)continue;
+      const a=ecartAspectExact(t[pl],natal[cible],[0,60,90,120,180]);
+      if(a.ecart<=orbe){
+        const majeur=['Pluton','Uranus','Saturne','Neptune'].includes(pl)&&['Soleil','Lune','AS','MC'].includes(cible);
+        ajouter('transit-lent',majeur?3.2:pl==='Jupiter'?1.8:2.2,`${pl} ${a.aspect}° ${cible} (écart ${a.ecart.toFixed(2)}°)`,cible);
+      }
+    }
+  }
+
+  // 2) Progressions secondaires : orbe très serré.
+  if(age>=0){
+    try{
+      const prog=calcProgressions(jdNatal,age);
+      for(const pp of ['Soleil','Lune','Venus','AS','MC']){
+        for(const cible of ['Soleil','Lune','AS','MC','Venus']){
+          if(prog[pp]===undefined||natal[cible]===undefined)continue;
+          const a=ecartAspectExact(prog[pp],natal[cible],[0,60,90,120,180]);
+          if(a.ecart<=0.8)ajouter('progression',2.2,`${pp} progressé ${a.aspect}° ${cible} (écart ${a.ecart.toFixed(2)}°)`,cible);
+        }
+      }
+    }catch(e){}
+  }
+
+  // 3) Directions par arc solaire : on retient les contacts exacts aux angles/luminaires.
+  if(age>=0){
+    try{
+      const arc=calcArcSoleil(jdNatal,age);
+      for(const src of ['Soleil','Lune','AS','MC','Jupiter','Saturne','Uranus','Pluton']){
+        if(natal[src]===undefined)continue;
+        const dirige=(natal[src]+arc)%360;
+        for(const cible of ['Soleil','Lune','AS','MC']){
+          if(src===cible||natal[cible]===undefined)continue;
+          const a=ecartAspectExact(dirige,natal[cible],[0,60,90,120,180]);
+          if(a.ecart<=0.75)ajouter('arc-solaire',2.6,`${src} dirigé ${a.aspect}° ${cible} (écart ${a.ecart.toFixed(2)}°)`,cible);
+        }
+      }
+    }catch(e){}
+  }
+
+  // 4) Éclipse officielle très proche d'un angle/luminaire.
+  try{
+    for(const ecl of calcEclipses(jdJour)){
+      for(const cible of ['Soleil','Lune','AS','MC']){
+        let d=Math.abs(ecl.lon-natal[cible]);if(d>180)d=360-d;
+        if(d<=2)ajouter('eclipse',3.1,`Éclipse ${ecl.type} officielle sur ${cible} (écart ${d.toFixed(2)}°)`,cible);
+      }
+    }
+  }catch(e){}
+
+  // 5) Maître de l'année de profection : confirmation seulement, jamais preuve unique.
+  try{
+    const prof=calcProfection(jdNatal,jdJour); const mp=prof.maitreAnnee;
+    if(mp&&t[mp]!==undefined){
+      for(const cible of ['Soleil','Lune','AS','MC']){
+        const a=ecartAspectExact(t[mp],natal[cible],[0,60,90,120,180]);
+        if(a.ecart<=1.5)ajouter('profection',1.25,`Maître annuel ${mp} active ${cible}`,cible);
+      }
+    }
+  }catch(e){}
+
+  // 6) Révolution solaire : contexte annuel, uniquement si le score est réellement marqué.
+  try{
+    const rs=scoreRevolutionSolaire(jdNatal,jdJour,posN,AS,MC,dom);
+    if(Math.abs(rs)>=1.15)ajouter('revolution-solaire',1.25,`Révolution solaire ${rs>0?'porteuse':'exigeante'} (${rs.toFixed(1)})`,dom==='travail'?'MC':dom==='famille'?'Lune':'Soleil');
+  }catch(e){}
+
+  // 7) Nœuds : confirmation de timing si contact serré à un angle/luminaire.
+  if(t.Noeud!==undefined){
+    for(const cible of ['Soleil','Lune','AS','MC']){
+      let d=Math.abs(t.Noeud-natal[cible]);if(d>180)d=360-d;
+      let ds=Math.abs(((t.Noeud+180)%360)-natal[cible]);if(ds>180)ds=360-ds;
+      if(Math.min(d,ds)<=1.2)ajouter('noeuds',1.35,`Axe nodal active ${cible}`,cible);
+    }
+  }
+
+  // Déduplication au sein d'une même famille/cible : on garde le signal le plus fort.
+  const uniq=[]; const vus=new Map();
+  for(const sig of signatures.sort((a,b)=>b.poids-a.poids)){
+    const k=sig.famille+'|'+sig.cible;
+    if(!vus.has(k)){vus.set(k,true);uniq.push(sig);}
+  }
+  const familles=[...new Set(uniq.map(x=>x.famille))];
+  const poids=uniq.reduce((a,b)=>a+b.poids,0);
+  const niveau=familles.length>=3||poids>=7?'forte':familles.length>=2||poids>=4?'confirmee':uniq.some(x=>x.poids>=3)?'majeure-seule':'faible';
+  return {niveau,familles,poids,signatures:uniq.slice(0,8),impact:uniq[0]?uniq[0].impact:impactConcretCible(null,dom)};
+}
+
+function selectionnerMomentsDistincts(resultats, sens='haut', n=3, espacement=1){
+  const tries=[...resultats].sort((a,b)=>sens==='haut'?b.score-a.score:a.score-b.score);
+  const out=[];
+  for(const r of tries){
+    if(out.every(x=>Math.abs((r.date-x.date)/86400000)>=espacement))out.push(r);
+    if(out.length>=n)break;
+  }
+  return out;
+}
+
+function regrouperConvergences(resultats){
+  const forts=resultats.filter(r=>r.convergence&&r.convergence.niveau!=='faible');
+  const groupes=[];
+  for(const r of forts){
+    const key=(r.convergence.familles||[]).slice().sort().join('|')+'|'+r.convergence.impact;
+    const last=groupes[groupes.length-1];
+    if(last&&last.key===key&&(r.date-last.fin)/86400000<=4){
+      last.fin=r.date;
+      if(r.convergence.poids>last.meilleur.convergence.poids)last.meilleur=r;
+    }else groupes.push({key,debut:r.date,fin:r.date,meilleur:r});
+  }
+  return groupes.sort((a,b)=>b.meilleur.convergence.poids-a.meilleur.convergence.poids).slice(0,6);
 }
 
 async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
@@ -3937,7 +4160,9 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
       declencheurs = detecterDeclencheurs(posBest, posN, AS, MC, jdNatal, anneeVie, jdJ);
     } catch(e) {}
 
-    res.push({date, score:maxS<-900?0:maxS, heure:maxH, declencheurs});
+    let convergence=null;
+    try { convergence=analyserSignaturesJour(jdJ,maxH,posN,AS,MC,dom,jdNatal); } catch(e) { convergence={niveau:'faible',familles:[],poids:0,signatures:[],impact:impactConcretCible(null,dom)}; }
+    res.push({date, score:maxS<-900?0:maxS, heure:maxH, declencheurs, convergence});
     if(j%5===0){onProg(j/nb);await new Promise(r=>setTimeout(r,0));}
   }
   return res;
@@ -4356,66 +4581,94 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
 
   pb.style.width='88%'; pl.textContent='Rédaction…';
 
-  const top3=[...resultats].filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
-  const pires3=[...resultats].sort((a,b)=>a.score-b.score).slice(0,3);
-  const scoreMoyen = resultats.reduce((s,r)=>s+r.score,0)/resultats.length;
-  const tendance = scoreMoyen > 4 ? 'globalement favorable' : scoreMoyen > 1 ? 'plutôt favorable' : scoreMoyen > -1 ? 'mitigée avec des opportunités' : scoreMoyen > -3 ? 'contrastée' : 'exigeante mais formatrice';
+  // Les meilleures / moins bonnes dates doivent être réellement distinctes :
+  // on évite les séries de 3 jours consécutifs qui racontent exactement la même chose.
+  const espacement = nbJours<=7 ? 1 : nbJours<=31 ? 3 : nbJours<=100 ? 7 : 14;
+  const top3=selectionnerMomentsDistincts(resultats.filter(r=>r.score>0),'haut',3,espacement);
+  const pires3=selectionnerMomentsDistincts(resultats,'bas',2,espacement);
+  const scoreMoyen = resultats.reduce((s,r)=>s+r.score,0)/Math.max(1,resultats.length);
+  const tendance = scoreMoyen > 4 ? 'globalement favorable' : scoreMoyen > 1 ? 'plutôt favorable' : scoreMoyen > -1 ? 'mitigée avec des opportunités' : scoreMoyen > -3 ? 'contrastée' : 'exigeante';
 
   const dateFin=new Date(dateDebut); dateFin.setDate(dateDebut.getDate()+nbJours-1);
   const fmtD=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
   const fmtL=d=>d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const periodeStr=nbJours===1?`le ${fmtD(dateDebut)}`:`du ${fmtD(dateDebut)} au ${fmtD(dateFin)}`;
 
-  const topTxt = top3.map(r=>{
-    const decs = r.declencheurs && r.declencheurs.length ? ' ['+r.declencheurs.map(d=>d.label).join(', ')+']' : '';
-    return `${fmtL(r.date)} — pic à ${String(r.heure).padStart(2,'0')}h00${decs}`;
+  const topTxt = top3.map(r=>`${fmtL(r.date)} — score ${r.score.toFixed(1)}${nbJours===1?' — meilleure fenêtre autour de '+String(r.heure).padStart(2,'0')+'h00':''}`).join('\n');
+  const pireTxt = pires3.map(r=>`${fmtL(r.date)} — score ${r.score.toFixed(1)}`).join('\n');
+
+  // Convergences techniques regroupées en périodes, pas en répétitions quotidiennes.
+  const convGroupes=regrouperConvergences(resultats);
+  const convergenceTxt=convGroupes.map(g=>{
+    const r=g.meilleur, c=r.convergence;
+    const dates=(g.debut.toDateString()===g.fin.toDateString())?fmtL(g.debut):`${fmtL(g.debut)} → ${fmtL(g.fin)}`;
+    const sig=(c.signatures||[]).map(x=>x.texte).join(' | ');
+    return `${dates} — convergence ${c.niveau} — domaine concret : ${c.impact} — familles indépendantes : ${(c.familles||[]).join(', ')||'aucune'} — ${sig}`;
   }).join('\n');
 
-  const pireTxt = pires3.map(r=>{
-    const decs = r.declencheurs && r.declencheurs.length ? ' ['+r.declencheurs.map(d=>d.label).join(', ')+']' : '';
-    return `${fmtL(r.date)} — score ${r.score.toFixed(1)}${decs}`;
-  }).join('\n');
-
-  const decsCritiques = resultats
-    .filter(r=>r.declencheurs && r.declencheurs.some(d=>d.force>=5))
-    .map(r=>`${fmtL(r.date)} : ${r.declencheurs.filter(d=>d.force>=5).map(d=>d.label).join(', ')}`)
-    .join('\n');
+  const GUIDE_DOMAINE = {
+    amour:'Parle de rencontre, évolution d’une relation existante, engagement, rapprochement, mise au point, prise de distance ou séparation uniquement si les indicateurs le justifient.',
+    travail:'Parle de poste, responsabilités, promotion, changement d’équipe ou de direction, contrat, recherche d’emploi, reconversion, départ ou reconnaissance uniquement si les indicateurs le justifient.',
+    finances:'Parle de revenus, dépenses, achat important, négociation, contrat, crédit, épargne ou réorganisation budgétaire. Ne promets jamais un gain certain.',
+    argent:'Parle de revenus, dépenses, achat important, négociation, contrat, crédit, épargne ou réorganisation budgétaire. Ne promets jamais un gain certain.',
+    famille:'Parle de foyer, proches, enfants si pertinent, déménagement, organisation familiale, rapprochement ou tensions concrètes.',
+    voyage:'Parle de déplacement, voyage, étranger, démarches, études ou changement d’horizon.',
+    sante:'Parle seulement d’énergie, fatigue, rythme, récupération et hygiène de vie. Aucun diagnostic, aucune maladie annoncée, aucun conseil médical.',
+    spirituel:'Parle de priorités, sens, intuition, créativité, besoin de recul et changement de regard, avec des conséquences concrètes dans les décisions.',
+    chance:'Parle d’opportunités réelles à saisir, de rencontres utiles, de portes qui s’ouvrent et de timing, sans promettre de résultat.',
+    tous:'Hiérarchise les domaines réellement les plus touchés : travail, couple, famille/foyer, finances, projets, déplacements et direction de vie.',
+    general:'Hiérarchise les domaines réellement les plus touchés : travail, couple, famille/foyer, finances, projets, déplacements et direction de vie.'
+  };
+  const guideDomaine=GUIDE_DOMAINE[domP]||GUIDE_DOMAINE.general;
 
   const prompt = nbJours===1
-    ? `Analyse la journée ${periodeStr} pour ${USER.prenom}, domaine : ${DOM_LABELS[domP]}.
-Score global : ${(resultats[0] && typeof resultats[0].score === 'number' ? resultats[0].score.toFixed(1) : '0')} — Tendance : ${tendance}
-Déclencheurs actifs : ${(resultats[0] && resultats[0].declencheurs && resultats[0].declencheurs.length ? resultats[0].declencheurs.map(d=>d.label+' — '+d.desc).join(' | ') : 'aucun déclencheur majeur')}
-Meilleure fenêtre : ${top3[0]?String(top3[0].heure).padStart(2,'0')+'h00':'aucune fenêtre favorable'}
+    ? `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
+Tendance calculée : ${tendance}. Score du jour : ${(resultats[0]&&Number.isFinite(resultats[0].score)?resultats[0].score.toFixed(1):'0')}.
+Fenêtre horaire la plus favorable calculée : ${top3[0]?String(top3[0].heure).padStart(2,'0')+'h00':'aucune fenêtre nette'}.
+Convergences techniques internes :
+${convergenceTxt||'Aucune convergence technique forte : journée plutôt ordinaire.'}
 
-3 sections :
-1. L'ÉNERGIE DU JOUR — sois honnête sur la tonalité réelle de cette journée, positive ou négative
-2. CE QUI EST FAVORISÉ ou CE QUI EST À RISQUE en ${DOM_LABELS[domP]} — selon la réalité du jour
-3. LA MEILLEURE FENÊTRE avec heure exacte, ou LE MOMENT DE VIGILANCE si la journée est difficile
+OBJECTIF : la personne veut savoir CE QUI PEUT CONCRÈTEMENT SE PASSER aujourd’hui dans ${DOM_LABELS[domP]}, pas recevoir un cours d’astrologie.
+${guideDomaine}
 
-RÈGLE ABSOLUE : aucun jargon astrologique. Si la journée est bonne, dis-le avec enthousiasme. Si elle est ordinaire, trouve ce qui est porteur. Si elle est vraiment difficile, annonce-le clairement — mais donne toujours un conseil concret pour la traverser au mieux.`
+Réponds en 3 blocs courts :
+1. AUJOURD’HUI — 2 à 4 phrases très concrètes sur le scénario dominant et ce qui est le plus probable.
+2. À SURVEILLER / À SAISIR — 2 ou 3 possibilités concrètes, classées de la plus plausible à la plus secondaire. Si rien de remarquable ne ressort, dis-le clairement.
+3. MEILLEUR MOMENT — indique l’heure utile seulement parce qu’un calcul horaire a été effectué, et explique en une phrase à quoi l’utiliser.
 
-    : `Analyse ${periodeStr} pour ${USER.prenom}, domaine : ${DOM_LABELS[domP]}.
-Tendance globale de la période : ${tendance} (score moyen : ${scoreMoyen.toFixed(1)})
+INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, "énergies", "vibrations", "transformation" sans dire de quoi il s’agit, phrases vagues comme "quelque chose se prépare". Ne transforme jamais une possibilité en certitude.`
 
-MEILLEURS MOMENTS :
-${topTxt||'Aucun pic favorable significatif'}
+    : `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
+Tendance calculée : ${tendance}. Score moyen : ${scoreMoyen.toFixed(1)}.
 
-MOMENTS DIFFICILES :
-${pireTxt}
+DATES FAVORABLES DISTINCTES :
+${topTxt||'Aucune date nettement favorable.'}
 
-DÉCLENCHEURS CRITIQUES SUR LA PÉRIODE :
-${decsCritiques||'Aucun déclencheur critique majeur'}
+DATES DE VIGILANCE DISTINCTES :
+${pireTxt||'Aucune date de vigilance particulière.'}
 
-4 sections :
-1. LE TABLEAU GÉNÉRAL — décris honnêtement la tonalité de cette période. Si elle est difficile, dis-le. Si elle est mitigée, nuance.
-2. CE QUI S'OUVRE ou CE QUI MENACE en ${DOM_LABELS[domP]} — selon la réalité calculée
-3. CE QUI SE TRANSFORME — les évolutions profondes de cette période
-4. LES DATES CLÉS — cite les 3 meilleures dates ET les 2 dates de plus grande vigilance, avec heures exactes et ce que cela signifie concrètement pour ${USER.prenom}
+CONVERGENCES TECHNIQUES INTERNES REGROUPÉES EN PÉRIODES :
+${convergenceTxt||'Aucune convergence technique forte sur cette période.'}
 
-RÈGLE ABSOLUE : aucun jargon astrologique. Sois honnête sur la réalité de cette période — si elle est belle, célèbre-la ; si elle est mitigée, montre les opportunités cachées ; si elle est vraiment sombre, dis-le clairement avec bienveillance. Dans tous les cas : donne des dates réelles et termine sur ce que la personne peut faire concrètement.`;
+OBJECTIF : la personne veut savoir CE QUI A LE PLUS DE CHANCES DE SE PASSER dans sa vie concrète concernant ${DOM_LABELS[domP]}. Elle ne veut ni cours d’astrologie ni phrases abstraites.
+${guideDomaine}
+
+Rédige 4 parties :
+1. CE QUI RESSORT VRAIMENT — maximum 4 phrases. N’évoque que les tendances suffisamment soutenues par les calculs. S’il n’y a rien de remarquable, dis "Aucun événement particulièrement marquant ne ressort sur cette période".
+2. LES SCÉNARIOS LES PLUS PLAUSIBLES — 2 à 4 scénarios concrets et différents, classés du plus soutenu au plus secondaire. Pour chacun, précise le domaine de vie et ce que cela pourrait donner dans la réalité. Ne donne pas de faux pourcentage statistique.
+3. QUAND — regroupe les dates qui appartiennent au même phénomène en UNE période. Cite seulement les dates utiles. Pour une semaine/mois/trimestre/année, n’invente PAS d’heure exacte : parle de journée ou de période, sauf événement réellement horaire.
+4. CE QUE ${USER.prenom.toUpperCase()} PEUT FAIRE — 2 ou 3 actions concrètes adaptées au domaine.
+
+RÈGLES ABSOLUES :
+- Aucun jargon astrologique et aucun nom de technique/planète dans la réponse finale.
+- Pas de répétition de la même idée sous plusieurs titres ou plusieurs dates.
+- Pas de phrase bateau : "une transformation", "une consolidation", "un nouveau cycle", "une énergie" sont interdits si tu ne précises pas ce qui change concrètement.
+- Ne prédis jamais une grossesse, un décès, une maladie, un licenciement ou une rupture comme une certitude. Présente seulement des scénarios possibles si les indicateurs fournis les soutiennent clairement.
+- N’invente rien qui ne soit pas appuyé par les données ci-dessus.
+- Si plusieurs techniques convergent, donne plus de poids à cette période qu’à un simple bon/mauvais score journalier.`;
 
   try {
-    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue honnête et bienveillant. Tes règles : 1) Tiens compte du genre : pour une femme, intègre les thèmes de maternité, cycles féminins, relations affectives ; pour un homme, intègre les thèmes de paternité, ambition, leadership. 2) Si une période est ordinaire ou mitigée, cherche ce qui est porteur. 3) Si une période est vraiment difficile, annonce-le clairement mais avec bienveillance. 4) Aucun jargon astrologique. 5) Termine toujours sur une piste d\'action concrète. Utilise les bons pronoms selon le genre indiqué.',messages:[{role:'user',content:prompt}]});
+    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes et par précision du timing. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le genre uniquement pour la grammaire, jamais pour supposer un destin différent. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
     document.getElementById('p-rapport').innerHTML=formatRapport(texteClaude(data)||'Erreur');
     const pTopListe = document.getElementById('p-top-liste');
     if (pTopListe) afficherTop(top3,'p-top-liste','p-top-titre',nbJours);
@@ -8220,7 +8473,7 @@ chargerStatutCompte().then(() => gererRetourPackQuestions()).catch(() => {});
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('sw.js?v=astro-paquita-v38-fix-validation-20260812', { updateViaCache: 'none' });
+      const reg = await navigator.serviceWorker.register('sw.js?v=astro-paquita-v45-admin-maintenance-20260813', { updateViaCache: 'none' });
       await reg.update();
     } catch (err) {
       console.warn('Service worker non enregistré :', err);
@@ -8420,11 +8673,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const planSub=document.getElementById('v30-plan-sub');
     if(!u){if(name)name.textContent='Mon profil';if(badge)badge.textContent='COMPTE GRATUIT';if(sub)sub.textContent='Connectez-vous pour accéder à votre espace.';if(title)title.textContent='Compte gratuit';if(planSub)planSub.textContent='Portrait complet + prévision du jour';return;}
     if(name) name.textContent=u.prenom||String(u.email||'').split('@')[0]||'Mon profil';
-    if(badge) badge.textContent=u.premium?'MEMBRE PREMIUM':'COMPTE GRATUIT';
+    if(badge) badge.textContent=u.role==='admin'?'ADMINISTRATEUR':(u.premium?'MEMBRE PREMIUM':'COMPTE GRATUIT');
     const exp=u.premium_expires_at?new Date(u.premium_expires_at):null;
     if(sub) sub.textContent=u.email||'';
-    if(title) title.textContent=u.premium?'Premium actif':'Compte gratuit';
-    if(planSub) planSub.textContent=u.premium?(exp&&!isNaN(exp)?'Actif jusqu’au '+exp.toLocaleDateString('fr-FR'):'Premium actif'):'Portrait complet + prévision du jour';
+    if(title) title.textContent=u.role==='admin'?'Profil Administrateur':(u.premium?'Premium actif':'Compte gratuit');
+    if(planSub) planSub.textContent=u.role==='admin'?'Accès complet + administration':(u.premium?(exp&&!isNaN(exp)?'Actif jusqu’au '+exp.toLocaleDateString('fr-FR'):'Premium actif'):'Portrait complet + prévision du jour');
   };
   document.addEventListener('DOMContentLoaded',()=>{
     const mods=document.getElementById('section-modules'), saisie=document.getElementById('section-saisie');

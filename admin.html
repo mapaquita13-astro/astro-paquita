@@ -1,195 +1,51 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Administration — Astro Paquita</title>
 <style>
-  body{font-family:system-ui,sans-serif;max-width:1500px;margin:2rem auto;padding:0 1rem 3rem;background:#0f0c29;color:#f0ecff}
-  h1{color:#c084fc} h2{margin-top:1rem}
-  input,select,button{padding:.55rem;margin:.25rem 0;border-radius:6px;border:1px solid #7c3aed;background:#1e1850;color:#fff}
-  button{background:#7c3aed;cursor:pointer} button:hover{background:#a855f7}
-  button.danger{background:#991b1b;border-color:#dc2626} button.danger:hover{background:#dc2626}
-  table{width:100%;border-collapse:collapse;margin-top:1rem;min-width:1250px}
-  th,td{border:1px solid #7c3aed;padding:.5rem;text-align:left;font-size:.82rem;vertical-align:middle;white-space:nowrap}
-  th{background:#27215e;position:sticky;top:0;z-index:1}
-  .config{background:#1e1850;padding:1rem;border-radius:8px;margin-bottom:1.5rem}.config input{width:100%;box-sizing:border-box}
-  label{display:block;margin-top:.5rem;font-size:.85rem;color:#c0b4e0}
-  .section{background:rgba(30,24,80,.35);padding:1rem;border-radius:8px;margin-top:1.5rem}
-  .muted{color:#c0b4e0;font-size:.9rem}.count{color:#c084fc;font-weight:700}.ok{color:#86efac}.no{color:#fca5a5}
-  .table-wrap{overflow-x:auto;border-radius:8px}
-  .stats{display:flex;gap:1rem;flex-wrap:wrap;margin:.5rem 0 1rem}.stat{background:#1e1850;border:1px solid #5b21b6;border-radius:8px;padding:.7rem 1rem}
-  .stat strong{display:block;color:#c084fc;font-size:1.25rem}
-</style>
-</head>
-<body>
+body{font-family:system-ui,sans-serif;max-width:1500px;margin:2rem auto;padding:0 1rem 3rem;background:#0f0c29;color:#f0ecff}h1{color:#c084fc}h2{margin-top:1rem}
+input,select,button{padding:.55rem;margin:.25rem 0;border-radius:7px;border:1px solid #7c3aed;background:#1e1850;color:#fff}button{background:#7c3aed;cursor:pointer}button:hover{background:#a855f7}button.danger{background:#991b1b;border-color:#dc2626}button.safe{background:#166534;border-color:#22c55e}.secondary{background:#3730a3}.gold{background:#8a6820;border-color:#c9a84c}
+.config,.section{background:rgba(30,24,80,.55);padding:1rem;border-radius:10px;margin:0 0 1.25rem}.config input{width:100%;box-sizing:border-box}label{display:block;margin-top:.5rem;font-size:.85rem;color:#c0b4e0}.muted{color:#c0b4e0;font-size:.9rem}.ok{color:#86efac}.no{color:#fca5a5}
+.stats{display:flex;gap:1rem;flex-wrap:wrap}.stat{background:#1e1850;border:1px solid #5b21b6;border-radius:8px;padding:.7rem 1rem}.stat strong{display:block;color:#c084fc;font-size:1.25rem}.table-wrap{overflow-x:auto;border-radius:8px}table{width:100%;border-collapse:collapse;margin-top:1rem;min-width:1350px}th,td{border:1px solid #7c3aed;padding:.5rem;text-align:left;font-size:.82rem;white-space:nowrap}th{background:#27215e;position:sticky;top:0}.maintenance-state{font-weight:800;font-size:1.05rem}.maintenance-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.badge-admin{display:inline-block;padding:.22rem .45rem;border-radius:999px;background:#8a6820;color:#fff4c2;font-weight:800}.auth-info{padding:.65rem;border-radius:8px;background:#171238;margin:.5rem 0}.hidden{display:none!important}
+</style></head><body>
 <h1>Administration — Astro Paquita</h1>
-
-<div class="config">
-  <label>URL du backend</label>
-  <input id="cfg-url" value="https://astro-paquita-backend.onrender.com" placeholder="https://astro-paquita-backend.onrender.com">
-  <label>Clé admin</label>
-  <input id="cfg-key" type="password" placeholder="ADMIN_KEY">
-  <button onclick="sauvegarderConfig()">Enregistrer et charger</button>
+<div id="auth-info" class="auth-info">Vérification de ton profil administrateur…</div>
+<div class="config" id="key-config">
+<label>URL du backend</label><input id="cfg-url" value="https://astro-paquita-backend.onrender.com">
+<label>Clé admin de secours</label><input id="cfg-key" type="password" placeholder="ADMIN_KEY">
+<button onclick="sauvegarderConfig()">Enregistrer et charger</button>
+<p class="muted">La clé n'est nécessaire que pour le premier accès ou pour transformer ton compte actuel en profil Administrateur.</p>
 </div>
-
 <div class="section">
-  <h2>Utilisateurs</h2>
-  <div class="stats">
-    <div class="stat"><span>Comptes inscrits</span><strong id="users-count">—</strong></div>
-    <div class="stat"><span>Premium actifs</span><strong id="premium-count">—</strong></div>
-    <div class="stat"><span>Visites enregistrées</span><strong id="visits-total">—</strong></div>
-    <div class="stat"><span>Connexions enregistrées</span><strong id="logins-total">—</strong></div>
-  </div>
-  <p class="muted">Les statistiques de visites et de connexions démarrent à partir de l'installation de cette version. Les anciens passages ne peuvent pas être reconstitués.</p>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Prénom</th><th>Email</th><th>Inscription</th><th>Premium</th><th>Fin Premium</th>
-          <th>Visites</th><th>Connexions</th><th>1re connexion</th><th>Dernière connexion</th><th>Dernière activité</th>
-          <th>Questions restantes</th><th>Questions utilisées</th><th>Packs achetés</th><th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-users"><tr><td colspan="14">Charge la configuration pour voir les utilisateurs.</td></tr></tbody>
-    </table>
-  </div>
+<h2>Maintenance du site</h2><div class="maintenance-row"><span id="maintenance-state" class="maintenance-state">État inconnu</span><button class="danger" onclick="changerMaintenance(true)">🔴 Mettre en maintenance</button><button class="safe" onclick="changerMaintenance(false)">🟢 Rouvrir le site</button><button class="secondary" onclick="voirSiteMaintenance()">👁 Voir le site</button></div>
+<label>Message affiché aux visiteurs</label><input id="maintenance-message" style="width:100%;box-sizing:border-box" value="Astro Paquita se refait une beauté. Le site sera de retour très bientôt."><p class="muted">Ton profil Administrateur peut continuer à utiliser le site pendant la maintenance.</p>
 </div>
-
-<div class="section">
-  <h2>Créer un code promo</h2>
-  <label>Code</label><input id="new-code" placeholder="BIENVENUE2026">
-  <label>Type</label>
-  <select id="new-type">
-    <option value="jours_premium">Jours de Premium offerts</option>
-    <option value="reduction_pourcentage">Réduction % à l'achat</option>
-  </select>
-  <label>Valeur</label><input id="new-valeur" type="number">
-  <label>Nombre max d'utilisations (vide = illimité)</label><input id="new-max" type="number">
-  <label>Date d'expiration (vide = jamais)</label><input id="new-expire" type="date">
-  <br><button onclick="creerCode()">Créer le code</button>
-</div>
-
-<div class="section">
-  <h2>Codes promo existants</h2>
-  <div class="table-wrap">
-    <table style="min-width:760px">
-      <thead><tr><th>Code</th><th>Type</th><th>Valeur</th><th>Utilisations</th><th>Actif</th><th>Action</th></tr></thead>
-      <tbody id="tbody-codes"><tr><td colspan="6">Charge la configuration pour voir les codes.</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
+<div class="section"><h2>Utilisateurs</h2><div class="stats"><div class="stat"><span>Comptes</span><strong id="users-count">—</strong></div><div class="stat"><span>Administrateurs</span><strong id="admins-count">—</strong></div><div class="stat"><span>Premium actifs</span><strong id="premium-count">—</strong></div><div class="stat"><span>Visites</span><strong id="visits-total">—</strong></div></div>
+<p class="muted"><strong>Pour ton compte :</strong> repère ton email et clique « Rendre admin ». À ta prochaine connexion sur Astro Paquita, ton compte sera reconnu comme Administrateur et aura accès à toutes les fonctions de test.</p>
+<div class="table-wrap"><table><thead><tr><th>Prénom</th><th>Email</th><th>Rôle</th><th>Inscription</th><th>Premium</th><th>Fin Premium</th><th>Visites</th><th>Connexions</th><th>Dernière connexion</th><th>Questions</th><th>Packs</th><th>Rôle</th><th>Compte</th></tr></thead><tbody id="tbody-users"><tr><td colspan="13">Chargement…</td></tr></tbody></table></div></div>
+<div class="section"><h2>Créer un code promo</h2><label>Code</label><input id="new-code" placeholder="BIENVENUE2026"><label>Type</label><select id="new-type"><option value="jours_premium">Jours de Premium offerts</option><option value="reduction_pourcentage">Réduction % à l'achat</option></select><label>Valeur</label><input id="new-valeur" type="number"><label>Nombre max d'utilisations</label><input id="new-max" type="number"><label>Date d'expiration</label><input id="new-expire" type="date"><br><button onclick="creerCode()">Créer le code</button></div>
+<div class="section"><h2>Codes promo existants</h2><div class="table-wrap"><table style="min-width:760px"><thead><tr><th>Code</th><th>Type</th><th>Valeur</th><th>Utilisations</th><th>Actif</th><th>Action</th></tr></thead><tbody id="tbody-codes"></tbody></table></div></div>
 <script>
-function apiUrl(){return(localStorage.getItem('astro-admin-url')||'https://astro-paquita-backend.onrender.com').replace(/\/$/,'')}
+const DEFAULT_API='https://astro-paquita-backend.onrender.com';
+function apiUrl(){return(localStorage.getItem('astro-admin-url')||DEFAULT_API).replace(/\/$/,'')}
 function adminKey(){return localStorage.getItem('astro-admin-key')||''}
+function token(){return localStorage.getItem('astro-token')||''}
+function headersAdmin(json=false){const h={};if(json)h['Content-Type']='application/json';if(token())h.Authorization='Bearer '+token();if(adminKey())h['x-admin-key']=adminKey();return h}
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-function fmtDate(v){if(!v)return'—';const d=new Date(v);if(Number.isNaN(d.getTime()))return esc(v);return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
-function premiumValide(u){if(!(u.premium===true||u.premium===1||u.premium==='1'))return false;if(u.premium_expires_at){const d=new Date(u.premium_expires_at);if(!Number.isNaN(d.getTime())&&d.getTime()<Date.now())return false}return true}
-
-function sauvegarderConfig(){
-  localStorage.setItem('astro-admin-url',document.getElementById('cfg-url').value.trim());
-  localStorage.setItem('astro-admin-key',document.getElementById('cfg-key').value);
-  chargerAdministration();
-}
-function chargerAdministration(){listerUtilisateurs();listerCodes()}
-window.addEventListener('load',()=>{
-  document.getElementById('cfg-url').value=apiUrl();
-  document.getElementById('cfg-key').value=adminKey();
-  if(apiUrl()&&adminKey())chargerAdministration();
-});
-
-async function listerUtilisateurs(){
-  const tbody=document.getElementById('tbody-users');
-  try{
-    const r=await fetch(apiUrl()+'/api/admin/users',{headers:{'x-admin-key':adminKey()}});
-    const data=await r.json().catch(()=>null);
-    if(!r.ok)throw new Error((data&&data.erreur)||'Erreur HTTP '+r.status);
-    if(!Array.isArray(data))throw new Error('Réponse invalide');
-
-    document.getElementById('users-count').textContent=data.length;
-    document.getElementById('premium-count').textContent=data.filter(premiumValide).length;
-    document.getElementById('visits-total').textContent=data.reduce((s,u)=>s+(Number(u.visit_count)||0),0);
-    document.getElementById('logins-total').textContent=data.reduce((s,u)=>s+(Number(u.login_count)||0),0);
-
-    if(!data.length){tbody.innerHTML='<tr><td colspan="14">Aucun utilisateur inscrit.</td></tr>';return}
-
-    tbody.innerHTML=data.map(u=>{
-      const p=premiumValide(u);
-      const id=encodeURIComponent(String(u.id));
-      const mail=encodeURIComponent(String(u.email||''));
-      return `<tr>
-        <td>${esc(u.prenom||'—')}</td>
-        <td>${esc(u.email||'—')}</td>
-        <td>${fmtDate(u.created_at)}</td>
-        <td class="${p?'ok':'no'}">${p?'Oui':'Non'}</td>
-        <td>${fmtDate(u.premium_expires_at)}</td>
-        <td>${Number(u.visit_count)||0}</td>
-        <td>${Number(u.login_count)||0}</td>
-        <td>${fmtDate(u.first_login_at)}</td>
-        <td>${fmtDate(u.last_login_at)}</td>
-        <td>${fmtDate(u.last_activity_at)}</td>
-        <td><strong>${Number(u.question_credits)||0}</strong></td>
-        <td>${Number(u.questions_used)||0}</td>
-        <td>${Number(u.question_packs_bought)||0}</td>
-        <td><button class="danger" onclick="supprimerUtilisateur('${id}','${mail}')">Supprimer</button></td>
-      </tr>`;
-    }).join('');
-  }catch(e){
-    console.error(e);
-    tbody.innerHTML='<tr><td colspan="14">Erreur : vérifie l\'URL, la clé admin et le backend.</td></tr>';
-  }
-}
-
-async function supprimerUtilisateur(idEncode,emailEncode){
-  const id=decodeURIComponent(idEncode),email=decodeURIComponent(emailEncode);
-  if(!confirm('Supprimer définitivement le compte'+(email?' de '+email:'')+' ?\n\nCette action est irréversible.'))return;
-  try{
-    const r=await fetch(apiUrl()+'/api/admin/users/'+encodeURIComponent(id),{method:'DELETE',headers:{'x-admin-key':adminKey()}});
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok){alert(data.erreur||'Erreur pendant la suppression.');return}
-    await listerUtilisateurs();
-  }catch(e){alert('Impossible de contacter le backend.');}
-}
-
-async function listerCodes(){
-  const tbody=document.getElementById('tbody-codes');
-  try{
-    const r=await fetch(apiUrl()+'/api/admin/promo',{headers:{'x-admin-key':adminKey()}});
-    const codes=await r.json();
-    if(!Array.isArray(codes))throw new Error('Réponse invalide');
-    if(!codes.length){tbody.innerHTML='<tr><td colspan="6">Aucun code promo.</td></tr>';return}
-    tbody.innerHTML=codes.map(c=>`<tr>
-      <td>${esc(c.code)}</td>
-      <td>${c.type==='jours_premium'?'Jours Premium':'Réduction %'}</td>
-      <td>${esc(c.valeur)}${c.type==='reduction_pourcentage'?' %':' j'}</td>
-      <td>${esc(c.utilisations_count)}${c.max_utilisations?' / '+esc(c.max_utilisations):''}</td>
-      <td>${c.actif?'✅':'❌'}</td>
-      <td>${c.actif?`<button onclick="desactiverCode(${Number(c.id)})">Désactiver</button>`:''}</td>
-    </tr>`).join('');
-  }catch(e){tbody.innerHTML='<tr><td colspan="6">Erreur : vérifie l\'URL et la clé admin.</td></tr>';}
-}
-
-async function creerCode(){
-  const body={
-    code:document.getElementById('new-code').value,
-    type:document.getElementById('new-type').value,
-    valeur:Number(document.getElementById('new-valeur').value),
-    maxUtilisations:document.getElementById('new-max').value?Number(document.getElementById('new-max').value):null,
-    expireLe:document.getElementById('new-expire').value||null
-  };
-  const r=await fetch(apiUrl()+'/api/admin/promo',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey()},body:JSON.stringify(body)});
-  const data=await r.json();
-  if(!r.ok){alert(data.erreur||'Erreur');return}
-  document.getElementById('new-code').value='';
-  document.getElementById('new-valeur').value='';
-  listerCodes();
-}
-
-async function desactiverCode(id){
-  await fetch(apiUrl()+'/api/admin/promo/'+id+'/desactiver',{method:'PATCH',headers:{'x-admin-key':adminKey()}});
-  listerCodes();
-}
-</script>
-</body>
-</html>
+function fmtDate(v){if(!v)return'—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+function premiumValide(u){if(u.role==='admin')return true;if(!u.premium)return false;if(u.premium_expires_at&&new Date(u.premium_expires_at)<new Date())return false;return true}
+function sauvegarderConfig(){localStorage.setItem('astro-admin-url',document.getElementById('cfg-url').value.trim());localStorage.setItem('astro-admin-key',document.getElementById('cfg-key').value);chargerAdministration()}
+async function verifierProfilAdmin(){const info=document.getElementById('auth-info');if(!token()){info.innerHTML='⚠ Ton compte Astro Paquita n’est pas connecté ici. Utilise la clé admin de secours ci-dessous pour le premier réglage.';return false}try{const r=await fetch(apiUrl()+'/api/me',{headers:{Authorization:'Bearer '+token()},cache:'no-store'});const u=await r.json();if(r.ok&&u.role==='admin'){info.innerHTML='👑 <strong>Profil Administrateur actif</strong> — '+esc(u.prenom||u.email);document.getElementById('key-config').classList.add('hidden');return true}info.innerHTML='👤 Ton compte est connecté mais n’est pas encore Administrateur. Repère ton email dans la liste et clique « Rendre admin ».';return false}catch(e){info.textContent='⚠ Impossible de vérifier le profil.';return false}}
+async function chargerAdministration(){await verifierProfilAdmin();await Promise.all([chargerMaintenance(),listerUtilisateurs(),listerCodes()])}
+window.addEventListener('load',()=>{document.getElementById('cfg-url').value=apiUrl();document.getElementById('cfg-key').value=adminKey();chargerAdministration()});
+async function chargerMaintenance(){const e=document.getElementById('maintenance-state');try{const r=await fetch(apiUrl()+'/api/admin/maintenance?ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const m=await r.json();if(!r.ok)throw new Error(m.erreur||'Erreur');e.textContent=m.enabled?'🔴 SITE EN MAINTENANCE':'🟢 SITE OUVERT';e.className='maintenance-state '+(m.enabled?'no':'ok');if(m.message)document.getElementById('maintenance-message').value=m.message}catch(err){e.textContent='⚠ Accès admin requis'}}
+async function changerMaintenance(enabled){if(enabled&&!confirm('Mettre le site en maintenance pour tous les visiteurs ?'))return;const message=document.getElementById('maintenance-message').value.trim();const r=await fetch(apiUrl()+'/api/admin/maintenance',{method:'PATCH',headers:headersAdmin(true),body:JSON.stringify({enabled,message})});const d=await r.json().catch(()=>({}));if(!r.ok){alert(d.erreur||'Accès refusé');return}await chargerMaintenance();alert(enabled?'Le site est en maintenance.':'Le site est rouvert.')}
+function voirSiteMaintenance(){window.open('./?maintenance_preview=1','_blank')}
+async function listerUtilisateurs(){const tb=document.getElementById('tbody-users');try{const r=await fetch(apiUrl()+'/api/admin/users',{headers:headersAdmin(),cache:'no-store'});const a=await r.json();if(!r.ok||!Array.isArray(a))throw new Error((a&&a.erreur)||'Accès refusé');document.getElementById('users-count').textContent=a.length;document.getElementById('admins-count').textContent=a.filter(u=>u.role==='admin').length;document.getElementById('premium-count').textContent=a.filter(premiumValide).length;document.getElementById('visits-total').textContent=a.reduce((s,u)=>s+(Number(u.visit_count)||0),0);tb.innerHTML=a.map(u=>{const id=encodeURIComponent(String(u.id)),mail=encodeURIComponent(String(u.email||'')),adm=u.role==='admin';return `<tr><td>${esc(u.prenom||'—')}</td><td>${esc(u.email||'—')}</td><td>${adm?'<span class="badge-admin">ADMIN</span>':'Utilisateur'}</td><td>${fmtDate(u.created_at)}</td><td>${premiumValide(u)?'Oui':'Non'}</td><td>${fmtDate(u.premium_expires_at)}</td><td>${Number(u.visit_count)||0}</td><td>${Number(u.login_count)||0}</td><td>${fmtDate(u.last_login_at)}</td><td>${Number(u.question_credits)||0}</td><td>${Number(u.question_packs_bought)||0}</td><td><button class="${adm?'secondary':'gold'}" onclick="changerRole('${id}','${adm?'user':'admin'}')">${adm?'Retirer admin':'👑 Rendre admin'}</button></td><td><button class="danger" onclick="supprimerUtilisateur('${id}','${mail}')">Supprimer</button></td></tr>`}).join('')||'<tr><td colspan="13">Aucun compte.</td></tr>'}catch(e){tb.innerHTML='<tr><td colspan="13">Accès refusé : connecte ton profil admin ou renseigne la clé ADMIN_KEY.</td></tr>'}}
+async function changerRole(id,role){if(role==='admin'&&!confirm('Transformer ce compte en Administrateur ? Il aura accès à toutes les fonctions de test et à cette administration.'))return;const r=await fetch(apiUrl()+'/api/admin/users/'+encodeURIComponent(decodeURIComponent(id))+'/role',{method:'PATCH',headers:headersAdmin(true),body:JSON.stringify({role})});const d=await r.json().catch(()=>({}));if(!r.ok){alert(d.erreur||'Impossible de modifier le rôle.');return}await listerUtilisateurs();await verifierProfilAdmin();alert(role==='admin'?'Compte Administrateur activé. Reconnecte ce compte sur le site pour actualiser son profil.':'Rôle Administrateur retiré.')}
+async function supprimerUtilisateur(id,email){email=decodeURIComponent(email);if(!confirm('Supprimer définitivement le compte'+(email?' de '+email:'')+' ?'))return;const r=await fetch(apiUrl()+'/api/admin/users/'+encodeURIComponent(decodeURIComponent(id)),{method:'DELETE',headers:headersAdmin()});if(!r.ok){const d=await r.json().catch(()=>({}));alert(d.erreur||'Erreur');return}listerUtilisateurs()}
+async function listerCodes(){const tb=document.getElementById('tbody-codes');try{const r=await fetch(apiUrl()+'/api/admin/promo',{headers:headersAdmin()});const a=await r.json();if(!r.ok||!Array.isArray(a))throw 0;tb.innerHTML=a.map(c=>`<tr><td>${esc(c.code)}</td><td>${c.type==='jours_premium'?'Jours Premium':'Réduction %'}</td><td>${esc(c.valeur)}${c.type==='reduction_pourcentage'?' %':' j'}</td><td>${esc(c.utilisations_count)}${c.max_utilisations?' / '+esc(c.max_utilisations):''}</td><td>${c.actif?'✅':'❌'}</td><td>${c.actif?`<button onclick="desactiverCode(${Number(c.id)})">Désactiver</button>`:''}</td></tr>`).join('')}catch(e){tb.innerHTML='<tr><td colspan="6">Accès admin requis.</td></tr>'}}
+async function creerCode(){const body={code:document.getElementById('new-code').value,type:document.getElementById('new-type').value,valeur:Number(document.getElementById('new-valeur').value),maxUtilisations:document.getElementById('new-max').value?Number(document.getElementById('new-max').value):null,expireLe:document.getElementById('new-expire').value||null};const r=await fetch(apiUrl()+'/api/admin/promo',{method:'POST',headers:headersAdmin(true),body:JSON.stringify(body)});const d=await r.json();if(!r.ok){alert(d.erreur||'Erreur');return}listerCodes()}
+async function desactiverCode(id){await fetch(apiUrl()+'/api/admin/promo/'+id+'/desactiver',{method:'PATCH',headers:headersAdmin()});listerCodes()}
+</script></body></html>

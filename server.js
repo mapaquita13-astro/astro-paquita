@@ -13,8 +13,24 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const ADMIN_KEY = process.env.ADMIN_KEY || 'change-moi-aussi';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 
+function aujourdHuiParis() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+function estPremiumValide(user) {
+  if (user && user.role === 'admin') return true;
+  if (!user || !user.premium) return false;
+  if (user.premium_expires_at && new Date(user.premium_expires_at) < new Date()) return false;
+  return true;
+}
+
 // ============================================================
-// WEBHOOK STRIPE — doit être déclaré AVANT express.json() car il a besoin du corps brut
+// WEBHOOK STRIPE — avant express.json() car Stripe exige le corps brut
 // ============================================================
 app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   let event;
@@ -29,27 +45,40 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req,
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const userId = Number(session.client_reference_id);
-    if (userId) {
-      db.updateUser(userId, {
-        premium: 1,
-        stripe_customer_id: session.customer,
-        stripe_subscription_id: session.subscription,
-      });
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const userId = Number(session.client_reference_id);
+
+      if (userId && session.metadata && session.metadata.purchase_type === 'questions_pack_5') {
+        db.enregistrerAchatQuestions(
+          userId,
+          session.id,
+          Number(session.metadata.credits) || 5
+        );
+      } else if (userId && session.mode === 'subscription') {
+        db.updateUser(userId, {
+          premium: 1,
+          premium_expires_at: null,
+          stripe_customer_id: session.customer,
+          stripe_subscription_id: session.subscription,
+        });
+      }
     }
-  }
 
-  if (event.type === 'customer.subscription.deleted') {
-    const sub = event.data.object;
-    db.updateUserByStripeSubscriptionId(sub.id, { premium: 0 });
-  }
+    if (event.type === 'customer.subscription.deleted') {
+      const sub = event.data.object;
+      db.updateUserByStripeSubscriptionId(sub.id, { premium: 0 });
+    }
 
-  if (event.type === 'customer.subscription.updated') {
-    const sub = event.data.object;
-    const actif = sub.status === 'active' || sub.status === 'trialing';
-    db.updateUserByStripeSubscriptionId(sub.id, { premium: actif ? 1 : 0 });
+    if (event.type === 'customer.subscription.updated') {
+      const sub = event.data.object;
+      const actif = sub.status === 'active' || sub.status === 'trialing';
+      db.updateUserByStripeSubscriptionId(sub.id, { premium: actif ? 1 : 0, ...(actif ? { premium_expires_at: null } : {}) });
+    }
+  } catch (err) {
+    console.error('Erreur traitement webhook Stripe :', err);
+    return res.status(500).json({ erreur: 'Erreur traitement webhook.' });
   }
 
   res.json({ received: true });
@@ -58,8 +87,23 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req,
 app.use(cors());
 app.use(express.json());
 
+// Statut public du site (utilisé par le frontend avant d'afficher le contenu)
+app.get('/api/status', (req, res) => {
+  const settings = db.getSiteSettings();
+  const maintenance = settings && settings.maintenance ? settings.maintenance : { enabled: false };
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    statut: 'ok',
+    maintenance: {
+      enabled: Boolean(maintenance.enabled),
+      message: maintenance.message || 'Astro Paquita se refait une beauté. Le site sera de retour très bientôt.',
+      updated_at: maintenance.updated_at || null,
+    },
+  });
+});
+
 // ============================================================
-// AUTH — outils
+// AUTH
 // ============================================================
 function creerToken(user) {
   return jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '30d' });
@@ -69,11 +113,14 @@ function auth(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return res.status(401).json({ erreur: 'Non connecté.' });
+
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     const user = db.getUserById(payload.id);
     if (!user) return res.status(401).json({ erreur: 'Compte introuvable.' });
+
     req.user = user;
+    db.touchActivity(user.id);
     next();
   } catch (e) {
     return res.status(401).json({ erreur: 'Session invalide, reconnectez-vous.' });
@@ -82,18 +129,36 @@ function auth(req, res, next) {
 
 function adminAuth(req, res, next) {
   const key = req.headers['x-admin-key'];
-  if (!key || key !== ADMIN_KEY) return res.status(403).json({ erreur: 'Accès refusé.' });
-  next();
+  if (key && key === ADMIN_KEY) return next();
+
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (token) {
+    try {
+      const payload = jwt.verify(token, JWT_SECRET);
+      const user = db.getUserById(payload.id);
+      if (user && user.role === 'admin') { req.user = user; return next(); }
+    } catch (e) {}
+  }
+  return res.status(403).json({ erreur: 'Accès administrateur refusé.' });
 }
 
-function estPremiumValide(user) {
-  if (!user.premium) return false;
-  if (user.premium_expires_at && new Date(user.premium_expires_at) < new Date()) return false;
-  return true;
+function reponseCompte(user) {
+  return {
+    email: user.email,
+    prenom: user.prenom,
+    premium: estPremiumValide(user),
+    premium_expires_at: user.premium_expires_at || null,
+    question_credits: Number(user.question_credits) || 0,
+    questions_used: Number(user.questions_used) || 0,
+    question_packs_bought: Number(user.question_packs_bought) || 0,
+    role: user.role === 'admin' ? 'admin' : 'user',
+    is_admin: user.role === 'admin',
+  };
 }
 
 // ============================================================
-// ROUTES : COMPTES
+// ROUTES : COMPTES + STATISTIQUES D'USAGE
 // ============================================================
 app.post('/api/auth/signup', async (req, res) => {
   const { email, motDePasse, prenom } = req.body;
@@ -102,6 +167,7 @@ app.post('/api/auth/signup', async (req, res) => {
       .status(400)
       .json({ erreur: "Email requis et mot de passe d'au moins 6 caractères." });
   }
+
   const emailNorm = email.toLowerCase().trim();
   const existant = db.getUserByEmail(emailNorm);
   if (existant) return res.status(409).json({ erreur: 'Un compte existe déjà avec cet email.' });
@@ -109,7 +175,7 @@ app.post('/api/auth/signup', async (req, res) => {
   const hash = await bcrypt.hash(motDePasse, 10);
   const user = db.insertUser({ email: emailNorm, password_hash: hash, prenom });
 
-  res.json({ token: creerToken(user), prenom: user.prenom, premium: false });
+  res.json({ token: creerToken(user), ...reponseCompte(user) });
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -120,15 +186,35 @@ app.post('/api/auth/login', async (req, res) => {
   const ok = await bcrypt.compare(motDePasse || '', user.password_hash);
   if (!ok) return res.status(401).json({ erreur: 'Email ou mot de passe incorrect.' });
 
-  res.json({ token: creerToken(user), prenom: user.prenom, premium: estPremiumValide(user) });
+  const maj = db.recordLogin(user.id) || user;
+  res.json({ token: creerToken(maj), ...reponseCompte(maj) });
 });
 
 app.get('/api/me', auth, (req, res) => {
-  res.json({
-    email: req.user.email,
-    prenom: req.user.prenom,
-    premium: estPremiumValide(req.user),
-  });
+  const user = db.getUserById(req.user.id) || req.user;
+  res.json(reponseCompte(user));
+});
+
+app.post('/api/activity/visit', auth, (req, res) => {
+  const user = db.recordVisit(req.user.id);
+  if (!user) return res.status(404).json({ erreur: 'Compte introuvable.' });
+  res.json({ succes: true, visit_count: Number(user.visit_count) || 0 });
+});
+
+app.delete('/api/me', auth, async (req, res) => {
+  if (req.user.stripe_subscription_id) {
+    try {
+      await stripe.subscriptions.cancel(req.user.stripe_subscription_id);
+    } catch (err) {
+      console.error('Annulation abonnement Stripe échouée :', err.message);
+      return res.status(500).json({
+        erreur: "Impossible d'annuler l'abonnement Stripe. Le compte n'a pas été supprimé.",
+      });
+    }
+  }
+
+  db.deleteUser(req.user.id);
+  res.json({ succes: true });
 });
 
 // ============================================================
@@ -139,9 +225,6 @@ app.post('/api/promo/redeem', auth, (req, res) => {
   if (!code) return res.status(400).json({ erreur: 'Code requis.' });
 
   const codeNormalise = code.trim().toUpperCase();
-  const tousLesCodes = db.getAllPromoCodes();
-  console.log('[DEBUG promo] reçu:', JSON.stringify(codeNormalise), '| codes en base:', JSON.stringify(tousLesCodes.map(p => p.code)));
-
   const promo = db.getPromoByCode(codeNormalise);
 
   if (!promo) return res.status(404).json({ erreur: 'Code promo invalide ou expiré.' });
@@ -163,15 +246,13 @@ app.post('/api/promo/redeem', auth, (req, res) => {
     base.setDate(base.getDate() + promo.valeur);
     db.updateUser(req.user.id, { premium: 1, premium_expires_at: base.toISOString() });
   }
-  // Le type "reduction_pourcentage" est appliqué côté Stripe Checkout (voir /api/stripe/checkout)
 
   db.enregistrerUtilisationPromo(req.user.id, promo.id);
-
   res.json({ succes: true, type: promo.type, valeur: promo.valeur });
 });
 
 // ============================================================
-// ROUTES : STRIPE
+// ROUTES : STRIPE — PREMIUM
 // ============================================================
 app.post('/api/stripe/checkout', auth, async (req, res) => {
   try {
@@ -204,24 +285,242 @@ app.post('/api/stripe/checkout', auth, async (req, res) => {
 });
 
 // ============================================================
+// ROUTES : STRIPE — PACK DE 5 QUESTIONS
+// Nécessite STRIPE_PRICE_ID_QUESTIONS_5 dans Render.
+// ============================================================
+app.post('/api/stripe/questions-pack', auth, async (req, res) => {
+  const priceId = process.env.STRIPE_PRICE_ID_QUESTIONS_5;
+  if (!priceId) {
+    return res.status(503).json({
+      erreur: "Le prix du pack de 5 questions n'est pas encore configuré.",
+    });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      client_reference_id: String(req.user.id),
+      customer_email: req.user.email,
+      metadata: {
+        purchase_type: 'questions_pack_5',
+        credits: '5',
+      },
+      success_url: `${process.env.FRONTEND_URL}/?questions=succes&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/?questions=annule`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erreur: 'Erreur lors de la création du paiement du pack.' });
+  }
+});
+
+app.get('/api/stripe/questions-pack/confirm', auth, async (req, res) => {
+  const sessionId = String(req.query.session_id || '');
+  if (!sessionId) return res.status(400).json({ erreur: 'Session Stripe manquante.' });
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const memeUtilisateur = String(session.client_reference_id || '') === String(req.user.id);
+    const bonType = session.metadata && session.metadata.purchase_type === 'questions_pack_5';
+    const paye = session.payment_status === 'paid' || session.status === 'complete';
+
+    if (!memeUtilisateur || !bonType || !paye) {
+      return res.status(400).json({ erreur: 'Paiement non validé.' });
+    }
+
+    const achat = db.enregistrerAchatQuestions(
+      req.user.id,
+      session.id,
+      Number(session.metadata.credits) || 5
+    );
+    const user = achat.user || db.getUserById(req.user.id);
+
+    res.json({
+      succes: true,
+      duplicate: !!achat.duplicate,
+      question_credits: Number(user && user.question_credits) || 0,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erreur: 'Impossible de confirmer le paiement.' });
+  }
+});
+
+// ============================================================
 // ROUTE : PROXY SÉCURISÉ VERS ANTHROPIC
-// La clé API ne quitte jamais ce serveur.
 // ============================================================
 const limiteurClaude = rateLimit({
   windowMs: 60 * 1000,
-  max: 20, // 20 appels par minute par IP — ajuste selon ton usage réel
+  max: 20,
   message: { erreur: 'Trop de requêtes, réessaie dans une minute.' },
 });
 
-app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
-  const { system, messages, max_tokens, model, premiumRequis } = req.body;
+const FEATURES_AUTORISEES = new Set([
+  'portrait',
+  'forecast_today',
+  'forecast_future',
+  'window',
+  'events',
+  'synastry',
+  'question',
+]);
 
-  if (premiumRequis && !estPremiumValide(req.user)) {
+const FEATURES_PREMIUM = new Set(['forecast_future', 'window', 'events', 'synastry']);
+
+// ------------------------------------------------------------------
+// Compatibilité avec les anciennes pages Astro Paquita.
+// Les anciennes versions de index.html n'envoyaient pas encore le
+// champ `feature`. On reconnaît alors le module à partir du texte
+// système/prompt. Cela évite l'erreur "Fonctionnalité non identifiée"
+// pendant qu'un ancien index reste en cache ou n'est pas encore déployé.
+// ------------------------------------------------------------------
+function normaliserTexteCompat(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function texteMessagesCompat(messages) {
+  if (!Array.isArray(messages)) return '';
+  return messages
+    .map((m) => (m && typeof m.content === 'string' ? m.content : ''))
+    .join('\n');
+}
+
+function aujourdHuiParisFrancaisNormalise() {
+  const txt = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+  return normaliserTexteCompat(txt);
+}
+
+function infererFeatureAncienIndex({ system, messages, premiumRequis }) {
+  const sys = normaliserTexteCompat(system);
+  const prompt = normaliserTexteCompat(texteMessagesCompat(messages));
+  const tout = `${sys}\n${prompt}`;
+
+  // Synastrie : l'ancien index envoyait aussi premiumRequis:true.
+  if (
+    sys.includes('synastrie') ||
+    prompt.includes('compare les themes astrologiques') ||
+    (premiumRequis === true && prompt.includes('relation'))
+  ) return 'synastry';
+
+  // Fenêtre idéale / timing sur 5 ans.
+  if (
+    sys.includes('timing cosmique') ||
+    prompt.includes('meilleure fenetre') ||
+    prompt.includes('calcul sur 5 ans')
+  ) return 'window';
+
+  // Grands événements.
+  if (
+    sys.includes('lectures de vie equilibrees') ||
+    prompt.includes('evenements astrologiques majeurs') ||
+    (prompt.includes('cycles actuels') && prompt.includes('jupiter'))
+  ) return 'events';
+
+  // Module Ma question.
+  if (
+    sys.includes('repond aux questions personnelles') ||
+    prompt.includes('reponds a la question')
+  ) return 'question';
+
+  // Portrait natal.
+  if (
+    sys.includes('portraits personnalises') ||
+    prompt.includes('ton rapport aux autres') ||
+    prompt.includes('tes forces et tes defis')
+  ) return 'portrait';
+
+  // Prévisions : aujourd'hui reste gratuit, toute autre date est Premium.
+  if (
+    sys.includes('astrologue honnete et bienveillant') ||
+    prompt.includes('energie du jour') ||
+    prompt.includes('tableau general')
+  ) {
+    const estUneJournee = prompt.includes('analyse la journee');
+    const estAujourdhui = prompt.includes(aujourdHuiParisFrancaisNormalise());
+    return estUneJournee && estAujourdhui ? 'forecast_today' : 'forecast_future';
+  }
+
+  // Aucun classement fiable : on refuse plutôt que d'ouvrir un accès au hasard.
+  if (tout.trim()) return null;
+  return null;
+}
+
+app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
+  const {
+    system,
+    messages,
+    max_tokens,
+    model,
+    feature: featureRecue,
+    featureContext: featureContextRecu,
+    premiumRequis,
+  } = req.body;
+
+  let feature = featureRecue;
+  let featureContext = featureContextRecu;
+  let ancienIndex = false;
+
+  if (!FEATURES_AUTORISEES.has(feature)) {
+    feature = infererFeatureAncienIndex({ system, messages, premiumRequis });
+    ancienIndex = !!feature;
+
+    // Pour l'ancien index, une prévision reconnue comme "aujourd'hui"
+    // reçoit ici le contexte que la nouvelle page envoie directement.
+    if (feature === 'forecast_today') {
+      featureContext = { date: aujourdHuiParis(), days: 1 };
+    }
+  }
+
+  if (!FEATURES_AUTORISEES.has(feature)) {
+    return res.status(400).json({
+      erreur: 'Fonctionnalité non identifiée. Recharge la page puis réessaie.',
+      code: 'FEATURE_NOT_IDENTIFIED',
+    });
+  }
+
+  if (ancienIndex) {
+    console.warn(`[compat] Ancien index détecté pour /api/claude -> ${feature}`);
+  }
+
+  if (FEATURES_PREMIUM.has(feature) && !estPremiumValide(req.user)) {
     return res.status(403).json({ erreur: 'Cette fonctionnalité est réservée aux profils Premium.' });
+  }
+
+  if (feature === 'forecast_today' && !estPremiumValide(req.user)) {
+    const dateDemandee = featureContext && String(featureContext.date || '');
+    const nbJours = Number(featureContext && featureContext.days);
+    if (dateDemandee !== aujourdHuiParis() || nbJours !== 1) {
+      return res.status(403).json({
+        erreur: "L'accès gratuit aux prévisions est limité à aujourd'hui.",
+      });
+    }
   }
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ erreur: 'Requête invalide.' });
+  }
+
+  let creditQuestionReserve = false;
+  if (feature === 'question') {
+    creditQuestionReserve = db.consumeQuestionCredit(req.user.id);
+    if (!creditQuestionReserve) {
+      return res.status(402).json({
+        erreur: 'Tu as utilisé ta question offerte. Achète un pack de 5 questions pour continuer.',
+        code: 'QUESTION_CREDIT_REQUIRED',
+      });
+    }
   }
 
   try {
@@ -242,19 +541,42 @@ app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
 
     const data = await resp.json();
     if (!resp.ok) {
+      if (creditQuestionReserve) db.refundQuestionCredit(req.user.id);
       console.error('Erreur Anthropic :', data);
       return res.status(resp.status).json({ erreur: data.error?.message || 'Erreur API.' });
     }
+
+    if (creditQuestionReserve) {
+      const userApres = db.getUserById(req.user.id);
+      data.astro_meta = {
+        question_credits: Number(userApres && userApres.question_credits) || 0,
+      };
+    }
+
     res.json(data);
   } catch (err) {
+    if (creditQuestionReserve) db.refundQuestionCredit(req.user.id);
     console.error(err);
     res.status(500).json({ erreur: "Erreur de connexion à l'API." });
   }
 });
 
 // ============================================================
-// ROUTES : ADMIN (codes promo, utilisateurs)
+// ROUTES : ADMIN
 // ============================================================
+app.get('/api/admin/maintenance', adminAuth, (req, res) => {
+  const settings = db.getSiteSettings();
+  res.set('Cache-Control', 'no-store');
+  res.json(settings.maintenance || { enabled: false });
+});
+
+app.patch('/api/admin/maintenance', adminAuth, (req, res) => {
+  const enabled = Boolean(req.body && req.body.enabled);
+  const message = req.body && req.body.message;
+  const maintenance = db.setMaintenance({ enabled, message });
+  res.json({ succes: true, maintenance });
+});
+
 app.get('/api/admin/promo', adminAuth, (req, res) => {
   res.json(db.getAllPromoCodes());
 });
@@ -281,8 +603,35 @@ app.get('/api/admin/users', adminAuth, (req, res) => {
   res.json(db.getAllUsers());
 });
 
+app.patch('/api/admin/users/:id/role', adminAuth, (req, res) => {
+  const role = req.body && req.body.role === 'admin' ? 'admin' : 'user';
+  const user = db.setUserRole(req.params.id, role);
+  if (!user) return res.status(404).json({ erreur: 'Utilisateur introuvable.' });
+  res.json({ succes: true, user: reponseCompte(user) });
+});
+
+app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
+  const user = db.getUserById(req.params.id);
+  if (!user) return res.status(404).json({ erreur: 'Utilisateur introuvable.' });
+
+  if (user.stripe_subscription_id) {
+    try {
+      await stripe.subscriptions.cancel(user.stripe_subscription_id);
+    } catch (err) {
+      console.error('Annulation abonnement Stripe échouée :', err.message);
+      return res.status(500).json({
+        erreur: "Impossible d'annuler l'abonnement Stripe. Le compte n'a pas été supprimé.",
+      });
+    }
+  }
+
+  const supprime = db.deleteUser(req.params.id);
+  if (!supprime) return res.status(404).json({ erreur: 'Utilisateur introuvable.' });
+  res.json({ succes: true });
+});
+
 // ============================================================
-app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif' }));
+app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-13-v45-admin-maintenance' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
