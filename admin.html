@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration — Astro Paquita</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:1500px;margin:2rem auto;padding:0 1rem 3rem;background:#0f0c29;color:#f0ecff}
+  h1{color:#c084fc} h2{margin-top:1rem}
+  input,select,button{padding:.55rem;margin:.25rem 0;border-radius:6px;border:1px solid #7c3aed;background:#1e1850;color:#fff}
+  button{background:#7c3aed;cursor:pointer} button:hover{background:#a855f7}
+  button.danger{background:#991b1b;border-color:#dc2626} button.danger:hover{background:#dc2626}
+  table{width:100%;border-collapse:collapse;margin-top:1rem;min-width:1250px}
+  th,td{border:1px solid #7c3aed;padding:.5rem;text-align:left;font-size:.82rem;vertical-align:middle;white-space:nowrap}
+  th{background:#27215e;position:sticky;top:0;z-index:1}
+  .config{background:#1e1850;padding:1rem;border-radius:8px;margin-bottom:1.5rem}.config input{width:100%;box-sizing:border-box}
+  label{display:block;margin-top:.5rem;font-size:.85rem;color:#c0b4e0}
+  .section{background:rgba(30,24,80,.35);padding:1rem;border-radius:8px;margin-top:1.5rem}
+  .muted{color:#c0b4e0;font-size:.9rem}.count{color:#c084fc;font-weight:700}.ok{color:#86efac}.no{color:#fca5a5}
+  .table-wrap{overflow-x:auto;border-radius:8px}
+  .stats{display:flex;gap:1rem;flex-wrap:wrap;margin:.5rem 0 1rem}.stat{background:#1e1850;border:1px solid #5b21b6;border-radius:8px;padding:.7rem 1rem}
+  .stat strong{display:block;color:#c084fc;font-size:1.25rem}
+</style>
+</head>
+<body>
+<h1>Administration — Astro Paquita</h1>
+
+<div class="config">
+  <label>URL du backend</label>
+  <input id="cfg-url" value="https://astro-paquita-backend.onrender.com" placeholder="https://astro-paquita-backend.onrender.com">
+  <label>Clé admin</label>
+  <input id="cfg-key" type="password" placeholder="ADMIN_KEY">
+  <button onclick="sauvegarderConfig()">Enregistrer et charger</button>
+</div>
+
+<div class="section">
+  <h2>Utilisateurs</h2>
+  <div class="stats">
+    <div class="stat"><span>Comptes inscrits</span><strong id="users-count">—</strong></div>
+    <div class="stat"><span>Premium actifs</span><strong id="premium-count">—</strong></div>
+    <div class="stat"><span>Visites enregistrées</span><strong id="visits-total">—</strong></div>
+    <div class="stat"><span>Connexions enregistrées</span><strong id="logins-total">—</strong></div>
+  </div>
+  <p class="muted">Les statistiques de visites et de connexions démarrent à partir de l'installation de cette version. Les anciens passages ne peuvent pas être reconstitués.</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Prénom</th><th>Email</th><th>Inscription</th><th>Premium</th><th>Fin Premium</th>
+          <th>Visites</th><th>Connexions</th><th>1re connexion</th><th>Dernière connexion</th><th>Dernière activité</th>
+          <th>Questions restantes</th><th>Questions utilisées</th><th>Packs achetés</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-users"><tr><td colspan="14">Charge la configuration pour voir les utilisateurs.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Créer un code promo</h2>
+  <label>Code</label><input id="new-code" placeholder="BIENVENUE2026">
+  <label>Type</label>
+  <select id="new-type">
+    <option value="jours_premium">Jours de Premium offerts</option>
+    <option value="reduction_pourcentage">Réduction % à l'achat</option>
+  </select>
+  <label>Valeur</label><input id="new-valeur" type="number">
+  <label>Nombre max d'utilisations (vide = illimité)</label><input id="new-max" type="number">
+  <label>Date d'expiration (vide = jamais)</label><input id="new-expire" type="date">
+  <br><button onclick="creerCode()">Créer le code</button>
+</div>
+
+<div class="section">
+  <h2>Codes promo existants</h2>
+  <div class="table-wrap">
+    <table style="min-width:760px">
+      <thead><tr><th>Code</th><th>Type</th><th>Valeur</th><th>Utilisations</th><th>Actif</th><th>Action</th></tr></thead>
+      <tbody id="tbody-codes"><tr><td colspan="6">Charge la configuration pour voir les codes.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function apiUrl(){return(localStorage.getItem('astro-admin-url')||'https://astro-paquita-backend.onrender.com').replace(/\/$/,'')}
+function adminKey(){return localStorage.getItem('astro-admin-key')||''}
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function fmtDate(v){if(!v)return'—';const d=new Date(v);if(Number.isNaN(d.getTime()))return esc(v);return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+function premiumValide(u){if(!(u.premium===true||u.premium===1||u.premium==='1'))return false;if(u.premium_expires_at){const d=new Date(u.premium_expires_at);if(!Number.isNaN(d.getTime())&&d.getTime()<Date.now())return false}return true}
+
+function sauvegarderConfig(){
+  localStorage.setItem('astro-admin-url',document.getElementById('cfg-url').value.trim());
+  localStorage.setItem('astro-admin-key',document.getElementById('cfg-key').value);
+  chargerAdministration();
+}
+function chargerAdministration(){listerUtilisateurs();listerCodes()}
+window.addEventListener('load',()=>{
+  document.getElementById('cfg-url').value=apiUrl();
+  document.getElementById('cfg-key').value=adminKey();
+  if(apiUrl()&&adminKey())chargerAdministration();
+});
+
+async function listerUtilisateurs(){
+  const tbody=document.getElementById('tbody-users');
+  try{
+    const r=await fetch(apiUrl()+'/api/admin/users',{headers:{'x-admin-key':adminKey()}});
+    const data=await r.json().catch(()=>null);
+    if(!r.ok)throw new Error((data&&data.erreur)||'Erreur HTTP '+r.status);
+    if(!Array.isArray(data))throw new Error('Réponse invalide');
+
+    document.getElementById('users-count').textContent=data.length;
+    document.getElementById('premium-count').textContent=data.filter(premiumValide).length;
+    document.getElementById('visits-total').textContent=data.reduce((s,u)=>s+(Number(u.visit_count)||0),0);
+    document.getElementById('logins-total').textContent=data.reduce((s,u)=>s+(Number(u.login_count)||0),0);
+
+    if(!data.length){tbody.innerHTML='<tr><td colspan="14">Aucun utilisateur inscrit.</td></tr>';return}
+
+    tbody.innerHTML=data.map(u=>{
+      const p=premiumValide(u);
+      const id=encodeURIComponent(String(u.id));
+      const mail=encodeURIComponent(String(u.email||''));
+      return `<tr>
+        <td>${esc(u.prenom||'—')}</td>
+        <td>${esc(u.email||'—')}</td>
+        <td>${fmtDate(u.created_at)}</td>
+        <td class="${p?'ok':'no'}">${p?'Oui':'Non'}</td>
+        <td>${fmtDate(u.premium_expires_at)}</td>
+        <td>${Number(u.visit_count)||0}</td>
+        <td>${Number(u.login_count)||0}</td>
+        <td>${fmtDate(u.first_login_at)}</td>
+        <td>${fmtDate(u.last_login_at)}</td>
+        <td>${fmtDate(u.last_activity_at)}</td>
+        <td><strong>${Number(u.question_credits)||0}</strong></td>
+        <td>${Number(u.questions_used)||0}</td>
+        <td>${Number(u.question_packs_bought)||0}</td>
+        <td><button class="danger" onclick="supprimerUtilisateur('${id}','${mail}')">Supprimer</button></td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    console.error(e);
+    tbody.innerHTML='<tr><td colspan="14">Erreur : vérifie l\'URL, la clé admin et le backend.</td></tr>';
+  }
+}
+
+async function supprimerUtilisateur(idEncode,emailEncode){
+  const id=decodeURIComponent(idEncode),email=decodeURIComponent(emailEncode);
+  if(!confirm('Supprimer définitivement le compte'+(email?' de '+email:'')+' ?\n\nCette action est irréversible.'))return;
+  try{
+    const r=await fetch(apiUrl()+'/api/admin/users/'+encodeURIComponent(id),{method:'DELETE',headers:{'x-admin-key':adminKey()}});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok){alert(data.erreur||'Erreur pendant la suppression.');return}
+    await listerUtilisateurs();
+  }catch(e){alert('Impossible de contacter le backend.');}
+}
+
+async function listerCodes(){
+  const tbody=document.getElementById('tbody-codes');
+  try{
+    const r=await fetch(apiUrl()+'/api/admin/promo',{headers:{'x-admin-key':adminKey()}});
+    const codes=await r.json();
+    if(!Array.isArray(codes))throw new Error('Réponse invalide');
+    if(!codes.length){tbody.innerHTML='<tr><td colspan="6">Aucun code promo.</td></tr>';return}
+    tbody.innerHTML=codes.map(c=>`<tr>
+      <td>${esc(c.code)}</td>
+      <td>${c.type==='jours_premium'?'Jours Premium':'Réduction %'}</td>
+      <td>${esc(c.valeur)}${c.type==='reduction_pourcentage'?' %':' j'}</td>
+      <td>${esc(c.utilisations_count)}${c.max_utilisations?' / '+esc(c.max_utilisations):''}</td>
+      <td>${c.actif?'✅':'❌'}</td>
+      <td>${c.actif?`<button onclick="desactiverCode(${Number(c.id)})">Désactiver</button>`:''}</td>
+    </tr>`).join('');
+  }catch(e){tbody.innerHTML='<tr><td colspan="6">Erreur : vérifie l\'URL et la clé admin.</td></tr>';}
+}
+
+async function creerCode(){
+  const body={
+    code:document.getElementById('new-code').value,
+    type:document.getElementById('new-type').value,
+    valeur:Number(document.getElementById('new-valeur').value),
+    maxUtilisations:document.getElementById('new-max').value?Number(document.getElementById('new-max').value):null,
+    expireLe:document.getElementById('new-expire').value||null
+  };
+  const r=await fetch(apiUrl()+'/api/admin/promo',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey()},body:JSON.stringify(body)});
+  const data=await r.json();
+  if(!r.ok){alert(data.erreur||'Erreur');return}
+  document.getElementById('new-code').value='';
+  document.getElementById('new-valeur').value='';
+  listerCodes();
+}
+
+async function desactiverCode(id){
+  await fetch(apiUrl()+'/api/admin/promo/'+id+'/desactiver',{method:'PATCH',headers:{'x-admin-key':adminKey()}});
+  listerCodes();
+}
+</script>
+</body>
+</html>
