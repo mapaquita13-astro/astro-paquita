@@ -143,6 +143,14 @@ function adminAuth(req, res, next) {
   return res.status(403).json({ erreur: 'Accès administrateur refusé.' });
 }
 
+function adminKeyOnly(req, res, next) {
+  const key = req.headers['x-admin-key'];
+  if (!key || key !== ADMIN_KEY) {
+    return res.status(403).json({ erreur: 'Clé ADMIN_KEY incorrecte ou absente.' });
+  }
+  next();
+}
+
 function reponseCompte(user) {
   return {
     email: user.email,
@@ -564,21 +572,50 @@ app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
 // ============================================================
 // ROUTES : ADMIN
 // ============================================================
-// Premier profil administrateur : amorçage sécurisé par session utilisateur.
-// Cette route ne fonctionne QUE tant qu'aucun administrateur n'existe.
-// Dès que le premier admin est créé, elle est définitivement bloquée.
+// Diagnostic public minimal : permet à admin.html de savoir si le backend
+// est bien à jour et si un premier administrateur peut encore être créé.
+app.get('/api/admin/bootstrap-status', (req, res) => {
+  const users = db.getAllUsers();
+  const adminCount = users.filter((u) => u && u.role === 'admin').length;
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    ok: true,
+    backend_version: 'v47-admin-recovery',
+    bootstrap_available: adminCount === 0,
+    admin_count: adminCount,
+  });
+});
+
+// Méthode 1 : si aucun admin n'existe, le compte connecté peut devenir
+// le premier administrateur sans connaître la clé ADMIN_KEY.
 app.post('/api/admin/bootstrap', auth, (req, res) => {
   const users = db.getAllUsers();
   const admins = users.filter((u) => u && u.role === 'admin');
   if (admins.length > 0) {
-    return res.status(409).json({ erreur: 'Un administrateur existe déjà. Utilise ce profil administrateur pour gérer les rôles.' });
+    return res.status(409).json({ erreur: 'Un administrateur existe déjà. Utilise la récupération par email avec la clé ADMIN_KEY.' });
   }
 
   const user = db.setUserRole(req.user.id, 'admin');
   if (!user) return res.status(404).json({ erreur: 'Compte introuvable.' });
-
   console.log(`Premier administrateur activé : ${user.email || user.id}`);
   return res.json({ succes: true, user: reponseCompte(user) });
+});
+
+// Méthode 2 (récupération) : la propriétaire du site peut promouvoir un
+// compte existant directement par son email avec la ADMIN_KEY de Render.
+// Cela fonctionne même si un autre admin existe déjà ou si la session web
+// n'est plus valide.
+app.post('/api/admin/promote-by-email', adminKeyOnly, (req, res) => {
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ erreur: 'Email requis.' });
+
+  const user = db.getUserByEmail(email);
+  if (!user) return res.status(404).json({ erreur: 'Aucun compte Astro Paquita avec cet email.' });
+
+  const updated = db.setUserRole(user.id, 'admin');
+  if (!updated) return res.status(404).json({ erreur: 'Compte introuvable.' });
+  console.log(`Administrateur activé par récupération : ${updated.email || updated.id}`);
+  return res.json({ succes: true, user: reponseCompte(updated) });
 });
 
 app.get('/api/admin/maintenance', adminAuth, (req, res) => {
@@ -648,7 +685,7 @@ app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
 });
 
 // ============================================================
-app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-13-v46-admin-bootstrap' }));
+app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-13-v47-admin-recovery' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));

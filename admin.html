@@ -11,6 +11,13 @@ input,select,button{padding:.55rem;margin:.25rem 0;border-radius:7px;border:1px 
 </style></head><body>
 <h1>Administration — Astro Paquita</h1>
 <div id="auth-info" class="auth-info">Vérification de ton profil administrateur…</div><div id="bootstrap-admin" class="section hidden" style="border:1px solid #c9a84c"><h2>👑 Activer mon profil Administrateur</h2><p>Ton compte est déjà connecté à Astro Paquita, mais aucun profil Administrateur n’est encore activé. Clique une seule fois ci-dessous : ton compte actuel deviendra le premier Administrateur.</p><button class="gold" onclick="activerMonAdmin()">👑 Activer mon compte comme Administrateur</button><p class="muted">Cette possibilité se verrouille automatiquement dès qu’un premier Administrateur existe.</p></div>
+<div class="section" style="border:1px solid #c9a84c">
+  <h2>🔑 Récupération de mon profil Administrateur</h2>
+  <p class="muted">Cette méthode fonctionne même si le bouton automatique ne fonctionne pas. Saisis l’email exact de ton compte Astro Paquita et la <strong>ADMIN_KEY</strong> enregistrée dans Render.</p>
+  <label>Email de mon compte</label><input id="recovery-email" type="email" placeholder="ton@email.fr">
+  <button class="gold" onclick="promouvoirParEmail()">👑 Rendre cet email Administrateur</button>
+  <div id="recovery-result" class="auth-info" style="margin-top:.7rem">Aucune action effectuée.</div>
+</div>
 <div class="config" id="key-config">
 <label>URL du backend</label><input id="cfg-url" value="https://astro-paquita-backend.onrender.com">
 <label>Clé admin de secours</label><input id="cfg-key" type="password" placeholder="ADMIN_KEY">
@@ -36,6 +43,39 @@ function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function fmtDate(v){if(!v)return'—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
 function premiumValide(u){if(u.role==='admin')return true;if(!u.premium)return false;if(u.premium_expires_at&&new Date(u.premium_expires_at)<new Date())return false;return true}
 function sauvegarderConfig(){localStorage.setItem('astro-admin-url',document.getElementById('cfg-url').value.trim());localStorage.setItem('astro-admin-key',document.getElementById('cfg-key').value);chargerAdministration()}
+async function verifierBackendV47(){
+  const info=document.getElementById('auth-info');
+  try{
+    const r=await fetch(apiUrl()+'/api/admin/bootstrap-status?ts='+Date.now(),{cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.ok){throw new Error('Backend non compatible');}
+    const suffix=' · Backend '+(d.backend_version||'inconnu')+' · '+(d.admin_count||0)+' admin(s)';
+    if(info&&!info.textContent.includes('Backend')) info.textContent=(info.textContent||'Administration')+suffix;
+    return d;
+  }catch(e){
+    if(info) info.textContent='⚠ Le backend ne semble pas encore être en V47. Remplace server.js ET db.js dans le dépôt backend, puis attends la fin du déploiement Render.';
+    return null;
+  }
+}
+async function promouvoirParEmail(){
+  const email=(document.getElementById('recovery-email').value||'').trim().toLowerCase();
+  const key=(document.getElementById('cfg-key').value||'').trim();
+  const out=document.getElementById('recovery-result');
+  if(!email){alert('Saisis ton email Astro Paquita.');return}
+  if(!key){alert('Saisis la ADMIN_KEY de Render dans « Clé admin de secours » puis clique sur Enregistrer et charger.');return}
+  localStorage.setItem('astro-admin-key',key);
+  out.textContent='Activation en cours…';
+  try{
+    const r=await fetch(apiUrl()+'/api/admin/promote-by-email',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({email})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){out.textContent='❌ '+(d.erreur||('Erreur HTTP '+r.status));return}
+    out.textContent='✅ '+email+' est maintenant Administrateur. Tu peux utiliser la maintenance immédiatement.';
+    await verifierProfilAdmin();
+    await chargerMaintenance();
+    await listerUtilisateurs();
+  }catch(e){out.textContent='❌ Impossible de contacter le backend.'}
+}
+
 async function verifierProfilAdmin(){
   const info=document.getElementById('auth-info');
   const bootstrap=document.getElementById('bootstrap-admin');
@@ -47,6 +87,7 @@ async function verifierProfilAdmin(){
   try{
     const r=await fetch(apiUrl()+'/api/me',{headers:{Authorization:'Bearer '+token()},cache:'no-store'});
     const u=await r.json();
+    if(r.ok){const ri=document.getElementById('recovery-email');if(ri&&u.email)ri.value=u.email;}
     if(r.ok&&u.role==='admin'){
       info.innerHTML='👑 <strong>Profil Administrateur actif</strong> — '+esc(u.prenom||u.email);
       document.getElementById('key-config').classList.add('hidden');
@@ -78,9 +119,9 @@ async function activerMonAdmin(){
   }catch(e){alert('Impossible de contacter le backend. Vérifie que le nouveau server.js est déployé.')}
 }
 async function chargerAdministration(){await verifierProfilAdmin();await Promise.all([chargerMaintenance(),listerUtilisateurs(),listerCodes()])}
-window.addEventListener('load',()=>{document.getElementById('cfg-url').value=apiUrl();document.getElementById('cfg-key').value=adminKey();chargerAdministration()});
+window.addEventListener('load',()=>{document.getElementById('cfg-url').value=apiUrl();document.getElementById('cfg-key').value=adminKey();verifierBackendV47();chargerAdministration()});
 async function chargerMaintenance(){const e=document.getElementById('maintenance-state');try{const r=await fetch(apiUrl()+'/api/admin/maintenance?ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const m=await r.json();if(!r.ok)throw new Error(m.erreur||'Erreur');e.textContent=m.enabled?'🔴 SITE EN MAINTENANCE':'🟢 SITE OUVERT';e.className='maintenance-state '+(m.enabled?'no':'ok');if(m.message)document.getElementById('maintenance-message').value=m.message}catch(err){e.textContent='⚠ Accès admin requis'}}
-async function changerMaintenance(enabled){if(enabled&&!confirm('Mettre le site en maintenance pour tous les visiteurs ?'))return;const message=document.getElementById('maintenance-message').value.trim();const r=await fetch(apiUrl()+'/api/admin/maintenance',{method:'PATCH',headers:headersAdmin(true),body:JSON.stringify({enabled,message})});const d=await r.json().catch(()=>({}));if(!r.ok){alert(d.erreur||'Accès refusé');return}await chargerMaintenance();alert(enabled?'Le site est en maintenance.':'Le site est rouvert.')}
+async function changerMaintenance(enabled){if(enabled&&!confirm('Mettre le site en maintenance pour tous les visiteurs ?'))return;const message=document.getElementById('maintenance-message').value.trim();const r=await fetch(apiUrl()+'/api/admin/maintenance',{method:'PATCH',headers:headersAdmin(true),body:JSON.stringify({enabled,message})});const d=await r.json().catch(()=>({}));if(!r.ok){alert(d.erreur||('Accès refusé (HTTP '+r.status+'). Vérifie ton profil Admin ou la ADMIN_KEY.'));return}await chargerMaintenance();alert(enabled?'Le site est en maintenance.':'Le site est rouvert.')}
 function voirSiteMaintenance(){window.open('./?maintenance_preview=1','_blank')}
 async function listerUtilisateurs(){const tb=document.getElementById('tbody-users');try{const r=await fetch(apiUrl()+'/api/admin/users',{headers:headersAdmin(),cache:'no-store'});const a=await r.json();if(!r.ok||!Array.isArray(a))throw new Error((a&&a.erreur)||'Accès refusé');document.getElementById('users-count').textContent=a.length;document.getElementById('admins-count').textContent=a.filter(u=>u.role==='admin').length;document.getElementById('premium-count').textContent=a.filter(premiumValide).length;document.getElementById('visits-total').textContent=a.reduce((s,u)=>s+(Number(u.visit_count)||0),0);tb.innerHTML=a.map(u=>{const id=encodeURIComponent(String(u.id)),mail=encodeURIComponent(String(u.email||'')),adm=u.role==='admin';return `<tr><td>${esc(u.prenom||'—')}</td><td>${esc(u.email||'—')}</td><td>${adm?'<span class="badge-admin">ADMIN</span>':'Utilisateur'}</td><td>${fmtDate(u.created_at)}</td><td>${premiumValide(u)?'Oui':'Non'}</td><td>${fmtDate(u.premium_expires_at)}</td><td>${Number(u.visit_count)||0}</td><td>${Number(u.login_count)||0}</td><td>${fmtDate(u.last_login_at)}</td><td>${Number(u.question_credits)||0}</td><td>${Number(u.question_packs_bought)||0}</td><td><button class="${adm?'secondary':'gold'}" onclick="changerRole('${id}','${adm?'user':'admin'}')">${adm?'Retirer admin':'👑 Rendre admin'}</button></td><td><button class="danger" onclick="supprimerUtilisateur('${id}','${mail}')">Supprimer</button></td></tr>`}).join('')||'<tr><td colspan="13">Aucun compte.</td></tr>'}catch(e){tb.innerHTML="<tr><td colspan='13'>Accès refusé pour le moment. Si ton compte n’est pas encore Administrateur, utilise le bouton « Activer mon profil Administrateur » au-dessus.</td></tr>"}}
 async function changerRole(id,role){if(role==='admin'&&!confirm('Transformer ce compte en Administrateur ? Il aura accès à toutes les fonctions de test et à cette administration.'))return;const r=await fetch(apiUrl()+'/api/admin/users/'+encodeURIComponent(decodeURIComponent(id))+'/role',{method:'PATCH',headers:headersAdmin(true),body:JSON.stringify({role})});const d=await r.json().catch(()=>({}));if(!r.ok){alert(d.erreur||'Impossible de modifier le rôle.');return}await listerUtilisateurs();await verifierProfilAdmin();alert(role==='admin'?'Compte Administrateur activé. Reconnecte ce compte sur le site pour actualiser son profil.':'Rôle Administrateur retiré.')}
