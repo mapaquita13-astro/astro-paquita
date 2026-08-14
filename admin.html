@@ -38,6 +38,55 @@ function headersAdmin(json=false){const h={};if(json)h['Content-Type']='applicat
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 function fmtDate(v){if(!v)return'—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
 function premiumValide(u){if(u.role==='admin')return true;if(!u.premium)return false;if(u.premium_expires_at&&new Date(u.premium_expires_at)<new Date())return false;return true}
+
+// Libellés centralisés de l'historique Admin. Les modules inconnus restent affichables
+// au lieu de faire planter toute la fenêtre d'historique ou les statistiques.
+const FEATURE_LABELS=Object.freeze({
+  portrait:'Portrait natal',
+  forecast_today:'Prévisions du jour',
+  forecast_future:'Prévisions futures',
+  window:'Fenêtre idéale',
+  events:'Grands événements',
+  synastry:'Synastrie',
+  question:'Ma question',
+  dashboard:'Tableau de bord',
+  dashboard_detail:'Détail du tableau de bord',
+  timeline:'Timeline 10 ans',
+  compare:'Comparateur de dates',
+  avoid_windows:'Fenêtres à éviter',
+  journal:'Journal',
+  life_context:'Contexte de vie',
+  saved_window:'Fenêtre enregistrée',
+  notification:'Notifications',
+  historical_validation:'Validation historique'
+});
+const ACTIVITY_CONTEXT_LABELS=Object.freeze({period:'Période',date:'Date',days:'Durée',domain:'Domaine',intent:'Intention',relation:'Relation',horizon:'Horizon',label:'Contexte',lang:'Langue',timezone:'Fuseau',surface:'Support'});
+function featureLabel(feature){
+  const f=String(feature||'').trim();
+  if(!f)return'—';
+  return FEATURE_LABELS[f]||f.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+function detailActivite(activity){
+  let c=activity&&activity.context;
+  if(typeof c==='string'){try{c=JSON.parse(c)}catch(_){return c.slice(0,180)}}
+  if(!c||typeof c!=='object'||Array.isArray(c))return'';
+  const ordre=['label','date','period','days','domain','intent','relation','horizon','lang','timezone','surface'];
+  const vus=new Set(),parts=[];
+  const ajouter=(k,v)=>{
+    if(v===null||v===undefined||v==='')return;
+    let valeur=String(v);
+    if(k==='days'&&/^\d+$/.test(valeur))valeur+=Number(valeur)>1?' jours':' jour';
+    parts.push((ACTIVITY_CONTEXT_LABELS[k]||k)+': '+valeur);
+    vus.add(k);
+  };
+  ordre.forEach(k=>ajouter(k,c[k]));
+  Object.keys(c).sort().forEach(k=>{if(!vus.has(k))ajouter(k,c[k])});
+  return parts.join(' · ');
+}
+function fermerHistorique(){
+  const modal=document.getElementById('activity-modal');
+  if(modal)modal.style.display='none';
+}
 function sauvegarderConfig(){localStorage.setItem('astro-admin-url',document.getElementById('cfg-url').value.trim());localStorage.setItem('astro-admin-key',document.getElementById('cfg-key').value);chargerAdministration()}
 async function verifierBackendV68(){
   const info=document.getElementById('auth-info');
@@ -141,9 +190,9 @@ async function listerUtilisateurs(){
     }).join('')||'<div class="empty">Aucun compte.</div>';
   }catch(e){box.innerHTML='<div class="empty">Accès refusé pour le moment. Vérifie ton profil Administrateur.</div>'}
 }
-async function voirHistorique(id,email){const modal=document.getElementById('activity-modal'),content=document.getElementById('activity-content'),titre=document.getElementById('activity-user');modal.style.display='flex';titre.textContent=decodeURIComponent(email||'');content.innerHTML='<div class="activity-empty">Chargement…</div>';try{const uid=encodeURIComponent(decodeURIComponent(id));const r=await fetch(apiUrl()+'/api/admin/users/'+uid+'/activity?limit=150&ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.erreur||'Accès refusé');const a=Array.isArray(d.activities)?d.activities:[];if(d.user){titre.textContent=(d.user.prenom?d.user.prenom+' — ':'')+(d.user.email||decodeURIComponent(email||''));}if(!a.length){content.innerHTML='<div class="activity-empty">Aucune consultation enregistrée depuis l’activation de l’historique.</div>';return}content.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Date / heure</th><th>Module</th><th>Détail</th></tr></thead><tbody>${a.map(x=>`<tr><td>${fmtDate(x.created_at)}</td><td>${esc(FEATURE_LABELS[x.feature]||x.feature||'—')}</td><td>${esc(detailActivite(x)||'—')}</td></tr>`).join('')}</tbody></table></div><p class="muted">Affichage des ${a.length} consultations les plus récentes. Aucun texte de question ni contenu de réponse IA n’est enregistré ici.</p>`;}catch(e){content.innerHTML='<div class="activity-empty">⚠ '+esc(e.message||'Impossible de charger l’historique.')+'</div>'}}
+async function voirHistorique(id,email){const modal=document.getElementById('activity-modal'),content=document.getElementById('activity-content'),titre=document.getElementById('activity-user');modal.style.display='flex';titre.textContent=decodeURIComponent(email||'');content.innerHTML='<div class="activity-empty">Chargement…</div>';try{const uid=encodeURIComponent(decodeURIComponent(id));const r=await fetch(apiUrl()+'/api/admin/users/'+uid+'/activity?limit=150&ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.erreur||'Accès refusé');const a=Array.isArray(d.activities)?d.activities:[];if(d.user){titre.textContent=(d.user.prenom?d.user.prenom+' — ':'')+(d.user.email||decodeURIComponent(email||''));}if(!a.length){content.innerHTML='<div class="activity-empty">Aucune consultation enregistrée depuis l’activation de l’historique.</div>';return}content.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Date / heure</th><th>Module</th><th>Détail</th></tr></thead><tbody>${a.map(x=>`<tr><td>${fmtDate(x.created_at)}</td><td>${esc(featureLabel(x.feature))}</td><td>${esc(detailActivite(x)||'—')}</td></tr>`).join('')}</tbody></table></div><p class="muted">Affichage des ${a.length} consultations les plus récentes. Aucun texte de question ni contenu de réponse IA n’est enregistré ici.</p>`;}catch(e){content.innerHTML='<div class="activity-empty">⚠ '+esc(e.message||'Impossible de charger l’historique.')+'</div>'}}
 
-async function chargerAnalytics(){try{const r=await fetch(apiUrl()+'/api/admin/analytics?ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.erreur||'Erreur');document.getElementById('ana-users').textContent=d.users??'—';document.getElementById('ana-premium').textContent=d.premium??'—';document.getElementById('ana-active7').textContent=d.active7??'—';document.getElementById('ana-active30').textContent=d.active30??'—';document.getElementById('ana-consult').textContent=d.consultations??'—';const langNames={fr:'Français',en:'English',es:'Español',ar:'العربية',other:'Autre'};const l=d.languages||{};const lmax=Math.max(1,...Object.values(l).map(Number));document.getElementById('ana-languages').innerHTML=Object.entries(l).map(([k,v])=>`<div class="analytics-row"><span>${esc(langNames[k]||k)}</span><div class="analytics-bar"><i style="width:${Math.round(Number(v)/lmax*100)}%"></i></div><strong>${Number(v)||0}</strong></div>`).join('');const f=Array.isArray(d.features)?d.features:[];const fmax=Math.max(1,...f.map(x=>Number(x.count)||0));document.getElementById('ana-features').innerHTML=f.slice(0,12).map(x=>`<div class="analytics-row"><span>${esc(FEATURE_LABELS[x.feature]||x.feature)}</span><div class="analytics-bar"><i style="width:${Math.round((Number(x.count)||0)/fmax*100)}%"></i></div><strong>${Number(x.count)||0}</strong></div>`).join('')||'<span class="muted">Pas encore de données.</span>';}catch(e){document.getElementById('ana-features').innerHTML='<span class="muted">Statistiques indisponibles.</span>';}}
+async function chargerAnalytics(){try{const r=await fetch(apiUrl()+'/api/admin/analytics?ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.erreur||'Erreur');document.getElementById('ana-users').textContent=d.users??'—';document.getElementById('ana-premium').textContent=d.premium??'—';document.getElementById('ana-active7').textContent=d.active7??'—';document.getElementById('ana-active30').textContent=d.active30??'—';document.getElementById('ana-consult').textContent=d.consultations??'—';const langNames={fr:'Français',en:'English',es:'Español',ar:'العربية',other:'Autre'};const l=d.languages||{};const lmax=Math.max(1,...Object.values(l).map(Number));document.getElementById('ana-languages').innerHTML=Object.entries(l).map(([k,v])=>`<div class="analytics-row"><span>${esc(langNames[k]||k)}</span><div class="analytics-bar"><i style="width:${Math.round(Number(v)/lmax*100)}%"></i></div><strong>${Number(v)||0}</strong></div>`).join('');const f=Array.isArray(d.features)?d.features:[];const fmax=Math.max(1,...f.map(x=>Number(x.count)||0));document.getElementById('ana-features').innerHTML=f.slice(0,12).map(x=>`<div class="analytics-row"><span>${esc(featureLabel(x.feature))}</span><div class="analytics-bar"><i style="width:${Math.round((Number(x.count)||0)/fmax*100)}%"></i></div><strong>${Number(x.count)||0}</strong></div>`).join('')||'<span class="muted">Pas encore de données.</span>';}catch(e){document.getElementById('ana-features').innerHTML='<span class="muted">Statistiques indisponibles.</span>';}}
 
 async function changerRole(id,role){if(role==='admin'&&!confirm('Transformer ce compte en Administrateur ? Il aura accès à toutes les fonctions de test et à cette administration.'))return;const r=await fetch(apiUrl()+'/api/admin/users/'+encodeURIComponent(decodeURIComponent(id))+'/role',{method:'PATCH',headers:headersAdmin(true),body:JSON.stringify({role})});const d=await r.json().catch(()=>({}));if(!r.ok){alert(d.erreur||'Impossible de modifier le rôle.');return}await listerUtilisateurs();await verifierProfilAdmin();alert(role==='admin'?'Compte Administrateur activé. Reconnecte ce compte sur le site pour actualiser son profil.':'Rôle Administrateur retiré.')}
 async function supprimerUtilisateur(id,email){email=decodeURIComponent(email);if(!confirm('Supprimer définitivement le compte'+(email?' de '+email:'')+' ?'))return;const r=await fetch(apiUrl()+'/api/admin/users/'+encodeURIComponent(decodeURIComponent(id)),{method:'DELETE',headers:headersAdmin()});if(!r.ok){const d=await r.json().catch(()=>({}));alert(d.erreur||'Erreur');return}listerUtilisateurs()}
