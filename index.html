@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v49-age-crise-familiale">
+<meta name="astro-build" content="v52-coherence-toutes-analyses">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -3003,11 +3003,60 @@ function etapeVie(dateRef){
 }
 function contraintesAge(dateRef){
   const e=etapeVie(dateRef);
-  if(e.code==='bebe')return `Âge au moment de la prévision : ${e.age} an(s), étape : ${e.label}. INTERDICTION de parler de couple, rencontre amoureuse, travail, carrière, emploi, argent personnel, grossesse ou choix d'adulte. Les domaines pertinents sont : foyer, proches, personnes qui s'occupent de l'enfant, sécurité affective, routines, sommeil/énergie sans diagnostic, déplacements familiaux et développement.`;
-  if(e.code==='enfant')return `Âge au moment de la prévision : ${e.age} ans, étape : ${e.label}. INTERDICTION de parler de couple, sexualité, emploi, carrière, crédit, investissement ou responsabilités d'adulte. Parle de famille, école/apprentissages, camarades, activités, sécurité, rythme de vie, changements de foyer ou d'organisation.`;
-  if(e.code==='ado')return `Âge au moment de la prévision : ${e.age} ans, étape : ${e.label}. Ne parle pas de carrière installée, mariage, crédit ou parentalité comme si la personne était adulte. Traduis le travail en études/orientation/projets, et l'affectif en relations adaptées à l'âge.`;
-  if(e.code==='senior')return `Âge au moment de la prévision : ${e.age} ans, étape : ${e.label}. En analyse générale, ne suppose pas que la personne travaille ni qu'elle cherche une promotion. Priorise famille, foyer, santé/énergie sans diagnostic, finances, patrimoine, activités, projets, transmission, déplacements et relations. Si le domaine Travail est explicitement choisi, parle d'activité, responsabilités, engagement, projet ou transmission, sans supposer un emploi salarié.`;
-  return `Âge au moment de la prévision : ${e.age} ans, étape : ${e.label}. Adapte tous les scénarios à cet âge réel et n'invente jamais une situation de vie incompatible.`;
+  if(e.code==='bebe')return `Âge au moment de l'analyse : ${e.age} an(s), étape : ${e.label}. INTERDICTION de parler de couple, rencontre amoureuse, travail, carrière, emploi, argent personnel, grossesse ou choix d'adulte. Les domaines pertinents sont : développement/adaptation, foyer, proches, personnes qui s'occupent de l'enfant, sécurité affective, routines, sommeil/énergie sans diagnostic, déplacements familiaux et changements de cadre.`;
+  if(e.code==='enfant')return `Âge au moment de l'analyse : ${e.age} ans, étape : ${e.label}. INTERDICTION de parler de couple, sexualité, emploi, carrière, crédit, investissement ou responsabilités d'adulte. Parle de développement, famille, école/apprentissages, camarades, activités, sécurité, rythme de vie, changements de foyer ou d'organisation.`;
+  if(e.code==='ado')return `Âge au moment de l'analyse : ${e.age} ans, étape : ${e.label}. Ne parle pas de carrière installée, mariage, crédit ou parentalité comme si la personne était adulte. Traduis le travail en études/orientation/stage/projets, et l'affectif en relations adaptées à l'âge.`;
+  if(e.code==='senior')return `Âge au moment de l'analyse : ${e.age} ans, étape : ${e.label}. Ne suppose pas que la personne travaille ni qu'elle cherche une promotion. Explore sans biais : direction personnelle, relations, famille/proches, foyer/logement, finances/patrimoine, activités/projets, transmission, déplacements, rythme/énergie et réseau. Si le domaine Travail est explicitement choisi, parle d'activité, responsabilités, engagement, projet ou transmission, sans supposer un emploi salarié.`;
+  return `Âge au moment de l'analyse : ${e.age} ans, étape : ${e.label}. Adapte tous les scénarios à cet âge réel et n'invente jamais une situation de vie incompatible.`;
+}
+
+function domainesVieUniversels(dateRef){
+  const e=etapeVie(dateRef||new Date());
+  if(e.code==='bebe')return 'développement/adaptation, famille et personnes qui s’occupent de l’enfant, foyer/cadre de vie, rythme/routines/énergie, déplacements/changements de cadre';
+  if(e.code==='enfant')return 'développement/autonomie, famille/proches, foyer/cadre de vie, école/apprentissages, camarades/activités/projets, rythme/énergie, déplacements/changements de cadre';
+  if(e.code==='ado')return 'direction personnelle, études/orientation/stage, relations/sentiments adaptés à l’âge, famille/proches, foyer/logement, argent de poche/ressources si pertinent, projets/activités/réseau, voyages/mobilité, rythme/énergie';
+  if(e.code==='senior')return 'direction personnelle, relations, famille/proches, foyer/logement, finances/patrimoine, activités/engagements/transmission, projets/réseau, voyages/mobilité, rythme/énergie';
+  return 'direction personnelle, travail/activité/statut, couple/relations, famille/proches, foyer/logement, finances/patrimoine, enfants/projets personnels, études/orientation, voyages/mobilité, rythme/énergie, projets/réseau';
+}
+
+function contexteAnalyseUniversel(dateRef, specialise=false){
+  const age=contraintesAge(dateRef||new Date());
+  const domaines=domainesVieUniversels(dateRef||new Date());
+  const portee=specialise
+    ? 'Cette analyse est spécialisée : reste centré sur le sujet demandé, mais ne déduis jamais automatiquement famille, couple ou travail si les données ne les indiquent pas.'
+    : 'Cette analyse est large : explore réellement tous les domaines pertinents avant de hiérarchiser ceux qui ressortent le plus fort.';
+  return `${age}
+RÈGLE GLOBALE DE COHÉRENCE : ${portee}
+Domaines pertinents à examiner pour cet âge : ${domaines}.
+AUCUN domaine n'est prioritaire par défaut. La famille, le couple et le travail ne doivent apparaître que s'ils sont réellement soutenus par les données ou explicitement demandés.
+Le favorable exceptionnel, le difficile exceptionnel et le contrasté ont exactement le même niveau de priorité.
+N'invente jamais un événement pour remplir une analyse ordinaire.`;
+}
+
+function ageDepuisISO(iso,dateRef){
+  if(!iso)return null;
+  const dN=new Date(iso+'T12:00:00'), dR=dateRef instanceof Date?dateRef:new Date(dateRef||Date.now());
+  if(Number.isNaN(dN.getTime())||Number.isNaN(dR.getTime()))return null;
+  let a=dR.getFullYear()-dN.getFullYear();
+  if(dR.getMonth()<dN.getMonth()||(dR.getMonth()===dN.getMonth()&&dR.getDate()<dN.getDate()))a--;
+  return Math.max(0,a);
+}
+
+function relationCompatibleAge(mode,dateISO1,dateISO2,dateRef){
+  const a1=ageDepuisISO(dateISO1,dateRef||new Date()), a2=ageDepuisISO(dateISO2,dateRef||new Date());
+  const mineurJeune=(a1!==null&&a1<=11)||(a2!==null&&a2<=11);
+  const mineur=(a1!==null&&a1<18)||(a2!==null&&a2<18);
+  if(mineurJeune && ['couple','rencontre','ex','compliquee','pro'].includes(mode))return false;
+  if(mineur && mode==='pro')return false;
+  return true;
+}
+
+function intentionCompatibleAge(intention,dateRef){
+  const e=etapeVie(dateRef||new Date());
+  if(e.code==='bebe'||e.code==='enfant')return !['argent','travail','investir','amour','enfant'].includes(intention);
+  if(e.code==='ado')return !['investir','enfant'].includes(intention);
+  if(e.code==='senior')return intention!=='enfant';
+  return true;
 }
 function adapterInterfaceAge(dateRef){
   if(!USER)return;
@@ -3039,10 +3088,30 @@ function adapterInterfaceAge(dateRef){
       if(/'investir'|'enfant'/.test(oc))b.style.display='none';
       const lab=b.querySelector('.f-label'); if(/'travail'/.test(oc)&&lab)lab.textContent='Études / orientation';
     } else if(e.code==='senior'){
+      if(/'enfant'/.test(oc))b.style.display='none';
       const lab=b.querySelector('.f-label'); if(/'travail'/.test(oc)&&lab)lab.textContent='Activité / projet';
     }
   });
+  const qBoutons=document.querySelectorAll('#q-domaines .dom-btn');
+  qBoutons.forEach(b=>{
+    const oc=String(b.getAttribute('onclick')||'');
+    const lab=b.querySelector('.dom-label');
+    b.style.display='';
+    if(e.code==='bebe'||e.code==='enfant'){
+      if(/'amour'|'travail'|'argent'/.test(oc)){b.style.display='none';if(b.classList.contains('actif'))b.classList.remove('actif');}
+    } else if(e.code==='ado'){
+      if(/'travail'/.test(oc)&&lab)lab.textContent='Études / orientation';
+      if(/'amour'/.test(oc)&&lab)lab.textContent='Relations';
+    } else if(e.code==='senior'){
+      if(/'travail'/.test(oc)&&lab)lab.textContent='Activité / projets';
+    } else {
+      if(/'travail'/.test(oc)&&lab)lab.textContent='Travail';
+      if(/'amour'/.test(oc)&&lab)lab.textContent='Amour';
+    }
+  });
   if((e.code==='bebe'||e.code==='enfant')&&['amour','travail','argent'].includes(domP))domP=null;
+  if((e.code==='bebe'||e.code==='enfant')&&['amour','travail','argent'].includes(domQ))domQ=null;
+  if(intentionF && !intentionCompatibleAge(intentionF,dateRef||new Date()))intentionF=null;
 }
 
 function selGenre(val, el) {
@@ -4188,69 +4257,473 @@ function analyserCriseFamiliale(jdJour,posN,AS,MC,jdNatal){
   const IC=(MC+180)%360;
   const natal={...posN,AS,MC,IC};
   const sig=[];
-  const add=(famille,poids,texte)=>sig.push({famille,poids,texte});
-  const hard=(a,b,orbe,aspects=[0,90,180,45,135])=>{const x=ecartAspectExact(a,b,aspects);return x.ecart<=orbe?x:null;};
-  // Transits lents difficiles vers Lune/IC/Soleil/AS : cœur des crises familiales lourdes.
+  const add=(famille,poids,texte,cible,core=false)=>sig.push({famille,poids,texte,cible,core});
+  const hard=(a,b,orbe,aspects=[0,90,180])=>{const x=ecartAspectExact(a,b,aspects);return x.ecart<=orbe?x:null;};
+
+  // Une alerte familiale lourde doit toucher réellement le foyer/la Lune.
+  // Soleil/AS seuls ne suffisent plus à transformer un tournant personnel en "problème familial".
   for(const pl of ['Saturne','Pluton','Uranus','Neptune']){
-    for(const cible of ['Lune','IC','Soleil','AS']){
+    for(const cible of ['Lune','IC']){
       if(t[pl]===undefined||natal[cible]===undefined)continue;
-      const a=hard(t[pl],natal[cible],pl==='Neptune'?1.1:1.25);
+      const a=hard(t[pl],natal[cible],pl==='Neptune'?0.85:1.0);
       if(a){
-        let w=(pl==='Saturne'||pl==='Pluton')?3.1:2.5;
-        if(cible==='Lune'||cible==='IC')w+=0.45;
-        add('transit-lent',w,`${pl} aspect dur ${cible} (${a.ecart.toFixed(2)}°)`);
+        const w=(pl==='Saturne'||pl==='Pluton')?3.35:2.85;
+        add('transit-lent',w,`${pl} aspect dur ${cible} (${a.ecart.toFixed(2)}°)`,cible,true);
       }
     }
+    // Soleil/AS = confirmation secondaire seulement.
+    for(const cible of ['Soleil','AS']){
+      if(t[pl]===undefined||natal[cible]===undefined)continue;
+      const a=hard(t[pl],natal[cible],0.75);
+      if(a)add('transit-lent',1.25,`${pl} confirme sur ${cible} (${a.ecart.toFixed(2)}°)`,cible,false);
+    }
   }
-  // Progressions : Lune/Soleil/angles vers Saturne-Pluton ou activation Lune/IC.
+
   if(age>=0){
     try{
       const p=calcProgressions(jdNatal,age);
-      for(const src of ['Lune','Soleil','AS','MC']){
-        if(p[src]===undefined)continue;
-        for(const cible of ['Saturne','Pluton','Lune','IC']){
+      if(p.Lune!==undefined){
+        for(const cible of ['Saturne','Pluton','IC']){
           if(natal[cible]===undefined)continue;
-          const a=hard(p[src],natal[cible],0.75,[0,90,180]);
-          if(a)add('progression',2.35,`${src} progressé active ${cible} (${a.ecart.toFixed(2)}°)`);
+          const a=hard(p.Lune,natal[cible],0.55);
+          if(a)add('progression',2.55,`Lune progressée active ${cible} (${a.ecart.toFixed(2)}°)`,cible,true);
+        }
+      }
+      for(const src of ['Soleil','AS','MC']){
+        if(p[src]===undefined)continue;
+        for(const cible of ['Lune','IC']){
+          const a=hard(p[src],natal[cible],0.5);
+          if(a)add('progression',2.1,`${src} progressé active ${cible} (${a.ecart.toFixed(2)}°)`,cible,true);
         }
       }
     }catch(e){}
+
     try{
       const arc=calcArcSoleil(jdNatal,age);
-      for(const src of ['Saturne','Pluton','Lune','Soleil','AS','MC']){
+      for(const src of ['Saturne','Pluton','Uranus','Lune','Soleil','AS','MC']){
         if(natal[src]===undefined)continue;
         const dirige=(natal[src]+arc)%360;
-        for(const cible of ['Lune','IC','Soleil','AS']){
-          if(natal[cible]===undefined||src===cible)continue;
-          const a=hard(dirige,natal[cible],0.65,[0,90,180]);
-          if(a)add('arc-solaire',2.8,`${src} dirigé active ${cible} (${a.ecart.toFixed(2)}°)`);
+        for(const cible of ['Lune','IC']){
+          if(src===cible||natal[cible]===undefined)continue;
+          const a=hard(dirige,natal[cible],0.5);
+          if(a)add('arc-solaire',3.0,`${src} dirigé active ${cible} (${a.ecart.toFixed(2)}°)`,cible,true);
         }
       }
     }catch(e){}
   }
+
   try{
     for(const ecl of calcEclipses(jdJour)){
-      for(const cible of ['Lune','IC','Soleil','AS']){
+      for(const cible of ['Lune','IC']){
         let d=Math.abs(ecl.lon-natal[cible]);if(d>180)d=360-d;
-        if(d<=1.8)add('eclipse',3.15,`Éclipse sur ${cible} (${d.toFixed(2)}°)`);
+        if(d<=1.35)add('eclipse',3.25,`Éclipse sur ${cible} (${d.toFixed(2)}°)`,cible,true);
       }
     }
   }catch(e){}
+
   if(t.Noeud!==undefined){
     for(const cible of ['Lune','IC']){
       let d=Math.abs(t.Noeud-natal[cible]);if(d>180)d=360-d;
       let ds=Math.abs(((t.Noeud+180)%360)-natal[cible]);if(ds>180)ds=360-ds;
-      if(Math.min(d,ds)<=1.0)add('noeuds',1.4,`Axe nodal sur ${cible}`);
+      if(Math.min(d,ds)<=0.75)add('noeuds',1.45,`Axe nodal sur ${cible}`,cible,true);
     }
   }
-  // Une famille technique ne compte qu'une fois pour éviter le gonflement artificiel.
+
+  // Une famille technique compte une seule fois.
   const parFam=new Map();
   for(const x of sig.sort((a,b)=>b.poids-a.poids))if(!parFam.has(x.famille))parFam.set(x.famille,x);
   const uniques=[...parFam.values()];
-  const familles=uniques.map(x=>x.famille), poids=uniques.reduce((a,b)=>a+b.poids,0);
-  const niveau=(familles.length>=3&&poids>=7.5)?'critique':(familles.length>=2&&poids>=5.0)?'forte':(uniques.some(x=>x.poids>=3.4)?'marquee':'faible');
-  const texte=niveau==='critique'?'Crise familiale ou événement de perte/séparation très fortement signalé':niveau==='forte'?'Période familiale lourde : perte, séparation, deuil ou bouleversement du foyer fait partie des scénarios possibles':niveau==='marquee'?'Tension familiale importante ou changement du foyer à surveiller':'Aucune alerte familiale lourde spécifique';
+  const familles=uniques.map(x=>x.famille);
+  const poids=uniques.reduce((a,b)=>a+b.poids,0);
+  const hasCore=uniques.some(x=>x.core);
+  const niveau=(hasCore&&familles.length>=3&&poids>=7.8)?'critique':
+               (hasCore&&familles.length>=2&&poids>=5.8)?'forte':
+               (hasCore&&uniques.some(x=>x.poids>=3.4))?'marquee':'faible';
+  const texte=niveau==='critique'?'Crise familiale ou bouleversement du foyer très fortement signalé':
+              niveau==='forte'?'Période familiale lourde : perte, séparation, deuil ou bouleversement du foyer fait partie des scénarios possibles':
+              niveau==='marquee'?'Un signal familial marqué existe, mais il n’est pas assez confirmé pour être présenté comme un événement familial majeur':
+              'Aucune alerte familiale lourde spécifique';
   return {niveau,poids,familles,signatures:uniques,texte};
+}
+
+function analyserExceptionnelPositif(jdJour,posN,AS,MC,jdNatal,dom){
+  const jd=jdJour+0.5, t=calcPos(jd), age=calcAnneeVieExacte(jdNatal,jdJour);
+  const natal={...posN,AS,MC};
+  const sig=[];
+  const add=(famille,poids,texte,cible)=>sig.push({famille,poids,texte,cible,impact:impactConcretCible(cible,dom,jdVersDate(jdJour))});
+  const doux=(a,b,orbe,aspects=[0,60,120])=>{const x=ecartAspectExact(a,b,aspects);return x.ecart<=orbe?x:null;};
+
+  // Jupiter sur les angles/luminaires : moteur positif principal, mais jamais suffisant à lui seul.
+  if(t.Jupiter!==undefined){
+    for(const cible of ['Soleil','Lune','AS','MC','Venus']){
+      const a=doux(t.Jupiter,natal[cible],1.0);
+      if(a){
+        let w=['AS','MC','Soleil','Lune'].includes(cible)?2.65:2.2;
+        if(a.aspect===0)w+=0.25;
+        add('transit-jupiter',w,`Jupiter favorable ${cible} (${a.aspect}°, écart ${a.ecart.toFixed(2)}°)`,cible);
+      }
+    }
+  }
+
+  // Saturne harmonique peut confirmer une réussite durable mais ne crée pas l'exceptionnel seul.
+  if(t.Saturne!==undefined){
+    for(const cible of ['Soleil','AS','MC']){
+      const a=doux(t.Saturne,natal[cible],0.75,[60,120]);
+      if(a)add('transit-structure',1.25,`Saturne stabilise ${cible} (${a.aspect}°, écart ${a.ecart.toFixed(2)}°)`,cible);
+    }
+  }
+
+  if(age>=0){
+    try{
+      const p=calcProgressions(jdNatal,age);
+      for(const src of ['Soleil','Lune','Venus','AS','MC']){
+        if(p[src]===undefined)continue;
+        for(const cible of ['Jupiter','Venus','Soleil','AS','MC']){
+          if(natal[cible]===undefined)continue;
+          const a=doux(p[src],natal[cible],0.55);
+          if(a)add('progression',2.15,`${src} progressé favorable ${cible} (${a.aspect}°, écart ${a.ecart.toFixed(2)}°)`,cible);
+        }
+      }
+    }catch(e){}
+
+    try{
+      const arc=calcArcSoleil(jdNatal,age);
+      for(const src of ['Jupiter','Venus','Soleil']){
+        if(natal[src]===undefined)continue;
+        const dirige=(natal[src]+arc)%360;
+        for(const cible of ['AS','MC','Soleil','Lune','Venus']){
+          if(natal[cible]===undefined||src===cible)continue;
+          const a=doux(dirige,natal[cible],0.45);
+          if(a)add('arc-solaire',3.0,`${src} dirigé favorable ${cible} (${a.aspect}°, écart ${a.ecart.toFixed(2)}°)`,cible);
+        }
+      }
+    }catch(e){}
+  }
+
+  // Révolution solaire = confirmation annuelle.
+  try{
+    const rs=scoreRevolutionSolaire(jdNatal,jdJour,posN,AS,MC,dom);
+    if(rs>=1.5)add('revolution-solaire',1.35,`Révolution solaire très porteuse (${rs.toFixed(1)})`,dom==='travail'?'MC':dom==='famille'?'Lune':'Soleil');
+  }catch(e){}
+
+  // Maître de l'année bénéfique = confirmation seulement.
+  try{
+    const prof=calcProfection(jdNatal,jdJour);
+    const mp=prof&&prof.maitreAnnee;
+    if((mp==='Jupiter'||mp==='Venus')&&t[mp]!==undefined){
+      for(const cible of ['Soleil','Lune','AS','MC']){
+        const a=doux(t[mp],natal[cible],0.9);
+        if(a)add('profection',1.25,`Maître annuel ${mp} favorable ${cible}`,cible);
+      }
+    }
+  }catch(e){}
+
+  // Vénus rapide ne fait que confirmer une fenêtre déjà soutenue.
+  if(t.Venus!==undefined){
+    for(const cible of ['AS','MC','Soleil','Lune','Venus']){
+      const a=doux(t.Venus,natal[cible],0.65);
+      if(a)add('transit-venus',0.7,`Vénus soutient ${cible}`,cible);
+    }
+  }
+
+  const parFam=new Map();
+  for(const x of sig.sort((a,b)=>b.poids-a.poids))if(!parFam.has(x.famille))parFam.set(x.famille,x);
+  const uniques=[...parFam.values()];
+  const familles=uniques.map(x=>x.famille);
+  const poids=uniques.reduce((a,b)=>a+b.poids,0);
+
+  // "Exceptionnel" exige une vraie convergence indépendante.
+  const niveau=(familles.length>=3&&poids>=7.0)?'exceptionnelle':
+               (familles.length>=2&&poids>=5.0)?'forte':
+               (uniques.some(x=>x.poids>=3.0))?'marquee':'faible';
+  const dominant=uniques[0];
+  const impact=dominant?dominant.impact:impactConcretCible(null,dom,jdVersDate(jdJour));
+  const texte=niveau==='exceptionnelle'?`Ouverture exceptionnellement favorable confirmée dans ${impact}`:
+              niveau==='forte'?`Très forte période d’ouverture ou d’aboutissement dans ${impact}`:
+              niveau==='marquee'?`Signal positif marqué dans ${impact}, mais pas assez confirmé pour parler d’événement exceptionnel`:
+              'Aucune ouverture positive exceptionnelle spécifique';
+  return {niveau,poids,familles,signatures:uniques,impact,texte};
+}
+
+
+
+// ============================================================
+// V51 — ÉVÉNEMENTS EXCEPTIONNELS : TOUS LES DOMAINES DE VIE
+// Le moteur ne privilégie plus la famille. Il classe les convergences
+// par domaine concret puis laisse le prompt hiérarchiser ce qui ressort.
+// ============================================================
+const PREV_DOMAIN_LABELS_V51 = {
+  identity:'Direction de vie / identité',
+  work:'Travail / activité / statut',
+  couple:'Couple / relations / associations',
+  family:'Famille / proches',
+  home:'Foyer / logement / patrimoine',
+  money:'Finances / revenus / patrimoine',
+  children:'Enfants / projets personnels / créativité',
+  studies:'Études / orientation / apprentissages',
+  travel:'Voyages / mobilité / étranger / démarches',
+  daily:'Rythme de vie / responsabilités / énergie',
+  projects:'Projets / réseau / vie sociale'
+};
+
+function prevEtapeAutoriseDomaineV51(domain,dateRef){
+  const ev=etapeVie(dateRef||new Date());
+  if(ev.code==='bebe') return ['identity','family','home','daily','travel'].includes(domain);
+  if(ev.code==='enfant') return ['identity','family','home','daily','studies','travel','projects'].includes(domain);
+  return true;
+}
+
+function prevLabelDomaineAgeV51(domain,dateRef){
+  const ev=etapeVie(dateRef||new Date());
+  if(ev.code==='bebe'){
+    return ({identity:'Développement / adaptation',family:'Famille / personnes qui s’occupent de l’enfant',home:'Foyer / cadre de vie',daily:'Rythme / routines / énergie',travel:'Déplacements / changements de cadre'})[domain]||PREV_DOMAIN_LABELS_V51[domain]||domain;
+  }
+  if(ev.code==='enfant'){
+    return ({identity:'Développement / confiance / autonomie',studies:'École / apprentissages',projects:'Activités / camarades / projets',daily:'Rythme / organisation / énergie'})[domain]||PREV_DOMAIN_LABELS_V51[domain]||domain;
+  }
+  if(ev.code==='ado'){
+    return ({work:'Études / orientation / premier projet professionnel',couple:'Vie relationnelle / sentiments',studies:'Études / orientation / examens'})[domain]||PREV_DOMAIN_LABELS_V51[domain]||domain;
+  }
+  if(ev.code==='senior'){
+    return ({work:'Activité / responsabilités / engagement / transmission',daily:'Rythme de vie / responsabilités / énergie'})[domain]||PREV_DOMAIN_LABELS_V51[domain]||domain;
+  }
+  return PREV_DOMAIN_LABELS_V51[domain]||domain;
+}
+
+function prevDomainsForTargetV51(target){
+  const map={
+    MC:[['work',1],['projects',.35]],
+    IC:[['home',1],['family',.75]],
+    DS:[['couple',1],['projects',.25]],
+    AS:[['identity',1],['daily',.45]],
+    Soleil:[['identity',1],['work',.45]],
+    Lune:[['family',1],['home',.75],['daily',.25]],
+    Venus:[['couple',1],['money',.45],['children',.30]],
+    Mercure:[['studies',1],['projects',.45],['travel',.25]],
+    Mars:[['daily',.8],['projects',.5],['work',.35]],
+    Jupiter:[['travel',.75],['studies',.55],['projects',.55],['money',.35]],
+    Saturne:[['work',.55],['daily',.55],['identity',.35]],
+    H2:[['money',1]], H3:[['studies',1],['travel',.35]], H5:[['children',1],['projects',.55],['couple',.35]],
+    H6:[['daily',1],['work',.5]], H8:[['money',1],['couple',.25]], H9:[['travel',1],['studies',.8]], H11:[['projects',1]]
+  };
+  const arr=map[target]||[['identity',.35]];
+  return arr.map(x=>Array.isArray(x)?x:[String(x),1]);
+}
+
+function prevPolariteV51(source,aspect){
+  const harm=aspect===60||aspect===120;
+  const dur=aspect===90||aspect===180;
+  if(source==='Jupiter'||source==='Venus') return (aspect===0||harm)?'positive':(dur?'difficile':'mixte');
+  if(source==='Saturne') return harm?'positive':((aspect===0||dur)?'difficile':'mixte');
+  if(source==='Pluton') return harm?'positive':((aspect===0||dur)?'difficile':'mixte');
+  if(source==='Uranus') return harm?'positive':(dur?'difficile':'mixte');
+  if(source==='Neptune') return harm?'positive':(dur?'difficile':'mixte');
+  if(source==='Mars') return harm?'positive':((aspect===0||dur)?'difficile':'mixte');
+  if(source==='Mercure') return (aspect===0||harm)?'positive':(dur?'difficile':'mixte');
+  return 'mixte';
+}
+
+function prevScenarioV51(domain,pol,dateRef){
+  const ev=etapeVie(dateRef||new Date());
+  const pos={
+    identity:['prise de décision qui ouvre une nouvelle étape','changement de statut ou de priorité vécu comme une avancée','gain d’autonomie ou nouveau cap personnel'],
+    work:['reconnaissance, nouvelle responsabilité ou projet qui avance','contrat, mission ou changement d’activité favorable','aboutissement professionnel ou nouvelle place plus satisfaisante'],
+    couple:['rapprochement, clarification ou engagement important','rencontre ou partenariat significatif si la situation s’y prête','relation qui franchit une étape constructive'],
+    family:['heureuse nouvelle, rapprochement ou soutien familial important','réconciliation ou nouvelle organisation qui améliore le climat','événement marquant concernant un proche ou la famille'],
+    home:['déménagement choisi, achat/vente ou projet de logement favorable','travaux ou changement du cadre de vie qui améliore le quotidien','décision patrimoniale liée au foyer qui avance'],
+    money:['amélioration de revenus ou accord financier favorable','vente, achat, financement ou négociation qui aboutit','réorganisation matérielle qui sécurise davantage la situation'],
+    children:['heureux événement ou étape importante concernant un enfant','projet personnel ou créatif qui prend de l’ampleur','activité ou projet affectif qui apporte beaucoup de satisfaction'],
+    studies:['réussite, admission, examen ou orientation favorable','formation ou apprentissage qui ouvre une porte','décision d’études qui clarifie la suite'],
+    travel:['voyage, mobilité ou projet à l’étranger qui se concrétise','démarche administrative ou internationale qui avance','changement d’horizon ou déplacement important vécu positivement'],
+    daily:['nouvelle organisation qui allège ou stabilise le quotidien','rythme plus adapté et responsabilités mieux réparties','période de récupération ou de reprise d’élan sans implication médicale'],
+    projects:['projet qui obtient du soutien ou franchit une étape','rencontre utile ou réseau qui ouvre une possibilité','objectif à long terme qui commence réellement à se concrétiser']
+  };
+  const neg={
+    identity:['remise en question forte du cap personnel','changement subi qui oblige à redéfinir les priorités','fin d’une ancienne manière de vivre ou de se positionner'],
+    work:['réorganisation, conflit de responsabilités ou changement de poste difficile','ralentissement, refus ou contrainte professionnelle importante','départ, rupture de contrat ou reconversion possible si d’autres indices vont dans ce sens'],
+    couple:['tension, prise de distance ou mise au point décisive','relation qui doit changer de fonctionnement','séparation possible seulement si plusieurs indices convergent et si le contexte le permet'],
+    family:['responsabilité lourde envers un proche ou crise familiale','éloignement, conflit ou changement difficile dans l’organisation familiale','perte, séparation ou deuil possible uniquement si la convergence familiale est exceptionnellement forte'],
+    home:['déménagement contraint, travaux lourds ou changement de logement difficile','pression patrimoniale ou familiale liée au lieu de vie','réorganisation du foyer imposée par les circonstances'],
+    money:['dépense importante, retard ou pression budgétaire','crédit, dette, contrat ou patrimoine à réorganiser','baisse ou instabilité financière demandant des arbitrages'],
+    children:['responsabilité ou préoccupation importante concernant un enfant','projet personnel retardé ou remis en cause','changement affectif ou familial qui modifie les projets'],
+    studies:['examen, orientation ou admission qui demande une révision du plan','retard, changement d’établissement ou difficulté d’organisation','formation ou projet d’études à réajuster'],
+    travel:['retard, annulation ou obstacle administratif dans une mobilité','déplacement ou projet étranger à réorganiser','changement d’horizon imposé ou plus compliqué que prévu'],
+    daily:['surcharge, fatigue ou contraintes de rythme à réorganiser','responsabilités quotidiennes plus lourdes','besoin de ralentir ou de changer l’organisation sans poser de diagnostic médical'],
+    projects:['projet retardé, refus ou changement de stratégie','rupture avec un groupe, un réseau ou un objectif devenu inadapté','priorité à revoir avant de pouvoir avancer']
+  };
+  let arr=(pol==='positive'?pos:neg)[domain]||[];
+  if(ev.code==='bebe'){
+    const special={identity:['étape importante d’adaptation ou de développement','nouveau rythme ou changement de cadre bien intégré'],family:['changement important chez les proches ou les personnes qui s’occupent de l’enfant','rapprochement ou réorganisation familiale'],home:['changement de logement ou de cadre de vie familial','nouvelle organisation du foyer'],daily:['changement marqué de rythme, routines ou organisation','période demandant davantage d’adaptation au quotidien'],travel:['déplacement ou changement de cadre familial important']};
+    arr=special[domain]||arr;
+  } else if(ev.code==='enfant'&&domain==='studies') arr=pol==='positive'?['progrès scolaire ou apprentissage important','nouvelle activité ou étape scolaire favorable','réussite ou reconnaissance dans les apprentissages']:['difficulté scolaire ou changement d’organisation','orientation ou apprentissage à réajuster','période demandant davantage d’accompagnement'];
+  else if(ev.code==='senior'&&domain==='work') arr=pol==='positive'?['projet, activité ou engagement qui apporte de la reconnaissance','responsabilité ou transmission valorisante','nouvelle organisation d’activité plus satisfaisante']:['responsabilité ou engagement à alléger','changement de rythme ou fin d’une activité','réorganisation d’un projet ou d’une responsabilité'];
+  return arr.slice(0,3);
+}
+
+function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelection){
+  const date=jdVersDate(jdJour), jd=jdJour+0.5, t=calcPos(jd), age=calcAnneeVieExacte(jdNatal,jdJour);
+  const IC=(MC+180)%360, DS=(AS+180)%360;
+  const natal={...posN,AS,MC,IC,DS,H2:(AS+30)%360,H3:(AS+60)%360,H5:(AS+120)%360,H6:(AS+150)%360,H8:(AS+210)%360,H9:(AS+240)%360,H11:(AS+300)%360};
+  const targetsMajor=['Soleil','Lune','AS','MC','IC','DS','Venus'];
+  const targetsSec=['Mercure','Mars','Jupiter','Saturne','H2','H3','H5','H6','H8','H9','H11'];
+  const sig=[];
+  const add=(famille,poids,pol,texte,target,core=true)=>{
+    for(const [domain,factor] of prevDomainsForTargetV51(target)){
+      if(!prevEtapeAutoriseDomaineV51(domain,date)) continue;
+      sig.push({famille,poids:poids*factor,pol,texte,target,domain,core:core&&factor>=.7});
+    }
+  };
+  const test=(value,target,aspects,orbe)=>{if(value===undefined||natal[target]===undefined)return null;const a=ecartAspectExact(value,natal[target],aspects);return a.ecart<=orbe?a:null;};
+
+  // Transits lents = moteurs principaux. Les secteurs secondaires ne confirment jamais seuls un événement exceptionnel.
+  for(const pl of ['Pluton','Uranus','Saturne','Neptune','Jupiter']){
+    const base={Pluton:3.3,Uranus:3.05,Saturne:3.15,Neptune:2.7,Jupiter:2.45}[pl];
+    const orb={Pluton:1.0,Uranus:1.05,Saturne:1.1,Neptune:.9,Jupiter:1.15}[pl];
+    for(const target of targetsMajor){
+      const a=test(t[pl],target,[0,60,90,120,180],orb); if(!a)continue;
+      add('transit-'+pl.toLowerCase(),base,prevPolariteV51(pl,a.aspect),`${pl} ${a.aspect}° ${target} (${a.ecart.toFixed(2)}°)`,target,true);
+    }
+    for(const target of targetsSec){
+      const a=test(t[pl],target,[0,60,90,120,180],orb*.75); if(!a)continue;
+      add('transit-'+pl.toLowerCase()+'-secondaire',base*.62,prevPolariteV51(pl,a.aspect),`${pl} confirme fortement ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+    }
+  }
+
+  // Progressions secondaires : timing lent/personnel, surtout comme confirmation de domaine.
+  if(age>=0){
+    try{
+      const p=calcProgressions(jdNatal,age);
+      for(const src of ['Soleil','Lune','Venus','Mercure','AS','MC']){
+        if(p[src]===undefined)continue;
+        for(const target of targetsMajor){
+          const a=test(p[src],target,[0,60,90,120,180],src==='Lune'?.65:.5); if(!a)continue;
+          const pol=src==='Venus'?prevPolariteV51('Venus',a.aspect):'mixte';
+          add('progression',2.25,pol,`${src} progressé ${a.aspect}° ${target} (${a.ecart.toFixed(2)}°)`,target,true);
+        }
+        // Les secteurs financiers, études, projets, enfants et rythme peuvent aussi devenir majeurs,
+        // mais seulement avec un contact progressé très serré ET une autre technique indépendante.
+        for(const target of targetsSec){
+          const a=test(p[src],target,[0,60,90,120,180],.38); if(!a)continue;
+          const pol=src==='Venus'?prevPolariteV51('Venus',a.aspect):'mixte';
+          add('progression-secondaire',1.95,pol,`${src} progressé confirme ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+        }
+      }
+    }catch(e){}
+
+    // Arc solaire : très fort si exact sur angles/luminaires.
+    try{
+      const arc=calcArcSoleil(jdNatal,age);
+      for(const src of ['Soleil','Lune','Venus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton','AS','MC']){
+        if(natal[src]===undefined)continue;
+        const dirige=(natal[src]+arc)%360;
+        for(const target of targetsMajor){
+          if(src===target)continue;
+          const a=test(dirige,target,[0,60,90,120,180],.42); if(!a)continue;
+          const pol=['Jupiter','Venus','Saturne','Pluton','Uranus','Neptune','Mars'].includes(src)?prevPolariteV51(src,a.aspect):'mixte';
+          add('arc-solaire',3.05,pol,`${src} dirigé ${a.aspect}° ${target} (${a.ecart.toFixed(2)}°)`,target,true);
+        }
+        for(const target of targetsSec){
+          const a=test(dirige,target,[0,60,90,120,180],.32); if(!a)continue;
+          const pol=['Jupiter','Venus','Saturne','Pluton','Uranus','Neptune','Mars'].includes(src)?prevPolariteV51(src,a.aspect):'mixte';
+          add('arc-solaire-secondaire',2.3,pol,`${src} dirigé confirme ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+        }
+      }
+    }catch(e){}
+  }
+
+  // Éclipses : elles signalent un pic, mais ne sont ni bonnes ni mauvaises par elles-mêmes.
+  try{
+    for(const ecl of calcEclipses(jdJour)){
+      for(const target of ['Soleil','Lune','AS','MC','IC','DS']){
+        let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
+        if(d<=1.45)add('eclipse',3.0,'mixte',`Éclipse sur ${target} (${d.toFixed(2)}°)`,target,true);
+      }
+      for(const target of ['H2','H3','H5','H6','H8','H9','H11']){
+        let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
+        if(d<=.8)add('eclipse-secondaire',2.0,'mixte',`Éclipse confirme ${target} (${d.toFixed(2)}°)`,target,true);
+      }
+    }
+  }catch(e){}
+
+  // Nœuds : confirmation de timing, jamais preuve unique.
+  if(t.Noeud!==undefined){
+    for(const target of ['Soleil','Lune','AS','MC','IC','DS']){
+      let d=Math.abs(t.Noeud-natal[target]);if(d>180)d=360-d;
+      let ds=Math.abs(((t.Noeud+180)%360)-natal[target]);if(ds>180)ds=360-ds;
+      if(Math.min(d,ds)<=.8)add('noeuds',1.35,'mixte',`Axe nodal sur ${target}`,target,true);
+    }
+  }
+
+  // Profection : active le domaine annuel, mais reste une confirmation faible.
+  try{
+    const prof=calcProfection(jdNatal,jdJour);
+    const houseDomains={0:['identity'],1:['money'],2:['studies','travel'],3:['home','family'],4:['children','projects'],5:['daily','work'],6:['couple'],7:['money','couple'],8:['travel','studies'],9:['work'],10:['projects'],11:['identity','daily']};
+    const ds=houseDomains[prof.maisonProfectee]||[];
+    for(const domain of ds){
+      if(!prevEtapeAutoriseDomaineV51(domain,date))continue;
+      sig.push({famille:'profection',poids:1.0,pol:'mixte',texte:`Contexte annuel actif pour ${domain}`,target:'profection',domain,core:false});
+    }
+  }catch(e){}
+
+  // Révolution solaire : une seule évaluation globale, répartie sur le domaine demandé si pertinent.
+  try{
+    const rs=scoreRevolutionSolaire(jdNatal,jdJour,posN,AS,MC,domSelection||'general');
+    if(Math.abs(rs)>=1.35){
+      const mapSel={travail:'work',amour:'couple',argent:'money',finances:'money',famille:'family',voyage:'travel',sante:'daily',spirituel:'identity'};
+      const domain=mapSel[domSelection]||'identity';
+      if(prevEtapeAutoriseDomaineV51(domain,date))sig.push({famille:'revolution-solaire',poids:1.25,pol:rs>0?'positive':'difficile',texte:`Contexte annuel ${rs>0?'porteur':'exigeant'} (${rs.toFixed(1)})`,target:'RS',domain,core:false});
+    }
+  }catch(e){}
+
+  // Agrégation : une technique ne compte qu'une fois par domaine (signal le plus fort).
+  const parDom={};
+  for(const x of sig.sort((a,b)=>b.poids-a.poids)){
+    if(!parDom[x.domain])parDom[x.domain]=new Map();
+    const k=x.famille;
+    const old=parDom[x.domain].get(k);
+    if(!old||x.poids>old.poids)parDom[x.domain].set(k,x);
+  }
+  const out=[];
+  for(const [domain,map] of Object.entries(parDom)){
+    const u=[...map.values()];
+    const fam=new Set(u.map(x=>x.famille));
+    const coreFamilies=new Set(u.filter(x=>x.core&&x.poids>=1.8).map(x=>x.famille));
+    const pos=u.filter(x=>x.pol==='positive').reduce((a,b)=>a+b.poids,0);
+    const neg=u.filter(x=>x.pol==='difficile').reduce((a,b)=>a+b.poids,0);
+    const mix=u.filter(x=>x.pol==='mixte').reduce((a,b)=>a+b.poids,0);
+    const posEff=pos+mix*.38, negEff=neg+mix*.38;
+    let pol='mixte',force=Math.max(posEff,negEff),niveau='faible';
+    if(posEff>=negEff+1.0)pol='positive'; else if(negEff>=posEff+1.0)pol='difficile';
+    if(coreFamilies.size>=3&&force>=7.2)niveau='exceptionnel';
+    else if(coreFamilies.size>=2&&force>=5.5)niveau='fort';
+    else if(coreFamilies.size>=1&&force>=4.2&&fam.size>=2)niveau='marque';
+    if(pol==='mixte'&&coreFamilies.size>=2&&(posEff+negEff)>=8.0)niveau=(coreFamilies.size>=3?'exceptionnel':'fort');
+    const label=prevLabelDomaineAgeV51(domain,date);
+    out.push({domain,label,polarite:pol,niveau,force,poidsPos:posEff,poidsNeg:negEff,familles:[...fam],coreFamilies:[...coreFamilies],signatures:u.slice(0,7),scenarios:prevScenarioV51(domain,pol==='positive'?'positive':'difficile',date)});
+  }
+  return out.sort((a,b)=>b.force-a.force);
+}
+
+function regrouperExceptionnelsDomainesV51(resultats){
+  const rows=[];
+  for(const r of resultats){
+    for(const e of (r.exceptionnelsDomaines||[])){
+      if(e.niveau!=='fort'&&e.niveau!=='exceptionnel')continue;
+      rows.push({date:r.date,...e});
+    }
+  }
+  rows.sort((a,b)=>a.date-b.date||b.force-a.force);
+  const groups=[];
+  for(const x of rows){
+    let g=groups.find(q=>q.domain===x.domain&&q.polarite===x.polarite&&(x.date-q.fin)/86400000<=35);
+    if(!g){g={domain:x.domain,label:x.label,polarite:x.polarite,niveau:x.niveau,debut:x.date,fin:x.date,peak:x,force:x.force,familles:new Set(x.familles||[]),scenarios:x.scenarios||[]};groups.push(g);}
+    else{
+      g.fin=x.date; (x.familles||[]).forEach(f=>g.familles.add(f));
+      if(x.force>g.force){g.force=x.force;g.peak=x;g.niveau=x.niveau;g.label=x.label;g.scenarios=x.scenarios||g.scenarios;}
+      if(x.niveau==='exceptionnel')g.niveau='exceptionnel';
+    }
+  }
+  return groups.sort((a,b)=>b.force-a.force).slice(0,10);
 }
 
 function selectionnerMomentsDistincts(resultats, sens='haut', n=3, espacement=1){
@@ -4306,13 +4779,18 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
     declencheurs=[...new Map(declencheurs.map(x=>[(x.id||x.label),x])).values()];
     let convergence=null;
     try { convergence=analyserSignaturesJour(jdJ,Math.abs(minS)>Math.abs(maxS)?minH:maxH,posN,AS,MC,dom,jdNatal); } catch(e) { convergence={niveau:'faible',familles:[],poids:0,signatures:[],impact:impactConcretCible(null,dom,date)}; }
-    let criseFamiliale={niveau:'faible',poids:0,familles:[],signatures:[],texte:'Aucune alerte familiale lourde spécifique'};
-    if(dom==='general'||dom==='tous'||dom==='famille'){
-      try{criseFamiliale=analyserCriseFamiliale(jdJ,posN,AS,MC,jdNatal);}catch(e){}
-    }
-    const critique=criseFamiliale.niveau==='critique'||criseFamiliale.niveau==='forte'||declencheurs.some(d=>d.type==='neg'&&Number(d.force)>=5);
-    const scoreDominant=critique?Math.min(minS,maxS):(Math.abs(minS)>Math.abs(maxS)?minS:maxS);
-    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,declencheurs,convergence,criseFamiliale});
+    // V51 : exploration symétrique de TOUS les domaines de vie, sans priorité familiale.
+    let exceptionnelsDomaines=[];
+    try{exceptionnelsDomaines=analyserExceptionnelsTousDomainesV51(jdJ,posN,AS,MC,jdNatal,dom);}catch(e){exceptionnelsDomaines=[];}
+    const exceptionnelsForts=exceptionnelsDomaines.filter(e=>e.niveau==='fort'||e.niveau==='exceptionnel');
+    const negExceptionnel=exceptionnelsForts.some(e=>e.polarite==='difficile'||e.polarite==='mixte');
+    const posExceptionnel=exceptionnelsForts.some(e=>e.polarite==='positive'||e.polarite==='mixte');
+    const critique=negExceptionnel||declencheurs.some(d=>d.type==='neg'&&Number(d.force)>=5);
+    const positifExceptionnel=posExceptionnel||declencheurs.some(d=>d.type==='pos'&&Number(d.force)>=6);
+    let scoreDominant=(Math.abs(minS)>Math.abs(maxS)?minS:maxS);
+    if(critique&&!positifExceptionnel)scoreDominant=Math.min(minS,maxS);
+    else if(positifExceptionnel&&!critique)scoreDominant=Math.max(minS,maxS);
+    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,positifExceptionnel,declencheurs,convergence,exceptionnelsDomaines});
     if(j%5===0){onProg(j/nb);await new Promise(r=>setTimeout(r,0));}
   }
   return res;
@@ -4626,6 +5104,8 @@ ${natalList}
 
 Données supplémentaires : ${USER.genre==='F'?USER.prenom+' est une femme.':USER.genre==='H'?USER.prenom+' est un homme.':''}
 
+${contexteAnalyseUniversel(new Date(), false)}
+
 Rédige un portrait astrologique en 4 sections (3-5 phrases chacune).
 Format STRICT — utilise exactement cette structure, sans rien d'autre :
 
@@ -4644,10 +5124,12 @@ Format STRICT — utilise exactement cette structure, sans rien d'autre :
 RÈGLES ABSOLUES :
 - Aucun jargon astrologique. Pas de planètes, degrés, signes, maisons, aspects, conjonctions.
 - Pas de titre de document, pas de ligne ---
-- Parle directement à ${USER.prenom} (tutoiement). Ton direct, chaleureux, précis.`;
+- Parle directement à ${USER.prenom} (tutoiement). Ton direct, chaleureux, précis.
+- Le portrait doit rester valable à l'étape de vie actuelle : aucune carrière, sexualité, couple, parentalité, crédit ou responsabilité adulte attribuée à un bébé/enfant ; aucune activité professionnelle supposée chez un senior.
+- Explore la personnalité de façon équilibrée : identité, besoins, rapport aux autres, manière d'agir, sécurité, autonomie, créativité, apprentissages/projets et adaptation au changement selon l'âge. Ne ramène pas automatiquement le portrait à la famille, au couple ou au travail.`;
 
   try {
-    const data = await appelerClaude({feature:'portrait',model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue expérimenté. Tu rédiges des portraits personnalisés sans aucun jargon astrologique. Tu parles uniquement de la personne et de sa vie. Ton chaleureux, direct et précis.',messages:[{role:'user',content:prompt}]});
+    const data = await appelerClaude({feature:'portrait',model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue expérimenté. Tu rédiges des portraits personnalisés sans aucun jargon astrologique. Tu adaptes strictement le contenu à l’âge et à l’étape de vie. Tu explores la personnalité sans privilégier famille, couple ou travail par défaut et tu n’inventes aucun rôle de vie incompatible. Ton chaleureux, direct et précis.',messages:[{role:'user',content:prompt}]});
     document.getElementById('n-rapport').innerHTML=formatRapport(texteClaude(data)||'Erreur');
     afficherTableauPlanetes();
     document.getElementById('n-res-titre').textContent=`Portrait de ${USER.prenom}`;
@@ -4743,9 +5225,22 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   const fmtD=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
   const fmtL=d=>d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const periodeStr=nbJours===1?`le ${fmtD(dateDebut)}`:`du ${fmtD(dateDebut)} au ${fmtD(dateFin)}`;
-  const contexteAge=contraintesAge(dateDebut);
-  const crisesFam=resultats.filter(r=>r.criseFamiliale&&r.criseFamiliale.niveau!=='faible').sort((a,b)=>b.criseFamiliale.poids-a.criseFamiliale.poids);
-  const criseFamTxt=crisesFam.slice(0,4).map(r=>`${fmtL(r.date)} — ${r.criseFamiliale.niveau} — ${r.criseFamiliale.texte} — ${(r.criseFamiliale.signatures||[]).map(x=>x.texte).join(' | ')}`).join('\n');
+  const contexteAge=contexteAnalyseUniversel(dateDebut, !(domP==='general'||domP==='tous'));
+  // V51 : regroupement des tournants exceptionnels dans TOUS les domaines.
+  const groupesExc=regrouperExceptionnelsDomainesV51(resultats);
+  const groupesPertinents=groupesExc.filter(g=>{
+    if(domP==='general'||domP==='tous')return true;
+    const map={amour:['couple'],travail:['work','studies','daily'],argent:['money'],finances:['money'],famille:['family','home','children'],voyage:['travel','studies'],sante:['daily','identity'],spirituel:['identity','projects','travel']};
+    const pref=map[domP]||[];
+    // On garde le domaine demandé, mais un autre domaine réellement exceptionnel n'est pas masqué.
+    return pref.includes(g.domain)||g.niveau==='exceptionnel';
+  }).slice(0,7);
+  const exceptionnelsTxt=groupesPertinents.map(g=>{
+    const periode=(g.debut.toDateString()===g.fin.toDateString())?fmtL(g.debut):`${fmtL(g.debut)} → ${fmtL(g.fin)}`;
+    const sens=g.polarite==='positive'?'FAVORABLE':g.polarite==='difficile'?'DIFFICILE':'CONTRASTÉ';
+    const scenarios=(g.scenarios||[]).join(' / ');
+    return `${periode} — ${g.label} — ${sens} ${g.niveau.toUpperCase()} — force ${g.force.toFixed(1)} — techniques indépendantes : ${[...g.familles].join(', ')} — formes concrètes possibles : ${scenarios}`;
+  }).join('\n');
 
   const topTxt = top3.map(r=>`${fmtL(r.date)} — score ${r.score.toFixed(1)}${nbJours===1?' — meilleure fenêtre autour de '+String(r.heure).padStart(2,'0')+'h00':''}`).join('\n');
   const pireTxt = pires3.map(r=>`${fmtL(r.date)} — score ${r.score.toFixed(1)}`).join('\n');
@@ -4769,8 +5264,8 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     sante:'Parle seulement d’énergie, fatigue, rythme, récupération et hygiène de vie. Aucun diagnostic, aucune maladie annoncée, aucun conseil médical.',
     spirituel:'Parle de priorités, sens, intuition, créativité, besoin de recul et changement de regard, avec des conséquences concrètes dans les décisions.',
     chance:'Parle d’opportunités réelles à saisir, de rencontres utiles, de portes qui s’ouvrent et de timing, sans promettre de résultat.',
-    tous:'Hiérarchise les domaines réellement les plus touchés : travail, couple, famille/foyer, finances, projets, déplacements et direction de vie.',
-    general:'Hiérarchise les domaines réellement les plus touchés : travail, couple, famille/foyer, finances, projets, déplacements et direction de vie.'
+    tous:'Hiérarchise sans biais les domaines réellement les plus touchés : direction personnelle, activité/travail, couple/relations, famille/proches, foyer/logement, finances/patrimoine, enfants/projets personnels, études/orientation, voyages/mobilité, rythme/énergie et projets/réseau.',
+    general:'Hiérarchise sans biais les domaines réellement les plus touchés : direction personnelle, activité/travail, couple/relations, famille/proches, foyer/logement, finances/patrimoine, enfants/projets personnels, études/orientation, voyages/mobilité, rythme/énergie et projets/réseau.'
   };
   let guideDomaine=GUIDE_DOMAINE[domP]||GUIDE_DOMAINE.general;
   const ev=etapeVie(dateDebut);
@@ -4784,8 +5279,8 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
 ${contexteAge}
 Tendance calculée : ${tendance}. Meilleur score horaire : ${(resultats[0]&&Number.isFinite(resultats[0].score)?resultats[0].score.toFixed(1):'0')} ; score de vigilance : ${(resultats[0]&&Number.isFinite(resultats[0].scoreMin)?resultats[0].scoreMin.toFixed(1):'0')}.
 Fenêtre horaire la plus favorable calculée : ${top3[0]?String(top3[0].heure).padStart(2,'0')+'h00':'aucune fenêtre nette'}.
-ALERTE FAMILIALE LOURDE :
-${criseFamTxt||'Aucune alerte familiale lourde spécifique.'}
+TOURNANTS EXCEPTIONNELS TOUS DOMAINES :
+${exceptionnelsTxt||'Aucun tournant exceptionnel suffisamment confirmé dans un domaine de vie.'}
 Convergences techniques internes :
 ${convergenceTxt||'Aucune convergence technique forte : journée plutôt ordinaire.'}
 
@@ -4795,9 +5290,13 @@ ${guideDomaine}
 Réponds en 3 blocs courts :
 1. AUJOURD’HUI — 2 à 4 phrases très concrètes sur le scénario dominant et ce qui est le plus probable.
 2. À SURVEILLER / À SAISIR — 2 ou 3 possibilités concrètes, classées de la plus plausible à la plus secondaire. Si rien de remarquable ne ressort, dis-le clairement.
-3. MOMENT CLÉ — si une alerte lourde domine la journée, présente d'abord la vigilance et ne laisse jamais une heure favorable minimiser un événement grave. Sinon, indique l'heure utile et à quoi l'utiliser.
+3. MOMENT CLÉ — si une alerte exceptionnelle domine la journée, présente-la d'abord. Une ouverture positive exceptionnelle ne doit pas être noyée dans des banalités ; une alerte lourde ne doit pas être minimisée par deux heures favorables. Si les deux coexistent, présente la journée comme un tournant majeur mais contrasté.
 
-RÈGLE DE PRIORITÉ : une convergence lourde familiale, une perte/séparation possible ou plusieurs déclencheurs difficiles priment sur un petit créneau favorable. Tu peux dire 'deuil, perte ou séparation fait partie des scénarios possibles' UNIQUEMENT si l'ALERTE FAMILIALE LOURDE ci-dessus est forte ou critique. Ne dis jamais qu'un décès va survenir.
+RÈGLE DE PRIORITÉ TOUS DOMAINES :
+- Examine tous les domaines réellement signalés : direction de vie, activité/travail, couple/relations, famille, foyer/logement, finances/patrimoine, enfants/projets personnels, études/orientation, voyages/mobilité, rythme/énergie, projets/réseau.
+- Un événement favorable exceptionnel et un événement difficile exceptionnel ont exactement la même priorité.
+- Ne privilégie JAMAIS la famille par défaut. N'évoque un problème familial que si le domaine « Famille / proches » ou « Foyer / logement » ressort réellement dans les données ci-dessus.
+- Si plusieurs domaines sont exceptionnels en même temps, classe-les par force et explique séparément ce qui pourrait se passer dans chacun.
 
 INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, "énergies", "vibrations", "transformation" sans dire de quoi il s’agit, phrases vagues comme "quelque chose se prépare". Ne transforme jamais une possibilité en certitude.`
 
@@ -4805,8 +5304,8 @@ INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, "énergies"
 ${contexteAge}
 Tendance calculée : ${tendance}. Score moyen : ${scoreMoyen.toFixed(1)}.
 
-ALERTES FAMILIALES LOURDES :
-${criseFamTxt||'Aucune alerte familiale lourde spécifique.'}
+TOURNANTS EXCEPTIONNELS — TOUS DOMAINES DE VIE :
+${exceptionnelsTxt||'Aucun tournant exceptionnel suffisamment confirmé sur cette période.'}
 
 DATES FAVORABLES DISTINCTES :
 ${topTxt||'Aucune date nettement favorable.'}
@@ -4833,11 +5332,15 @@ RÈGLES ABSOLUES :
 - Ne prédis jamais une grossesse, un décès, une maladie, un licenciement ou une rupture comme une certitude. Présente seulement des scénarios possibles si les indicateurs fournis les soutiennent clairement.
 - N’invente rien qui ne soit pas appuyé par les données ci-dessus.
 - Si plusieurs techniques convergent, donne plus de poids à cette période qu’à un simple bon/mauvais score journalier.
-- Si une alerte familiale est forte ou critique, elle doit apparaître clairement dans CE QUI RESSORT VRAIMENT, avec des mots concrets comme crise familiale, perte, séparation ou deuil possible, sans jamais annoncer un décès comme une certitude.
+- Explore et hiérarchise TOUS les domaines de vie réellement activés : direction personnelle, activité/travail, couple/relations, famille/proches, foyer/logement, finances/patrimoine, enfants/projets personnels, études/orientation, voyages/mobilité, rythme/énergie, projets/réseau.
+- Le domaine familial n'a AUCUNE priorité particulière. Il ne doit apparaître que s'il ressort réellement parmi les domaines les plus forts.
+- Traite le positif exceptionnel, le difficile exceptionnel et le contrasté avec le MÊME niveau de priorité.
+- Pour une analyse générale, commence par les 2 à 4 domaines les plus fortement confirmés, même si la famille n'en fait pas partie.
+- Si plusieurs domaines sont concernés par le même tournant, sépare clairement leurs conséquences concrètes au lieu de tout ramener au foyer ou au couple.
 - Respecte strictement l'âge et l'étape de vie indiqués : aucune carrière ou couple pour un bébé/enfant, et aucun emploi supposé pour un senior en analyse générale.`;
 
   try {
-    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes et par précision du timing. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le genre uniquement pour la grammaire, jamais pour supposer un destin différent. Tu respectes strictement l\'âge et l\'étape de vie de la personne : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Une alerte lourde confirmée par plusieurs techniques doit primer sur un petit score favorable. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
+    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes, précision du timing ET domaine de vie réellement touché. Quelle que soit la période demandée — date précise, journée, semaine, mois, trimestre ou année — tu appliques la même méthode. Tu explores sans biais la direction personnelle, l’activité/travail, le couple/relations, la famille, le foyer/logement, les finances/patrimoine, les enfants/projets personnels, les études/orientation, les voyages/mobilité, le rythme/énergie et les projets/réseau. Aucun domaine n’est prioritaire par défaut, notamment la famille. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le genre uniquement pour la grammaire. Tu respectes strictement l\'âge et l\'étape de vie : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Un signal exceptionnel confirmé par plusieurs techniques, favorable, difficile ou contrasté, prime sur les scores ordinaires. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
     document.getElementById('p-rapport').innerHTML=formatRapport(texteClaude(data)||'Erreur');
     const pTopListe = document.getElementById('p-top-liste');
     if (pTopListe) afficherTop(top3,'p-top-liste','p-top-titre',nbJours);
@@ -6308,6 +6811,10 @@ function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
 async function lancerFenetre() {
   if (!USER) return;
   if (!intentionF) { affErr('f-err','Choisissez une intention.'); return; }
+  if (!intentionCompatibleAge(intentionF,new Date())) {
+    affErr('f-err',"Cette intention n'est pas adaptée à l'âge réel de ce profil. Choisissez une intention correspondant à son étape de vie.");
+    return;
+  }
 
   document.getElementById('f-err').style.display = 'none';
   document.getElementById('f-btn').disabled = true;
@@ -6388,15 +6895,16 @@ async function lancerFenetre() {
   });
 
   const topResume = top.map((r,i) =>
-    (i+1) + '. ' + fmtDate(r.date) + ' — Score ' + r.score + '/100 (' + niveau(r.score).label + ') — ' + r.tags.join(', ')
+    (i+1) + '. ' + fmtDate(r.date) + ' — âge ' + (ageAuMoment(r.date)===null?'non déterminé':ageAuMoment(r.date)+' ans') + ' — Score ' + r.score + '/100 (' + niveau(r.score).label + ') — ' + r.tags.join(', ')
   ).join('\n');
 
   const genreLabel = USER.genre==='F'?', femme':USER.genre==='H'?', homme':'';
-  const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenetre pour : ' + intent.label + '.\n\nCalcul sur 10 ans — Top 5 fenetres identifiees :\n' + topResume + '\n\nRedige une analyse en 3 paragraphes :\n1. Pourquoi la fenetre n1 est particulierement puissante pour cette intention\n2. Ce que ' + USER.prenom + ' devrait concretement preparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nTon : confiant, direct, chaleureux. Parle a ' + USER.prenom + ' en "tu".';
+  const contexteFenetre = contexteAnalyseUniversel(new Date(), true);
+  const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenêtre pour : ' + intent.label + '.\n\n' + contexteFenetre + '\n\nCalcul sur 10 ans — Top 5 fenêtres identifiées :\n' + topResume + '\n\nRédige une analyse en 3 paragraphes :\n1. Pourquoi la fenêtre n°1 est particulièrement forte pour CETTE intention, sans dériver vers la famille, le couple ou le travail si ce n’est pas le sujet\n2. Ce que ' + USER.prenom + ' devrait concrètement préparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nRÈGLES : respecte strictement l’âge à chacune des dates citées ; n’invente aucun scénario adulte pour un enfant ; pour un senior, ne suppose jamais un emploi salarié. Le positif doit être soutenu par les calculs : ne qualifie pas une fenêtre d’exceptionnelle uniquement pour être encourageant.\n\nTon : confiant, direct, chaleureux. Parle à ' + USER.prenom + ' en "tu".';
 
   try {
     const data = await appelerClaude({ feature:'window', model:'claude-sonnet-4-6', max_tokens:1000,
-        system:'Tu es un astrologue expert en timing cosmique. Tu identifies les fenêtres favorables avec enthousiasme et précision. Tu parles de façon accessible, positive et encourageante. Tu aides les gens à agir au meilleur moment.',
+        system:'Tu es un astrologue expert en timing. Tu restes strictement centré sur l’intention choisie, tu respectes l’âge et l’étape de vie, et tu n’inventes pas d’événement. Aucun domaine — famille, couple ou travail — n’est prioritaire par défaut. Tu identifies les fenêtres réellement favorables avec précision et nuance.',
         messages:[{role:'user',content:prompt}]});
     document.getElementById('f-rapport').innerHTML = formatRapport(texteClaude(data) || '');
   } catch(e) { document.getElementById('f-rapport').innerHTML = '<p>Analyse IA indisponible.</p>'; }
@@ -6586,7 +7094,7 @@ function yLirePartenaireSynastrie() {
   const jd2 = julianDay(u2.y, u2.m, u2.d, u2.h);
   const pos2 = calcPos(jd2);
   const axes2 = calcASMC(jd2, lat2, lon2);
-  return { prenom2, dateRaw2, heure2, ville2, tz2, jd2, pos2, AS2:axes2.AS, MC2:axes2.MC };
+  return { prenom2, dateRaw2, dateISO2, heure2, ville2, tz2, jd2, pos2, AS2:axes2.AS, MC2:axes2.MC };
 }
 
 
@@ -6598,6 +7106,10 @@ async function analyserSynastrie() {
   if (!part) return;
   const mode = yModeRelationV26();
   const cfg = yCfgRelationV26(mode);
+  if(!relationCompatibleAge(mode,USER.dateISO,part.dateISO2,new Date())){
+    affErr('y-err',"Ce type de relation n'est pas adapté à l'âge réel d'au moins un des deux profils. Pour un enfant, utilisez plutôt Famille ou Amitié.");
+    return;
+  }
   window.ASTRO_SYNASTRIE_LAST_MODE = mode;
   window.ASTRO_SYNASTRIE_FORCE_PRO = mode === 'pro';
   if (document.documentElement) document.documentElement.setAttribute('data-synastrie-mode', mode);
@@ -6634,13 +7146,14 @@ async function analyserSynastrie() {
   const titres = titresParMode[mode] || titresParMode.couple;
   const sections = titres.map((t,i)=>`${i+1}. ${t}`).join('\n');
 
-  const prompt = `Compare les thèmes astrologiques de ${USER.prenom} et ${part.prenom2} pour une synastrie de type : ${cfg.label}.\n\n${contexteParMode[mode] || contexteParMode.couple}\n\nThème de ${USER.prenom} :\nAscendant : ${fmt(USER.AS)} · MC : ${fmt(USER.MC)}\n${listeA}\n\nThème de ${part.prenom2} :\nAscendant : ${fmt(part.AS2)} · MC : ${fmt(part.MC2)}\n${listeB}\n\nRédige une analyse en sections :\n${sections}\n\nRÈGLES ABSOLUES :\n- Le vocabulaire doit correspondre au type choisi : ${cfg.label}.\n- Ne parle pas comme un couple amoureux si le type choisi n'est pas couple ou rencontre.\n- Aucun jargon technique lourd : explique concrètement.\n- Parle directement à ${USER.prenom}.\n- Ton honnête, utile, nuancé, concret.\n- 3 à 5 phrases par section.`;
+  const ageA=ageDepuisISO(USER.dateISO,new Date()), ageB=ageDepuisISO(part.dateISO2,new Date());
+  const prompt = `Compare les thèmes astrologiques de ${USER.prenom} et ${part.prenom2} pour une synastrie de type : ${cfg.label}.\n\nÂges actuels : ${USER.prenom} ${ageA===null?'non déterminé':ageA+' ans'} ; ${part.prenom2} ${ageB===null?'non déterminé':ageB+' ans'}. Respecte strictement ces âges : aucun vocabulaire amoureux, sexuel, professionnel ou de responsabilité adulte incompatible avec l'âge.\n\n${contexteParMode[mode] || contexteParMode.couple}\n\nThème de ${USER.prenom} :\nAscendant : ${fmt(USER.AS)} · MC : ${fmt(USER.MC)}\n${listeA}\n\nThème de ${part.prenom2} :\nAscendant : ${fmt(part.AS2)} · MC : ${fmt(part.MC2)}\n${listeB}\n\nRédige une analyse en sections :\n${sections}\n\nRÈGLES ABSOLUES :\n- Le vocabulaire doit correspondre au type choisi : ${cfg.label}.\n- Ne parle pas comme un couple amoureux si le type choisi n'est pas couple ou rencontre.\n- Aucun jargon technique lourd : explique concrètement.\n- Parle directement à ${USER.prenom}.\n- Ton honnête, utile, nuancé, concret.\n- 3 à 5 phrases par section.`;
 
   try {
     const data = await appelerClaude({
       feature: 'synastry',
       model: 'claude-sonnet-4-6', max_tokens: mode === 'pro' ? 2200 : 1800,
-      system: `Tu es un astrologue expérimenté. Tu adaptes strictement la synastrie au type de relation choisi : ${cfg.label}. Tu ne mélanges jamais relation professionnelle, amicale, familiale et couple amoureux.`,
+      system: `Tu es un astrologue expérimenté. Tu adaptes strictement la synastrie au type de relation choisi : ${cfg.label} ET à l’âge réel des deux personnes. Tu ne mélanges jamais relation professionnelle, amicale, familiale et couple amoureux. Tu n’attribues jamais à un enfant une dynamique de couple, de sexualité ou de travail adulte.`,
       messages: [{role:'user', content: prompt}]
     });
     let html = yBadgeModeV26(mode) + formatRapport(texteClaude(data) || 'Erreur');
@@ -7225,6 +7738,10 @@ function yBadgeModeV26(mode) {
 function yActualiserTypeSynastrieV26() {
   const mode = yModeRelationV26();
   const cfg = yCfgRelationV26(mode);
+  if(!relationCompatibleAge(mode,USER.dateISO,part.dateISO2,new Date())){
+    affErr('y-err',"Ce type de relation n'est pas adapté à l'âge réel d'au moins un des deux profils. Pour un enfant, utilisez plutôt Famille ou Amitié.");
+    return;
+  }
   window.ASTRO_SYNASTRIE_LAST_MODE = mode;
   window.ASTRO_SYNASTRIE_FORCE_PRO = mode === 'pro';
   if (document.documentElement) document.documentElement.setAttribute('data-synastrie-mode', mode);
@@ -7743,7 +8260,7 @@ async function analyserPrevisionsSynastrie() {
 
 function evTendance(e) {
   if (e.type === 'positif') return {classe:'favorable', icone:'🟢', label:'Favorable'};
-  if (e.type === 'negatif') return {classe:'difficile', icone:'🔴', label:'Difficile / vigilance'};
+  if (e.type === 'negatif' || e.type === 'critique') return {classe:'difficile', icone:'🔴', label:'Difficile / vigilance'};
   return {classe:'mixte', icone:'🟠', label:'Mixte / transformation'};
 }
 function evIntensite(force) {
@@ -7776,20 +8293,22 @@ async function genererEvenements() {
     {key:'AS',deg:AS,domain:'identity',label:'Identité / mode de vie / direction personnelle'},
     {key:'Soleil',deg:posN.Soleil,domain:'identity',label:'Identité / ambition / place sociale'},
     {key:'Lune',deg:posN.Lune,domain:'family',label:'Famille / foyer / vie émotionnelle'}
-  ];
+  ].filter(c=>prevEtapeAutoriseDomaineV51(c.domain,today));
 
   // Cibles secondaires : elles ne suffisent jamais seules à fabriquer un « grand événement ».
   // Les cuspides H2/H5/H6/H8/H9/H11 sont utilisées seulement comme confirmations de domaine.
   const CIBLES_SECONDAIRES=[
     {key:'Venus',deg:posN.Venus,domain:'couple',label:'Vie affective / couple'},
+    {key:'Mercure',deg:posN.Mercure,domain:'studies',label:'Études / apprentissages / décisions / communication'},
     {key:'Jupiter',deg:posN.Jupiter,domain:'travel',label:'Expansion / études / voyages / opportunités'},
     {key:'H2',deg:(AS+30)%360,domain:'money',label:'Finances / revenus / possessions'},
+    {key:'H3',deg:(AS+60)%360,domain:'studies',label:'Études / apprentissages / déplacements proches'},
     {key:'H5',deg:(AS+120)%360,domain:'children',label:'Enfants / projets personnels / vie sentimentale'},
     {key:'H6',deg:(AS+150)%360,domain:'daily',label:'Travail quotidien / rythme de vie / énergie'},
     {key:'H8',deg:(AS+210)%360,domain:'money',label:'Argent partagé / crédit / patrimoine'},
     {key:'H9',deg:(AS+240)%360,domain:'travel',label:'Études / voyages / étranger / démarches importantes'},
     {key:'H11',deg:(AS+300)%360,domain:'projects',label:'Projets / réseau / cercle social'}
-  ];
+  ].filter(c=>prevEtapeAutoriseDomaineV51(c.domain,today));
 
   const DOMAIN_LABELS={
     work:'Travail / carrière / statut',
@@ -7798,7 +8317,8 @@ async function genererEvenements() {
     home:'Foyer / logement / patrimoine',
     money:'Finances / revenus / patrimoine',
     children:'Enfants / projets personnels / vie affective',
-    travel:'Études / voyages / étranger / démarches',
+    studies:'Études / orientation / apprentissages',
+    travel:'Voyages / mobilité / étranger / démarches',
     identity:'Identité / direction de vie',
     daily:'Travail quotidien / rythme de vie / énergie',
     projects:'Projets / réseau / cercle social'
@@ -7812,7 +8332,8 @@ async function genererEvenements() {
     home:new Set(['home','family','money','identity']),
     money:new Set(['money','work','home']),
     children:new Set(['children','family','couple']),
-    travel:new Set(['travel','identity','work','projects']),
+    studies:new Set(['studies','travel','projects','identity','work']),
+    travel:new Set(['travel','studies','identity','work','projects']),
     daily:new Set(['daily','work','identity']),
     projects:new Set(['projects','work','identity','travel'])
   };
@@ -7966,21 +8487,11 @@ async function genererEvenements() {
   });
 
   function titleFor(e){
-    const d=e.domainKeys||[];
-    if(d.length>2)return 'Un tournant majeur touche plusieurs domaines de votre vie';
+    const d=(e.domainKeys||[]).filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today));
+    if(d.length>2)return 'Un tournant majeur touche plusieurs domaines de la vie';
     const k=d[0]||'identity';
-    return ({
-      work:'Un tournant important se prépare dans votre vie professionnelle',
-      couple:'Une décision ou une évolution majeure se prépare dans votre vie affective',
-      family:'Une période importante touche votre vie familiale',
-      home:'Votre foyer ou votre logement entre dans une période de changement important',
-      money:'Une réorganisation financière ou patrimoniale importante se prépare',
-      children:'Un tournant important touche les enfants, la vie affective ou un projet personnel',
-      travel:'Un changement de cap peut ouvrir une nouvelle étape d’études, de mobilité ou d’étranger',
-      daily:'Votre rythme de vie et vos responsabilités vont devoir être réorganisés',
-      projects:'Un projet ou votre cercle relationnel peut prendre une nouvelle importance',
-      identity:'Votre direction de vie entre dans une période de changement profond'
-    })[k];
+    const label=prevLabelDomaineAgeV51(k,e.date||today);
+    return `Un tournant important touche ${label.toLowerCase()}`;
   }
 
   const SCENARIOS={
@@ -8037,8 +8548,10 @@ async function genererEvenements() {
   };
 
   function scenariosFor(e){
-    const keys=(e.domainKeys&&e.domainKeys.length?e.domainKeys:['identity']);
-    const texts=[];keys.forEach(k=>(SCENARIOS[k]||[]).forEach(s=>{if(!texts.includes(s))texts.push(s);}));
+    const keys=(e.domainKeys&&e.domainKeys.length?e.domainKeys:['identity']).filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today));
+    const pol=e.type==='positif'?'positive':'difficile';
+    const texts=[];
+    keys.forEach(k=>prevScenarioV51(k,pol,e.date||today).forEach(s=>{if(!texts.includes(s))texts.push(s);}));
     const base=Math.max(58,Math.min(88,Math.round(57+(e.force-7.5)*8+Math.min(3,Math.max(0,(e.signatures||1)-1))*4)));
     return texts.slice(0,3).map((texte,i)=>({texte,pct:Math.max(38,base-[0,9,17][i])}));
   }
@@ -8050,7 +8563,7 @@ async function genererEvenements() {
   }else{
     alertes.forEach(e=>{
       const domains=(e.domainKeys&&e.domainKeys.length?e.domainKeys:['identity']);
-      const domainTags=domains.map(k=>`<span class="ev-domain-tag">${DOMAIN_LABELS[k]||k}</span>`).join('');
+      const domainTags=domains.filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today)).map(k=>`<span class="ev-domain-tag">${prevLabelDomaineAgeV51(k,e.date||today)}</span>`).join('');
       const pics=(e.pics||[]).map(fmtDate).join(' · ');
       const scenarios=scenariosFor(e);
       const tendance=evTendance(e),intensite=evIntensite(e.force);
@@ -8074,12 +8587,12 @@ async function genererEvenements() {
     if(globalWrap)globalWrap.style.display='block';
     const resume=alertes.map(e=>{
       const sc=scenariosFor(e).slice(0,2).map(x=>x.texte).join(' OU ');
-      const dom=(e.domainKeys||[]).map(k=>DOMAIN_LABELS[k]||k).join(', ');
+      const dom=(e.domainKeys||[]).filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today)).map(k=>prevLabelDomaineAgeV51(k,e.date||today)).join(', ');
       return `Domaine : ${dom}. Période : ${fmtDate(e.dateDebut)} à ${fmtDate(e.dateFin)}. Scénarios principaux : ${sc}.`;
     }).join('\n');
-    const prompt=`Voici les seuls tournants de vie réellement majeurs retenus pour ${USER.prenom} sur les 24 prochains mois :\n${resume}\n\nRédige uniquement une synthèse de 3 à 4 phrases maximum. Parle de la VIE CONCRÈTE : travail, couple, famille, logement, argent, enfants, mobilité, projets ou changement de direction. Ne mentionne aucune planète, maison, transit, cycle, technique astrologique ou « module ». Ne répète pas toutes les dates : elles sont déjà affichées sur les cartes. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème de santé comme une certitude. Explique seulement quels domaines semblent les plus susceptibles de connaître un changement important et quelle forme générale ce changement pourrait prendre.`;
+    const prompt=`Voici les seuls tournants de vie réellement majeurs retenus pour ${USER.prenom} sur les 24 prochains mois :\n${resume}\n\n${contexteAnalyseUniversel(today,false)}\n\nRédige uniquement une synthèse de 3 à 4 phrases maximum. Commence par les domaines réellement les plus forts, quel qu'ils soient. Ne donne aucune priorité automatique à la famille, au couple ou au travail. Parle de la VIE CONCRÈTE adaptée à l'âge réel. Ne mentionne aucune planète, maison, transit, cycle, technique astrologique ou « module ». Ne répète pas toutes les dates : elles sont déjà affichées sur les cartes. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème de santé comme une certitude. Explique seulement quels domaines semblent les plus susceptibles de connaître un changement important et quelle forme générale ce changement pourrait prendre.`;
     try{
-      const data=await appelerClaude({feature:'events',model:'claude-sonnet-4-6',max_tokens:350,system:'Tu écris une synthèse très courte, concrète, accessible et sans jargon. Tu ne parles jamais de technique astrologique.',messages:[{role:'user',content:prompt}]});
+      const data=await appelerClaude({feature:'events',model:'claude-sonnet-4-6',max_tokens:350,system:'Tu écris une synthèse très courte, concrète, accessible et sans jargon. Tu respectes strictement l’âge et tu hiérarchises tous les domaines sans priorité familiale, sentimentale ou professionnelle par défaut. Tu ne parles jamais de technique astrologique.',messages:[{role:'user',content:prompt}]});
       if(report)report.innerHTML=formatRapport(texteClaude(data)||'');
     }catch(e){if(globalWrap)globalWrap.style.display='none';}
   }
@@ -8108,6 +8621,11 @@ async function poserQuestion() {
   const question = document.getElementById('q-texte').value.trim();
   if (!question) { affErr('q-err','Formule ta question avant de continuer.'); return; }
   if (question.length < 10) { affErr('q-err','Ta question est trop courte — précise-la un peu.'); return; }
+  const etapeQ=etapeVie(new Date());
+  if((etapeQ.code==='bebe'||etapeQ.code==='enfant')&&['amour','travail','argent'].includes(domQ)){
+    affErr('q-err',"Ce domaine n'est pas adapté à l'âge réel de ce profil. Choisissez Général, Famille ou Santé/rythme selon la question.");
+    return;
+  }
 
   document.getElementById('q-err').style.display = 'none';
   document.getElementById('q-btn').disabled = true;
@@ -8160,8 +8678,11 @@ async function poserQuestion() {
 
   const domLabel = DOM_LABELS[domaine] || '';
 
+  const contexteQuestion=contexteAnalyseUniversel(today, !(domaine==='general'||domaine==='tous'));
   const prompt = `${USER.prenom} pose cette question astrologique : "${question}"
 ${domLabel ? `Domaine concerné : ${domLabel}` : ''}
+
+${contexteQuestion}
 
 Données natales de ${USER.prenom} :
 Ascendant : ${fmt(USER.AS)} · MC : ${fmt(USER.MC)}
@@ -8183,13 +8704,16 @@ RÈGLES ABSOLUES :
 - Aucun jargon astrologique (pas de "carré", "trigone", "maison", "aspect")
 - Sois honnête : si la réponse est négative, dis-le clairement mais avec bienveillance
 - Donne toujours une piste d'action concrète
+- Si la question est générale, examine les domaines pertinents pour l'âge sans donner priorité à la famille, au couple ou au travail.
+- Si la question suppose une situation incompatible avec l'âge réel du profil, dis clairement que ce scénario n'est pas applicable et reformule vers ce qui peut réellement concerner cette personne.
+- Ne fabrique jamais une grossesse, un décès, une maladie, un licenciement, une séparation ou un gain financier certain.
 - Longueur : 5-8 phrases par section, pas plus`;
 
   try {
     const data = await appelerClaude({
       feature: 'question',
       model: 'claude-sonnet-4-6', max_tokens: 1200,
-      system: 'Tu es un astrologue expérimenté qui répond aux questions personnelles avec honnêteté et bienveillance. Tu analyses le thème natal et les transits pour donner une réponse précise et utile. Ton direct, chaleureux, sans détour. Tu ne rassures jamais faussement mais tu cherches toujours ce qui est constructif.',
+      system: 'Tu es un astrologue expérimenté qui répond aux questions personnelles avec honnêteté et bienveillance. Tu respectes strictement l’âge et l’étape de vie. Pour une question générale, tu explores les domaines pertinents sans privilégier famille, couple ou travail. Pour une question spécialisée, tu restes centré sur le sujet demandé. Tu n’inventes aucun événement et tu ne rassures jamais faussement. Ton direct, chaleureux, sans détour.',
       messages: [{role: 'user', content: prompt}]
     });
     document.getElementById('q-rapport').innerHTML = formatRapport(texteClaude(data) || 'Erreur');
