@@ -1927,7 +1927,7 @@ a{color:var(--cab-plum2)}
           <div class="dom-btn" onclick="selD('p','amour',this)"><span class="dom-icone">💑</span><span class="dom-label">Amour</span></div>
           <div class="dom-btn" onclick="selD('p','travail',this)"><span class="dom-icone">💼</span><span class="dom-label">Travail</span></div>
           <div class="dom-btn" onclick="selD('p','argent',this)"><span class="dom-icone">💰</span><span class="dom-label">Argent</span></div>
-          <div class="dom-btn" onclick="selD('p','sante',this)"><span class="dom-icone">🏥</span><span class="dom-label">Santé</span></div>
+          <div class="dom-btn" onclick="selD('p','sante',this)"><span class="dom-icone">🌿</span><span class="dom-label">Bien-être / récupération</span></div>
           <div class="dom-btn" onclick="selD('p','famille',this)"><span class="dom-icone">👨‍👩‍👧</span><span class="dom-label">Famille</span></div>
           <div class="dom-btn" onclick="selD('p','voyage',this)"><span class="dom-icone">✈️</span><span class="dom-label">Voyage</span></div>
           <div class="dom-btn" onclick="selD('p','spirituel',this)"><span class="dom-icone">🌙</span><span class="dom-label">Spirituel</span></div>
@@ -1996,7 +1996,7 @@ a{color:var(--cab-plum2)}
           <button class="f-btn" onclick="selIntent('amour',this)"><span class="f-icone">💑</span><span class="f-label">Rencontre</span></button>
           <button class="f-btn" onclick="selIntent('demenager',this)"><span class="f-icone">🏠</span><span class="f-label">Déménager</span></button>
           <button class="f-btn" onclick="selIntent('voyage',this)"><span class="f-icone">✈️</span><span class="f-label">Voyage</span></button>
-          <button class="f-btn" onclick="selIntent('sante',this)"><span class="f-icone">🏥</span><span class="f-label">Soin / Op.</span></button>
+          <button class="f-btn" onclick="selIntent('sante',this)"><span class="f-icone">🌿</span><span class="f-label">Bien-être / récupération</span></button>
           <button class="f-btn" onclick="selIntent('creation',this)"><span class="f-icone">🎨</span><span class="f-label">Création</span></button>
           <button class="f-btn" onclick="selIntent('examen',this)"><span class="f-icone">🎓</span><span class="f-label">Examen</span></button>
           <button class="f-btn" onclick="selIntent('enfant',this)"><span class="f-icone">👶</span><span class="f-label">Conception</span></button>
@@ -2041,7 +2041,7 @@ a{color:var(--cab-plum2)}
             <div class="dom-btn" onclick="selDomQ('amour',this)"><span class="dom-icone">💑</span><span class="dom-label">Amour</span></div>
             <div class="dom-btn" onclick="selDomQ('travail',this)"><span class="dom-icone">💼</span><span class="dom-label">Travail</span></div>
             <div class="dom-btn" onclick="selDomQ('argent',this)"><span class="dom-icone">💰</span><span class="dom-label">Argent</span></div>
-            <div class="dom-btn" onclick="selDomQ('sante',this)"><span class="dom-icone">🏥</span><span class="dom-label">Santé</span></div>
+            <div class="dom-btn" onclick="selDomQ('sante',this)"><span class="dom-icone">🌿</span><span class="dom-label">Bien-être / récupération</span></div>
             <div class="dom-btn" onclick="selDomQ('famille',this)"><span class="dom-icone">👨‍👩‍👧</span><span class="dom-label">Famille</span></div>
             <div class="dom-btn" onclick="selDomQ('general',this)"><span class="dom-icone">✦</span><span class="dom-label">Général</span></div>
           </div>
@@ -3110,8 +3110,8 @@ function initDateAuto(id) {
 let USER = null;
 let domP = null, perP = null;
 
-const DOM_LABELS = {amour:'Amour & Relations',travail:'Travail & Carrière',argent:'Finances & Argent',sante:'Santé & Énergie',famille:'Famille',voyage:'Voyage',spirituel:'Spiritualité',general:'Général',finances:'Finances',chance:'Chance Générale',tous:'Tous domaines'};
-const DOM_ICONES = {amour:'💑',travail:'💼',argent:'💰',sante:'🏥',famille:'👨‍👩‍👧',voyage:'✈️',spirituel:'🌙',general:'✦',finances:'◉',chance:'★',tous:'✦'};
+const DOM_LABELS = {amour:'Amour & Relations',travail:'Travail & Carrière',argent:'Finances & Argent',sante:'Bien-être / récupération',famille:'Famille',voyage:'Voyage',spirituel:'Spiritualité',general:'Général',finances:'Finances',chance:'Chance Générale',tous:'Tous domaines'};
+const DOM_ICONES = {amour:'💑',travail:'💼',argent:'💰',sante:'🌿',famille:'👨‍👩‍👧',voyage:'✈️',spirituel:'🌙',general:'✦',finances:'◉',chance:'★',tous:'✦'};
 
 
 function genreCtx() {
@@ -5438,7 +5438,7 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   if(ev.code==='bebe')guideDomaine='Parle uniquement du foyer, des proches, des personnes qui s’occupent du bébé, de la sécurité affective, des routines, des déplacements familiaux et du rythme/énergie sans diagnostic.';
   else if(ev.code==='enfant')guideDomaine='Parle de famille, école/apprentissages, camarades, activités, foyer, rythme de vie et changements d’organisation. Aucun couple ni emploi.';
   else if(ev.code==='ado'&&domP==='travail')guideDomaine='Traduis ce domaine en études, orientation, stage, examens et projets d’avenir.';
-  else if(ev.code==='senior'&&(domP==='general'||domP==='tous'))guideDomaine='Hiérarchise famille, foyer, santé/énergie sans diagnostic, finances, patrimoine, activités, projets, transmission, déplacements et relations. Ne suppose pas d’emploi.';
+  else if(ev.code==='senior'&&(domP==='general'||domP==='tous'))guideDomaine='Hiérarchise famille, foyer, bien-être, rythme et récupération sans diagnostic, finances, patrimoine, activités, projets, transmission, déplacements et relations. Ne suppose pas d’emploi.';
 
   const prompt = nbJours===1
     ? `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
@@ -5506,7 +5506,7 @@ RÈGLES ABSOLUES :
 - Respecte strictement l'âge et l'étape de vie indiqués : aucune carrière ou couple pour un bébé/enfant, et aucun emploi supposé pour un senior en analyse générale.`;
 
   try {
-    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours,period:per,domain:domP,label:DOM_LABELS[domP]||domP},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes, précision du timing ET domaine de vie réellement touché. Quelle que soit la période demandée — date précise, journée, semaine, mois, trimestre ou année — tu appliques la même méthode. Tu explores sans biais la direction personnelle, l’activité/travail, le couple/relations, la famille, le foyer/logement, les finances/patrimoine, les enfants/projets personnels, les études/orientation, les voyages/mobilité, le rythme/énergie et les projets/réseau. Aucun domaine n’est prioritaire par défaut, notamment la famille. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le sexe/genre pour les pronoms et seulement lorsqu\'il apporte un contexte réellement pertinent à un domaine déjà activé ; il ne modifie jamais les calculs astrologiques et tu ne fabriques aucune différence homme/femme par stéréotype. Tu respectes strictement l\'âge et l\'étape de vie : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Un signal exceptionnel confirmé par plusieurs techniques, favorable, difficile ou contrasté, prime sur les scores ordinaires. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
+    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours,period:per,domain:domP,label:DOM_LABELS[domP]||domP},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes, précision du timing ET domaine de vie réellement touché. Quelle que soit la période demandée — date précise, journée, semaine, mois, trimestre ou année — tu appliques la même méthode. Tu explores sans biais la direction personnelle, l’activité/travail, le couple/relations, la famille, le foyer/logement, les finances/patrimoine, les enfants/projets personnels, les études/orientation, les voyages/mobilité, le rythme/énergie et les projets/réseau. Aucun domaine n’est prioritaire par défaut, notamment la famille. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le sexe/genre pour les pronoms et seulement lorsqu\'il apporte un contexte réellement pertinent à un domaine déjà activé ; il ne modifie jamais les calculs astrologiques et tu ne fabriques aucune différence homme/femme par stéréotype. Tu respectes strictement l\'âge et l\'étape de vie : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Un signal exceptionnel confirmé par plusieurs techniques, favorable, difficile ou contrasté, prime sur les scores ordinaires. Bien-être / récupération : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
     document.getElementById('p-rapport').innerHTML=formatRapport(texteClaude(data)||'Erreur');
     const pTopListe = document.getElementById('p-top-liste');
     if (pTopListe) afficherTop(top3,'p-top-liste','p-top-titre',nbJours);
@@ -5582,7 +5582,7 @@ function afficherDetailJour(r, cellEl, etoiles) {
   const domsEl = document.getElementById('c-jd-domaines');
   if(!domsEl) return;
   domsEl.innerHTML = '';
-  const labelsMap = {amour:'♡ Amour',travail:'◈ Travail',finances:'◉ Finances',sante:'✿ Santé',chance:'★ Chance'};
+  const labelsMap = {amour:'♡ Amour',travail:'◈ Travail',finances:'◉ Finances',sante:'🌿 Bien-être / récupération',chance:'★ Chance'};
   Object.entries(r.scores||{}).sort((a,b)=>b[1]-a[1]).forEach(([d,v]) => {
     const s = v>=5?'★★★★★':v>=3?'★★★★☆':v>=1?'★★★☆☆':v>=-1?'★★☆☆☆':'★☆☆☆☆';
     domsEl.innerHTML += `<div class="jd-dom-item"><span class="jd-dom-nom">${labelsMap[d]}</span><span class="jd-dom-score">${s}</span></div>`;
@@ -6790,8 +6790,8 @@ function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
   if (merRetro && ['investir','examen','voyage','travail'].includes(intention))
     return { score: INTERDIT, pct: 0, tags: ['Mercure retrograde - periode interdite'] };
   if (intention === 'sante') {
-    if (luneSign === 7) return { score: INTERDIT, pct: 0, tags: ['Lune Scorpion - contre-indique chirurgie'] };
-    if (durScore(marT, satT, 5, 1) > 0.6) return { score: INTERDIT, pct: 0, tags: ['Mars carre Saturne - danger physique'] };
+    if (luneSign === 7) return { score: INTERDIT, pct: 0, tags: ['Rythme moins favorable à la récupération'] };
+    if (durScore(marT, satT, 5, 1) > 0.6) return { score: INTERDIT, pct: 0, tags: ['Tension de rythme - récupération à privilégier'] };
   }
   if (['amour','enfant'].includes(intention)) {
     for (const pt of ['AS','Soleil','Venus']) {
@@ -6947,7 +6947,7 @@ function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
     if(jupSign===2||jupSign===8){score+=4;tags.push('Jupiter en ' + SIGNES[jupSign]);}
     if(!merRetro&&harmScore(merT,AS,2,4)>0){score+=3;tags.push('Mercure harmonique AC');}
   } else if (intention === 'sante') {
-    if(luneSign===3){score+=5;tags.push('Lune Cancer - guerison');}
+    if(luneSign===3){score+=5;tags.push('Lune Cancer - récupération');}
     if(luneSign===1){score+=3;tags.push('Lune Taureau - recuperation');}
     if(conj(jupT,AS,3)){score+=6;tags.push('Jupiter conjoint AC - vitalite');}
     const marDur=durScore(marT,AS,3,5)+durScore(marT,natal.Soleil,3,5);
@@ -8727,7 +8727,7 @@ ${resume}
 
 ${contexteAnalyseUniversel(today,false)}
 
-Rédige uniquement une synthèse de 3 à 4 phrases maximum. Respecte strictement la polarité calculée de chaque période : favorable, difficile ou mixte. N'assombris pas une période favorable et n'embellis pas une période difficile. Si une période est mixte, explique clairement qu'elle contient à la fois ouverture et ajustement. Ne donne aucune priorité automatique à la famille, au couple ou au travail. Parle de vie concrète adaptée à l'âge réel. Aucun jargon astrologique. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème de santé comme une certitude.`;
+Rédige uniquement une synthèse de 3 à 4 phrases maximum. Respecte strictement la polarité calculée de chaque période : favorable, difficile ou mixte. N'assombris pas une période favorable et n'embellis pas une période difficile. Si une période est mixte, explique clairement qu'elle contient à la fois ouverture et ajustement. Ne donne aucune priorité automatique à la famille, au couple ou au travail. Parle de vie concrète adaptée à l'âge réel. Aucun jargon astrologique. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème médical comme une certitude.`;
     try{
       const data=await appelerClaude({feature:'events',featureContext:{horizon:'24 mois',label:'Grands événements',engine:'v74-balanced-v51'},model:'claude-sonnet-4-6',max_tokens:350,system:'Tu rédiges une synthèse concrète à partir d’un calcul déjà classé en favorable, difficile ou mixte. Tu respectes ce classement et tu ne modifies jamais la polarité pour dramatiser. Aucun jargon astrologique.',messages:[{role:'user',content:prompt}]});
       if(report) report.innerHTML=formatRapport(texteClaude(data)||'');
@@ -8774,7 +8774,7 @@ async function poserQuestion() {
   if (question.length < 10) { affErr('q-err','Ta question est trop courte — précise-la un peu.'); return; }
   const etapeQ=etapeVie(new Date());
   if((etapeQ.code==='bebe'||etapeQ.code==='enfant')&&['amour','travail','argent'].includes(domQ)){
-    affErr('q-err',"Ce domaine n'est pas adapté à l'âge réel de ce profil. Choisissez Général, Famille ou Santé/rythme selon la question.");
+    affErr('q-err',"Ce domaine n'est pas adapté à l'âge réel de ce profil. Choisissez Général, Famille ou Bien-être / récupération selon la question.");
     return;
   }
 
@@ -9574,7 +9574,7 @@ fr:{
  notification_title:'Rappels de mes fenêtres',notification_enable:'Activer les rappels navigateur',notification_explain:'Les rappels concernent uniquement les fenêtres que vous avez choisi d’enregistrer. Aucun horoscope quotidien imposé.',upcoming:'Fenêtre enregistrée bientôt',
  validation_title:'Validation historique — Admin',validation_sub:'Le moteur calcule d’abord la date passée sans connaître l’événement. Vous pouvez ensuite comparer avec ce qui s’est réellement produit.',validation_run:'Calculer à l’aveugle',what_happened:'Événement réel (à remplir après le calcul)',compare_real:'Comparer après coup',
  premium_title:'Premium international',premium_desc:'Timeline 10 ans, comparateur, fenêtres idéales et à éviter, grands événements, synastrie avancée et analyses futures dans la langue choisie.',premium_timeline:'Timeline 10 ans',premium_compare:'Comparateur de périodes',premium_events:'Grands événements',premium_windows:'Fenêtres idéales',premium_languages:'4 langues',premium_relations:'Synastrie avancée',
- money:'Argent',work:'Emploi / activité',love:'Relations',move:'Déménagement',travel:'Voyage',health:'Soin / rythme',creation:'Création / projet',exam:'Examen / concours',child:'Conception / naissance',invest:'Investissement',general:'Général',
+ money:'Argent',work:'Emploi / activité',love:'Relations',move:'Déménagement',travel:'Voyage',health:'Bien-être / récupération',creation:'Création / projet',exam:'Examen / concours',child:'Conception / naissance',invest:'Investissement',general:'Général',
  positive:'Favorable',difficult:'Exigeant',mixed:'Contrasté',score:'Score',loading:'Analyse en cours…',no_profile:'Chargez d’abord un profil astrologique.',premium_required:'Cette fonction est réservée au Premium.',saved:'Enregistré.',error:'Une erreur est survenue.',language:'Langue',
  privacy_context:'Ces informations restent privées dans votre navigateur et ne sont pas affichées dans l’administration.',
  profile_stage:'Étape de vie',direction:'Direction personnelle',home:'Foyer / logement',family:'Famille / proches',finances:'Finances / patrimoine',studies:'Études / orientation',projects:'Projets / réseau',energy:'Rythme / énergie',marked:'Marqué',strong_signal:'Fort',exceptional_signal:'Exceptionnel',age_incompatible:'Cette intention ne correspond pas à l’âge de ce profil à cette date.'
@@ -9588,7 +9588,7 @@ en:{
  notification_title:'Saved-window reminders',notification_enable:'Enable browser reminders',notification_explain:'Reminders only concern windows you chose to save. No forced daily horoscope.',upcoming:'Saved window coming soon',
  validation_title:'Historical validation — Admin',validation_sub:'The engine calculates the past date first without knowing the event. You can then compare it with what actually happened.',validation_run:'Calculate blind',what_happened:'Actual event (fill in after calculation)',compare_real:'Compare afterwards',
  premium_title:'International Premium',premium_desc:'10-year timeline, date comparison, ideal and avoid windows, major events, advanced synastry and future forecasts in the selected language.',premium_timeline:'10-year timeline',premium_compare:'Date comparison',premium_events:'Major events',premium_windows:'Ideal windows',premium_languages:'4 languages',premium_relations:'Advanced synastry',
- money:'Money',work:'Work / activity',love:'Relationships',move:'Moving home',travel:'Travel',health:'Care / wellbeing',creation:'Creation / project',exam:'Exam / competition',child:'Conception / birth',invest:'Investment',general:'General',
+ money:'Money',work:'Work / activity',love:'Relationships',move:'Moving home',travel:'Travel',health:'Wellbeing / recovery',creation:'Creation / project',exam:'Exam / competition',child:'Conception / birth',invest:'Investment',general:'General',
  positive:'Favourable',difficult:'Demanding',mixed:'Mixed',score:'Score',loading:'Analysing…',no_profile:'Load an astrology profile first.',premium_required:'This feature is Premium only.',saved:'Saved.',error:'Something went wrong.',language:'Language',privacy_context:'This information stays private in your browser and is not shown in the admin area.',profile_stage:'Life stage',direction:'Personal direction',home:'Home / housing',family:'Family / close ones',finances:'Finances / assets',studies:'Studies / orientation',projects:'Projects / network',energy:'Rhythm / energy',marked:'Marked',strong_signal:'Strong',exceptional_signal:'Exceptional',age_incompatible:'This intention does not fit this profile’s age on that date.'
 },
 es:{
@@ -9600,7 +9600,7 @@ es:{
  notification_title:'Recordatorios de mis periodos',notification_enable:'Activar recordatorios del navegador',notification_explain:'Los recordatorios solo se refieren a periodos que has elegido guardar. Sin horóscopo diario impuesto.',upcoming:'Periodo guardado próximamente',
  validation_title:'Validación histórica — Admin',validation_sub:'El motor calcula primero la fecha pasada sin conocer el acontecimiento. Después puedes compararlo con lo que realmente ocurrió.',validation_run:'Calcular a ciegas',what_happened:'Acontecimiento real (rellenar después del cálculo)',compare_real:'Comparar después',
  premium_title:'Premium internacional',premium_desc:'Cronología de 10 años, comparador, periodos ideales y a evitar, grandes acontecimientos, sinastría avanzada y previsiones futuras en el idioma elegido.',premium_timeline:'Cronología 10 años',premium_compare:'Comparador de periodos',premium_events:'Grandes acontecimientos',premium_windows:'Periodos ideales',premium_languages:'4 idiomas',premium_relations:'Sinastría avanzada',
- money:'Dinero',work:'Trabajo / actividad',love:'Relaciones',move:'Mudanza',travel:'Viaje',health:'Salud / ritmo',creation:'Creación / proyecto',exam:'Examen / oposición',child:'Concepción / nacimiento',invest:'Inversión',general:'General',
+ money:'Dinero',work:'Trabajo / actividad',love:'Relaciones',move:'Mudanza',travel:'Viaje',health:'Bienestar / recuperación',creation:'Creación / proyecto',exam:'Examen / oposición',child:'Concepción / nacimiento',invest:'Inversión',general:'General',
  positive:'Favorable',difficult:'Exigente',mixed:'Contraste',score:'Puntuación',loading:'Analizando…',no_profile:'Carga primero un perfil astrológico.',premium_required:'Esta función es solo Premium.',saved:'Guardado.',error:'Se ha producido un error.',language:'Idioma',privacy_context:'Esta información permanece privada en tu navegador y no aparece en la administración.',profile_stage:'Etapa de vida',direction:'Dirección personal',home:'Hogar / vivienda',family:'Familia / allegados',finances:'Finanzas / patrimonio',studies:'Estudios / orientación',projects:'Proyectos / red',energy:'Ritmo / energía',marked:'Marcado',strong_signal:'Fuerte',exceptional_signal:'Excepcional',age_incompatible:'Esta intención no corresponde a la edad de este perfil en esa fecha.'
 },
 ar:{
@@ -9612,7 +9612,7 @@ ar:{
  notification_title:'تذكير بالفترات المحفوظة',notification_enable:'تفعيل تذكيرات المتصفح',notification_explain:'التذكيرات تخص فقط الفترات التي اخترت حفظها. لا توجد توقعات يومية مفروضة.',upcoming:'فترة محفوظة تقترب',
  validation_title:'التحقق التاريخي — الإدارة',validation_sub:'يحسب المحرك التاريخ الماضي أولاً من دون معرفة الحدث، ثم يمكنك مقارنته بما حدث فعلاً.',validation_run:'حساب أعمى',what_happened:'الحدث الحقيقي (يُملأ بعد الحساب)',compare_real:'المقارنة بعد الحساب',
  premium_title:'بريميوم دولي',premium_desc:'خط زمني 10 سنوات، مقارنة التواريخ، الفترات المثالية والأقل ملاءمة، الأحداث الكبرى، توافق متقدم وتوقعات مستقبلية باللغة المختارة.',premium_timeline:'خط زمني 10 سنوات',premium_compare:'مقارنة الفترات',premium_events:'الأحداث الكبرى',premium_windows:'الفترات المثالية',premium_languages:'4 لغات',premium_relations:'توافق متقدم',
- money:'المال',work:'العمل / النشاط',love:'العلاقات',move:'الانتقال للسكن',travel:'السفر',health:'العافية / الإيقاع',creation:'إبداع / مشروع',exam:'اختبار / مسابقة',child:'حمل / ولادة',invest:'استثمار',general:'عام',
+ money:'المال',work:'العمل / النشاط',love:'العلاقات',move:'الانتقال للسكن',travel:'السفر',health:'العافية / التعافي',creation:'إبداع / مشروع',exam:'اختبار / مسابقة',child:'حمل / ولادة',invest:'استثمار',general:'عام',
  positive:'إيجابي',difficult:'متطلب',mixed:'متباين',score:'النتيجة',loading:'جارٍ التحليل…',no_profile:'حمّل ملفاً فلكياً أولاً.',premium_required:'هذه الميزة متاحة لبريميوم فقط.',saved:'تم الحفظ.',error:'حدث خطأ.',language:'اللغة',privacy_context:'تبقى هذه المعلومات خاصة في متصفحك ولا تظهر في لوحة الإدارة.',profile_stage:'مرحلة الحياة',direction:'الاتجاه الشخصي',home:'المنزل / السكن',family:'العائلة / المقربون',finances:'المال / الممتلكات',studies:'الدراسة / التوجيه',projects:'المشاريع / الشبكة',energy:'الإيقاع / الطاقة',marked:'ملحوظ',strong_signal:'قوي',exceptional_signal:'استثنائي',age_incompatible:'هذا الهدف لا يناسب عمر هذا الملف في هذا التاريخ.'
 }};
 function apT(k){return (AP_T[AP_LANG]&&AP_T[AP_LANG][k])||AP_T.fr[k]||k;} window.apT=apT;
@@ -9624,10 +9624,10 @@ function apProfileKey(){if(typeof USER!=='undefined'&&USER)return `${USER.prenom
 // -------- V59: static UI translations --------
 const AP_STATIC={
 'Mon espace':{en:'My space',es:'Mi espacio',ar:'مساحتي'},'Déconnexion':{en:'Log out',es:'Cerrar sesión',ar:'تسجيل الخروج'},'Connexion':{en:'Sign in',es:'Conexión',ar:'تسجيل الدخول'},'Portrait':{en:'Portrait',es:'Retrato',ar:'الخريطة الشخصية'},'Prévisions':{en:'Forecasts',es:'Previsiones',ar:'التوقعات'},'Fenêtre idéale':{en:'Ideal timing',es:'Momento ideal',ar:'الوقت الأنسب'},'Événements':{en:'Events',es:'Eventos',ar:'الأحداث'},'Ma question':{en:'My question',es:'Mi pregunta',ar:'سؤالي'},'Synastrie':{en:'Synastry',es:'Sinastría',ar:'التوافق'},
-'Domaine de vie':{en:'Life area',es:'Área de vida',ar:'مجال الحياة'},'Amour':{en:'Love',es:'Amor',ar:'العاطفة'},'Travail':{en:'Work',es:'Trabajo',ar:'العمل'},'Argent':{en:'Money',es:'Dinero',ar:'المال'},'Santé':{en:'Wellbeing',es:'Bienestar',ar:'العافية'},'Famille':{en:'Family',es:'Familia',ar:'العائلة'},'Voyage':{en:'Travel',es:'Viaje',ar:'السفر'},'Spirituel':{en:'Spiritual',es:'Espiritual',ar:'الروحاني'},'Général':{en:'General',es:'General',ar:'عام'},
+'Domaine de vie':{en:'Life area',es:'Área de vida',ar:'مجال الحياة'},'Amour':{en:'Love',es:'Amor',ar:'العاطفة'},'Travail':{en:'Work',es:'Trabajo',ar:'العمل'},'Argent':{en:'Money',es:'Dinero',ar:'المال'},'Bien-être / récupération':{en:'Wellbeing / recovery',es:'Bienestar / recuperación',ar:'العافية / التعافي'},'Famille':{en:'Family',es:'Familia',ar:'العائلة'},'Voyage':{en:'Travel',es:'Viaje',ar:'السفر'},'Spirituel':{en:'Spiritual',es:'Espiritual',ar:'الروحاني'},'Général':{en:'General',es:'General',ar:'عام'},
 'Période':{en:'Period',es:'Periodo',ar:'الفترة'},"Aujourd'hui":{en:'Today',es:'Hoy',ar:'اليوم'},'Semaine':{en:'Week',es:'Semana',ar:'أسبوع'},'Mois':{en:'Month',es:'Mes',ar:'شهر'},'Trimestre':{en:'Quarter',es:'Trimestre',ar:'ثلاثة أشهر'},'Année':{en:'Year',es:'Año',ar:'سنة'},'Date précise':{en:'Specific date',es:'Fecha concreta',ar:'تاريخ محدد'},'Date souhaitée':{en:'Chosen date',es:'Fecha deseada',ar:'التاريخ المطلوب'},
 'Votre ciel de naissance':{en:'Your birth chart',es:'Tu carta natal',ar:'خريطة الميلاد'},'Positions planétaires natales':{en:'Natal planetary positions',es:'Posiciones planetarias natales',ar:'مواقع الكواكب عند الميلاد'},'Portrait astrologique':{en:'Astrological portrait',es:'Retrato astrológico',ar:'الملف الفلكي'},'Lecture astrologique':{en:'Astrological reading',es:'Lectura astrológica',ar:'القراءة الفلكية'},'Vos prévisions':{en:'Your forecasts',es:'Tus previsiones',ar:'توقعاتك'},
-'Emploi':{en:'Work',es:'Empleo',ar:'العمل'},'Investir':{en:'Invest',es:'Invertir',ar:'استثمار'},'Rencontre':{en:'Meeting / love',es:'Encuentro',ar:'لقاء'},'Déménager':{en:'Move home',es:'Mudanza',ar:'انتقال للسكن'},'Soin / Op.':{en:'Care / procedure',es:'Cuidado / intervención',ar:'عناية / إجراء'},'Création':{en:'Creation',es:'Creación',ar:'إبداع'},'Examen':{en:'Exam',es:'Examen',ar:'اختبار'},'Conception':{en:'Conception',es:'Concepción',ar:'حمل'},
+'Emploi':{en:'Work',es:'Empleo',ar:'العمل'},'Investir':{en:'Invest',es:'Invertir',ar:'استثمار'},'Rencontre':{en:'Meeting / love',es:'Encuentro',ar:'لقاء'},'Déménager':{en:'Move home',es:'Mudanza',ar:'انتقال للسكن'},'Création':{en:'Creation',es:'Creación',ar:'إبداع'},'Examen':{en:'Exam',es:'Examen',ar:'اختبار'},'Conception':{en:'Conception',es:'Concepción',ar:'حمل'},
 'Calcul en cours…':{en:'Calculating…',es:'Calculando…',ar:'جارٍ الحساب…'},'Scan en cours…':{en:'Scanning…',es:'Escaneando…',ar:'جارٍ المسح…'},'Analyse en cours…':{en:'Analysing…',es:'Analizando…',ar:'جارٍ التحليل…'},'← Nouvelle analyse':{en:'← New analysis',es:'← Nuevo análisis',ar:'تحليل جديد ←'},'← Nouvelle recherche':{en:'← New search',es:'← Nueva búsqueda',ar:'بحث جديد ←'},'⬇ Télécharger en PDF':{en:'⬇ Download PDF',es:'⬇ Descargar PDF',ar:'⬇ تنزيل PDF'},
 'Pose ta question':{en:'Ask your question',es:'Haz tu pregunta',ar:'اطرح سؤالك'},'Ta question':{en:'Your question',es:'Tu pregunta',ar:'سؤالك'},'Domaine concerné (optionnel)':{en:'Life area (optional)',es:'Área (opcional)',ar:'المجال (اختياري)'},'Historique de tes questions':{en:'Your question history',es:'Historial de preguntas',ar:'سجل الأسئلة'},'Réponse astrologique':{en:'Astrological answer',es:'Respuesta astrológica',ar:'الإجابة الفلكية'},
 'Les grands tournants de votre vie':{en:'Major turning points in your life',es:'Grandes etapas de tu vida',ar:'التحولات الكبرى في حياتك'},'Ce qui peut réellement changer':{en:'What may genuinely change',es:'Lo que puede cambiar de verdad',ar:'ما قد يتغير فعلاً'},'En bref':{en:'In short',es:'En resumen',ar:'باختصار'},
