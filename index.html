@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v52-coherence-toutes-analyses">
+<meta name="astro-build" content="v53-genre-contexte-sans-stereotype">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -2028,6 +2028,12 @@ a{color:var(--cab-plum2)}
         <input class="champ-input" id="y-date" type="text" placeholder="12/05/1980" maxlength="10" autocomplete="off"/>
         <label class="champ-label">Heure de naissance (HH:MM)</label>
         <input class="champ-input" id="y-heure" type="text" placeholder="14:20" maxlength="5" autocomplete="off"/>
+        <label class="champ-label">Sexe / genre</label>
+        <select class="champ-input" id="y-genre">
+          <option value="N">Non précisé</option>
+          <option value="F">♀ Femme</option>
+          <option value="H">♂ Homme</option>
+        </select>
         <label class="champ-label">Ville de naissance</label>
         <div class="champ-rel">
           <input class="champ-input" id="y-ville" type="text" placeholder="Tapez la ville…" autocomplete="off"/>
@@ -2981,6 +2987,18 @@ function genreCtx() {
   };
 }
 
+function contexteGenrePour(age, genre, prenom){
+  const g=genre||'N';
+  const nom=prenom||'La personne';
+  if(g!=='F'&&g!=='H') return `Sexe/genre non précisé pour ${nom}. N'invente aucune différence liée au sexe ou au genre.`;
+  const label=g==='F'?'femme':'homme';
+  const jeune=age!==null&&age<18;
+  return `Sexe/genre renseigné : ${nom} est ${g==='F'?'une':'un'} ${label}. Cette donnée NE CHANGE PAS les positions, aspects, scores ni dates astrologiques. Utilise-la pour les pronoms et seulement lorsqu'elle est concrètement pertinente pour interpréter un sujet réellement activé (par exemple corps/reproduction ou parentalité à l'âge adulte). ${jeune?'Comme la personne est mineure, interdiction de projeter grossesse, maternité, paternité, sexualité ou rôle parental adulte.':''} N'en déduis jamais automatiquement maternité/paternité, carrière, comportement, couple, rôle social ou destin différent. Deux thèmes astrologiquement identiques peuvent légitimement donner des tendances très proches : ne fabrique jamais une différence uniquement parce que l'un est homme et l'autre femme.`;
+}
+function contexteGenreVie(dateRef){
+  return contexteGenrePour(ageAuMoment(dateRef||new Date()), USER&&USER.genre?USER.genre:'N', USER&&USER.prenom?USER.prenom:'La personne');
+}
+
 function ageAuMoment(dateRef){
   if(!USER || !USER.dateISO) return null;
   const dN=new Date(USER.dateISO+'T12:00:00');
@@ -3026,6 +3044,7 @@ function contexteAnalyseUniversel(dateRef, specialise=false){
     ? 'Cette analyse est spécialisée : reste centré sur le sujet demandé, mais ne déduis jamais automatiquement famille, couple ou travail si les données ne les indiquent pas.'
     : 'Cette analyse est large : explore réellement tous les domaines pertinents avant de hiérarchiser ceux qui ressortent le plus fort.';
   return `${age}
+${contexteGenreVie(dateRef||new Date())}
 RÈGLE GLOBALE DE COHÉRENCE : ${portee}
 Domaines pertinents à examiner pour cet âge : ${domaines}.
 AUCUN domaine n'est prioritaire par défaut. La famille, le couple et le travail ne doivent apparaître que s'ils sont réellement soutenus par les données ou explicitement demandés.
@@ -5340,7 +5359,7 @@ RÈGLES ABSOLUES :
 - Respecte strictement l'âge et l'étape de vie indiqués : aucune carrière ou couple pour un bébé/enfant, et aucun emploi supposé pour un senior en analyse générale.`;
 
   try {
-    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes, précision du timing ET domaine de vie réellement touché. Quelle que soit la période demandée — date précise, journée, semaine, mois, trimestre ou année — tu appliques la même méthode. Tu explores sans biais la direction personnelle, l’activité/travail, le couple/relations, la famille, le foyer/logement, les finances/patrimoine, les enfants/projets personnels, les études/orientation, les voyages/mobilité, le rythme/énergie et les projets/réseau. Aucun domaine n’est prioritaire par défaut, notamment la famille. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le genre uniquement pour la grammaire. Tu respectes strictement l\'âge et l\'étape de vie : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Un signal exceptionnel confirmé par plusieurs techniques, favorable, difficile ou contrasté, prime sur les scores ordinaires. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
+    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes, précision du timing ET domaine de vie réellement touché. Quelle que soit la période demandée — date précise, journée, semaine, mois, trimestre ou année — tu appliques la même méthode. Tu explores sans biais la direction personnelle, l’activité/travail, le couple/relations, la famille, le foyer/logement, les finances/patrimoine, les enfants/projets personnels, les études/orientation, les voyages/mobilité, le rythme/énergie et les projets/réseau. Aucun domaine n’est prioritaire par défaut, notamment la famille. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le sexe/genre pour les pronoms et seulement lorsqu\'il apporte un contexte réellement pertinent à un domaine déjà activé ; il ne modifie jamais les calculs astrologiques et tu ne fabriques aucune différence homme/femme par stéréotype. Tu respectes strictement l\'âge et l\'étape de vie : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Un signal exceptionnel confirmé par plusieurs techniques, favorable, difficile ou contrasté, prime sur les scores ordinaires. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
     document.getElementById('p-rapport').innerHTML=formatRapport(texteClaude(data)||'Erreur');
     const pTopListe = document.getElementById('p-top-liste');
     if (pTopListe) afficherTop(top3,'p-top-liste','p-top-titre',nbJours);
@@ -7077,6 +7096,8 @@ function yLirePartenaireSynastrie() {
   const prenom2  = document.getElementById('y-prenom').value.trim();
   const dateRaw2 = document.getElementById('y-date').value.trim();
   const heureRaw2= document.getElementById('y-heure').value.trim();
+  const genre2El=document.getElementById('y-genre');
+  const genre2=genre2El?genre2El.value:'N';
   const lat2 = parseFloat(document.getElementById('y-lat').value);
   const lon2 = parseFloat(document.getElementById('y-lon').value);
   const tz2  = document.getElementById('y-tz').value;
@@ -7094,7 +7115,7 @@ function yLirePartenaireSynastrie() {
   const jd2 = julianDay(u2.y, u2.m, u2.d, u2.h);
   const pos2 = calcPos(jd2);
   const axes2 = calcASMC(jd2, lat2, lon2);
-  return { prenom2, dateRaw2, dateISO2, heure2, ville2, tz2, jd2, pos2, AS2:axes2.AS, MC2:axes2.MC };
+  return { prenom2, dateRaw2, dateISO2, heure2, ville2, tz2, genre2, jd2, pos2, AS2:axes2.AS, MC2:axes2.MC };
 }
 
 
@@ -7147,13 +7168,15 @@ async function analyserSynastrie() {
   const sections = titres.map((t,i)=>`${i+1}. ${t}`).join('\n');
 
   const ageA=ageDepuisISO(USER.dateISO,new Date()), ageB=ageDepuisISO(part.dateISO2,new Date());
-  const prompt = `Compare les thèmes astrologiques de ${USER.prenom} et ${part.prenom2} pour une synastrie de type : ${cfg.label}.\n\nÂges actuels : ${USER.prenom} ${ageA===null?'non déterminé':ageA+' ans'} ; ${part.prenom2} ${ageB===null?'non déterminé':ageB+' ans'}. Respecte strictement ces âges : aucun vocabulaire amoureux, sexuel, professionnel ou de responsabilité adulte incompatible avec l'âge.\n\n${contexteParMode[mode] || contexteParMode.couple}\n\nThème de ${USER.prenom} :\nAscendant : ${fmt(USER.AS)} · MC : ${fmt(USER.MC)}\n${listeA}\n\nThème de ${part.prenom2} :\nAscendant : ${fmt(part.AS2)} · MC : ${fmt(part.MC2)}\n${listeB}\n\nRédige une analyse en sections :\n${sections}\n\nRÈGLES ABSOLUES :\n- Le vocabulaire doit correspondre au type choisi : ${cfg.label}.\n- Ne parle pas comme un couple amoureux si le type choisi n'est pas couple ou rencontre.\n- Aucun jargon technique lourd : explique concrètement.\n- Parle directement à ${USER.prenom}.\n- Ton honnête, utile, nuancé, concret.\n- 3 à 5 phrases par section.`;
+  const genreSynA=contexteGenrePour(ageA,USER.genre||'N',USER.prenom);
+  const genreSynB=contexteGenrePour(ageB,part.genre2||'N',part.prenom2);
+  const prompt = `Compare les thèmes astrologiques de ${USER.prenom} et ${part.prenom2} pour une synastrie de type : ${cfg.label}.\n\nÂges actuels : ${USER.prenom} ${ageA===null?'non déterminé':ageA+' ans'} ; ${part.prenom2} ${ageB===null?'non déterminé':ageB+' ans'}. Respecte strictement ces âges : aucun vocabulaire amoureux, sexuel, professionnel ou de responsabilité adulte incompatible avec l'âge.\n${genreSynA}\n${genreSynB}\n\n${contexteParMode[mode] || contexteParMode.couple}\n\nThème de ${USER.prenom} :\nAscendant : ${fmt(USER.AS)} · MC : ${fmt(USER.MC)}\n${listeA}\n\nThème de ${part.prenom2} :\nAscendant : ${fmt(part.AS2)} · MC : ${fmt(part.MC2)}\n${listeB}\n\nRédige une analyse en sections :\n${sections}\n\nRÈGLES ABSOLUES :\n- Le vocabulaire doit correspondre au type choisi : ${cfg.label}.\n- Ne parle pas comme un couple amoureux si le type choisi n'est pas couple ou rencontre.\n- Aucun jargon technique lourd : explique concrètement.\n- Parle directement à ${USER.prenom}.\n- Ton honnête, utile, nuancé, concret.\n- 3 à 5 phrases par section.`;
 
   try {
     const data = await appelerClaude({
       feature: 'synastry',
       model: 'claude-sonnet-4-6', max_tokens: mode === 'pro' ? 2200 : 1800,
-      system: `Tu es un astrologue expérimenté. Tu adaptes strictement la synastrie au type de relation choisi : ${cfg.label} ET à l’âge réel des deux personnes. Tu ne mélanges jamais relation professionnelle, amicale, familiale et couple amoureux. Tu n’attribues jamais à un enfant une dynamique de couple, de sexualité ou de travail adulte.`,
+      system: `Tu es un astrologue expérimenté. Tu adaptes strictement la synastrie au type de relation choisi : ${cfg.label} ET à l’âge réel des deux personnes. Tu ne mélanges jamais relation professionnelle, amicale, familiale et couple amoureux. Tu n’attribues jamais à un enfant une dynamique de couple, de sexualité ou de travail adulte. Le sexe/genre sert aux pronoms et uniquement à contextualiser un sujet déjà pertinent ; il ne change pas les calculs astrologiques et ne justifie jamais un stéréotype.`,
       messages: [{role:'user', content: prompt}]
     });
     let html = yBadgeModeV26(mode) + formatRapport(texteClaude(data) || 'Erreur');
@@ -8857,6 +8880,7 @@ function chargerProfilSynastrie() {
   document.getElementById('y-prenom').value = p.prenom || '';
   document.getElementById('y-date').value   = p.date   || '';
   document.getElementById('y-heure').value  = p.heure  || '';
+  const yg=document.getElementById('y-genre'); if(yg) yg.value = p.genre || 'N';
   document.getElementById('y-ville').value  = p.ville  || '';
   document.getElementById('y-lat').value    = p.lat    || '';
   document.getElementById('y-lon').value    = p.lon    || '';
