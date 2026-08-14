@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v74-evenements-timeline-coherents">
+<meta name="astro-build" content="v75-coherence-globale-admin-clair">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -2386,6 +2386,24 @@ function dateIsoLocale(d) {
 
 // Appel sécurisé à Claude via le backend. "feature" permet au serveur de faire respecter
 // les droits réels : gratuit aujourd'hui, Premium pour le futur, crédits pour les questions.
+const AP_COHERENCE_POLICY = `
+RÈGLE CENTRALE ASTRO PAQUITA — COHÉRENCE ENTRE TOUS LES MODULES :
+- Les calculs fournis par le site sont la source de vérité de cette réponse. Tu ne modifies jamais leur polarité, leur domaine principal ni leur niveau de convergence pour rendre le texte plus spectaculaire.
+- Une même période et un même domaine doivent garder le même sens dans Prévisions, Grands événements, Timeline, Fenêtre idéale, Comparateur, Questions et Synastrie. Une différence de niveau est permise parce que les modules n'ont pas le même seuil, mais pas une inversion favorable/difficile sans donnée calculée qui l'explique.
+- Favorable = ouverture/opportunité ; difficile = contrainte/vigilance ; mixte = coexistence d'ouverture et d'ajustement. N'assombris pas le favorable, n'embellis pas le difficile.
+- Les techniques indépendantes se confirment, elles ne se comptent pas plusieurs fois lorsqu'elles décrivent le même phénomène. Les techniques lentes donnent le contexte ; les techniques rapides servent surtout au timing.
+- Aucun domaine de vie n'est prioritaire par défaut. Respecte l'âge, l'étape de vie et la situation réelle connue du profil.
+- N'invente jamais un événement pour remplir une période. Ne transforme jamais un classement astrologique en probabilité statistique.
+- Aucun diagnostic médical et aucune certitude sur décès, grossesse, rupture, licenciement, gain d'argent ou autre événement concret.
+- Réponds dans la langue actuellement choisie sur le site : français, anglais, espagnol ou arabe. En arabe, utilise un arabe naturel et lisible.
+`;
+
+function apSystemCoherent(system, feature){
+  const lang=(typeof AP_LANG!=='undefined'?AP_LANG:(localStorage.getItem('astro-lang')||'fr'));
+  const langRule={fr:'Réponds intégralement en français.',en:'Answer entirely in English.',es:'Responde íntegramente en español.',ar:'أجب بالكامل باللغة العربية.'}[lang]||'Réponds intégralement en français.';
+  return String(system||'')+'\n\n'+AP_COHERENCE_POLICY+'\n'+langRule+'\nModule : '+String(feature||'general')+'.';
+}
+
 async function appelerClaude({ system, messages, max_tokens, model, feature, featureContext }) {
   if (!TOKEN) {
     ouvrirCompte();
@@ -2394,7 +2412,7 @@ async function appelerClaude({ system, messages, max_tokens, model, feature, fea
   const resp = await fetch(BACKEND_URL + '/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
-    body: JSON.stringify({ system, messages, max_tokens, model, feature, featureContext })
+    body: JSON.stringify({ system: apSystemCoherent(system, feature), messages, max_tokens, model, feature, featureContext })
   });
   const data = await resp.json();
   if (!resp.ok) {
@@ -3964,7 +3982,14 @@ const ECLIPSES_OFFICIELLES_2025_2030 = [
   ['2027-02-06','solaire'],['2027-02-20','lunaire'],['2027-07-18','lunaire'],['2027-08-02','solaire'],['2027-08-17','lunaire'],
   ['2028-01-12','lunaire'],['2028-01-26','solaire'],['2028-07-06','lunaire'],['2028-07-22','solaire'],['2028-12-31','lunaire'],
   ['2029-01-14','solaire'],['2029-06-12','solaire'],['2029-06-26','lunaire'],['2029-07-11','solaire'],['2029-12-05','solaire'],['2029-12-20','lunaire'],
-  ['2030-06-01','solaire'],['2030-06-15','lunaire'],['2030-11-25','solaire'],['2030-12-09','lunaire']
+  ['2030-06-01','solaire'],['2030-06-15','lunaire'],['2030-11-25','solaire'],['2030-12-09','lunaire'],
+  // NASA/GSFC 2031-2036 — couverture complète de la Timeline 10 ans au départ de 2026
+  ['2031-05-07','lunaire'],['2031-05-21','solaire'],['2031-06-05','lunaire'],['2031-10-30','lunaire'],['2031-11-14','solaire'],
+  ['2032-04-25','lunaire'],['2032-05-09','solaire'],['2032-10-18','lunaire'],['2032-11-03','solaire'],
+  ['2033-03-30','solaire'],['2033-04-14','lunaire'],['2033-09-23','solaire'],['2033-10-08','lunaire'],
+  ['2034-03-20','solaire'],['2034-04-03','lunaire'],['2034-09-12','solaire'],['2034-09-28','lunaire'],
+  ['2035-02-22','lunaire'],['2035-03-09','solaire'],['2035-08-19','lunaire'],['2035-09-02','solaire'],
+  ['2036-02-11','lunaire'],['2036-02-27','solaire'],['2036-07-23','solaire'],['2036-08-07','lunaire'],['2036-08-21','solaire']
 ];
 
 function calcEclipses(jdAnalyse) {
@@ -5332,7 +5357,7 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   // Les meilleures / moins bonnes dates doivent être réellement distinctes :
   // on évite les séries de 3 jours consécutifs qui racontent exactement la même chose.
   const espacement = nbJours<=7 ? 1 : nbJours<=31 ? 3 : nbJours<=100 ? 7 : 14;
-  const top3=selectionnerMomentsDistincts(resultats.filter(r=>r.score>0),'haut',3,espacement);
+  const top3=selectionnerMomentsDistincts(resultats.map(r=>({...r,score:Number.isFinite(r.scoreDominant)?r.scoreDominant:r.score})).filter(r=>r.score>0),'haut',3,espacement);
   const pires3=selectionnerMomentsDistincts(resultats.map(r=>({...r,score:Number.isFinite(r.scoreMin)?r.scoreMin:r.score,heure:Number.isFinite(r.heureMin)?r.heureMin:r.heure})),'bas',2,espacement);
   const scoreMoyen = resultats.reduce((s,r)=>s+(Number.isFinite(r.scoreDominant)?r.scoreDominant:r.score),0)/Math.max(1,resultats.length);
   const tendance = scoreMoyen > 4 ? 'globalement favorable' : scoreMoyen > 1 ? 'plutôt favorable' : scoreMoyen > -1 ? 'mitigée avec des opportunités' : scoreMoyen > -3 ? 'contrastée' : 'exigeante';
@@ -6617,7 +6642,7 @@ const INTENTIONS = {
   amour:     { label:'Rencontre amoureuse',  icone:'💑', desc:'Vénus, Mars et Lune en harmonie' },
   demenager: { label:'Déménager',            icone:'🏠', desc:'Lune, Jupiter et 4e maison favorisés' },
   voyage:    { label:'Grand voyage',         icone:'✈️', desc:'Jupiter, Mercure direct et Sagittaire actif' },
-  sante:     { label:'Opération / Soin',     icone:'🏥', desc:'Lune hors Scorpion, Mars et Saturne stables' },
+  sante:     { label:'Bien-être / récupération', icone:'🌿', desc:'Périodes de rythme plus soutenant pour le repos, la récupération et les soins déjà décidés avec un professionnel' },
   creation:  { label:'Création / Projet',    icone:'🎨', desc:'Soleil, Vénus et Mercure en soutien' },
   examen:    { label:'Examen / Concours',    icone:'🎓', desc:'Mercure, Jupiter et Soleil en force' },
   enfant:    { label:'Conception / Naissance',icone:'👶', desc:'Vénus, Lune et Jupiter bienveillants' },
@@ -6958,6 +6983,29 @@ function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
   };
 }
 
+
+function apIntentDomainsV75(intent){
+  return ({argent:['money'],travail:['work','studies','daily'],investir:['money','work'],amour:['couple'],demenager:['home'],voyage:['travel'],sante:['daily','identity'],creation:['projects','identity'],examen:['studies'],enfant:['children','family']})[intent]||[];
+}
+function apReconcileIntentScoreV75(jd,intent,baseScore){
+  let score=Number(baseScore)||0, row=null;
+  try{
+    const rows=analyserExceptionnelsTousDomainesV51(jd,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[];
+    const ds=apIntentDomainsV75(intent);
+    row=rows.filter(x=>ds.includes(x.domain)).sort((a,b)=>b.force-a.force)[0]||null;
+    if(row&&(row.niveau==='fort'||row.niveau==='exceptionnel')){
+      const delta=row.niveau==='exceptionnel'?16:10;
+      if(row.polarite==='positive') score+=delta;
+      else if(row.polarite==='difficile') score-=delta;
+      else score-=2;
+    } else if(row&&row.niveau==='marque'){
+      if(row.polarite==='positive') score+=4;
+      else if(row.polarite==='difficile') score-=4;
+    }
+  }catch(e){}
+  return {score:Math.max(0,Math.min(100,score)),v51:row};
+}
+
 async function lancerFenetre() {
   if (!USER) return;
   if (!intentionF) { affErr('f-err','Choisissez une intention.'); return; }
@@ -6983,9 +7031,11 @@ async function lancerFenetre() {
       const jdJ = jdAujourdhui + k;
       try {
         const res = scoreJourFenetre(jdJ, USER.pos, USER.AS, USER.MC, intentionF);
-        if (res.score > 0) {
+        const baseIntentScore=intentionF==='argent'?(res.scoreArgent||res.score):res.score;
+        const coh=apReconcileIntentScoreV75(jdJ,intentionF,baseIntentScore);
+        if (coh.score > 0) {
           const date = jdVersDate(jdJ);
-          resultats.push({ jd: jdJ, date, score: res.score, scoreArgent:res.scoreArgent, raw: res.raw, moneyStrength:res.moneyStrength, moneyFamilies:res.moneyFamilies||[], tags: res.tags });
+          resultats.push({ jd: jdJ, date, score: coh.score, scoreArgent:intentionF==='argent'?coh.score:res.scoreArgent, raw: res.raw, moneyStrength:res.moneyStrength, moneyFamilies:res.moneyFamilies||[], tags: res.tags, v51:coh.v51 });
         }
       } catch(e) {}
     }
@@ -8631,8 +8681,8 @@ async function genererEvenements() {
         <div class="ev-period-line"><strong>Point fort :</strong> ${fmtDate(e.date)}</div>
         <div class="ev-period-line"><strong>Importance :</strong> ${intensite} · ${e.signatures} familles de techniques · ${reliability}</div>
         <div class="ev-concrete-title">Ce qui est le plus susceptible de se produire</div>
-        ${scenarios.map(s=>`<div class="ev-scenario"><div class="ev-proba">≈ ${s.pct}%</div><div class="ev-scenario-text">${s.texte}</div></div>`).join('')}
-        <div class="ev-proba-note">Ces pourcentages sont uniquement un classement astrologique relatif des scénarios. Ils ne constituent pas des probabilités statistiques ni une certitude sur un événement précis.</div>
+        ${scenarios.map((sc,i)=>`<div class="ev-scenario"><div class="ev-proba">${i===0?'Scénario principal':'Autre possibilité'}</div><div class="ev-scenario-text">${sc.texte}</div></div>`).join('')}
+        <div class="ev-proba-note">Ces scénarios sont des possibilités astrologiques relatives, jamais des probabilités statistiques ni des certitudes.</div>
       </div>`;
     }
   }
@@ -8721,7 +8771,19 @@ async function poserQuestion() {
   let meilleurJour = null, meilleureScore = -999;
   for (let j = 0; j < 30; j++) {
     try {
-      const s = scorerJour(jdD+j, USER.pos, USER.AS, USER.MC, domaine, USER.jd);
+      let s = scorerJour(jdD+j, USER.pos, USER.AS, USER.MC, domaine, USER.jd);
+      const mapQ={argent:'argent',finances:'argent',travail:'travail',amour:'amour',voyage:'voyage'};
+      if(mapQ[domaine]){
+        const coh=apReconcileIntentScoreV75(jdD+j,mapQ[domaine],50+Math.max(-30,Math.min(30,s*3)));
+        s=(coh.score-50)/3;
+      }else{
+        try{
+          const rows=analyserExceptionnelsTousDomainesV51(jdD+j,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[];
+          const doms=domaine==='famille'?['family','home','children']:domaine==='sante'?['daily','identity']:[];
+          const rr=rows.filter(x=>doms.includes(x.domain)).sort((a,b)=>b.force-a.force)[0];
+          if(rr&&(rr.niveau==='fort'||rr.niveau==='exceptionnel')) s += rr.polarite==='positive'?4:rr.polarite==='difficile'?-4:0;
+        }catch(e){}
+      }
       if (s > meilleureScore) { meilleureScore = s; meilleurJour = jdVersDate(jdD+j); }
     } catch(e) {}
   }
@@ -9578,7 +9640,7 @@ function apRel(sig){const n=sig&&sig.familles?sig.familles.length:0;const p=sig&
 function apRelHtml(sig){const r=apRel(sig);return `<span class="ap-chip ${r.cls}">${apEsc(apT(r.key))}${r.n?` · ${r.n} ${apEsc(apT('families'))}`:''}</span>`;}
 function apValidIntent(i,date=new Date()){try{return typeof intentionCompatibleAge==='function'?intentionCompatibleAge(i,date):true;}catch(e){return true;}}
 function apCandidateIntents(date=new Date()){return ['argent','travail','amour','demenager','voyage','creation','examen','investir'].filter(i=>apValidIntent(i,date));}
-function apScoreIntent(date,intent){try{const jd=apJDFromDate(date);const r=scoreJourFenetre(jd,USER.pos,USER.AS,USER.MC,intent);const score=intent==='argent'?(r.scoreArgent||r.score):r.score;let sig=null;try{sig=analyserSignaturesJour(jd,12,USER.pos,USER.AS,USER.MC,intent==='argent'?'finances':intent,USER.jd);}catch(e){}return{date:new Date(date),jd,intent,score:Number(score)||0,raw:Number(r.raw)||0,tags:r.tags||[],sig};}catch(e){return null;}}
+function apScoreIntent(date,intent){try{const jd=apJDFromDate(date);const r=scoreJourFenetre(jd,USER.pos,USER.AS,USER.MC,intent);const base=intent==='argent'?(r.scoreArgent||r.score):r.score;const coh=apReconcileIntentScoreV75(jd,intent,base);let sig=null;try{sig=analyserSignaturesJour(jd,12,USER.pos,USER.AS,USER.MC,intent==='argent'?'finances':intent,USER.jd);}catch(e){}return{date:new Date(date),jd,intent,score:Number(coh.score)||0,raw:Number(r.raw)||0,tags:r.tags||[],sig,v51:coh.v51};}catch(e){return null;}}
 function apCluster(list,minDays=45,max=12){const out=[];for(const x of list){if(out.length>=max)break;if(!out.some(y=>Math.abs(y.jd-x.jd)<minDays))out.push(x);}return out;}
 function apDomainDescription(intent,score){const pos=score>=50;const all={
 fr:{argent:pos?['rentrée d’argent non routinière','amélioration financière','accord ou paiement favorable']:['dépense ou tension financière','prudence sur un engagement financier'],travail:pos?['évolution d’activité','reconnaissance ou nouveau projet','opportunité professionnelle']:['réorganisation du travail','responsabilité plus lourde ou changement de rythme'],amour:pos?['rapprochement relationnel','rencontre ou engagement','relation qui se clarifie positivement']:['mise au point relationnelle','distance ou réévaluation du lien'],demenager:pos?['changement de foyer favorable','installation ou projet immobilier']:['retard ou contrainte autour du logement','réorganisation du foyer'],voyage:pos?['voyage ou ouverture vers l’extérieur','mobilité favorable']:['déplacement plus compliqué','projet de voyage à réajuster'],creation:pos?['projet créatif qui prend forme','initiative personnelle porteuse']:['projet à restructurer','créativité freinée temporairement'],examen:pos?['réussite ou progression dans les études','période favorable aux examens']:['effort d’étude plus exigeant','orientation à ajuster'],investir:pos?['fenêtre plus porteuse pour structurer un investissement','décision patrimoniale mieux soutenue']:['prudence sur les engagements','risque de décision précipitée']},
@@ -9640,9 +9702,25 @@ const timeline=document.createElement('div');timeline.className='mod-panneau';ti
 const comp=document.createElement('div');comp.className='mod-panneau';comp.id='mod-compare';comp.innerHTML=`<div class="ap-panel"><h2 data-ap="compare_title"></h2><p class="ap-muted" data-ap="compare_sub"></p><div class="ap-form-row"><div class="ap-field"><label data-ap="intention"></label><select id="ap-compare-intent">${['argent','travail','amour','demenager','voyage','creation','examen','investir'].map(i=>`<option value="${i}">${apEsc(apIntentLabel(i))}</option>`).join('')}</select></div><div></div></div><div class="ap-grid2" style="margin-top:.7rem">${[1,2,3,4].map(i=>`<div class="ap-field"><label>${apT('date')} ${i}</label><input id="ap-cdate-${i}" type="date"></div>`).join('')}</div><div class="ap-dashboard-actions"><button class="ap-btn primary" onclick="apCompareDates()" data-ap="compare_run"></button><button class="ap-btn" onclick="apFindAvoid()" data-ap="avoid_run"></button></div><div id="ap-compare-results" class="ap-compare-results"></div></div>`;sec.appendChild(comp);
 const journal=document.createElement('div');journal.className='mod-panneau';journal.id='mod-journal';journal.innerHTML=apJournalHtml();sec.appendChild(journal);}
 function apJournalHtml(){return `<div class="ap-panel"><h2 data-ap="context_title"></h2><p class="ap-muted" data-ap="context_sub"></p><div class="ap-grid2"><div class="ap-field"><label data-ap="relationship"></label><select id="ap-life-relationship"><option value="">${apT('not_set')}</option><option value="single">${apT('single')}</option><option value="couple">${apT('couple')}</option><option value="complicated">${apT('complicated')}</option></select></div><div class="ap-field"><label data-ap="activity"></label><select id="ap-life-activity"><option value="">${apT('not_set')}</option><option value="student">${apT('student')}</option><option value="employee">${apT('employee')}</option><option value="self_employed">${apT('self_employed')}</option><option value="unemployed">${apT('unemployed')}</option><option value="retired">${apT('retired')}</option><option value="other">${apT('other')}</option></select></div><div class="ap-field"><label data-ap="children"></label><select id="ap-life-children"><option value="">${apT('not_set')}</option><option value="none">${apT('none')}</option><option value="yes">${apT('yes')}</option></select></div><div class="ap-field"><label data-ap="housing"></label><select id="ap-life-housing"><option value="">${apT('not_set')}</option><option value="owner">${apT('owner')}</option><option value="tenant">${apT('tenant')}</option><option value="hosted">${apT('hosted')}</option><option value="other">${apT('other')}</option></select></div></div><div class="ap-dashboard-actions"><button class="ap-btn primary" onclick="apSaveContext()" data-ap="save_context"></button></div><div class="ap-notice" style="margin-top:.65rem" data-ap="privacy_context"></div></div><div class="ap-panel"><h2 data-ap="journal_title"></h2><p class="ap-muted" data-ap="journal_sub"></p><div class="ap-form-row"><div class="ap-field"><label data-ap="date"></label><input id="ap-jdate" type="date"></div><div class="ap-field"><label data-ap="category"></label><select id="ap-jcat"><option value="general">${apT('general')}</option><option value="work">${apT('work')}</option><option value="money">${apT('money')}</option><option value="love">${apT('love')}</option><option value="family">${apT('family')}</option><option value="home">${apT('home')}</option><option value="studies">${apT('studies')}</option></select></div></div><div class="ap-field" style="margin-top:.65rem"><label data-ap="note"></label><textarea id="ap-jtext"></textarea></div><button class="ap-btn gold" onclick="apAddJournal()" data-ap="journal_add"></button><div id="ap-journal-list" class="ap-journal-list"></div></div><div class="ap-panel"><h2 data-ap="saved_windows"></h2><div id="ap-window-list" class="ap-window-list"></div></div><div class="ap-panel"><h3 data-ap="notification_title"></h3><p class="ap-muted" data-ap="notification_explain"></p><button class="ap-btn" onclick="apEnableNotifications()" data-ap="notification_enable"></button></div>`;}
-window.apRunTimeline=async function(){if(!USER){alert(apT('no_profile'));return;}if(!PREMIUM){ouvrirCompte();return;}apTrack('timeline',{horizon:'10 years'});const prog=document.getElementById('ap-timeline-progress'),list=document.getElementById('ap-timeline-list'),yearsEl=document.getElementById('ap-years');prog.textContent=apT('loading');list.innerHTML='';yearsEl.innerHTML='';const start=new Date(),items=[],yearStats={};const total=Math.ceil(3652/14);let idx=0;for(let day=0;day<=3652;day+=14){const d=new Date(start);d.setDate(d.getDate()+day);const sigs=apV51Signals(d,'marque').slice(0,4);for(const x of sigs){items.push(x);const y=d.getFullYear();if(!yearStats[y])yearStats[y]={year:y,sum:0,count:0,max:0,domains:{},strong:0};const ys=yearStats[y],mag=x.strength;ys.sum+=mag;ys.count++;ys.max=Math.max(ys.max,mag);ys.strong+=x.niveau==='exceptionnel'?3:x.niveau==='fort'?2:1;ys.domains[x.domain]=(ys.domains[x.domain]||0)+mag;}idx++;if(idx%12===0){prog.textContent=`${Math.min(99,Math.round(idx/total*100))}%`;await new Promise(r=>setTimeout(r,0));}}const clustered=[];for(const x of items.sort((a,b)=>b.strength-a.strength)){if(clustered.length>=14)break;if(!clustered.some(y=>Math.abs(y.jd-x.jd)<60))clustered.push(x);}const ranked=clustered.sort((a,b)=>a.date-b.date);window.AP_TIMELINE_RESULTS=ranked;list.innerHTML=ranked.length?ranked.map(x=>`<div class="ap-timeline-item"><div class="ap-timeline-date">${apEsc(apFmtDate(x.date,{month:'long',year:'numeric'}))}</div><div class="ap-timeline-title">${apEsc(apEventTitle(x))}</div><div class="ap-timeline-desc">${apEsc(apT(apV51LevelKey(x.niveau)))} · ${apRelHtml(x.sig)}${apV51Hint(x)?`<div class="ap-muted" style="margin-top:.35rem">${apEsc(apV51Hint(x))}</div>`:''}<button class="ap-btn" style="min-height:30px;padding:.25rem .55rem;margin-top:.35rem" onclick="apSaveTimelineWindow('${x.date.toISOString().slice(0,10)}','domain:${x.domain}',${Math.round(x.score)},'${apRel(x.sig).key}')">☆ ${apT('save')}</button></div></div>`).join(''):`<div class="ap-notice">${apT('dashboard_none')}</div>`;const ys=Object.values(yearStats).filter(y=>y.count>0).map(y=>{const dom=Object.entries(y.domains).sort((a,b)=>b[1]-a[1])[0]?.[0]||'identity';const avg=y.sum/Math.max(1,y.count);return{...y,score:Math.min(100,Math.round(35+y.max*7+Math.min(15,y.strong*1.5)+avg*2)),dom};}).sort((a,b)=>b.score-a.score).slice(0,6).sort((a,b)=>a.year-b.year);yearsEl.innerHTML=ys.length?`<h3>${apT('strong_years')}</h3><div class="ap-year-grid">${ys.map(y=>`<div class="ap-year-card"><strong>${y.year}</strong><span>${apEsc(apDomainLabelV51(y.dom))}</span><div class="ap-scorebar"><i style="width:${y.score}%"></i></div></div>`).join('')}</div>`:'';prog.textContent='';try{if(typeof appelerClaude==='function'&&ranked.length){const summary=ranked.slice(0,10).map(x=>`${x.date.toISOString().slice(0,10)} | domain=${x.domain} | polarity=${x.polarite} | level=${x.niveau} | independent_families=${apRel(x.sig).n}`).join('\n');const data=await appelerClaude({feature:'timeline',featureContext:{horizon:'10 years'},model:'claude-sonnet-4-6',max_tokens:1000,system:'You summarise a ten-year astrology timing scan across ALL life domains. No domain is privileged. Do not invent events. Prioritise only independently convergent periods and translate them into concrete possibilities, with uncertainty. Do not present astrology as scientific certainty.',messages:[{role:'user',content:`Profile: ${USER.prenom}. Strongest calculated periods across all life domains:\n${summary}\nGive a concise overview of the 3-5 most important periods. Cover different life areas only when the calculations genuinely support them; do not force family, love, work or money.`}]});const txt=typeof texteClaude==='function'?texteClaude(data):'';if(txt)yearsEl.insertAdjacentHTML('beforeend',`<div class="ap-panel ap-no-auto-translate" style="margin-top:.8rem"><h3>${apT('dashboard_main')}</h3><div class="rapport-texte">${formatRapport(txt)}</div></div>`);}}catch(e){}};
+window.apRunTimeline=async function(){if(!USER){alert(apT('no_profile'));return;}if(!PREMIUM){ouvrirCompte();return;}apTrack('timeline',{horizon:'10 years'});const prog=document.getElementById('ap-timeline-progress'),list=document.getElementById('ap-timeline-list'),yearsEl=document.getElementById('ap-years');prog.textContent=apT('loading');list.innerHTML='';yearsEl.innerHTML='';const start=new Date(),items=[],yearStats={};const timelineEnd=new Date(start);timelineEnd.setDate(timelineEnd.getDate()+3652);prog.innerHTML=`<div style="font-weight:700;margin-bottom:.35rem">Période analysée : ${apEsc(apFmtDate(start))} → ${apEsc(apFmtDate(timelineEnd))}</div>${apT('loading')}`;const total=Math.ceil(3652/14);let idx=0;for(let day=0;day<=3652;day+=14){const d=new Date(start);d.setDate(d.getDate()+day);const sigs=apV51Signals(d,'marque').slice(0,4);for(const x of sigs){items.push(x);const y=d.getFullYear();if(!yearStats[y])yearStats[y]={year:y,sum:0,count:0,max:0,domains:{},strong:0};const ys=yearStats[y],mag=x.strength;ys.sum+=mag;ys.count++;ys.max=Math.max(ys.max,mag);ys.strong+=x.niveau==='exceptionnel'?3:x.niveau==='fort'?2:1;ys.domains[x.domain]=(ys.domains[x.domain]||0)+mag;}idx++;if(idx%12===0){prog.textContent=`${Math.min(99,Math.round(idx/total*100))}%`;await new Promise(r=>setTimeout(r,0));}}const clustered=[];for(const x of items.sort((a,b)=>b.strength-a.strength)){if(clustered.length>=14)break;if(!clustered.some(y=>Math.abs(y.jd-x.jd)<60))clustered.push(x);}const ranked=clustered.sort((a,b)=>a.date-b.date);window.AP_TIMELINE_RESULTS=ranked;list.innerHTML=ranked.length?ranked.map(x=>`<div class="ap-timeline-item"><div class="ap-timeline-date">${apEsc(apFmtDate(x.date,{month:'long',year:'numeric'}))}</div><div class="ap-timeline-title">${apEsc(apEventTitle(x))}</div><div class="ap-timeline-desc">${apEsc(apT(apV51LevelKey(x.niveau)))} · ${apRelHtml(x.sig)}${apV51Hint(x)?`<div class="ap-muted" style="margin-top:.35rem">${apEsc(apV51Hint(x))}</div>`:''}<button class="ap-btn" style="min-height:30px;padding:.25rem .55rem;margin-top:.35rem" onclick="apSaveTimelineWindow('${x.date.toISOString().slice(0,10)}','domain:${x.domain}',${Math.round(x.score)},'${apRel(x.sig).key}')">☆ ${apT('save')}</button></div></div>`).join(''):`<div class="ap-notice">${apT('dashboard_none')}</div>`;const ys=Object.values(yearStats).filter(y=>y.count>0).map(y=>{const dom=Object.entries(y.domains).sort((a,b)=>b[1]-a[1])[0]?.[0]||'identity';const avg=y.sum/Math.max(1,y.count);return{...y,score:Math.min(100,Math.round(35+y.max*7+Math.min(15,y.strong*1.5)+avg*2)),dom};}).sort((a,b)=>b.score-a.score).slice(0,6).sort((a,b)=>a.year-b.year);yearsEl.innerHTML=ys.length?`<h3>${apT('strong_years')}</h3><div class="ap-year-grid">${ys.map(y=>`<div class="ap-year-card"><strong>${y.year}</strong><span>${apEsc(apDomainLabelV51(y.dom))}</span><div class="ap-scorebar"><i style="width:${y.score}%"></i></div></div>`).join('')}</div>`:'';prog.innerHTML=`<div style="font-weight:700">Période analysée : ${apEsc(apFmtDate(start))} → ${apEsc(apFmtDate(timelineEnd))}</div>`;try{if(typeof appelerClaude==='function'&&ranked.length){const summary=ranked.slice(0,10).map(x=>`${x.date.toISOString().slice(0,10)} | domain=${x.domain} | polarity=${x.polarite} | level=${x.niveau} | independent_families=${apRel(x.sig).n}`).join('\n');const data=await appelerClaude({feature:'timeline',featureContext:{horizon:'10 years'},model:'claude-sonnet-4-6',max_tokens:1000,system:'You summarise a ten-year astrology timing scan across ALL life domains. No domain is privileged. Do not invent events. Prioritise only independently convergent periods and translate them into concrete possibilities, with uncertainty. Do not present astrology as scientific certainty.',messages:[{role:'user',content:`Profile: ${USER.prenom}. Strongest calculated periods across all life domains:\n${summary}\nGive a concise overview of the 3-5 most important periods. Cover different life areas only when the calculations genuinely support them; do not force family, love, work or money.`}]});const txt=typeof texteClaude==='function'?texteClaude(data):'';if(txt)yearsEl.insertAdjacentHTML('beforeend',`<div class="ap-panel ap-no-auto-translate" style="margin-top:.8rem"><h3>${apT('dashboard_main')}</h3><div class="rapport-texte">${formatRapport(txt)}</div></div>`);}}catch(e){}};
 
 window.apSaveTimelineWindow=async function(date,intent,score,reliability){apTrack('saved_window',{date,intent});if(!TOKEN){ouvrirCompte();return;}const isDom=String(intent||'').startsWith('domain:');const row={start_date:date,end_date:date,intent,label:isDom?apDomainLabelV51(String(intent).slice(7)):apEventTitle({intent,score}),score,reliability,notify_days:10};try{const r=await fetch(BACKEND_URL+'/api/me/windows',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify(row)});if(!r.ok)throw new Error();alert(apT('saved'));apLoadWindows();}catch(e){alert(apT('error'));}};
+
+
+// -------- V75 diagnostic de cohérence interne --------
+window.apAuditCoherenceV75=function(date=new Date()){
+  if(!USER)return {ok:false,reason:'no_profile'};
+  const jd=apJDFromDate(date), rows=analyserExceptionnelsTousDomainesV51(jd,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[];
+  const intents=apCandidateIntents(date).map(i=>apScoreIntent(date,i)).filter(Boolean);
+  const contradictions=[];
+  for(const x of intents){
+    const ds=apIntentDomainsV75(x.intent), r=rows.filter(q=>ds.includes(q.domain)&&(q.niveau==='fort'||q.niveau==='exceptionnel')).sort((a,b)=>b.force-a.force)[0];
+    if(!r)continue;
+    const positiveWindow=x.score>=55;
+    if(r.polarite==='difficile'&&positiveWindow)contradictions.push({intent:x.intent,windowScore:x.score,domain:r.domain,polarity:r.polarite,level:r.niveau});
+  }
+  return {ok:contradictions.length===0,date:new Date(date).toISOString().slice(0,10),contradictions,rows,intents};
+};
 
 // -------- V63 Compare + avoid --------
 window.apCompareDates=function(){apTrack('compare',{intent:document.getElementById('ap-compare-intent')?.value||''});if(!USER){alert(apT('no_profile'));return;}if(!PREMIUM){ouvrirCompte();return;}const intent=document.getElementById('ap-compare-intent').value;const dates=[1,2,3,4].map(i=>document.getElementById(`ap-cdate-${i}`).value).filter(Boolean),out=document.getElementById('ap-compare-results');if(!dates.length){out.innerHTML=`<div class="ap-notice">${apT('date')} ?</div>`;return;}const ok=[],bad=[];for(const ds of dates){const d=new Date(ds+'T12:00:00');if(!apValidIntent(intent,d)){bad.push(ds);continue;}const x=apScoreIntent(d,intent);if(x)ok.push(x);}ok.sort((a,b)=>b.score-a.score);out.innerHTML=(bad.length?`<div class="ap-notice warn">${apEsc(apT('age_incompatible'))}<br>${bad.map(x=>apEsc(apFmtDate(x))).join(' · ')}</div>`:'')+(ok.length?ok.map((x,i)=>`<div class="ap-compare-card"><div class="ap-compare-rank">#${i+1} · ${apEsc(apFmtDate(x.date))}</div><div class="ap-compare-main"><strong>${apEsc(apEventTitle(x))}</strong><small>${apRelHtml(x.sig)}</small></div><div class="ap-score">${Math.round(x.score)}/100</div></div>`).join(''):`<div class="ap-notice">${apT('dashboard_none')}</div>`);};
