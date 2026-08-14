@@ -1894,7 +1894,7 @@ a{color:var(--cab-plum2)}
         <p style="font-size:0.93rem;color:var(--texte-doux);line-height:1.7;margin-bottom:1rem">Choisissez votre intention. Astro Paquita scanne les 10 prochaines années pour trouver vos fenêtres idéales.</p>
         <div class="f-limite-msg" id="f-limite-msg">🔒 La Fenêtre idéale est réservée aux profils Premium.</div>
         <div class="f-intentions" id="f-intentions">
-          <button class="f-btn" onclick="selIntent('argent',this)"><span class="f-icone">💰</span><span class="f-label">Rentrée d'argent importante</span></button>
+          <button class="f-btn" onclick="selIntent('argent',this)"><span class="f-icone">💰</span><span class="f-label">Argent</span></button>
           <button class="f-btn" onclick="selIntent('travail',this)"><span class="f-icone">💼</span><span class="f-label">Emploi</span></button>
           <button class="f-btn" onclick="selIntent('investir',this)"><span class="f-icone">📈</span><span class="f-label">Investir</span></button>
           <button class="f-btn" onclick="selIntent('amour',this)"><span class="f-icone">💑</span><span class="f-label">Rencontre</span></button>
@@ -6514,7 +6514,7 @@ let PREMIUM = false; // mis à jour par chargerStatutCompte() depuis le backend,
 let domaineGratuitFenetre = null; // le domaine choisi par un profil gratuit (verrouillé ensuite)
 
 const INTENTIONS = {
-  argent:    { label:'Rentrée d\'argent importante', icone:'💰', desc:'Recherche uniquement les périodes où plusieurs techniques convergent vers une amélioration financière réellement significative' },
+  argent:    { label:'Argent',                icone:'💰', desc:'Périodes favorables à un apport d’argent hors revenus habituels ou à une amélioration financière nette' },
   travail:   { label:'Trouver un emploi',    icone:'💼', desc:'Jupiter sur le MC, Soleil et Mercure favorables' },
   investir:  { label:'Investir / Signer',    icone:'📈', desc:'Jupiter, Mercure direct et Saturne stable' },
   amour:     { label:'Rencontre amoureuse',  icone:'💑', desc:'Vénus, Mars et Lune en harmonie' },
@@ -6778,42 +6778,10 @@ function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
   if (profBonus > 0) tags.push('Profection H' + (maison+1) + ' active');
 
   // COUCHE 9 : Bonus specifique par intention
-  // Pour l'argent, on cherche une RENTRÉE SIGNIFICATIVE au sens large, pas les jeux de hasard.
-  // Une simple journée agréable financièrement ne suffit pas : il faut une convergence de techniques indépendantes.
-  let argentFamilles = new Set();
   if (intention === 'argent') {
     const partFN=calcPartFortune(AS,posN.Soleil,posN.Lune);
-    let transitArgentFort=false;
-    if(conj(jupT,partFN,3)){score+=7;tags.push('Jupiter sur Part Fortune');transitArgentFort=true;}
-    const jVen=harmScore(jupT,posN.Venus,3,6);
-    if(jVen>2.5){score+=Math.min(5,jVen);tags.push('Jupiter favorable à Vénus');transitArgentFort=true;}
-    const jJup=harmScore(jupT,posN.Jupiter,3,5);
-    if(jJup>2.2){score+=Math.min(4,jJup);tags.push('Jupiter favorable à Jupiter natal');transitArgentFort=true;}
-    const jMc=harmScore(jupT,MC,3,6);
-    if(jMc>2.5){score+=Math.min(5,jMc);tags.push('Jupiter favorable au MC');transitArgentFort=true;}
-    const vJ=harmScore(venT,posN.Jupiter,2,5);
-    if(vJ>2&&luneSolDiff<180){score+=3;tags.push('Vénus favorable à Jupiter');transitArgentFort=true;}
-    if(!merRetro){
-      const mJ=harmScore(merT,posN.Jupiter,2,4);
-      const mMc=harmScore(merT,MC,2,4);
-      if(mJ>2||mMc>2){score+=3;tags.push('Mercure favorable aux affaires');transitArgentFort=true;}
-    }
-    if(transitArgentFort) argentFamilles.add('transits');
-
-    // Confirmation par progression secondaire
-    const lpJ=harmScore(luneProg,posN.Jupiter,4,5);
-    const lpV=harmScore(luneProg,posN.Venus,4,4);
-    const lpMc=harmScore(luneProg,MC,4,5);
-    if(lpJ>2.2||lpV>2||lpMc>2.2){argentFamilles.add('progressions');tags.push('Progression favorable finances');}
-
-    // Confirmation par révolution solaire
-    if(rsJupMC||rsJupAS||(posRS&&harmScore(posRS.Jupiter,MC,4,5)>2.2)){
-      argentFamilles.add('revolution-solaire');tags.push('Révolution solaire porteuse');
-    }
-
-    // La profection et les nœuds ne suffisent jamais seuls, mais peuvent confirmer.
-    if(profBonus>=2){argentFamilles.add('profection');tags.push('Profection confirmante');}
-    if(conj(noeudT,posN.Jupiter,3)||conj(noeudT,MC,3)){argentFamilles.add('noeuds');tags.push('Nœuds confirmants');}
+    if(conj(jupT,partFN,3)){score+=8;tags.push('Jupiter sur Part Fortune');}
+    if(harmScore(venT,posN.Jupiter,2,5)>0&&luneSolDiff<180) score+=4;
   } else if (intention === 'travail') {
     if(conj(jupT,MC,4)){score+=6;tags.push('Jupiter conjoint MC');}
     if(conj(solT,MC,2)){score+=4;tags.push('Soleil conjoint MC');}
@@ -6855,11 +6823,8 @@ function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
   // NORMALISATION sur 100
   const scoreMin = -8; const scoreMax = 75;
   const scorePct = Math.round(Math.max(0, Math.min(100, ((score - scoreMin) / (scoreMax - scoreMin)) * 100)));
-  // Une "rentrée d'argent importante" n'est retenue que si le score est élevé ET
-  // si au moins deux familles de techniques indépendantes se confirment.
-  const significatifArgent = intention !== 'argent' || (scorePct >= 70 && argentFamilles.size >= 2);
 
-  return { score: scorePct, raw: score, tags: [...new Set(tags)].slice(0, 6), significatifArgent, argentFamilles:[...argentFamilles] };
+  return { score: scorePct, raw: score, tags: [...new Set(tags)].slice(0, 6) };
 }
 
 async function lancerFenetre() {
@@ -6887,9 +6852,9 @@ async function lancerFenetre() {
       const jdJ = jdAujourdhui + k;
       try {
         const res = scoreJourFenetre(jdJ, USER.pos, USER.AS, USER.MC, intentionF);
-        if (res.score > 0 && (intentionF !== 'argent' || res.significatifArgent)) {
+        if (res.score > 0) {
           const date = jdVersDate(jdJ);
-          resultats.push({ jd: jdJ, date, score: res.score, raw: res.raw, tags: res.tags, argentFamilles:res.argentFamilles||[] });
+          resultats.push({ jd: jdJ, date, score: res.score, raw: res.raw, tags: res.tags });
         }
       } catch(e) {}
     }
@@ -6899,12 +6864,21 @@ async function lancerFenetre() {
     await new Promise(r => setTimeout(r, 0));
   }
 
-  pb.style.width = '92%'; pl.textContent = 'Sélection des fenêtres exceptionnelles…';
+  pb.style.width = '92%'; pl.textContent = intentionF==='argent' ? 'Sélection des meilleures périodes financières…' : 'Sélection des fenêtres les plus favorables…';
   await new Promise(r => setTimeout(r, 0));
 
   const triés = [...resultats].sort((a,b) => b.score - a.score);
   const top = [];
-  for (const r of triés) {
+  // Pour « Argent », on cherche des périodes réellement marquées sans exiger un événement rarissime.
+  // Un score trop faible ou un seul petit signal ne suffit pas, mais on n'impose pas non plus le seuil « exceptionnel ».
+  const estSignalArgentSpecifique = r => {
+    const tags = (r.tags||[]).join(' | ');
+    return /Part Fortune|Part For|Venus -> Jupiter|Jup -> Venus|Jupiter sur Part Fortune|Profection H2|Profection H5|Profection H8|Profection H11|RS Jupiter|Noeud N -> Jup/i.test(tags);
+  };
+  const candidats = intentionF==='argent'
+    ? triés.filter(r => r.score >= 52 && (r.tags||[]).length >= 2 && estSignalArgentSpecifique(r))
+    : triés;
+  for (const r of candidats) {
     if (top.length >= 5) break;
     if (!top.some(t => Math.abs(t.jd - r.jd) < 45)) top.push(r);
   }
@@ -6913,6 +6887,13 @@ async function lancerFenetre() {
   await new Promise(r => setTimeout(r, 0));
 
   const niveau = s => {
+    if (intentionF==='argent') {
+      if (s >= 85) return { label:'Très forte', couleur:'#f5e6c0' };
+      if (s >= 70) return { label:'Forte', couleur:'#c9a84c' };
+      if (s >= 55) return { label:'Favorable', couleur:'#8ac96a' };
+      if (s >= 45) return { label:'À surveiller', couleur:'#6a9ac9' };
+      return { label:'Peu marquée', couleur:'#8080a0' };
+    }
     if (s >= 91) return { label:'Rarissime', couleur:'#f5e6c0' };
     if (s >= 76) return { label:'Exceptionnel', couleur:'#c9a84c' };
     if (s >= 61) return { label:'Très favorable', couleur:'#8ac96a' };
@@ -6926,9 +6907,8 @@ async function lancerFenetre() {
 
   const container = document.getElementById('f-fenetres');
   container.innerHTML = '';
-
-  if (intentionF === 'argent' && top.length === 0) {
-    container.innerHTML = '<div class="fenetre-card"><div class="fenetre-rang">Aucune fenêtre majeure détectée</div><div class="fenetre-periode">Sur les 10 prochaines années, le moteur ne trouve pas de période assez forte et assez confirmée pour parler honnêtement d’une rentrée d’argent importante. Il préfère ne rien annoncer plutôt que transformer une simple amélioration financière en événement exceptionnel.</div></div>';
+  if (top.length===0 && intentionF==='argent') {
+    container.innerHTML = '<div class="fenetre-card"><div class="fenetre-rang">Argent</div><div class="fenetre-date">Aucune période financière suffisamment marquée</div><div class="fenetre-periode">Le scan ne trouve pas, sur la période étudiée, une convergence assez nette pour mettre en avant un apport d’argent hors revenus habituels ou une amélioration financière nette. Cela ne signifie pas qu’il n’y aura aucun mouvement financier favorable.</div></div>';
   }
 
   top.forEach((r, i) => {
@@ -6958,14 +6938,13 @@ async function lancerFenetre() {
 
   const genreLabel = USER.genre==='F'?', femme':USER.genre==='H'?', homme':'';
   const contexteFenetre = contexteAnalyseUniversel(new Date(), true);
-  const regleArgent = intentionF==='argent'
-    ? '\n\nRÈGLE FINANCIÈRE SPÉCIALE : « rentrée d’argent importante » signifie une amélioration matérielle réellement significative : prime ou rémunération exceptionnelle, hausse de revenus, paiement important attendu, vente, contrat rémunérateur, remboursement conséquent, opération financière favorable ou autre encaissement notable. Ne réduis jamais cette intention au loto, casino ou jeux de hasard. Ne promets aucun gain. Si les signatures ne permettent pas d’identifier la provenance, dis seulement qu’une fenêtre financière forte existe sans inventer la source. Une petite économie, un cadeau banal ou une journée simplement favorable aux dépenses ne compte pas comme rentrée d’argent importante.'
-    : '';
-  const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenêtre pour : ' + intent.label + '.\n\n' + contexteFenetre + '\n\nCalcul sur 10 ans — fenêtres réellement retenues :\n' + (topResume||'Aucune fenêtre assez forte pour être qualifiée de significative.') + regleArgent + '\n\nRédige une analyse en 3 paragraphes :\n1. Pourquoi la fenêtre n°1 est particulièrement forte pour CETTE intention, sans dériver vers la famille, le couple ou le travail si ce n’est pas le sujet\n2. Ce que ' + USER.prenom + ' devrait concrètement préparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nRÈGLES : respecte strictement l’âge à chacune des dates citées ; n’invente aucun scénario adulte pour un enfant ; pour un senior, ne suppose jamais un emploi salarié. Le positif doit être soutenu par les calculs : ne qualifie pas une fenêtre d’exceptionnelle uniquement pour être encourageant. Si aucune fenêtre significative n’est retenue, dis-le clairement au lieu d’en fabriquer une.\n\nTon : confiant, direct, chaleureux. Parle à ' + USER.prenom + ' en "tu".';
+  const consigneArgent = intentionF==='argent'
+    ? '\n\nRÈGLE SPÉCIALE ARGENT : cherche des périodes astrologiquement favorables à un apport d’argent HORS revenus habituels ou à une amélioration financière nette. EXCLUS ABSOLUMENT le simple versement mensuel normal d’un salaire, d’une pension/retraite, d’une allocation habituelle ou de tout revenu récurrent attendu. Une hausse durable de rémunération peut être mentionnée seulement si elle représente un vrai changement, jamais comme simple jour de paie. Les scénarios possibles peuvent être : prime ou bonus, rappel ou régularisation, remboursement, indemnité, paiement attendu, vente, règlement d’une prestation ou mission ponctuelle, aide ou versement exceptionnel, opération patrimoniale favorable, ou autre somme non routinière. N’invente jamais la provenance si les calculs ne permettent pas de la distinguer. Ne parle pas de loto, casino ou jeux de hasard sauf si la personne le demande explicitement. Ne transforme pas une petite économie ou un avantage banal en apport d’argent. ' : '';
+  const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenêtre pour : ' + intent.label + '.\n\n' + contexteFenetre + '\n\nCalcul sur 10 ans — meilleures fenêtres identifiées :\n' + (topResume||'Aucune fenêtre suffisamment marquée') + consigneArgent + '\n\nRédige une analyse en 3 paragraphes :\n1. Pourquoi la fenêtre n°1 est particulièrement forte pour CETTE intention, sans dériver vers la famille, le couple ou le travail si ce n’est pas le sujet\n2. Ce que ' + USER.prenom + ' devrait concrètement préparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nRÈGLES : respecte strictement l’âge à chacune des dates citées ; n’invente aucun scénario adulte pour un enfant ; pour un senior, ne suppose jamais un emploi salarié. Le positif doit être soutenu par les calculs : ne qualifie pas une fenêtre d’exceptionnelle uniquement pour être encourageant.\n\nTon : confiant, direct, chaleureux. Parle à ' + USER.prenom + ' en "tu".';
 
   try {
     const data = await appelerClaude({ feature:'window', model:'claude-sonnet-4-6', max_tokens:1000,
-        system:'Tu es un astrologue expert en timing. Tu restes strictement centré sur l’intention choisie, tu respectes l’âge et l’étape de vie, et tu n’inventes pas d’événement. Aucun domaine — famille, couple ou travail — n’est prioritaire par défaut. Tu identifies les fenêtres réellement favorables avec précision et nuance. Pour l\'argent, tu distingues une véritable rentrée financière importante d\'une simple journée agréable ou d\'un jeu de hasard.',
+        system:'Tu es un astrologue expert en timing. Tu restes strictement centré sur l’intention choisie, tu respectes l’âge et l’étape de vie, et tu n’inventes pas d’événement. Aucun domaine — famille, couple ou travail — n’est prioritaire par défaut. Tu identifies les fenêtres réellement favorables avec précision et nuance.',
         messages:[{role:'user',content:prompt}]});
     document.getElementById('f-rapport').innerHTML = formatRapport(texteClaude(data) || '');
   } catch(e) { document.getElementById('f-rapport').innerHTML = '<p>Analyse IA indisponible.</p>'; }
@@ -6977,7 +6956,9 @@ async function lancerFenetre() {
   const niv0 = niveau(scoreMax5);
   document.getElementById('f-res-icone').textContent = intent.icone;
   document.getElementById('f-res-titre').textContent = intent.label + ' — ' + USER.prenom;
-  document.getElementById('f-res-sous').textContent = 'Meilleure fenetre : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 10 ans';
+  document.getElementById('f-res-sous').textContent = intentionF==='argent'
+    ? (top.length ? 'Période Argent la plus marquée : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 10 ans' : 'Aucune période financière suffisamment marquée · Scan 10 ans')
+    : 'Meilleure fenetre : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 10 ans';
   document.getElementById('f-form').style.display = 'none';
   document.getElementById('f-res').style.display = 'block';
   document.getElementById('f-btn').disabled = false;
