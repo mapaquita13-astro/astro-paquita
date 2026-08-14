@@ -207,6 +207,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/me', auth, (req, res) => {
   const user = db.getUserById(req.user.id) || req.user;
+  res.set('Cache-Control', 'no-store');
   res.json(reponseCompte(user));
 });
 

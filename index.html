@@ -2313,8 +2313,16 @@ async function enregistrerVisiteUneFoisParSession() {
   } catch (e) {}
 }
 
+function compteAdminActif() {
+  return !!(USER_CONNECTE && (
+    USER_CONNECTE.role === 'admin' ||
+    USER_CONNECTE.is_admin === true ||
+    USER_CONNECTE.questions_unlimited === true
+  ));
+}
+
 function majCreditsQuestionsUI() {
-  const estAdmin = !!(USER_CONNECTE && (USER_CONNECTE.role === 'admin' || USER_CONNECTE.questions_unlimited));
+  const estAdmin = compteAdminActif();
   const n = USER_CONNECTE ? Number(USER_CONNECTE.question_credits || 0) : 0;
   const compte = document.getElementById('compte-questions');
   const qbox = document.getElementById('q-credit-box');
@@ -2345,8 +2353,9 @@ async function chargerStatutCompte() {
     return;
   }
   try {
-    const resp = await fetch(BACKEND_URL + '/api/me', {
-      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    const resp = await fetch(BACKEND_URL + '/api/me?ts=' + Date.now(), {
+      headers: { 'Authorization': 'Bearer ' + TOKEN },
+      cache: 'no-store'
     });
     if (!resp.ok) {
       definirToken(null);
@@ -2371,6 +2380,15 @@ async function chargerStatutCompte() {
     majBoutonCompte();
   }
 }
+
+// Si le rôle du compte est modifié dans admin.html, le site principal se
+// resynchronise automatiquement dès que l'on revient sur l'onglet.
+window.addEventListener('focus', () => {
+  if (TOKEN) chargerStatutCompte();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && TOKEN) chargerStatutCompte();
+});
 
 function majBoutonCompte() {
   const btn = document.getElementById('btn-compte');
@@ -2630,7 +2648,7 @@ function majMobileAccueil() {
   const prenom = (USER && USER.prenom) || (USER_CONNECTE && USER_CONNECTE.prenom) || '';
   titre.textContent = prenom ? `Bonjour ${prenom} ✦` : 'Votre espace astrologique';
   badge.textContent = PREMIUM ? 'PREMIUM' : 'GRATUIT';
-  const estAdmin = !!(USER_CONNECTE && (USER_CONNECTE.role === 'admin' || USER_CONNECTE.questions_unlimited));
+  const estAdmin = compteAdminActif();
   const credits = USER_CONNECTE ? Number(USER_CONNECTE.question_credits || 0) : null;
   txt.textContent = credits === null
     ? 'Votre portrait, votre journée et vos grandes périodes au même endroit.'
@@ -8738,7 +8756,14 @@ function selDomQ(val, el) {
 async function poserQuestion() {
   if (!USER) return;
   if (!TOKEN) { ouvrirCompte(); return; }
-  const adminQuestionsIllimitees = !!(USER_CONNECTE && (USER_CONNECTE.role === 'admin' || USER_CONNECTE.questions_unlimited));
+  // Le rôle peut avoir été changé depuis la page Administration pendant que ce
+  // navigateur gardait encore l'ancien profil en mémoire. On resynchronise le
+  // compte avec le backend AVANT d'appliquer un blocage de crédits.
+  let adminQuestionsIllimitees = compteAdminActif();
+  if (USER_CONNECTE && !adminQuestionsIllimitees && Number(USER_CONNECTE.question_credits || 0) <= 0) {
+    await chargerStatutCompte();
+    adminQuestionsIllimitees = compteAdminActif();
+  }
   if (USER_CONNECTE && !adminQuestionsIllimitees && Number(USER_CONNECTE.question_credits || 0) <= 0) {
     affErr('q-err','Ta question offerte a déjà été utilisée. Achète un pack de 5 questions pour continuer.');
     majCreditsQuestionsUI();

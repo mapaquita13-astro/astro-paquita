@@ -163,7 +163,22 @@ async function activerMonAdmin(){
     await chargerAdministration();
   }catch(e){alert('Impossible de contacter le backend. Vérifie que le nouveau server.js est déployé.')}
 }
-async function chargerAdministration(){await verifierProfilAdmin();await Promise.all([chargerMaintenance(),listerUtilisateurs(),listerCodes(),chargerAnalytics()])}
+async function synchroniserCompteAdminAvecCle(){
+  // Si cette page possède déjà une ADMIN_KEY valide et qu'un compte Astro
+  // Paquita est connecté dans le même navigateur, ce compte est reconnu comme
+  // Administrateur. Cela évite d'avoir accès au panneau Admin tout en restant
+  // traité comme un utilisateur gratuit dans « Ma question ».
+  if(!token()||!adminKey())return false;
+  try{
+    const me=await fetch(apiUrl()+'/api/me?ts='+Date.now(),{headers:{Authorization:'Bearer '+token()},cache:'no-store'});
+    const u=await me.json().catch(()=>({}));
+    if(!me.ok||!u.email)return false;
+    if(u.role==='admin')return true;
+    const r=await fetch(apiUrl()+'/api/admin/promote-by-email',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey()},body:JSON.stringify({email:u.email})});
+    return r.ok;
+  }catch(e){return false}
+}
+async function chargerAdministration(){await synchroniserCompteAdminAvecCle();await verifierProfilAdmin();await Promise.all([chargerMaintenance(),listerUtilisateurs(),listerCodes(),chargerAnalytics()])}
 window.addEventListener('load',()=>{document.getElementById('cfg-url').value=apiUrl();document.getElementById('cfg-key').value=adminKey();verifierBackendV68();chargerAdministration()});
 async function chargerMaintenance(){const e=document.getElementById('maintenance-state');try{const r=await fetch(apiUrl()+'/api/admin/maintenance?ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const m=await r.json();if(!r.ok)throw new Error(m.erreur||'Erreur');e.textContent=m.enabled?'🔴 SITE EN MAINTENANCE':'🟢 SITE OUVERT';e.className='maintenance-state '+(m.enabled?'no':'ok');if(m.message)document.getElementById('maintenance-message').value=m.message}catch(err){e.textContent='⚠ Accès admin requis'}}
 async function changerMaintenance(enabled){if(enabled&&!confirm('Mettre le site en maintenance pour tous les visiteurs ?'))return;const message=document.getElementById('maintenance-message').value.trim();const r=await fetch(apiUrl()+'/api/admin/maintenance',{method:'PATCH',headers:headersAdmin(true),body:JSON.stringify({enabled,message})});const d=await r.json().catch(()=>({}));if(!r.ok){alert(d.erreur||('Accès refusé (HTTP '+r.status+'). Vérifie ton profil Admin ou la ADMIN_KEY.'));return}await chargerMaintenance();alert(enabled?'Le site est en maintenance.':'Le site est rouvert.')}
