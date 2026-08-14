@@ -554,6 +554,14 @@ app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
       return res.status(resp.status).json({ erreur: data.error?.message || 'Erreur API.' });
     }
 
+    // Journal de consultation : module + contexte technique minimal uniquement.
+    // Aucun prompt, texte de question ou contenu de réponse IA n'est enregistré.
+    try {
+      db.recordActivity(req.user.id, feature, featureContext || {});
+    } catch (e) {
+      console.error('Journal activité non enregistré :', e.message);
+    }
+
     if (creditQuestionReserve) {
       const userApres = db.getUserById(req.user.id);
       data.astro_meta = {
@@ -580,7 +588,7 @@ app.get('/api/admin/bootstrap-status', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({
     ok: true,
-    backend_version: 'v47-admin-recovery',
+    backend_version: 'v58-activity-history',
     bootstrap_available: adminCount === 0,
     admin_count: adminCount,
   });
@@ -654,7 +662,19 @@ app.patch('/api/admin/promo/:id/desactiver', adminAuth, (req, res) => {
 });
 
 app.get('/api/admin/users', adminAuth, (req, res) => {
+  res.set('Cache-Control', 'no-store');
   res.json(db.getAllUsers());
+});
+
+app.get('/api/admin/users/:id/activity', adminAuth, (req, res) => {
+  const user = db.getUserById(req.params.id);
+  if (!user) return res.status(404).json({ erreur: 'Compte introuvable.' });
+  const limit = Math.max(1, Math.min(300, Number(req.query.limit) || 100));
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    user: { id: user.id, prenom: user.prenom || null, email: user.email || null },
+    activities: db.getUserActivity(user.id, limit),
+  });
 });
 
 app.patch('/api/admin/users/:id/role', adminAuth, (req, res) => {
@@ -685,7 +705,7 @@ app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
 });
 
 // ============================================================
-app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-13-v47-admin-recovery' }));
+app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-14-v58-activity-history' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));

@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v53-genre-contexte-sans-stereotype">
+<meta name="astro-build" content="v58-historique-activite-admin">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -5148,7 +5148,7 @@ RÈGLES ABSOLUES :
 - Explore la personnalité de façon équilibrée : identité, besoins, rapport aux autres, manière d'agir, sécurité, autonomie, créativité, apprentissages/projets et adaptation au changement selon l'âge. Ne ramène pas automatiquement le portrait à la famille, au couple ou au travail.`;
 
   try {
-    const data = await appelerClaude({feature:'portrait',model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue expérimenté. Tu rédiges des portraits personnalisés sans aucun jargon astrologique. Tu adaptes strictement le contenu à l’âge et à l’étape de vie. Tu explores la personnalité sans privilégier famille, couple ou travail par défaut et tu n’inventes aucun rôle de vie incompatible. Ton chaleureux, direct et précis.',messages:[{role:'user',content:prompt}]});
+    const data = await appelerClaude({feature:'portrait',featureContext:{label:'Portrait natal'},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue expérimenté. Tu rédiges des portraits personnalisés sans aucun jargon astrologique. Tu adaptes strictement le contenu à l’âge et à l’étape de vie. Tu explores la personnalité sans privilégier famille, couple ou travail par défaut et tu n’inventes aucun rôle de vie incompatible. Ton chaleureux, direct et précis.',messages:[{role:'user',content:prompt}]});
     document.getElementById('n-rapport').innerHTML=formatRapport(texteClaude(data)||'Erreur');
     afficherTableauPlanetes();
     document.getElementById('n-res-titre').textContent=`Portrait de ${USER.prenom}`;
@@ -5359,7 +5359,7 @@ RÈGLES ABSOLUES :
 - Respecte strictement l'âge et l'étape de vie indiqués : aucune carrière ou couple pour un bébé/enfant, et aucun emploi supposé pour un senior en analyse générale.`;
 
   try {
-    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes, précision du timing ET domaine de vie réellement touché. Quelle que soit la période demandée — date précise, journée, semaine, mois, trimestre ou année — tu appliques la même méthode. Tu explores sans biais la direction personnelle, l’activité/travail, le couple/relations, la famille, le foyer/logement, les finances/patrimoine, les enfants/projets personnels, les études/orientation, les voyages/mobilité, le rythme/énergie et les projets/réseau. Aucun domaine n’est prioritaire par défaut, notamment la famille. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le sexe/genre pour les pronoms et seulement lorsqu\'il apporte un contexte réellement pertinent à un domaine déjà activé ; il ne modifie jamais les calculs astrologiques et tu ne fabriques aucune différence homme/femme par stéréotype. Tu respectes strictement l\'âge et l\'étape de vie : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Un signal exceptionnel confirmé par plusieurs techniques, favorable, difficile ou contrasté, prime sur les scores ordinaires. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
+    const data=await appelerClaude({feature:(per==='aujourdhui'?'forecast_today':'forecast_future'),featureContext:{date:dateIsoLocale(dateDebut),days:nbJours,period:per,domain:domP,label:DOM_LABELS[domP]||domP},model:'claude-sonnet-4-6',max_tokens:2000,system:'Tu es un astrologue de prévision expérimenté. Tu hiérarchises les informations par convergence de techniques indépendantes, précision du timing ET domaine de vie réellement touché. Quelle que soit la période demandée — date précise, journée, semaine, mois, trimestre ou année — tu appliques la même méthode. Tu explores sans biais la direction personnelle, l’activité/travail, le couple/relations, la famille, le foyer/logement, les finances/patrimoine, les enfants/projets personnels, les études/orientation, les voyages/mobilité, le rythme/énergie et les projets/réseau. Aucun domaine n’est prioritaire par défaut, notamment la famille. Tu traduis les calculs en situations de vie concrètes, accessibles et nuancées. Aucun jargon astrologique dans la réponse finale. Tu n\'inventes pas d\'événement pour remplir une période ordinaire. Tu utilises le sexe/genre pour les pronoms et seulement lorsqu\'il apporte un contexte réellement pertinent à un domaine déjà activé ; il ne modifie jamais les calculs astrologiques et tu ne fabriques aucune différence homme/femme par stéréotype. Tu respectes strictement l\'âge et l\'étape de vie : aucun scénario adulte pour un enfant et aucune carrière supposée pour un senior. Un signal exceptionnel confirmé par plusieurs techniques, favorable, difficile ou contrasté, prime sur les scores ordinaires. Santé : aucune prédiction médicale ni diagnostic.',messages:[{role:'user',content:prompt}]});
     document.getElementById('p-rapport').innerHTML=formatRapport(texteClaude(data)||'Erreur');
     const pTopListe = document.getElementById('p-top-liste');
     if (pTopListe) afficherTop(top3,'p-top-liste','p-top-titre',nbJours);
@@ -7007,7 +7007,7 @@ async function lancerFenetre() {
   const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenêtre pour : ' + intent.label + '.\n\n' + contexteFenetre + '\n\nCalcul sur 10 ans — meilleures fenêtres identifiées :\n' + (topResume||'Aucune fenêtre suffisamment marquée') + consigneArgent + '\n\nRédige une analyse en 3 paragraphes :\n1. Pourquoi la fenêtre n°1 est particulièrement forte pour CETTE intention, sans dériver vers la famille, le couple ou le travail si ce n’est pas le sujet\n2. Ce que ' + USER.prenom + ' devrait concrètement préparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nRÈGLES : respecte strictement l’âge à chacune des dates citées ; n’invente aucun scénario adulte pour un enfant ; pour un senior, ne suppose jamais un emploi salarié. Le positif doit être soutenu par les calculs : ne qualifie pas une fenêtre d’exceptionnelle uniquement pour être encourageant.\n\nTon : confiant, direct, chaleureux. Parle à ' + USER.prenom + ' en "tu".';
 
   try {
-    const data = await appelerClaude({ feature:'window', model:'claude-sonnet-4-6', max_tokens:1000,
+    const data = await appelerClaude({ feature:'window', featureContext:{intent:intentionF,label:intent.label,horizon:'10 ans'}, model:'claude-sonnet-4-6', max_tokens:1000,
         system:'Tu es un astrologue expert en timing. Tu restes strictement centré sur l’intention choisie, tu respectes l’âge et l’étape de vie, et tu n’inventes pas d’événement. Aucun domaine — famille, couple ou travail — n’est prioritaire par défaut. Tu identifies les fenêtres réellement favorables avec précision et nuance.',
         messages:[{role:'user',content:prompt}]});
     document.getElementById('f-rapport').innerHTML = formatRapport(texteClaude(data) || '');
@@ -7262,6 +7262,7 @@ async function analyserSynastrie() {
   try {
     const data = await appelerClaude({
       feature: 'synastry',
+      featureContext: { relation: mode, label: cfg.label },
       model: 'claude-sonnet-4-6', max_tokens: mode === 'pro' ? 2200 : 1800,
       system: `Tu es un astrologue expérimenté. Tu adaptes strictement la synastrie au type de relation choisi : ${cfg.label} ET à l’âge réel des deux personnes. Tu ne mélanges jamais relation professionnelle, amicale, familiale et couple amoureux. Tu n’attribues jamais à un enfant une dynamique de couple, de sexualité ou de travail adulte. Le sexe/genre sert aux pronoms et uniquement à contextualiser un sujet déjà pertinent ; il ne change pas les calculs astrologiques et ne justifie jamais un stéréotype.`,
       messages: [{role:'user', content: prompt}]
@@ -8702,7 +8703,7 @@ async function genererEvenements() {
     }).join('\n');
     const prompt=`Voici les seuls tournants de vie réellement majeurs retenus pour ${USER.prenom} sur les 24 prochains mois :\n${resume}\n\n${contexteAnalyseUniversel(today,false)}\n\nRédige uniquement une synthèse de 3 à 4 phrases maximum. Commence par les domaines réellement les plus forts, quel qu'ils soient. Ne donne aucune priorité automatique à la famille, au couple ou au travail. Parle de la VIE CONCRÈTE adaptée à l'âge réel. Ne mentionne aucune planète, maison, transit, cycle, technique astrologique ou « module ». Ne répète pas toutes les dates : elles sont déjà affichées sur les cartes. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème de santé comme une certitude. Explique seulement quels domaines semblent les plus susceptibles de connaître un changement important et quelle forme générale ce changement pourrait prendre.`;
     try{
-      const data=await appelerClaude({feature:'events',model:'claude-sonnet-4-6',max_tokens:350,system:'Tu écris une synthèse très courte, concrète, accessible et sans jargon. Tu respectes strictement l’âge et tu hiérarchises tous les domaines sans priorité familiale, sentimentale ou professionnelle par défaut. Tu ne parles jamais de technique astrologique.',messages:[{role:'user',content:prompt}]});
+      const data=await appelerClaude({feature:'events',featureContext:{horizon:'24 mois',label:'Grands événements'},model:'claude-sonnet-4-6',max_tokens:350,system:'Tu écris une synthèse très courte, concrète, accessible et sans jargon. Tu respectes strictement l’âge et tu hiérarchises tous les domaines sans priorité familiale, sentimentale ou professionnelle par défaut. Tu ne parles jamais de technique astrologique.',messages:[{role:'user',content:prompt}]});
       if(report)report.innerHTML=formatRapport(texteClaude(data)||'');
     }catch(e){if(globalWrap)globalWrap.style.display='none';}
   }
@@ -8822,6 +8823,7 @@ RÈGLES ABSOLUES :
   try {
     const data = await appelerClaude({
       feature: 'question',
+      featureContext: { domain: domaine, label: domLabel || 'Général' },
       model: 'claude-sonnet-4-6', max_tokens: 1200,
       system: 'Tu es un astrologue expérimenté qui répond aux questions personnelles avec honnêteté et bienveillance. Tu respectes strictement l’âge et l’étape de vie. Pour une question générale, tu explores les domaines pertinents sans privilégier famille, couple ou travail. Pour une question spécialisée, tu restes centré sur le sujet demandé. Tu n’inventes aucun événement et tu ne rassures jamais faussement. Ton direct, chaleureux, sans détour.',
       messages: [{role: 'user', content: prompt}]

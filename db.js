@@ -10,6 +10,7 @@ const SCHEMA_VIDE = {
   promoCodes: [],
   promoUtilisations: [],
   questionPurchases: [],
+  activityLogs: [],
   settings: {
     maintenance: {
       enabled: false,
@@ -22,6 +23,7 @@ const SCHEMA_VIDE = {
     promoCodes: 0,
     promoUtilisations: 0,
     questionPurchases: 0,
+    activityLogs: 0,
   },
 };
 
@@ -35,7 +37,7 @@ function normaliserData(data) {
     return { data: cloneSchemaVide(), modifie: true };
   }
 
-  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases']) {
+  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs']) {
     if (!Array.isArray(data[cle])) {
       data[cle] = [];
       modifie = true;
@@ -73,7 +75,7 @@ function normaliserData(data) {
     modifie = true;
   }
 
-  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases']) {
+  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs']) {
     if (!Number.isFinite(Number(data.compteurs[cle]))) {
       const maxId = data[cle].reduce((m, x) => Math.max(m, Number(x && x.id) || 0), 0);
       data.compteurs[cle] = maxId;
@@ -90,6 +92,8 @@ function normaliserData(data) {
       visit_count: 0,
       last_visit_at: null,
       last_activity_at: null,
+      consultation_count: 0,
+      last_consultation_at: null,
       question_credits: 1, // 1 question offerte, y compris pour les comptes déjà existants.
       questions_used: 0,
       question_packs_bought: 0,
@@ -170,6 +174,8 @@ function insertUser({ email, password_hash, prenom }) {
     visit_count: 0,
     last_visit_at: null,
     last_activity_at: null,
+    consultation_count: 0,
+    last_consultation_at: null,
     question_credits: 1,
     questions_used: 0,
     question_packs_bought: 0,
@@ -213,6 +219,8 @@ function deleteUser(id) {
   const index = data.users.findIndex((u) => memeId(u.id, id));
   if (index === -1) return false;
   data.users.splice(index, 1);
+  // Les journaux d'activité sont liés au compte : ils sont supprimés avec lui.
+  data.activityLogs = (data.activityLogs || []).filter((a) => !memeId(a.user_id, id));
   sauvegarder(data);
   return true;
 }
@@ -258,6 +266,78 @@ function touchActivity(id, delaiSecondes = 60) {
     sauvegarder(data);
   }
   return user;
+}
+
+
+// ============================================================
+// HISTORIQUE DES CONSULTATIONS (sans contenu privé)
+// ============================================================
+const MAX_ACTIVITY_PAR_UTILISATEUR = 300;
+
+function nettoyerTexteActivite(v, max = 90) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function contexteActiviteSecurise(feature, contexte) {
+  const c = contexte && typeof contexte === 'object' && !Array.isArray(contexte) ? contexte : {};
+  // Liste blanche stricte : on ne stocke jamais le texte d'une question, un prompt ou une réponse IA.
+  const autorisees = ['period', 'date', 'days', 'domain', 'intent', 'relation', 'horizon', 'label'];
+  const out = {};
+  for (const cle of autorisees) {
+    if (!(cle in c)) continue;
+    if (cle === 'days') {
+      const n = Number(c[cle]);
+      if (Number.isFinite(n)) out[cle] = Math.max(0, Math.min(3650, Math.round(n)));
+    } else {
+      const val = nettoyerTexteActivite(c[cle]);
+      if (val) out[cle] = val;
+    }
+  }
+  return out;
+}
+
+function recordActivity(id, feature, contexte) {
+  const data = charger();
+  const user = data.users.find((u) => memeId(u.id, id));
+  if (!user) return null;
+
+  const featureNet = nettoyerTexteActivite(feature, 40) || 'unknown';
+  const maintenant = new Date().toISOString();
+  const entree = {
+    id: nouvelId(data, 'activityLogs'),
+    user_id: user.id,
+    feature: featureNet,
+    context: contexteActiviteSecurise(featureNet, contexte),
+    created_at: maintenant,
+  };
+  data.activityLogs.push(entree);
+  user.consultation_count = (Number(user.consultation_count) || 0) + 1;
+  user.last_consultation_at = maintenant;
+  user.last_activity_at = maintenant;
+
+  // Évite que le fichier JSON grossisse indéfiniment : 300 consultations récentes par compte.
+  const idsUtilisateur = data.activityLogs
+    .filter((a) => memeId(a.user_id, user.id))
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+    .map((a) => a.id);
+  if (idsUtilisateur.length > MAX_ACTIVITY_PAR_UTILISATEUR) {
+    const garder = new Set(idsUtilisateur.slice(0, MAX_ACTIVITY_PAR_UTILISATEUR).map(String));
+    data.activityLogs = data.activityLogs.filter((a) => !memeId(a.user_id, user.id) || garder.has(String(a.id)));
+  }
+
+  sauvegarder(data);
+  return entree;
+}
+
+function getUserActivity(userId, limit = 100) {
+  const data = charger();
+  const n = Math.max(1, Math.min(300, Number(limit) || 100));
+  return (data.activityLogs || [])
+    .filter((a) => memeId(a.user_id, userId))
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+    .slice(0, n)
+    .map((a) => ({ ...a }));
 }
 
 function consumeQuestionCredit(id) {
@@ -401,6 +481,8 @@ module.exports = {
   recordLogin,
   recordVisit,
   touchActivity,
+  recordActivity,
+  getUserActivity,
   consumeQuestionCredit,
   refundQuestionCredit,
   enregistrerAchatQuestions,
