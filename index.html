@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v70-dashboard-explications">
+<meta name="astro-build" content="v72-mobile-lang-city-fixes">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -1583,6 +1583,57 @@ a{color:var(--cab-plum2)}
 <style id="ap-v70-dashboard-details">
 .ap-dashboard-click{cursor:pointer;position:relative;transition:transform .16s ease,box-shadow .16s ease}.ap-dashboard-click:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(64,29,55,.11)}.ap-dashboard-click:focus-visible{outline:3px solid rgba(197,140,54,.35);outline-offset:2px}.ap-dashboard-more{margin-top:.72rem;padding-top:.55rem;border-top:1px solid rgba(155,113,57,.17);font-size:.72rem;font-weight:800;color:#7b4f25}.ap-dash-modal{position:fixed;inset:0;z-index:99999;display:none}.ap-dash-modal.open{display:block}.ap-dash-modal-backdrop{position:absolute;inset:0;background:rgba(37,13,32,.58);backdrop-filter:blur(3px)}.ap-dash-sheet{position:relative;width:min(680px,calc(100% - 28px));max-height:min(84vh,760px);overflow:auto;margin:8vh auto 0;background:#fffaf3;border:1px solid #dfc9aa;border-radius:22px;padding:1.35rem 1.35rem 1.2rem;box-shadow:0 24px 70px rgba(35,10,30,.28);color:#3b2135}.ap-dash-close{position:absolute;top:.7rem;right:.8rem;width:38px;height:38px;border:0;border-radius:999px;background:#f2e4d5;color:#4c1744;font-size:1.55rem;line-height:1;cursor:pointer}.ap-rtl .ap-dash-close{right:auto;left:.8rem}.ap-dash-detail-kicker{padding-right:46px;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:#9b7139;font-weight:900}.ap-rtl .ap-dash-detail-kicker{padding-right:0;padding-left:46px}.ap-dash-sheet h2{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.9rem;line-height:1.08;color:#35102f;margin:.28rem 0 .45rem}.ap-dash-detail-meta{font-size:.84rem;color:#6f5968;display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}.ap-dash-detail-section{margin-top:1rem;padding-top:.85rem;border-top:1px solid #ead9c4}.ap-dash-detail-section h3{font-family:'Cormorant Garamond',Georgia,serif;color:#4c1744;font-size:1.18rem;margin:0 0 .35rem}.ap-dash-detail-section p,.ap-dash-detail-section li{font-size:.91rem;line-height:1.6;color:#513e4c}.ap-dash-detail-section ul{margin:.35rem 0 .1rem;padding-left:1.15rem}.ap-rtl .ap-dash-detail-section ul{padding-left:0;padding-right:1.15rem}.ap-dash-detail-note{margin-top:1rem;background:#f6eddf;border-radius:12px;padding:.72rem .8rem;font-size:.78rem;line-height:1.45;color:#715b69}.ap-dash-close-btn{width:100%;margin-top:1rem}.ap-modal-open{overflow:hidden}
 @media(max-width:700px){.ap-dashboard-more{font-size:.69rem;margin-top:.55rem}.ap-dash-sheet{position:absolute;left:0;right:0;bottom:0;margin:0;width:100%;max-height:88vh;border-radius:22px 22px 0 0;padding:1.15rem 1rem calc(1rem + env(safe-area-inset-bottom));animation:apSheetIn .2s ease}.ap-dash-sheet h2{font-size:1.55rem}.ap-dash-detail-section{margin-top:.82rem;padding-top:.72rem}.ap-dash-detail-section p,.ap-dash-detail-section li{font-size:.86rem}.ap-dash-detail-meta{font-size:.78rem}@keyframes apSheetIn{from{transform:translateY(28px);opacity:.4}to{transform:translateY(0);opacity:1}}}
+</style>
+
+<style id="astro-paquita-v72-mobile-ui-fixes">
+/* V72 — Mobile : le sélecteur de langue ne masque plus le bouton + ; suggestions de villes lisibles */
+@media (max-width:700px){
+  .ap-lang-fixed{
+    top:62px!important;
+    right:10px!important;
+    left:auto!important;
+    z-index:4900!important;
+  }
+  .ap-rtl .ap-lang-fixed{
+    left:10px!important;
+    right:auto!important;
+  }
+  .ap-lang-picker{
+    background:#fffaf3!important;
+    border-color:#d7bd95!important;
+    box-shadow:0 4px 14px rgba(58,21,50,.16)!important;
+  }
+  .ap-lang-picker select{color:#35102f!important;font-size:.72rem!important;font-weight:800!important}
+
+  .champ-rel{z-index:20}
+  .sugg-box{
+    background:#fffdf9!important;
+    border:1px solid #d8c3a7!important;
+    border-radius:10px!important;
+    max-height:280px!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    z-index:12000!important;
+    box-shadow:0 10px 28px rgba(53,16,47,.18)!important;
+  }
+  .sugg-box .sugg-item{
+    background:#fffdf9!important;
+    color:#2d1930!important;
+    border-bottom:1px solid #eadbc6!important;
+    font-size:1rem!important;
+    line-height:1.3!important;
+    padding:.88rem .95rem!important;
+    min-height:46px!important;
+    display:flex!important;
+    align-items:center!important;
+  }
+  .sugg-box .sugg-item:hover,
+  .sugg-box .sugg-item:active{
+    background:#f7ead8!important;
+    color:#2d1930!important;
+  }
+  .sugg-box .sugg-item strong{color:#6f376d!important}
+}
 </style>
 </head>
 <body>
@@ -9646,7 +9697,7 @@ async function apTrack(feature,context={}){if(typeof TOKEN==='undefined'||!TOKEN
 window.apTrack=apTrack;
 async function apSyncPreferences(){if(typeof TOKEN==='undefined'||!TOKEN)return;try{const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||null;const r=await fetch(BACKEND_URL+'/api/me/preferences',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify({lang:AP_LANG,timezone:tz,notifications_enabled:localStorage.getItem('ap-notifications')==='1'})});if(r.ok&&typeof USER_CONNECTE!=='undefined'&&USER_CONNECTE){const d=await r.json();USER_CONNECTE.lang=d.lang||AP_LANG;USER_CONNECTE.timezone=d.timezone||tz;USER_CONNECTE.notifications_enabled=!!d.notifications_enabled;}}catch(e){}}
 
-function apInstallLanguagePickers(){if(document.getElementById('ap-lang-fixed'))return;const div=document.createElement('div');div.id='ap-lang-fixed';div.className='ap-lang-picker ap-lang-fixed';div.innerHTML=`<span>🌐</span><select class="ap-lang-select" aria-label="Language"><option value="fr">FR</option><option value="en">EN</option><option value="es">ES</option><option value="ar">العربية</option></select>`;div.querySelector('select').addEventListener('change',e=>apSetLang(e.target.value));document.body.appendChild(div);const ver=document.createElement('div');ver.className='ap-version-chip';ver.textContent='V69';document.body.appendChild(ver);}
+function apInstallLanguagePickers(){if(document.getElementById('ap-lang-fixed'))return;const div=document.createElement('div');div.id='ap-lang-fixed';div.className='ap-lang-picker ap-lang-fixed';div.innerHTML=`<span>🌐</span><select class="ap-lang-select" aria-label="Language"><option value="fr">FR</option><option value="en">EN</option><option value="es">ES</option><option value="ar">العربية</option></select>`;div.querySelector('select').addEventListener('change',e=>apSetLang(e.target.value));document.body.appendChild(div);const ver=document.createElement('div');ver.className='ap-version-chip';ver.textContent='V72';document.body.appendChild(ver);}
 
 // -------- Universal AI language + real-life context --------
 function apLifeStore(){try{return JSON.parse(localStorage.getItem('ap-life-context-v1')||'{}')||{};}catch(e){return {};}}
