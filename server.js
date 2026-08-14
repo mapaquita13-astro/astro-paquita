@@ -116,8 +116,17 @@ function auth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const user = db.getUserById(payload.id);
+    let user = db.getUserById(payload.id);
     if (!user) return res.status(401).json({ erreur: 'Compte introuvable.' });
+
+    // Auto-réparation Administrateur : la page admin et le site principal
+    // partagent la même ADMIN_KEY dans ce navigateur. Si cette clé valide est
+    // envoyée avec une session connectée, le rôle est synchronisé en base avant
+    // d'appliquer les quotas (notamment « Ma question »).
+    const adminKeyRecue = req.headers['x-admin-key'];
+    if (adminKeyRecue && adminKeyRecue === ADMIN_KEY && user.role !== 'admin') {
+      user = db.setUserRole(user.id, 'admin') || user;
+    }
 
     req.user = user;
     db.touchActivity(user.id);

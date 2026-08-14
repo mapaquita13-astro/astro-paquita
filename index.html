@@ -2353,8 +2353,11 @@ async function chargerStatutCompte() {
     return;
   }
   try {
+    const headersCompte = { 'Authorization': 'Bearer ' + TOKEN };
+    const cleAdminLocale = localStorage.getItem('astro-admin-key');
+    if (cleAdminLocale) headersCompte['x-admin-key'] = cleAdminLocale;
     const resp = await fetch(BACKEND_URL + '/api/me?ts=' + Date.now(), {
-      headers: { 'Authorization': 'Bearer ' + TOKEN },
+      headers: headersCompte,
       cache: 'no-store'
     });
     if (!resp.ok) {
@@ -2429,9 +2432,12 @@ async function appelerClaude({ system, messages, max_tokens, model, feature, fea
     ouvrirCompte();
     throw new Error('Connecte-toi (gratuit) pour utiliser cette fonctionnalité.');
   }
+  const headersClaude = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+  const cleAdminLocale = localStorage.getItem('astro-admin-key');
+  if (cleAdminLocale) headersClaude['x-admin-key'] = cleAdminLocale;
   const resp = await fetch(BACKEND_URL + '/api/claude', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
+    headers: headersClaude,
     body: JSON.stringify({ system: apSystemCoherent(system, feature), messages, max_tokens, model, feature, featureContext })
   });
   const data = await resp.json();
