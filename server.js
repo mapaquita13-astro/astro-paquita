@@ -162,6 +162,11 @@ function reponseCompte(user) {
     question_packs_bought: Number(user.question_packs_bought) || 0,
     role: user.role === 'admin' ? 'admin' : 'user',
     is_admin: user.role === 'admin',
+    lang: ['fr','en','es','ar'].includes(user.lang) ? user.lang : 'fr',
+    timezone: user.timezone || null,
+    preferences: user.preferences || {},
+    life_context: user.life_context || {},
+    notifications_enabled: Boolean(user.notifications_enabled),
   };
 }
 
@@ -169,7 +174,7 @@ function reponseCompte(user) {
 // ROUTES : COMPTES + STATISTIQUES D'USAGE
 // ============================================================
 app.post('/api/auth/signup', async (req, res) => {
-  const { email, motDePasse, prenom } = req.body;
+  const { email, motDePasse, prenom, lang, timezone } = req.body;
   if (!email || !motDePasse || motDePasse.length < 6) {
     return res
       .status(400)
@@ -181,7 +186,8 @@ app.post('/api/auth/signup', async (req, res) => {
   if (existant) return res.status(409).json({ erreur: 'Un compte existe déjà avec cet email.' });
 
   const hash = await bcrypt.hash(motDePasse, 10);
-  const user = db.insertUser({ email: emailNorm, password_hash: hash, prenom });
+  let user = db.insertUser({ email: emailNorm, password_hash: hash, prenom });
+  user = db.updatePreferences(user.id, { lang, timezone }) || user;
 
   res.json({ token: creerToken(user), ...reponseCompte(user) });
 });
@@ -203,10 +209,36 @@ app.get('/api/me', auth, (req, res) => {
   res.json(reponseCompte(user));
 });
 
+
+// V68 — préférences internationales et contexte de vie (privé au compte)
+app.patch('/api/me/preferences', auth, (req,res)=>{
+  const user=db.updatePreferences(req.user.id, req.body||{});
+  if(!user)return res.status(404).json({erreur:'Compte introuvable.'});
+  res.json({succes:true,...reponseCompte(user)});
+});
+
+// Journal personnel : jamais exposé à l'administration.
+app.get('/api/me/journal', auth, (req,res)=>res.json({entries:db.getJournal(req.user.id, Number(req.query.limit)||200)}));
+app.post('/api/me/journal', auth, (req,res)=>{const row=db.addJournal(req.user.id,req.body||{});if(!row)return res.status(400).json({erreur:'Entrée invalide.'});res.json({succes:true,entry:row});});
+app.delete('/api/me/journal/:id', auth, (req,res)=>{if(!db.deleteJournal(req.user.id,req.params.id))return res.status(404).json({erreur:'Entrée introuvable.'});res.json({succes:true});});
+
+// Fenêtres enregistrées et rappels choisis par l'utilisateur.
+app.get('/api/me/windows', auth, (req,res)=>res.json({windows:db.getSavedWindows(req.user.id,Number(req.query.limit)||200)}));
+app.post('/api/me/windows', auth, (req,res)=>{const row=db.addSavedWindow(req.user.id,req.body||{});if(!row)return res.status(400).json({erreur:'Fenêtre invalide.'});res.json({succes:true,window:row});});
+app.delete('/api/me/windows/:id', auth, (req,res)=>{if(!db.deleteSavedWindow(req.user.id,req.params.id))return res.status(404).json({erreur:'Fenêtre introuvable.'});res.json({succes:true});});
+
 app.post('/api/activity/visit', auth, (req, res) => {
   const user = db.recordVisit(req.user.id);
   if (!user) return res.status(404).json({ erreur: 'Compte introuvable.' });
   res.json({ succes: true, visit_count: Number(user.visit_count) || 0 });
+});
+
+app.post('/api/activity/track', auth, (req,res)=>{
+  const allowed=new Set(['dashboard','timeline','compare','avoid_windows','journal','life_context','saved_window','notification','historical_validation']);
+  const feature=String(req.body&&req.body.feature||'').slice(0,40);
+  if(!allowed.has(feature))return res.status(400).json({erreur:'Module invalide.'});
+  const row=db.recordActivity(req.user.id,feature,(req.body&&req.body.context)||{});
+  res.json({succes:true,id:row&&row.id});
 });
 
 app.delete('/api/me', auth, async (req, res) => {
@@ -375,9 +407,10 @@ const FEATURES_AUTORISEES = new Set([
   'events',
   'synastry',
   'question',
+  'timeline',
 ]);
 
-const FEATURES_PREMIUM = new Set(['forecast_future', 'window', 'events', 'synastry']);
+const FEATURES_PREMIUM = new Set(['forecast_future', 'window', 'events', 'synastry', 'timeline']);
 
 // ------------------------------------------------------------------
 // Compatibilité avec les anciennes pages Astro Paquita.
@@ -588,7 +621,7 @@ app.get('/api/admin/bootstrap-status', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({
     ok: true,
-    backend_version: 'v58-activity-history',
+    backend_version: 'v68-international-suite',
     bootstrap_available: adminCount === 0,
     admin_count: adminCount,
   });
@@ -661,6 +694,8 @@ app.patch('/api/admin/promo/:id/desactiver', adminAuth, (req, res) => {
   res.json({ succes: true });
 });
 
+app.get('/api/admin/analytics', adminAuth, (req,res)=>{res.set('Cache-Control','no-store');res.json(db.getAnalytics());});
+
 app.get('/api/admin/users', adminAuth, (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json(db.getAllUsers());
@@ -705,7 +740,7 @@ app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
 });
 
 // ============================================================
-app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-14-v58-activity-history' }));
+app.get('/', (req, res) => res.json({ statut: 'Astro Paquita backend actif', version: 'compat-api-2026-08-14-v68-international-suite' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));

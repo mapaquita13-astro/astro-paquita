@@ -11,6 +11,8 @@ const SCHEMA_VIDE = {
   promoUtilisations: [],
   questionPurchases: [],
   activityLogs: [],
+  journalEntries: [],
+  savedWindows: [],
   settings: {
     maintenance: {
       enabled: false,
@@ -24,6 +26,8 @@ const SCHEMA_VIDE = {
     promoUtilisations: 0,
     questionPurchases: 0,
     activityLogs: 0,
+    journalEntries: 0,
+    savedWindows: 0,
   },
 };
 
@@ -37,7 +41,7 @@ function normaliserData(data) {
     return { data: cloneSchemaVide(), modifie: true };
   }
 
-  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs']) {
+  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs', 'journalEntries', 'savedWindows']) {
     if (!Array.isArray(data[cle])) {
       data[cle] = [];
       modifie = true;
@@ -75,7 +79,7 @@ function normaliserData(data) {
     modifie = true;
   }
 
-  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs']) {
+  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs', 'journalEntries', 'savedWindows']) {
     if (!Number.isFinite(Number(data.compteurs[cle]))) {
       const maxId = data[cle].reduce((m, x) => Math.max(m, Number(x && x.id) || 0), 0);
       data.compteurs[cle] = maxId;
@@ -98,6 +102,11 @@ function normaliserData(data) {
       questions_used: 0,
       question_packs_bought: 0,
       role: 'user',
+      lang: 'fr',
+      timezone: null,
+      preferences: {},
+      life_context: {},
+      notifications_enabled: false,
     };
     for (const [cle, valeur] of Object.entries(valeursParDefaut)) {
       if (!(cle in u)) {
@@ -180,6 +189,11 @@ function insertUser({ email, password_hash, prenom }) {
     questions_used: 0,
     question_packs_bought: 0,
     role: 'user',
+    lang: 'fr',
+    timezone: null,
+    preferences: {},
+    life_context: {},
+    notifications_enabled: false,
   };
   data.users.push(user);
   sauvegarder(data);
@@ -221,6 +235,8 @@ function deleteUser(id) {
   data.users.splice(index, 1);
   // Les journaux d'activité sont liés au compte : ils sont supprimés avec lui.
   data.activityLogs = (data.activityLogs || []).filter((a) => !memeId(a.user_id, id));
+  data.journalEntries = (data.journalEntries || []).filter((a) => !memeId(a.user_id, id));
+  data.savedWindows = (data.savedWindows || []).filter((a) => !memeId(a.user_id, id));
   sauvegarder(data);
   return true;
 }
@@ -282,7 +298,7 @@ function nettoyerTexteActivite(v, max = 90) {
 function contexteActiviteSecurise(feature, contexte) {
   const c = contexte && typeof contexte === 'object' && !Array.isArray(contexte) ? contexte : {};
   // Liste blanche stricte : on ne stocke jamais le texte d'une question, un prompt ou une réponse IA.
-  const autorisees = ['period', 'date', 'days', 'domain', 'intent', 'relation', 'horizon', 'label'];
+  const autorisees = ['period', 'date', 'days', 'domain', 'intent', 'relation', 'horizon', 'label', 'lang', 'timezone', 'surface'];
   const out = {};
   for (const cle of autorisees) {
     if (!(cle in c)) continue;
@@ -469,6 +485,92 @@ function enregistrerUtilisationPromo(userId, promoId) {
   sauvegarder(data);
 }
 
+// ============================================================
+// V68 — PRÉFÉRENCES, JOURNAL PRIVÉ, FENÊTRES ENREGISTRÉES, ANALYTIQUE
+// ============================================================
+function nettoyerObjetSimple(obj, maxKeys = 20) {
+  const src = obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {};
+  const out = {};
+  for (const [k, v] of Object.entries(src).slice(0, maxKeys)) {
+    const key = String(k).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
+    if (!key) continue;
+    if (typeof v === 'boolean' || typeof v === 'number') out[key] = v;
+    else if (v != null) out[key] = String(v).slice(0, 300);
+  }
+  return out;
+}
+
+function updatePreferences(id, payload) {
+  const data = charger();
+  const user = data.users.find((u) => memeId(u.id, id));
+  if (!user) return null;
+  const p = payload && typeof payload === 'object' ? payload : {};
+  if (p.lang && ['fr','en','es','ar'].includes(String(p.lang))) user.lang = String(p.lang);
+  if ('timezone' in p) user.timezone = p.timezone ? String(p.timezone).slice(0, 80) : null;
+  if ('notifications_enabled' in p) user.notifications_enabled = Boolean(p.notifications_enabled);
+  if (p.preferences && typeof p.preferences === 'object') user.preferences = { ...(user.preferences || {}), ...nettoyerObjetSimple(p.preferences) };
+  if (p.life_context && typeof p.life_context === 'object') user.life_context = nettoyerObjetSimple(p.life_context, 30);
+  user.last_activity_at = new Date().toISOString();
+  sauvegarder(data);
+  return user;
+}
+
+function getJournal(userId, limit = 200) {
+  const data = charger();
+  const n = Math.max(1, Math.min(500, Number(limit) || 200));
+  return (data.journalEntries || []).filter(x => memeId(x.user_id, userId))
+    .sort((a,b)=>String(b.event_date||b.created_at||'').localeCompare(String(a.event_date||a.created_at||'')))
+    .slice(0,n).map(x=>({...x}));
+}
+
+function addJournal(userId, entry) {
+  const data = charger();
+  const user = data.users.find(u=>memeId(u.id,userId));
+  if (!user) return null;
+  const e = entry && typeof entry==='object' ? entry : {};
+  const text = String(e.text||'').trim().slice(0,4000);
+  if (!text) return null;
+  const row = {
+    id: nouvelId(data,'journalEntries'), user_id:user.id,
+    event_date: String(e.event_date||'').slice(0,10) || new Date().toISOString().slice(0,10),
+    category: String(e.category||'general').slice(0,40),
+    text, private: true, created_at:new Date().toISOString(), updated_at:new Date().toISOString()
+  };
+  data.journalEntries.push(row); user.last_activity_at=row.created_at; sauvegarder(data); return {...row};
+}
+
+function deleteJournal(userId, id) {
+  const data=charger(); const i=data.journalEntries.findIndex(x=>memeId(x.id,id)&&memeId(x.user_id,userId));
+  if(i<0)return false; data.journalEntries.splice(i,1); sauvegarder(data); return true;
+}
+
+function getSavedWindows(userId, limit=200) {
+  const data=charger(); const n=Math.max(1,Math.min(500,Number(limit)||200));
+  return (data.savedWindows||[]).filter(x=>memeId(x.user_id,userId))
+   .sort((a,b)=>String(a.start_date||'').localeCompare(String(b.start_date||''))).slice(0,n).map(x=>({...x}));
+}
+
+function addSavedWindow(userId, entry) {
+  const data=charger(); const user=data.users.find(u=>memeId(u.id,userId)); if(!user)return null;
+  const e=entry&&typeof entry==='object'?entry:{}; const start=String(e.start_date||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(start))return null;
+  const row={id:nouvelId(data,'savedWindows'),user_id:user.id,start_date:start,end_date:String(e.end_date||start).slice(0,10),intent:String(e.intent||'general').slice(0,40),label:String(e.label||'').slice(0,160),score:Number.isFinite(Number(e.score))?Math.max(-999,Math.min(100,Number(e.score))):null,reliability:String(e.reliability||'').slice(0,40),notify_days:Math.max(0,Math.min(90,Number(e.notify_days)||10)),created_at:new Date().toISOString()};
+  data.savedWindows.push(row); user.last_activity_at=row.created_at; sauvegarder(data); return {...row};
+}
+
+function deleteSavedWindow(userId,id){const data=charger();const i=data.savedWindows.findIndex(x=>memeId(x.id,id)&&memeId(x.user_id,userId));if(i<0)return false;data.savedWindows.splice(i,1);sauvegarder(data);return true;}
+
+function getAllActivity(){const data=charger();return (data.activityLogs||[]).map(x=>({...x}));}
+
+function getAnalytics(){
+  const data=charger(), users=data.users||[], acts=data.activityLogs||[]; const now=Date.now(), d7=7*86400000,d30=30*86400000;
+  const lang={fr:0,en:0,es:0,ar:0,other:0}; users.forEach(u=>{const l=['fr','en','es','ar'].includes(u.lang)?u.lang:'other';lang[l]++;});
+  const features={}; acts.forEach(a=>{features[a.feature]=(features[a.feature]||0)+1;});
+  const active=(ms)=>users.filter(u=>u.last_activity_at && now-new Date(u.last_activity_at).getTime()<=ms).length;
+  const premium=users.filter(u=>u.role==='admin'||(u.premium&&(!u.premium_expires_at||new Date(u.premium_expires_at)>=new Date()))).length;
+  const days={}; for(const a of acts){const d=String(a.created_at||'').slice(0,10);if(d)days[d]=(days[d]||0)+1;}
+  return {users:users.length,premium,free:Math.max(0,users.length-premium),active7:active(d7),active30:active(d30),consultations:users.reduce((sum,u)=>sum+(Number(u.consultation_count)||0),0),languages:lang,features:Object.entries(features).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([feature,count])=>({feature,count})),days:Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-30).map(([date,count])=>({date,count}))};
+}
+
 module.exports = {
   getUserByEmail,
   getUserById,
@@ -483,6 +585,15 @@ module.exports = {
   touchActivity,
   recordActivity,
   getUserActivity,
+  updatePreferences,
+  getJournal,
+  addJournal,
+  deleteJournal,
+  getSavedWindows,
+  addSavedWindow,
+  deleteSavedWindow,
+  getAllActivity,
+  getAnalytics,
   consumeQuestionCredit,
   refundQuestionCredit,
   enregistrerAchatQuestions,
