@@ -6824,7 +6824,41 @@ function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
   const scoreMin = -8; const scoreMax = 75;
   const scorePct = Math.round(Math.max(0, Math.min(100, ((score - scoreMin) / (scoreMax - scoreMin)) * 100)));
 
-  return { score: scorePct, raw: score, tags: [...new Set(tags)].slice(0, 6) };
+  // V57 — Indice financier distinct du score général.
+  // On le calcule AVANT de tronquer les tags d'affichage, sinon un vrai signal financier
+  // peut disparaître simplement parce que six autres tags ont été ajoutés plus tôt.
+  const tagsComplets = [...new Set(tags)];
+  let moneyStrength = 0;
+  const moneyFamilies = new Set();
+  if (intention === 'argent') {
+    for (const tag of tagsComplets) {
+      if (/Jupiter sur Part Fortune|Jup -> Part For natal|Part For -> Jup natal/i.test(tag)) {
+        moneyStrength += 3.5; moneyFamilies.add('fortune');
+      } else if (/Jup -> Venus|Venus -> Jupiter/i.test(tag)) {
+        moneyStrength += 2.4; moneyFamilies.add('jupiter-venus');
+      } else if (/Lune prog -> Jup|Lune prog -> Venus/i.test(tag)) {
+        moneyStrength += 1.8; moneyFamilies.add('progression');
+      } else if (/Profection H2|Profection H5|Profection H8|Profection H11/i.test(tag)) {
+        moneyStrength += 1.2; moneyFamilies.add('profection');
+      } else if (/RS Jupiter/i.test(tag)) {
+        moneyStrength += 1.6; moneyFamilies.add('revolution-solaire');
+      } else if (/Noeud N -> Jup natal|Jupiter retour natal/i.test(tag)) {
+        moneyStrength += 1.4; moneyFamilies.add('cycle-jupiter');
+      }
+    }
+  }
+  const scoreArgent = intention === 'argent'
+    ? Math.round(Math.max(0, Math.min(100, scorePct * 0.68 + moneyStrength * 6 + Math.min(12, moneyFamilies.size * 3))))
+    : scorePct;
+
+  return {
+    score: scorePct,
+    scoreArgent,
+    raw: score,
+    moneyStrength,
+    moneyFamilies:[...moneyFamilies],
+    tags: tagsComplets.slice(0, 6)
+  };
 }
 
 async function lancerFenetre() {
@@ -6854,7 +6888,7 @@ async function lancerFenetre() {
         const res = scoreJourFenetre(jdJ, USER.pos, USER.AS, USER.MC, intentionF);
         if (res.score > 0) {
           const date = jdVersDate(jdJ);
-          resultats.push({ jd: jdJ, date, score: res.score, raw: res.raw, tags: res.tags });
+          resultats.push({ jd: jdJ, date, score: res.score, scoreArgent:res.scoreArgent, raw: res.raw, moneyStrength:res.moneyStrength, moneyFamilies:res.moneyFamilies||[], tags: res.tags });
         }
       } catch(e) {}
     }
@@ -6869,18 +6903,45 @@ async function lancerFenetre() {
 
   const triés = [...resultats].sort((a,b) => b.score - a.score);
   const top = [];
-  // Pour « Argent », on cherche des périodes réellement marquées sans exiger un événement rarissime.
-  // Un score trop faible ou un seul petit signal ne suffit pas, mais on n'impose pas non plus le seuil « exceptionnel ».
-  const estSignalArgentSpecifique = r => {
-    const tags = (r.tags||[]).join(' | ');
-    return /Part Fortune|Part For|Venus -> Jupiter|Jup -> Venus|Jupiter sur Part Fortune|Profection H2|Profection H5|Profection H8|Profection H11|RS Jupiter|Noeud N -> Jup/i.test(tags);
-  };
-  const candidats = intentionF==='argent'
-    ? triés.filter(r => r.score >= 52 && (r.tags||[]).length >= 2 && estSignalArgentSpecifique(r))
-    : triés;
-  for (const r of candidats) {
-    if (top.length >= 5) break;
-    if (!top.some(t => Math.abs(t.jd - r.jd) < 45)) top.push(r);
+
+  // V57 — « Argent » : on ne cherche ni les jours de paie ordinaires,
+  // ni uniquement des événements rarissimes. On classe les périodes où le thème
+  // financier est réellement soutenu, avec plusieurs niveaux de force.
+  if (intentionF === 'argent') {
+    const argentTries = [...resultats]
+      .filter(r => (r.moneyStrength || 0) > 0)
+      .sort((a,b) => {
+        const ra = (a.scoreArgent || 0) + Math.min(10,(a.moneyFamilies||[]).length*3);
+        const rb = (b.scoreArgent || 0) + Math.min(10,(b.moneyFamilies||[]).length*3);
+        return rb - ra;
+      });
+
+    // Premier passage : vraies convergences ou indice financier net.
+    const forts = argentTries.filter(r =>
+      ((r.moneyFamilies||[]).length >= 2 && (r.scoreArgent||0) >= 42) ||
+      ((r.moneyStrength||0) >= 3.2 && (r.scoreArgent||0) >= 40)
+    );
+    for (const r of forts) {
+      if (top.length >= 5) break;
+      if (!top.some(t => Math.abs(t.jd - r.jd) < 45)) top.push(r);
+    }
+
+    // Deuxième passage : si le thème natal n'offre pas cinq fenêtres fortes,
+    // on montre les meilleures périodes financières plus modérées au lieu d'afficher « rien ».
+    if (top.length < 5) {
+      const souples = argentTries.filter(r =>
+        (r.scoreArgent||0) >= 34 && (r.moneyStrength||0) >= 1.1
+      );
+      for (const r of souples) {
+        if (top.length >= 5) break;
+        if (!top.some(t => Math.abs(t.jd - r.jd) < 45)) top.push(r);
+      }
+    }
+  } else {
+    for (const r of triés) {
+      if (top.length >= 5) break;
+      if (!top.some(t => Math.abs(t.jd - r.jd) < 45)) top.push(r);
+    }
   }
 
   pb.style.width = '96%'; pl.textContent = 'Analyse astrologique en cours…';
@@ -6888,11 +6949,11 @@ async function lancerFenetre() {
 
   const niveau = s => {
     if (intentionF==='argent') {
-      if (s >= 85) return { label:'Très forte', couleur:'#f5e6c0' };
-      if (s >= 70) return { label:'Forte', couleur:'#c9a84c' };
-      if (s >= 55) return { label:'Favorable', couleur:'#8ac96a' };
-      if (s >= 45) return { label:'À surveiller', couleur:'#6a9ac9' };
-      return { label:'Peu marquée', couleur:'#8080a0' };
+      if (s >= 76) return { label:'Très forte', couleur:'#f5e6c0' };
+      if (s >= 62) return { label:'Forte', couleur:'#c9a84c' };
+      if (s >= 48) return { label:'Favorable', couleur:'#8ac96a' };
+      if (s >= 34) return { label:'Intéressante', couleur:'#6a9ac9' };
+      return { label:'Modérée', couleur:'#8080a0' };
     }
     if (s >= 91) return { label:'Rarissime', couleur:'#f5e6c0' };
     if (s >= 76) return { label:'Exceptionnel', couleur:'#c9a84c' };
@@ -6908,11 +6969,12 @@ async function lancerFenetre() {
   const container = document.getElementById('f-fenetres');
   container.innerHTML = '';
   if (top.length===0 && intentionF==='argent') {
-    container.innerHTML = '<div class="fenetre-card"><div class="fenetre-rang">Argent</div><div class="fenetre-date">Aucune période financière suffisamment marquée</div><div class="fenetre-periode">Le scan ne trouve pas, sur la période étudiée, une convergence assez nette pour mettre en avant un apport d’argent hors revenus habituels ou une amélioration financière nette. Cela ne signifie pas qu’il n’y aura aucun mouvement financier favorable.</div></div>';
+    container.innerHTML = '<div class="fenetre-card"><div class="fenetre-rang">Argent</div><div class="fenetre-date">Aucune fenêtre financière nette détectée</div><div class="fenetre-periode">Même avec le seuil assoupli, le scan ne trouve pas de période suffisamment différenciée du reste. Cela ne signifie pas qu’il n’y aura aucune prime, aucun remboursement ou autre rentrée d’argent ; seulement qu’aucune date ne ressort assez clairement pour être privilégiée astrologiquement.</div></div>';
   }
 
   top.forEach((r, i) => {
-    const niv = niveau(r.score);
+    const scoreAffiche = intentionF==='argent' ? (r.scoreArgent||r.score) : r.score;
+    const niv = niveau(scoreAffiche);
     const debut = new Date(r.date); debut.setDate(debut.getDate() - 4);
     const fin   = new Date(r.date); fin.setDate(fin.getDate() + 8);
     const tagsHtml = r.tags.map(t => '<span class="fenetre-tag">' + t + '</span>').join('');
@@ -6923,23 +6985,25 @@ async function lancerFenetre() {
       + '<div style="margin:0.6rem 0 0.4rem">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem">'
       + '<span style="font-size:0.82rem;text-transform:uppercase;letter-spacing:0.15em;color:' + niv.couleur + '">' + niv.label + '</span>'
-      + '<span style="font-family:\'Cormorant Garamond\',serif;font-size:1.15rem;color:' + niv.couleur + ';font-weight:600">' + r.score + '<span style="font-size:0.9rem;opacity:0.6">/100</span></span>'
+      + '<span style="font-family:\'Cormorant Garamond\',serif;font-size:1.15rem;color:' + niv.couleur + ';font-weight:600">' + scoreAffiche + '<span style="font-size:0.9rem;opacity:0.6">/100</span></span>'
       + '</div>'
       + '<div style="background:rgba(0,0,0,0.3);border-radius:2px;height:4px">'
-      + '<div style="width:' + r.score + '%;height:4px;border-radius:2px;background:' + niv.couleur + '"></div>'
+      + '<div style="width:' + scoreAffiche + '%;height:4px;border-radius:2px;background:' + niv.couleur + '"></div>'
       + '</div></div>'
       + '<div class="fenetre-planetes">' + tagsHtml + '</div>'
       + '</div>';
   });
 
-  const topResume = top.map((r,i) =>
-    (i+1) + '. ' + fmtDate(r.date) + ' — âge ' + (ageAuMoment(r.date)===null?'non déterminé':ageAuMoment(r.date)+' ans') + ' — Score ' + r.score + '/100 (' + niveau(r.score).label + ') — ' + r.tags.join(', ')
-  ).join('\n');
+  const topResume = top.map((r,i) => {
+    const sc = intentionF==='argent' ? (r.scoreArgent||r.score) : r.score;
+    const fam = intentionF==='argent' && (r.moneyFamilies||[]).length ? ' — confirmations financières : ' + r.moneyFamilies.join(', ') : '';
+    return (i+1) + '. ' + fmtDate(r.date) + ' — âge ' + (ageAuMoment(r.date)===null?'non déterminé':ageAuMoment(r.date)+' ans') + ' — Score ' + sc + '/100 (' + niveau(sc).label + ')' + fam + ' — ' + r.tags.join(', ');
+  }).join('\n');
 
   const genreLabel = USER.genre==='F'?', femme':USER.genre==='H'?', homme':'';
   const contexteFenetre = contexteAnalyseUniversel(new Date(), true);
   const consigneArgent = intentionF==='argent'
-    ? '\n\nRÈGLE SPÉCIALE ARGENT : cherche des périodes astrologiquement favorables à un apport d’argent HORS revenus habituels ou à une amélioration financière nette. EXCLUS ABSOLUMENT le simple versement mensuel normal d’un salaire, d’une pension/retraite, d’une allocation habituelle ou de tout revenu récurrent attendu. Une hausse durable de rémunération peut être mentionnée seulement si elle représente un vrai changement, jamais comme simple jour de paie. Les scénarios possibles peuvent être : prime ou bonus, rappel ou régularisation, remboursement, indemnité, paiement attendu, vente, règlement d’une prestation ou mission ponctuelle, aide ou versement exceptionnel, opération patrimoniale favorable, ou autre somme non routinière. N’invente jamais la provenance si les calculs ne permettent pas de la distinguer. Ne parle pas de loto, casino ou jeux de hasard sauf si la personne le demande explicitement. Ne transforme pas une petite économie ou un avantage banal en apport d’argent. ' : '';
+    ? '\n\nRÈGLE SPÉCIALE ARGENT : repère les périodes où un apport financier NON ROUTINIER ou une amélioration financière concrète est plus plausible. EXCLUS le simple versement normal d’un salaire, d’une pension/retraite, d’une allocation habituelle ou d’un revenu récurrent attendu. En revanche, ne sois pas excessivement restrictif : une prime, un bonus, un rappel, une régularisation, un remboursement, une indemnité, un paiement attendu, une vente, une mission ponctuelle, une aide, une hausse réelle de rémunération, un accord financier ou une opération patrimoniale favorable peuvent constituer une fenêtre intéressante même si la somme n’est pas exceptionnelle. Les fenêtres sont classées par force : modérée, intéressante, favorable, forte ou très forte. N’invente jamais la provenance de l’argent si les calculs ne la distinguent pas et ne garantis aucun versement. Ne parle pas de loto, casino ou jeux de hasard sauf demande explicite. ' : '';
   const prompt = USER.prenom + ' (' + USER.dateRaw + ', ' + USER.heure + ', ' + USER.ville + genreLabel + ') cherche la meilleure fenêtre pour : ' + intent.label + '.\n\n' + contexteFenetre + '\n\nCalcul sur 10 ans — meilleures fenêtres identifiées :\n' + (topResume||'Aucune fenêtre suffisamment marquée') + consigneArgent + '\n\nRédige une analyse en 3 paragraphes :\n1. Pourquoi la fenêtre n°1 est particulièrement forte pour CETTE intention, sans dériver vers la famille, le couple ou le travail si ce n’est pas le sujet\n2. Ce que ' + USER.prenom + ' devrait concrètement préparer AVANT cette date\n3. Une mise en garde ou nuance importante\n\nRÈGLES : respecte strictement l’âge à chacune des dates citées ; n’invente aucun scénario adulte pour un enfant ; pour un senior, ne suppose jamais un emploi salarié. Le positif doit être soutenu par les calculs : ne qualifie pas une fenêtre d’exceptionnelle uniquement pour être encourageant.\n\nTon : confiant, direct, chaleureux. Parle à ' + USER.prenom + ' en "tu".';
 
   try {
@@ -6952,12 +7016,12 @@ async function lancerFenetre() {
   pb.style.width = '100%';
   setTimeout(() => pw.style.display = 'none', 1000);
 
-  const scoreMax5 = (top[0] && top[0].score ? top[0].score : 0);
+  const scoreMax5 = top[0] ? (intentionF==='argent' ? (top[0].scoreArgent||top[0].score||0) : (top[0].score||0)) : 0;
   const niv0 = niveau(scoreMax5);
   document.getElementById('f-res-icone').textContent = intent.icone;
   document.getElementById('f-res-titre').textContent = intent.label + ' — ' + USER.prenom;
   document.getElementById('f-res-sous').textContent = intentionF==='argent'
-    ? (top.length ? 'Période Argent la plus marquée : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 10 ans' : 'Aucune période financière suffisamment marquée · Scan 10 ans')
+    ? (top.length ? 'Période Argent la plus marquée : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 10 ans' : 'Aucune fenêtre financière nette détectée · Scan 10 ans')
     : 'Meilleure fenetre : ' + scoreMax5 + '/100 · ' + niv0.label + ' · Scan 10 ans';
   document.getElementById('f-form').style.display = 'none';
   document.getElementById('f-res').style.display = 'block';
