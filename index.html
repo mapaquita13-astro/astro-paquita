@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v72-mobile-lang-city-fixes">
+<meta name="astro-build" content="v74-evenements-timeline-coherents">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -8487,337 +8487,188 @@ function evIntensite(force) {
 async function genererEvenements() {
   if (!USER) return;
   if (!PREMIUM) { ouvrirCompte(); return; }
+
   const btn=document.getElementById('ev-btn');
   if(btn) btn.disabled=true;
   const err=document.getElementById('ev-err'); if(err) err.style.display='none';
   const pw=document.getElementById('ev-pw'),pb=document.getElementById('ev-pb'),pl=document.getElementById('ev-pl');
-  if(pw) pw.style.display='block'; if(pb) pb.style.width='5%';
+  if(pw) pw.style.display='block';
+  if(pb) pb.style.width='5%';
 
   const today=new Date(); today.setHours(12,0,0,0);
   const jdNow=julianDay(today.getFullYear(),today.getMonth()+1,today.getDate(),12);
-  const posN=USER.pos, AS=USER.AS, MC=USER.MC, DS=(AS+180)%360, IC=(MC+180)%360;
   const fmtDate=d=>d.toLocaleDateString((typeof apLocale==='function'?apLocale():'fr-FR'),{day:'numeric',month:'long',year:'numeric'});
-  const delta=(a,b)=>{let d=Math.abs(((a-b)%360+360)%360);return d>180?360-d:d;};
-  const orbAspect=(v,t,aspects=[0,90,180])=>Math.min(...aspects.map(a=>Math.abs(delta(v,t)-a)));
   const MS_JOUR=86400000;
 
-  // Domaines réellement compréhensibles pour l'utilisateur.
-  // Les angles et luminaires sont des cibles majeures autonomes.
-  const CIBLES_MAJEURES=[
-    {key:'MC',deg:MC,domain:'work',label:'Travail / carrière / statut'},
-    {key:'IC',deg:IC,domain:'home',label:'Foyer / logement / patrimoine'},
-    {key:'DS',deg:DS,domain:'couple',label:'Couple / association / contrat important'},
-    {key:'AS',deg:AS,domain:'identity',label:'Identité / mode de vie / direction personnelle'},
-    {key:'Soleil',deg:posN.Soleil,domain:'identity',label:'Identité / ambition / place sociale'},
-    {key:'Lune',deg:posN.Lune,domain:'family',label:'Famille / foyer / vie émotionnelle'}
-  ].filter(c=>prevEtapeAutoriseDomaineV51(c.domain,today));
+  // V74 : Grands événements et Timeline utilisent désormais le MÊME moteur de polarité.
+  // On scanne les 24 mois avec analyserExceptionnelsTousDomainesV51, qui traite de façon
+  // symétrique les configurations favorables, difficiles et mixtes.
+  if(pl) pl.textContent='Analyse équilibrée des 24 prochains mois…';
 
-  // Cibles secondaires : elles ne suffisent jamais seules à fabriquer un « grand événement ».
-  // Les cuspides H2/H5/H6/H8/H9/H11 sont utilisées seulement comme confirmations de domaine.
-  const CIBLES_SECONDAIRES=[
-    {key:'Venus',deg:posN.Venus,domain:'couple',label:'Vie affective / couple'},
-    {key:'Mercure',deg:posN.Mercure,domain:'studies',label:'Études / apprentissages / décisions / communication'},
-    {key:'Jupiter',deg:posN.Jupiter,domain:'travel',label:'Expansion / études / voyages / opportunités'},
-    {key:'H2',deg:(AS+30)%360,domain:'money',label:'Finances / revenus / possessions'},
-    {key:'H3',deg:(AS+60)%360,domain:'studies',label:'Études / apprentissages / déplacements proches'},
-    {key:'H5',deg:(AS+120)%360,domain:'children',label:'Enfants / projets personnels / vie sentimentale'},
-    {key:'H6',deg:(AS+150)%360,domain:'daily',label:'Travail quotidien / rythme de vie / énergie'},
-    {key:'H8',deg:(AS+210)%360,domain:'money',label:'Argent partagé / crédit / patrimoine'},
-    {key:'H9',deg:(AS+240)%360,domain:'travel',label:'Études / voyages / étranger / démarches importantes'},
-    {key:'H11',deg:(AS+300)%360,domain:'projects',label:'Projets / réseau / cercle social'}
-  ].filter(c=>prevEtapeAutoriseDomaineV51(c.domain,today));
-
-  const DOMAIN_LABELS={
-    work:'Travail / carrière / statut',
-    couple:'Couple / relations / associations',
-    family:'Famille / vie émotionnelle',
-    home:'Foyer / logement / patrimoine',
-    money:'Finances / revenus / patrimoine',
-    children:'Enfants / projets personnels / vie affective',
-    studies:'Études / orientation / apprentissages',
-    travel:'Voyages / mobilité / étranger / démarches',
-    identity:'Identité / direction de vie',
-    daily:'Travail quotidien / rythme de vie / énergie',
-    projects:'Projets / réseau / cercle social'
-  };
-
-  const RELATED={
-    identity:new Set(['identity','work','home','couple','daily','travel','projects']),
-    work:new Set(['work','identity','money','daily','projects','travel']),
-    couple:new Set(['couple','identity','family','children']),
-    family:new Set(['family','home','couple','children']),
-    home:new Set(['home','family','money','identity']),
-    money:new Set(['money','work','home']),
-    children:new Set(['children','family','couple']),
-    studies:new Set(['studies','travel','projects','identity','work']),
-    travel:new Set(['travel','studies','identity','work','projects']),
-    daily:new Set(['daily','work','identity']),
-    projects:new Set(['projects','work','identity','travel'])
-  };
-
-  function bestTarget(value,points,aspects=[0,90,180]){
-    let best=null;
-    points.forEach(p=>{
-      const orb=orbAspect(value,p.deg,aspects);
-      if(!best||orb<best.orb) best={...p,orb};
-    });
-    return best;
-  }
-  function domainCompatible(a,b){
-    const da=new Set(a.domainKeys||[]), db=new Set(b.domainKeys||[]);
-    if(!da.size||!db.size) return true;
-    for(const x of da) for(const y of db) if(x===y || (RELATED[x]&&RELATED[x].has(y))) return true;
-    return false;
-  }
-
-  // Éclipses astronomiques utilisées pour l'horizon actuel.
-  const ECLIPSES=[
-    {iso:'2026-08-12',type:'solaire'},{iso:'2026-08-28',type:'lunaire'},
-    {iso:'2027-02-06',type:'solaire'},{iso:'2027-02-20',type:'lunaire'},
-    {iso:'2027-07-18',type:'lunaire'},{iso:'2027-08-02',type:'solaire'},{iso:'2027-08-17',type:'lunaire'},
-    {iso:'2028-01-12',type:'lunaire'},{iso:'2028-01-26',type:'solaire'},
-    {iso:'2028-07-06',type:'lunaire'},{iso:'2028-07-22',type:'solaire'},
-    {iso:'2028-12-31',type:'lunaire'},
-    {iso:'2029-01-14',type:'solaire'},{iso:'2029-06-12',type:'solaire'},{iso:'2029-06-26',type:'lunaire'},
-    {iso:'2029-07-11',type:'solaire'},{iso:'2029-12-05',type:'solaire'},{iso:'2029-12-20',type:'lunaire'},
-    {iso:'2030-06-01',type:'solaire'},{iso:'2030-06-15',type:'lunaire'},
-    {iso:'2030-11-25',type:'solaire'},{iso:'2030-12-09',type:'lunaire'}
-  ].map(e=>{const d=new Date(e.iso+'T12:00:00Z');const jd=julianDay(d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),12);return {...e,jd,lon:e.type==='solaire'?calcSoleil(jd):calcLune(jd),date:jdVersDate(jd)};})
-   .filter(e=>e.jd>=jdNow-1&&e.jd<=jdNow+731);
-
-  function eclipseHit(jd){
-    const e=ECLIPSES.find(x=>Math.abs(x.jd-jd)<=.55); if(!e) return null;
-    const t=bestTarget(e.lon,CIBLES_MAJEURES,[0]);
-    return t&&t.orb<=1.6?{orb:t.orb,target:t,eclipse:e}:null;
-  }
-  function progression(jd){return calcProgressions(USER.jd,calcAnneeVieExacte(USER.jd,jd));}
-  function arcHit(jd){
-    const arc=calcArcSoleil(USER.jd,calcAnneeVieExacte(USER.jd,jd));
-    let best=null;
-    CIBLES_MAJEURES.forEach(src=>{
-      const dirige=(src.deg+arc+360)%360;
-      CIBLES_MAJEURES.forEach(dst=>{
-        if(src.key===dst.key)return;
-        const orb=orbAspect(dirige,dst.deg,[0,90,180]);
-        if(!best||orb<best.orb)best={orb,target:dst,from:src};
-      });
-    });
-    return best;
-  }
-
-  function evalPlanet(planet,points,maxOrb,aspects=[0,90,180]){
-    return (posT)=>{const t=bestTarget(posT[planet],points,aspects);return t&&t.orb<=maxOrb?{orb:t.orb,target:t}:null;};
-  }
-
-  const DETECTEURS=[
-    {id:'saturn-return',level:'A',source:'saturn',type:'critique',force:10,technique:'Retour de Saturne',eval:(p)=>{const o=delta(p.Saturne,posN.Saturne);return o<=2?{orb:o,target:{key:'Saturne',domain:'identity',label:'Structure de vie / responsabilités'}}:null;}},
-    {id:'saturn-major',level:'A',source:'saturn',type:'critique',force:9.3,technique:'Saturne',eval:evalPlanet('Saturne',CIBLES_MAJEURES,1.6)},
-    {id:'uranus-major',level:'A',source:'uranus',type:'critique',force:9.6,technique:'Uranus',eval:evalPlanet('Uranus',CIBLES_MAJEURES,1.5)},
-    {id:'pluto-major',level:'A',source:'pluto',type:'critique',force:10,technique:'Pluton',eval:evalPlanet('Pluton',CIBLES_MAJEURES,1.25)},
-    {id:'eclipse-major',level:'A',source:'eclipse',type:'critique',force:9.7,technique:'Éclipse',eclipse:true,eval:(p,jd)=>eclipseHit(jd)},
-    {id:'arc-major',level:'A',source:'arc',type:'critique',force:9.5,technique:'Arc solaire',eval:(p,jd)=>{const h=arcHit(jd);return h&&h.orb<=.45?h:null;}},
-
-    // Confirmations fortes : jamais affichées seules.
-    {id:'neptune-major',level:'B',source:'neptune',type:'critique',force:8.2,technique:'Neptune',eval:evalPlanet('Neptune',CIBLES_MAJEURES,1.0)},
-    {id:'prog-sun',level:'B',source:'progression',type:'critique',force:8.4,technique:'Progression solaire',eval:(p,jd)=>{const t=bestTarget(progression(jd).Soleil,CIBLES_MAJEURES,[0,90,180]);return t&&t.orb<=.65?{orb:t.orb,target:t}:null;}},
-    {id:'prog-moon',level:'B',source:'progression-lune',type:'critique',force:7.8,technique:'Progression lunaire',eval:(p,jd)=>{const t=bestTarget(progression(jd).Lune,CIBLES_MAJEURES,[0]);return t&&t.orb<=.85?{orb:t.orb,target:t}:null;}},
-    {id:'nodes-major',level:'B',source:'nodes',type:'critique',force:7.8,technique:'Axe nodal',eval:(p)=>{const n=p.Noeud,s=(n+180)%360;const a=bestTarget(n,CIBLES_MAJEURES,[0]),b=bestTarget(s,CIBLES_MAJEURES,[0]);const t=(!b||a.orb<=b.orb)?a:b;return t&&t.orb<=1.25?{orb:t.orb,target:t}:null;}},
-    {id:'jupiter-major',level:'B',source:'jupiter',type:'positif',force:7.8,technique:'Jupiter',eval:evalPlanet('Jupiter',CIBLES_MAJEURES,1.25,[0])},
-
-    // Domaines secondaires : finance, enfants, mobilité, rythme de vie, projets.
-    // Ils servent uniquement à préciser/renforcer un tournant déjà confirmé par ailleurs.
-    {id:'saturn-secondary',level:'B',source:'saturn-secondary',type:'critique',force:7.9,technique:'Saturne secondaire',eval:evalPlanet('Saturne',CIBLES_SECONDAIRES,1.0)},
-    {id:'uranus-secondary',level:'B',source:'uranus-secondary',type:'critique',force:8.1,technique:'Uranus secondaire',eval:evalPlanet('Uranus',CIBLES_SECONDAIRES,.9)},
-    {id:'pluto-secondary',level:'B',source:'pluto-secondary',type:'critique',force:8.3,technique:'Pluton secondaire',eval:evalPlanet('Pluton',CIBLES_SECONDAIRES,.8)},
-    {id:'jupiter-secondary',level:'B',source:'jupiter-secondary',type:'positif',force:7.6,technique:'Jupiter secondaire',eval:evalPlanet('Jupiter',CIBLES_SECONDAIRES,1.0,[0])}
-  ];
-
-  if(pl)pl.textContent='Recherche des tournants réellement majeurs…'; if(pb)pb.style.width='12%';
-  const activations=DETECTEURS.map(()=>[]), HORIZON=730, CHUNK=15;
-  for(let j=0;j<HORIZON;j+=CHUNK){
-    for(let k=j;k<Math.min(j+CHUNK,HORIZON);k++){
-      const jd=jdNow+k,posT=calcPos(jd),date=jdVersDate(jd);
-      DETECTEURS.forEach((det,idx)=>{
-        try{const hit=det.eval(posT,jd);if(hit)activations[idx].push({jd,date,k,orb:Number(hit.orb)||0,target:hit.target||null});}catch(e){}
-      });
-    }
-    if(pb)pb.style.width=(12+Math.round((j/HORIZON)*58))+'%';
-    if(pl)pl.textContent=`Analyse… mois ${Math.min(24,Math.ceil((j+1)/30))}/24`;
-    await new Promise(r=>setTimeout(r,0));
-  }
-
-  function passages(jours){
-    if(!jours.length)return[];const out=[];let cur=[jours[0]];
-    for(let i=1;i<jours.length;i++){if(jours[i].jd-jours[i-1].jd<=1.1)cur.push(jours[i]);else{out.push(cur);cur=[jours[i]];}}out.push(cur);
-    return out.map(p=>({debut:p[0],fin:p[p.length-1],pic:p.reduce((b,x)=>x.orb<b.orb?x:b,p[0])}));
-  }
-  function groupPassages(ps){
-    const out=[];ps.forEach(p=>{const last=out[out.length-1];if(last&&p.debut.jd-last.fin.jd<=120){last.fin=p.fin;last.pics.push(p.pic);}else out.push({debut:p.debut,fin:p.fin,pics:[p.pic]});});return out;
-  }
-
-  const raw=[];
-  activations.forEach((jours,idx)=>{
-    const det=DETECTEURS[idx];
-    groupPassages(passages(jours)).forEach(g=>{
-      let debutJD=g.debut.jd,finJD=g.fin.jd;
-      if(det.eclipse){debutJD=g.pics[0].jd-30;finJD=g.pics[0].jd+150;}
-      const targets=[...new Map(g.pics.filter(x=>x.target).map(x=>[x.target.key,x.target])).values()];
-      raw.push({...det,dateDebut:jdVersDate(debutJD),dateFin:jdVersDate(finJD),pics:g.pics.map(x=>x.date),targets,domainKeys:[...new Set(targets.map(t=>t.domain).filter(Boolean))],date:g.pics[0].date});
-    });
-  });
-
-  const center=e=>{const a=(e.pics&&e.pics.length?e.pics:[e.date]).map(d=>d.getTime()).sort((a,b)=>a-b);return a[Math.floor(a.length/2)];};
-  const close=(a,b,days=95)=>Math.abs(center(a)-center(b))<=days*MS_JOUR;
-
-  function mergeGroup(items){
-    const uniq=[...new Set(items)],leader=[...uniq].sort((a,b)=>b.force-a.force)[0];
-    const allTargets=[];const tk=new Set();uniq.flatMap(x=>x.targets||[]).forEach(t=>{if(t&&!tk.has(t.key)){tk.add(t.key);allTargets.push(t);}});
-    const domainKeys=[...new Set(allTargets.map(t=>t.domain).filter(Boolean))];
-    const pics=[];const pk=new Set();uniq.flatMap(x=>x.pics||[x.date]).sort((a,b)=>a-b).forEach(d=>{const k=d.toISOString().slice(0,10);if(!pk.has(k)){pk.add(k);pics.push(d);}});
-    const start=new Date(Math.min(...uniq.map(x=>x.dateDebut.getTime()))),finish=new Date(Math.max(...uniq.map(x=>x.dateFin.getTime())));
-    const sources=[...new Set(uniq.map(x=>x.source))];
-    const force=Math.min(10,Math.max(...uniq.map(x=>x.force))+(sources.length-1)*.3);
-    return {...leader,dateDebut:start,dateFin:finish,date:pics[0]||leader.date,pics,targets:allTargets,domainKeys,signatures:uniq.length,sourcesCount:sources.length,force};
-  }
-
-  // Filtre strict : A suffit seule. B exige au moins deux familles indépendantes et un domaine cohérent.
-  const candidates=[...raw].filter(x=>x.force>=7.5).sort((a,b)=>(a.level==='A'?0:1)-(b.level==='A'?0:1)||b.force-a.force||center(a)-center(b));
-  const used=new Set(),major=[];
-  for(const e of candidates){
-    if(used.has(e))continue;
-    const voisins=candidates.filter(x=>x!==e&&!used.has(x)&&close(e,x,95)&&domainCompatible(e,x));
-    if(e.level==='A'){
-      const conf=voisins.filter(x=>x.level==='B'||x.level==='A').filter(x=>x.source!==e.source||x.level==='A');
-      const grp=[e,...conf];grp.forEach(x=>used.add(x));major.push(mergeGroup(grp));
-    }else{
-      const grp=[e,...voisins.filter(x=>x.level==='B')];const sources=new Set(grp.map(x=>x.source));
-      if(sources.size>=2&&grp.reduce((s,x)=>s+x.force,0)>=15.7){grp.forEach(x=>used.add(x));major.push(mergeGroup(grp));}
+  const scan=[];
+  const HORIZON=730, PAS=2;
+  let idx=0;
+  for(let k=0;k<=HORIZON;k+=PAS){
+    const jd=jdNow+k;
+    const date=jdVersDate(jd);
+    let rows=[];
+    try{
+      rows=(analyserExceptionnelsTousDomainesV51(jd,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[])
+        .filter(r=>r.niveau==='fort'||r.niveau==='exceptionnel');
+    }catch(e){}
+    scan.push({date,exceptionnelsDomaines:rows});
+    idx++;
+    if(idx%15===0){
+      if(pb) pb.style.width=(8+Math.round((k/HORIZON)*65))+'%';
+      if(pl) pl.textContent=`Analyse équilibrée… mois ${Math.min(24,Math.max(1,Math.ceil(k/30)))}/24`;
+      await new Promise(r=>setTimeout(r,0));
     }
   }
 
-  // Deux groupes très proches et portant sur le même domaine concret deviennent un seul tournant.
-  const merged=[];
-  [...major].sort((a,b)=>a.dateDebut-b.dateDebut).forEach(e=>{
-    const last=merged[merged.length-1];
-    if(last&&close(last,e,75)&&domainCompatible(last,e)) merged[merged.length-1]=mergeGroup([last,e]);
-    else merged.push(e);
+  let groups=regrouperExceptionnelsDomainesV51(scan) || [];
+
+  // Raffine le pic de chaque groupe au jour près, autour du meilleur point trouvé.
+  function refinePeak(g){
+    let best=g.peak||null;
+    const center=best?.date || g.debut || today;
+    const baseJD=julianDay(center.getFullYear(),center.getMonth()+1,center.getDate(),12);
+    for(let d=-5;d<=5;d++){
+      try{
+        const rows=analyserExceptionnelsTousDomainesV51(baseJD+d,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[];
+        const r=rows.find(x=>x.domain===g.domain&&x.polarite===g.polarite&&(x.niveau==='fort'||x.niveau==='exceptionnel'));
+        if(r && (!best || r.force>best.force)) best={date:jdVersDate(baseJD+d),...r};
+      }catch(e){}
+    }
+    return best||g.peak;
+  }
+
+  groups=groups.map(g=>{
+    const peak=refinePeak(g);
+    return {...g,peak,force:peak?.force||g.force,niveau:peak?.niveau||g.niveau,
+      scenarios:peak?.scenarios||g.scenarios||[]};
   });
 
+  // Si le même domaine porte simultanément un signal favorable ET difficile,
+  // on le présente comme "mixte / transformation" au lieu de créer deux cartes contradictoires.
+  const reconciled=[];
+  const sorted=[...groups].sort((a,b)=>a.debut-b.debut||b.force-a.force);
+  for(const g of sorted){
+    const near=reconciled.find(x=>x.domain===g.domain &&
+      Math.abs(((x.peak?.date||x.debut)-(g.peak?.date||g.debut))/MS_JOUR)<=24 &&
+      x.polarite!==g.polarite);
+    if(near){
+      near.polarite='mixte';
+      near.debut=new Date(Math.min(near.debut.getTime(),g.debut.getTime()));
+      near.fin=new Date(Math.max(near.fin.getTime(),g.fin.getTime()));
+      near.force=Math.max(near.force,g.force);
+      near.niveau=(near.niveau==='exceptionnel'||g.niveau==='exceptionnel')?'exceptionnel':'fort';
+      const fs=new Set([...(near.familles||[]),...(g.familles||[])]);
+      near.familles=fs;
+      near.scenarios=[
+        ...(prevScenarioV51(near.domain,'positive',near.peak?.date||near.debut)||[]).slice(0,2),
+        ...(prevScenarioV51(near.domain,'difficile',near.peak?.date||near.debut)||[]).slice(0,2)
+      ];
+    }else reconciled.push({...g});
+  }
+
+  function typeFromPol(p){return p==='positive'?'positif':p==='difficile'?'critique':'mixte';}
+  function displayForce(g){
+    const base=g.niveau==='exceptionnel'?8.9:7.25;
+    return Math.min(10,base+Math.max(0,(Number(g.force)||5.5)-5.5)*.45);
+  }
   function titleFor(e){
-    const d=(e.domainKeys||[]).filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today));
-    if(d.length>2)return 'Un tournant majeur touche plusieurs domaines de la vie';
-    const k=d[0]||'identity';
-    const label=prevLabelDomaineAgeV51(k,e.date||today);
-    return `Un tournant important touche ${label.toLowerCase()}`;
+    const label=prevLabelDomaineAgeV51(e.domain,e.peak?.date||e.debut||today);
+    return `Un tournant important touche ${String(label||'la direction de vie').toLowerCase()}`;
   }
-
-  const SCENARIOS={
-    work:[
-      'changement de poste, de fonction ou de niveau de responsabilités',
-      'réorganisation importante du travail, de l’entreprise ou du cadre professionnel',
-      'reconversion, départ d’un poste ou lancement d’un nouveau projet professionnel'
-    ],
-    couple:[
-      'officialisation, engagement plus fort ou décision importante concernant le couple',
-      'redéfinition profonde de la relation, avec séparation possible si le lien ne correspond plus à la nouvelle étape de vie',
-      'association, contrat ou partenariat important avec une autre personne'
-    ],
-    family:[
-      'changement dans la composition ou l’organisation de la famille',
-      'responsabilité nouvelle envers un proche ou décision familiale structurante',
-      'rapprochement, éloignement ou nouvelle organisation durable des liens familiaux'
-    ],
-    home:[
-      'déménagement, achat, vente ou changement important de logement',
-      'travaux, réorganisation du foyer ou nouvelle manière de vivre au quotidien',
-      'décision patrimoniale ou familiale directement liée au lieu de vie'
-    ],
-    money:[
-      'achat, vente, crédit, investissement ou dépense importante qui engage sur la durée',
-      'changement notable des revenus ou de la sécurité financière',
-      'réorganisation d’un patrimoine, d’une dette ou d’argent partagé avec une autre personne'
-    ],
-    children:[
-      'arrivée d’un enfant ou étape importante concernant un enfant déjà présent',
-      'projet personnel ou créatif qui prend une place beaucoup plus importante',
-      'évolution affective ayant un impact direct sur les projets de famille'
-    ],
-    travel:[
-      'mobilité importante, départ loin du lieu de vie actuel ou projet lié à l’étranger',
-      'formation ou reprise d’études qui change la trajectoire',
-      'démarche administrative, juridique ou internationale décisive pour un projet'
-    ],
-    daily:[
-      'changement durable des horaires, de la charge ou de l’organisation du travail quotidien',
-      'rééquilibrage important du rythme de vie et des responsabilités',
-      'nouvelle manière de gérer l’énergie, les contraintes et les priorités du quotidien'
-    ],
-    projects:[
-      'projet collectif ou réseau qui ouvre une nouvelle étape',
-      'changement important dans le cercle social ou professionnel',
-      'objectif à long terme qui devient prioritaire et modifie l’organisation de la vie'
-    ],
-    identity:[
-      'changement de statut, de priorité ou de direction de vie',
-      'décision de quitter un ancien mode de vie devenu trop étroit',
-      'nouveau positionnement personnel avec des conséquences durables sur plusieurs choix'
-    ]
-  };
-
   function scenariosFor(e){
-    const keys=(e.domainKeys&&e.domainKeys.length?e.domainKeys:['identity']).filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today));
-    const pol=e.type==='positif'?'positive':'difficile';
-    const texts=[];
-    keys.forEach(k=>prevScenarioV51(k,pol,e.date||today).forEach(s=>{if(!texts.includes(s))texts.push(s);}));
-    const base=Math.max(58,Math.min(88,Math.round(57+(e.force-7.5)*8+Math.min(3,Math.max(0,(e.signatures||1)-1))*4)));
-    return texts.slice(0,3).map((texte,i)=>({texte,pct:Math.max(38,base-[0,9,17][i])}));
+    const date=e.peak?.date||e.debut||today;
+    let texts=[];
+    if(e.polarite==='mixte'){
+      const pos=prevScenarioV51(e.domain,'positive',date)||[];
+      const neg=prevScenarioV51(e.domain,'difficile',date)||[];
+      texts=[pos[0],neg[0],pos[1]||neg[1]].filter(Boolean);
+    }else{
+      texts=prevScenarioV51(e.domain,e.polarite==='positive'?'positive':'difficile',date)||[];
+    }
+    const force=displayForce(e);
+    const base=Math.max(56,Math.min(84,Math.round(56+(force-7)*9+Math.min(3,Math.max(0,((e.familles&&e.familles.size)||2)-2))*3)));
+    return texts.slice(0,3).map((texte,i)=>({texte,pct:Math.max(36,base-[0,9,17][i])}));
   }
 
-  const alertes=merged.sort((a,b)=>b.force-a.force||a.dateDebut-b.dateDebut).slice(0,6).sort((a,b)=>a.dateDebut-b.dateDebut);
-  const box=document.getElementById('ev-alertes'); if(box)box.innerHTML='';
+  // Même seuil pour le favorable et le difficile : aucune polarité n'est privilégiée.
+  const alertes=reconciled
+    .filter(g=>g.niveau==='fort'||g.niveau==='exceptionnel')
+    .sort((a,b)=>b.force-a.force||a.debut-b.debut)
+    .slice(0,6)
+    .sort((a,b)=>a.debut-b.debut)
+    .map(g=>({
+      ...g,
+      type:typeFromPol(g.polarite),
+      dateDebut:g.debut,
+      dateFin:g.fin,
+      date:g.peak?.date||g.debut,
+      pics:[g.peak?.date||g.debut],
+      domainKeys:[g.domain],
+      signatures:(g.familles&&g.familles.size)||1,
+      force:displayForce(g)
+    }));
+
+  const box=document.getElementById('ev-alertes');
+  if(box) box.innerHTML='';
+
   if(!alertes.length){
-    if(box)box.innerHTML='<div class="ev-card neutre"><div class="ev-card-titre">Aucun tournant de vie exceptionnel ne ressort sur les 24 prochains mois</div><div class="ev-card-desc">Cela ne signifie pas qu’il ne se passera rien. Simplement, aucune période ne franchit le seuil très élevé retenu ici pour parler d’un changement susceptible de marquer durablement la trajectoire de vie.</div></div>';
+    if(box) box.innerHTML='<div class="ev-card neutre"><div class="ev-card-titre">Aucun tournant de vie exceptionnel ne ressort sur les 24 prochains mois</div><div class="ev-card-desc">Cela ne signifie pas qu’il ne se passera rien. Simplement, aucune période ne franchit le seuil élevé retenu ici pour parler d’un changement susceptible de marquer durablement la trajectoire de vie.</div></div>';
   }else{
-    alertes.forEach(e=>{
-      const domains=(e.domainKeys&&e.domainKeys.length?e.domainKeys:['identity']);
-      const domainTags=domains.filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today)).map(k=>`<span class="ev-domain-tag">${prevLabelDomaineAgeV51(k,e.date||today)}</span>`).join('');
-      const pics=(e.pics||[]).map(fmtDate).join(' · ');
+    for(const e of alertes){
+      const domainTags=`<span class="ev-domain-tag">${prevLabelDomaineAgeV51(e.domain,e.date)}</span>`;
       const scenarios=scenariosFor(e);
       const tendance=evTendance(e),intensite=evIntensite(e.force);
+      const reliability=e.polarite==='mixte'?'Convergence contrastée':(e.polarite==='positive'?'Convergence favorable':'Convergence exigeante');
       box.innerHTML+=`<div class="ev-card ${e.type}">
         <div class="ev-card-header"><div class="ev-card-titre">${titleFor(e)}</div><span class="ev-trend ${tendance.classe}">${tendance.icone} ${tendance.label}</span></div>
         <div class="ev-domain-tags">${domainTags}</div>
         <div class="ev-period-line"><strong>Période :</strong> ${fmtDate(e.dateDebut)} → ${fmtDate(e.dateFin)}</div>
-        <div class="ev-period-line"><strong>${(e.pics||[]).length>1?'Points forts':'Point fort'} :</strong> ${pics||fmtDate(e.date)}</div>
-        <div class="ev-period-line"><strong>Importance :</strong> ${intensite}${e.signatures>1?` · ${e.signatures} indicateurs convergents`:''}</div>
+        <div class="ev-period-line"><strong>Point fort :</strong> ${fmtDate(e.date)}</div>
+        <div class="ev-period-line"><strong>Importance :</strong> ${intensite} · ${e.signatures} familles de techniques · ${reliability}</div>
         <div class="ev-concrete-title">Ce qui est le plus susceptible de se produire</div>
         ${scenarios.map(s=>`<div class="ev-scenario"><div class="ev-proba">≈ ${s.pct}%</div><div class="ev-scenario-text">${s.texte}</div></div>`).join('')}
-        <div class="ev-proba-note">Probabilités astrologiques relatives : elles classent les scénarios selon la force et la convergence des indicateurs. Elles ne sont pas des probabilités statistiques ni une certitude sur un événement précis.</div>
+        <div class="ev-proba-note">Ces pourcentages sont uniquement un classement astrologique relatif des scénarios. Ils ne constituent pas des probabilités statistiques ni une certitude sur un événement précis.</div>
       </div>`;
-    });
+    }
   }
 
-  // Une synthèse courte seulement : les cartes portent l'information principale.
   const globalWrap=document.getElementById('ev-global-wrap'), report=document.getElementById('ev-rapport');
-  if(!alertes.length){if(globalWrap)globalWrap.style.display='none';if(report)report.innerHTML='';}
-  else{
-    if(globalWrap)globalWrap.style.display='block';
+  if(!alertes.length){
+    if(globalWrap) globalWrap.style.display='none';
+    if(report) report.innerHTML='';
+  }else{
+    if(globalWrap) globalWrap.style.display='block';
     const resume=alertes.map(e=>{
       const sc=scenariosFor(e).slice(0,2).map(x=>x.texte).join(' OU ');
-      const dom=(e.domainKeys||[]).filter(k=>prevEtapeAutoriseDomaineV51(k,e.date||today)).map(k=>prevLabelDomaineAgeV51(k,e.date||today)).join(', ');
-      return `Domaine : ${dom}. Période : ${fmtDate(e.dateDebut)} à ${fmtDate(e.dateFin)}. Scénarios principaux : ${sc}.`;
+      return `Domaine : ${prevLabelDomaineAgeV51(e.domain,e.date)}. Polarité calculée : ${e.polarite}. Période : ${fmtDate(e.dateDebut)} à ${fmtDate(e.dateFin)}. Point fort : ${fmtDate(e.date)}. Scénarios : ${sc}.`;
     }).join('\n');
-    const prompt=`Voici les seuls tournants de vie réellement majeurs retenus pour ${USER.prenom} sur les 24 prochains mois :\n${resume}\n\n${contexteAnalyseUniversel(today,false)}\n\nRédige uniquement une synthèse de 3 à 4 phrases maximum. Commence par les domaines réellement les plus forts, quel qu'ils soient. Ne donne aucune priorité automatique à la famille, au couple ou au travail. Parle de la VIE CONCRÈTE adaptée à l'âge réel. Ne mentionne aucune planète, maison, transit, cycle, technique astrologique ou « module ». Ne répète pas toutes les dates : elles sont déjà affichées sur les cartes. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème de santé comme une certitude. Explique seulement quels domaines semblent les plus susceptibles de connaître un changement important et quelle forme générale ce changement pourrait prendre.`;
+    const prompt=`Voici les tournants majeurs retenus pour ${USER.prenom} sur les 24 prochains mois par le même moteur de polarité que la Timeline :
+${resume}
+
+${contexteAnalyseUniversel(today,false)}
+
+Rédige uniquement une synthèse de 3 à 4 phrases maximum. Respecte strictement la polarité calculée de chaque période : favorable, difficile ou mixte. N'assombris pas une période favorable et n'embellis pas une période difficile. Si une période est mixte, explique clairement qu'elle contient à la fois ouverture et ajustement. Ne donne aucune priorité automatique à la famille, au couple ou au travail. Parle de vie concrète adaptée à l'âge réel. Aucun jargon astrologique. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème de santé comme une certitude.`;
     try{
-      const data=await appelerClaude({feature:'events',featureContext:{horizon:'24 mois',label:'Grands événements'},model:'claude-sonnet-4-6',max_tokens:350,system:'Tu écris une synthèse très courte, concrète, accessible et sans jargon. Tu respectes strictement l’âge et tu hiérarchises tous les domaines sans priorité familiale, sentimentale ou professionnelle par défaut. Tu ne parles jamais de technique astrologique.',messages:[{role:'user',content:prompt}]});
-      if(report)report.innerHTML=formatRapport(texteClaude(data)||'');
-    }catch(e){if(globalWrap)globalWrap.style.display='none';}
+      const data=await appelerClaude({feature:'events',featureContext:{horizon:'24 mois',label:'Grands événements',engine:'v74-balanced-v51'},model:'claude-sonnet-4-6',max_tokens:350,system:'Tu rédiges une synthèse concrète à partir d’un calcul déjà classé en favorable, difficile ou mixte. Tu respectes ce classement et tu ne modifies jamais la polarité pour dramatiser. Aucun jargon astrologique.',messages:[{role:'user',content:prompt}]});
+      if(report) report.innerHTML=formatRapport(texteClaude(data)||'');
+    }catch(e){
+      if(globalWrap) globalWrap.style.display='none';
+    }
   }
 
-  if(pb)pb.style.width='100%';setTimeout(()=>{if(pw)pw.style.display='none';},700);
-  const form=document.getElementById('ev-form'),res=document.getElementById('ev-res');if(form)form.style.display='none';if(res)res.style.display='block';if(btn)btn.disabled=false;
+  if(pb) pb.style.width='100%';
+  if(pl) pl.textContent='Analyse terminée';
+  setTimeout(()=>{if(pw)pw.style.display='none';},700);
+  const form=document.getElementById('ev-form'),res=document.getElementById('ev-res');
+  if(form) form.style.display='none';
+  if(res) res.style.display='block';
+  if(btn) btn.disabled=false;
 }
-
 /* ===== MODULE MA QUESTION ===== */
 let domQ = null;
 
@@ -9878,6 +9729,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 // Update UI when a profile is created/loaded.
 ['validerSaisie','chargerProfil','v37ChangerProfil'].forEach(name=>{try{const fn=window[name];if(typeof fn==='function')window[name]=async function(){const r=await fn.apply(this,arguments);setTimeout(()=>{apShowDashboardIfProfile();apLoadContext();},80);return r;};}catch(e){}});
 
+// V74 — événements 24 mois alignés sur le même moteur de polarité que la Timeline.
 // V73 — correction du clignotement : le MutationObserver global a été supprimé.
 // AP_TRANSLATE_OBSERVER traduit déjà uniquement les nouveaux éléments ajoutés au DOM.
 })();
