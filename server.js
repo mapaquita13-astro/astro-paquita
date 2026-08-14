@@ -160,6 +160,7 @@ function reponseCompte(user) {
     question_credits: Number(user.question_credits) || 0,
     questions_used: Number(user.questions_used) || 0,
     question_packs_bought: Number(user.question_packs_bought) || 0,
+    questions_unlimited: user.role === 'admin',
     role: user.role === 'admin' ? 'admin' : 'user',
     is_admin: user.role === 'admin',
     lang: ['fr','en','es','ar'].includes(user.lang) ? user.lang : 'fr',
@@ -268,8 +269,12 @@ app.post('/api/promo/redeem', auth, (req, res) => {
   const promo = db.getPromoByCode(codeNormalise);
 
   if (!promo) return res.status(404).json({ erreur: 'Code promo invalide ou expiré.' });
-  if (promo.expire_le && new Date(promo.expire_le) < new Date()) {
-    return res.status(410).json({ erreur: 'Ce code a expiré.' });
+  if (promo.expire_le) {
+    const expire = String(promo.expire_le);
+    const expiree = /^\d{4}-\d{2}-\d{2}$/.test(expire)
+      ? expire < aujourdHuiParis()
+      : new Date(expire) < new Date();
+    if (expiree) return res.status(410).json({ erreur: 'Ce code a expiré.' });
   }
   if (promo.max_utilisations && promo.utilisations_count >= promo.max_utilisations) {
     return res.status(410).json({ erreur: "Ce code a atteint sa limite d'utilisation." });
@@ -283,12 +288,20 @@ app.post('/api/promo/redeem', auth, (req, res) => {
       req.user.premium_expires_at && new Date(req.user.premium_expires_at) > new Date()
         ? new Date(req.user.premium_expires_at)
         : new Date();
-    base.setDate(base.getDate() + promo.valeur);
+    base.setDate(base.getDate() + Number(promo.valeur));
     db.updateUser(req.user.id, { premium: 1, premium_expires_at: base.toISOString() });
+  } else if (promo.type === 'questions_gratuites') {
+    db.ajouterCreditsQuestions(req.user.id, Number(promo.valeur));
   }
 
   db.enregistrerUtilisationPromo(req.user.id, promo.id);
-  res.json({ succes: true, type: promo.type, valeur: promo.valeur });
+  const userApres = db.getUserById(req.user.id);
+  res.json({
+    succes: true,
+    type: promo.type,
+    valeur: Number(promo.valeur),
+    question_credits: Number(userApres && userApres.question_credits) || 0,
+  });
 });
 
 // ============================================================
@@ -396,6 +409,9 @@ app.get('/api/stripe/questions-pack/confirm', auth, async (req, res) => {
 const limiteurClaude = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
+  // Les administrateurs ne sont pas soumis au quota applicatif :
+  // ils doivent pouvoir tester le module Questions sans limitation.
+  skip: (req) => !!(req.user && req.user.role === 'admin'),
   message: { erreur: 'Trop de requêtes, réessaie dans une minute.' },
 });
 
@@ -554,7 +570,7 @@ app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
   }
 
   let creditQuestionReserve = false;
-  if (feature === 'question') {
+  if (feature === 'question' && req.user.role !== 'admin') {
     creditQuestionReserve = db.consumeQuestionCredit(req.user.id);
     if (!creditQuestionReserve) {
       return res.status(402).json({
@@ -678,11 +694,34 @@ app.get('/api/admin/promo', adminAuth, (req, res) => {
 
 app.post('/api/admin/promo', adminAuth, (req, res) => {
   const { code, type, valeur, maxUtilisations, expireLe } = req.body;
-  if (!code || !type || !valeur) {
-    return res.status(400).json({ erreur: 'code, type et valeur sont requis.' });
+  const codeNormalise = String(code || '').trim().toUpperCase();
+  const typesAutorises = new Set(['jours_premium', 'questions_gratuites', 'reduction_pourcentage']);
+  const valeurNum = Number(valeur);
+  const maxNum = maxUtilisations === null || maxUtilisations === undefined || maxUtilisations === ''
+    ? null
+    : Number(maxUtilisations);
+
+  if (!codeNormalise || !typesAutorises.has(type) || !Number.isFinite(valeurNum) || valeurNum <= 0) {
+    return res.status(400).json({ erreur: 'Code, type et valeur positive sont requis.' });
   }
+  if (type === 'reduction_pourcentage' && valeurNum > 100) {
+    return res.status(400).json({ erreur: 'La réduction doit être comprise entre 1 et 100 %.' });
+  }
+  if ((type === 'questions_gratuites' || type === 'jours_premium') && !Number.isInteger(valeurNum)) {
+    return res.status(400).json({ erreur: 'Le nombre de questions ou de jours doit être un nombre entier.' });
+  }
+  if (maxNum !== null && (!Number.isInteger(maxNum) || maxNum < 1)) {
+    return res.status(400).json({ erreur: "Le nombre maximal d'utilisations doit être un entier supérieur ou égal à 1." });
+  }
+
   try {
-    db.insertPromoCode({ code: code.trim().toUpperCase(), type, valeur, maxUtilisations, expireLe });
+    db.insertPromoCode({
+      code: codeNormalise,
+      type,
+      valeur: valeurNum,
+      maxUtilisations: maxNum,
+      expireLe,
+    });
     res.json({ succes: true });
   } catch (err) {
     res.status(409).json({ erreur: 'Ce code existe déjà.' });

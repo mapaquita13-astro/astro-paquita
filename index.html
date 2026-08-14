@@ -2314,13 +2314,15 @@ async function enregistrerVisiteUneFoisParSession() {
 }
 
 function majCreditsQuestionsUI() {
+  const estAdmin = !!(USER_CONNECTE && (USER_CONNECTE.role === 'admin' || USER_CONNECTE.questions_unlimited));
   const n = USER_CONNECTE ? Number(USER_CONNECTE.question_credits || 0) : 0;
   const compte = document.getElementById('compte-questions');
   const qbox = document.getElementById('q-credit-box');
   const qpack = document.getElementById('q-pack-btn');
-  if (compte) compte.textContent = `🔮 Questions disponibles : ${n}`;
-  if (qbox) qbox.textContent = `🔮 Questions disponibles : ${n}`;
-  if (qpack) qpack.style.display = USER_CONNECTE && n <= 0 ? 'inline-block' : 'none';
+  const texte = estAdmin ? '👑 Questions illimitées — Administrateur' : `🔮 Questions disponibles : ${n}`;
+  if (compte) compte.textContent = texte;
+  if (qbox) qbox.textContent = texte;
+  if (qpack) qpack.style.display = USER_CONNECTE && !estAdmin && n <= 0 ? 'inline-block' : 'none';
 }
 
 function majAccesPremiumUI() {
@@ -2551,7 +2553,9 @@ async function validerCodePromo() {
     });
     const data = await resp.json();
     if (!resp.ok) { msgEl.textContent = data.erreur || 'Code invalide.'; msgEl.style.color = '#f87171'; return; }
-    msgEl.textContent = 'Code appliqué ✓';
+    msgEl.textContent = data.type === 'questions_gratuites'
+      ? `Code appliqué ✓ +${Number(data.valeur)||0} question${Number(data.valeur)===1?'':'s'} gratuite${Number(data.valeur)===1?'':'s'}`
+      : 'Code appliqué ✓';
     msgEl.style.color = '#4ade80';
     chargerStatutCompte();
   } catch (e) { msgEl.textContent = 'Erreur réseau.'; }
@@ -2626,10 +2630,13 @@ function majMobileAccueil() {
   const prenom = (USER && USER.prenom) || (USER_CONNECTE && USER_CONNECTE.prenom) || '';
   titre.textContent = prenom ? `Bonjour ${prenom} ✦` : 'Votre espace astrologique';
   badge.textContent = PREMIUM ? 'PREMIUM' : 'GRATUIT';
+  const estAdmin = !!(USER_CONNECTE && (USER_CONNECTE.role === 'admin' || USER_CONNECTE.questions_unlimited));
   const credits = USER_CONNECTE ? Number(USER_CONNECTE.question_credits || 0) : null;
   txt.textContent = credits === null
     ? 'Votre portrait, votre journée et vos grandes périodes au même endroit.'
-    : `Votre portrait, vos prévisions et vos grandes périodes au même endroit · ${credits} question${credits===1?'':'s'} disponible${credits===1?'':'s'}.`;
+    : estAdmin
+      ? 'Votre portrait, vos prévisions et vos grandes périodes au même endroit · questions illimitées.'
+      : `Votre portrait, vos prévisions et vos grandes périodes au même endroit · ${credits} question${credits===1?'':'s'} disponible${credits===1?'':'s'}.`;
 }
 
 function majMobileNav(id='home') {
@@ -8731,7 +8738,8 @@ function selDomQ(val, el) {
 async function poserQuestion() {
   if (!USER) return;
   if (!TOKEN) { ouvrirCompte(); return; }
-  if (USER_CONNECTE && Number(USER_CONNECTE.question_credits || 0) <= 0) {
+  const adminQuestionsIllimitees = !!(USER_CONNECTE && (USER_CONNECTE.role === 'admin' || USER_CONNECTE.questions_unlimited));
+  if (USER_CONNECTE && !adminQuestionsIllimitees && Number(USER_CONNECTE.question_credits || 0) <= 0) {
     affErr('q-err','Ta question offerte a déjà été utilisée. Achète un pack de 5 questions pour continuer.');
     majCreditsQuestionsUI();
     return;

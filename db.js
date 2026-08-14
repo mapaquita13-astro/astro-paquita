@@ -377,6 +377,17 @@ function refundQuestionCredit(id) {
   return true;
 }
 
+function ajouterCreditsQuestions(id, credits = 1) {
+  const data = charger();
+  const user = data.users.find((u) => memeId(u.id, id));
+  if (!user) return null;
+  const nb = Math.max(1, Math.min(1000, Math.floor(Number(credits) || 1)));
+  user.question_credits = (Number(user.question_credits) || 0) + nb;
+  user.last_activity_at = new Date().toISOString();
+  sauvegarder(data);
+  return user;
+}
+
 function enregistrerAchatQuestions(userId, stripeSessionId, credits = 5) {
   const data = charger();
   const deja = data.questionPurchases.find((p) => p.stripe_session_id === stripeSessionId);
@@ -596,6 +607,7 @@ module.exports = {
   getAnalytics,
   consumeQuestionCredit,
   refundQuestionCredit,
+  ajouterCreditsQuestions,
   enregistrerAchatQuestions,
   getSiteSettings,
   setMaintenance,
