@@ -4741,7 +4741,12 @@ function prevDomainsForTargetV51(target){
 }
 
 function prevTechniqueRootV80(famille){
-  return String(famille||'').replace(/-(secondaire|secteur|ruler)$/,'');
+  const f=String(famille||'');
+  if(/^retour-(jupiter|saturne|uranus|neptune|pluton)$/i.test(f)) return 'retour-planetaire';
+  if(/^declencheur-rapide/i.test(f)) return 'declencheur-rapide';
+  if(/^progression-mineure/i.test(f)) return 'progression';
+  if(/^arc-solaire-mineur/i.test(f)) return 'arc-solaire';
+  return f.replace(/-(secondaire|secteur|ruler)$/,'');
 }
 
 function prevDomainAnchorKindV80(target,domain){
@@ -4894,12 +4899,24 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
   const targetsSector=['H2','H3','H5','H6','H8','H9','H11','H12'];
   const targetsRuler=Object.keys(rulers);
   const sig=[];
+  const globalSupports=[];
   const add=(famille,poids,pol,texte,target,core=true)=>{
     for(const [domain,factor] of prevDomainsForTargetV51(target)){
       if(!prevEtapeAutoriseDomaineV51(domain,date)) continue;
       const anchorKind=prevDomainAnchorKindV80(target,domain);
       sig.push({famille,poids:poids*factor,pol,texte,target,domain,core:core&&factor>=.7,anchor:anchorKind!=='none',anchorKind});
     }
+  };
+  // V81 — confirmations/déclencheurs : ils peuvent renforcer ou dater un domaine
+  // déjà prouvé, mais ne créent JAMAIS le domaine à eux seuls.
+  const addSupport=(famille,poids,pol,texte,target)=>{
+    for(const [domain,factor] of prevDomainsForTargetV51(target)){
+      if(!prevEtapeAutoriseDomaineV51(domain,date)) continue;
+      sig.push({famille,poids:poids*factor,pol,texte,target,domain,core:false,anchor:false,anchorKind:'support'});
+    }
+  };
+  const addGlobalSupport=(famille,poids,pol,texte)=>{
+    globalSupports.push({famille,poids,pol,texte,target:'cycle',core:false,anchor:false,anchorKind:'support'});
   };
   const test=(value,target,aspects,orbe)=>{if(value===undefined||natal[target]===undefined)return null;const a=ecartAspectExact(value,natal[target],aspects);return a.ecart<=orbe?a:null;};
 
@@ -4925,11 +4942,48 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
     }
   }
 
+  // V81 — RETOURS PLANÉTAIRES : contexte de cycle, jamais preuve sectorielle autonome.
+  for(const pl of ['Jupiter','Saturne','Uranus','Neptune','Pluton']){
+    if(t[pl]===undefined||posN[pl]===undefined) continue;
+    let d=Math.abs(t[pl]-posN[pl]); if(d>180)d=360-d;
+    const orb={Jupiter:1.15,Saturne:1.0,Uranus:.75,Neptune:.70,Pluton:.65}[pl];
+    if(d<=orb){
+      const w={Jupiter:1.15,Saturne:1.30,Uranus:1.05,Neptune:.95,Pluton:1.10}[pl];
+      addGlobalSupport('retour-'+pl.toLowerCase(),w,'mixte',`Retour planétaire de ${pl} (écart ${d.toFixed(2)}°)`);
+    }
+  }
+
+  // V81 — RETOUR LUNAIRE : déclencheur mensuel de timing uniquement.
+  // Échantillonnage intrajournalier pour ne pas rater le retour exact au milieu de la journée.
+  try{
+    let best=999;
+    for(const off of [0,.25,.5,.75,1]){
+      const lp=calcPos(jdJour+off).Lune;
+      let d=Math.abs(lp-posN.Lune); if(d>180)d=360-d;
+      if(d<best)best=d;
+    }
+    if(best<=1.35) addGlobalSupport('retour-lunaire',.45,'mixte',`Retour lunaire proche (écart ${best.toFixed(2)}°)`);
+  }catch(e){}
+
+  // V81 — TRANSITS RAPIDES : Soleil, Mercure, Vénus, Mars et Lune servent à préciser
+  // la date d'un cycle déjà établi. Ils sont volontairement NON-ANCHOR et NON-CORE.
+  for(const src of ['Soleil','Mercure','Venus','Mars','Lune']){
+    if(t[src]===undefined) continue;
+    const orb={Soleil:.55,Mercure:.45,Venus:.50,Mars:.50,Lune:1.15}[src];
+    const w={Soleil:.60,Mercure:.55,Venus:.65,Mars:.70,Lune:.35}[src];
+    for(const target of [...targetsMajor,...targetsSector,...targetsRuler]){
+      const a=test(t[src],target,[0,60,90,120,180],orb); if(!a)continue;
+      const pol=(src==='Soleil'||src==='Lune')?'mixte':prevPolariteV51(src,a.aspect);
+      const label=/^R/.test(target)?`maître de maison ${target.slice(1)}`:target;
+      addSupport('declencheur-rapide-'+src.toLowerCase(),w,pol,`${src} déclenche ${label} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target);
+    }
+  }
+
   // Progressions secondaires : timing lent/personnel, surtout comme confirmation de domaine.
   if(age>=0){
     try{
       const p=calcProgressions(jdNatal,age);
-      for(const src of ['Soleil','Lune','Venus','Mercure','AS','MC']){
+      for(const src of ['Soleil','Lune','Venus','Mercure','Mars','AS','MC']){
         if(p[src]===undefined)continue;
         for(const target of targetsMajor){
           const a=test(p[src],target,[0,60,90,120,180],src==='Lune'?.65:.5); if(!a)continue;
@@ -4945,8 +4999,14 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
         }
         for(const target of targetsRuler){
           const a=test(p[src],target,[0,60,90,120,180],.36); if(!a)continue;
-          const pol=src==='Venus'?prevPolariteV51('Venus',a.aspect):'mixte';
+          const pol=src==='Venus'?prevPolariteV51('Venus',a.aspect):src==='Mars'?prevPolariteV51('Mars',a.aspect):'mixte';
           add('progression-ruler',2.35,pol,`${src} progressé active le maître de maison ${target.slice(1)} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+        }
+        // Aspects secondaires 45°/135° : confirmation seulement, jamais preuve de domaine.
+        for(const target of [...targetsMajor,...targetsSector,...targetsRuler]){
+          const a=test(p[src],target,[45,135],src==='Lune'?.28:.20); if(!a)continue;
+          const pol=(src==='Venus'||src==='Mars')?prevPolariteV51(src,a.aspect):'mixte';
+          addSupport('progression-mineure',.70,pol,`${src} progressé ${a.aspect}° ${target} (${a.ecart.toFixed(2)}°)`,target);
         }
       }
     }catch(e){}
@@ -4972,6 +5032,13 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
           const a=test(dirige,target,[0,60,90,120,180],.32); if(!a)continue;
           const pol=['Jupiter','Venus','Saturne','Pluton','Uranus','Neptune','Mars'].includes(src)?prevPolariteV51(src,a.aspect):'mixte';
           add('arc-solaire-ruler',2.65,pol,`${src} dirigé active le maître de maison ${target.slice(1)} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+        }
+        // Semi-carré / sesqui-carré par arc solaire : indicateur secondaire très serré.
+        for(const target of [...targetsMajor,...targetsSector,...targetsRuler]){
+          if(src===target)continue;
+          const a=test(dirige,target,[45,135],.18); if(!a)continue;
+          const pol=['Jupiter','Venus','Saturne','Pluton','Uranus','Neptune','Mars'].includes(src)?prevPolariteV51(src,a.aspect):'mixte';
+          addSupport('arc-solaire-mineur',.85,pol,`${src} dirigé ${a.aspect}° ${target} (${a.ecart.toFixed(2)}°)`,target);
         }
       }
     }catch(e){}
@@ -5035,6 +5102,10 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
     const anchorSignals=u.filter(x=>x.anchor);
     const domainProof=prevDomainProofV77(domain,u);
     if(!domainProof.confirmed) continue; // V77 : aucune adaptation d'une maison ambiguë vers un domaine.
+
+    // V81 — les retours planétaires/lunaires sont injectés seulement APRÈS preuve du domaine.
+    // Ils renforcent le contexte et le timing sans pouvoir fabriquer Travail/Finance/Famille/etc.
+    for(const gs of globalSupports) u.push({...gs,domain});
 
     // La RS peut seulement moduler un domaine déjà prouvé ; elle ne peut pas le créer.
     if(Math.abs(rsContexte)>=1.35){
@@ -5183,6 +5254,15 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
       const posExceptionnel=exceptionnelsForts.some(e=>e.polarite==='positive'||e.polarite==='mixte');
       critique=negExceptionnel||declencheurs.some(d=>d.type==='neg'&&Number(d.force)>=5);
       positifExceptionnel=posExceptionnel||declencheurs.some(d=>d.type==='pos'&&Number(d.force)>=6);
+
+      // V81 — même en prévision « Général », le moteur multidomaine central participe
+      // au classement des jours. Ainsi retours, progressions/arcs complémentaires et
+      // déclencheurs rapides ne restent pas cantonnés aux seuls modules spécialisés.
+      const posRows=exceptionnelsDomaines.filter(e=>e.polarite==='positive'&&e.niveau!=='faible').sort((a,b)=>b.force-a.force);
+      const negRows=exceptionnelsDomaines.filter(e=>e.polarite==='difficile'&&e.niveau!=='faible').sort((a,b)=>b.force-a.force);
+      if(posRows.length) maxS=Math.max(maxS, Math.max(.1,apSignedDomainScoreV76(posRows[0])));
+      if(negRows.length) minS=Math.min(minS, Math.min(-.1,apSignedDomainScoreV76(negRows[0])));
+
       scoreDominant=(Math.abs(minS)>Math.abs(maxS)?minS:maxS);
       if(critique&&!positifExceptionnel)scoreDominant=Math.min(minS,maxS);
       else if(positifExceptionnel&&!critique)scoreDominant=Math.max(minS,maxS);
@@ -7647,7 +7727,7 @@ function yLirePartenaireSynastrie() {
   const jd2 = julianDay(u2.y, u2.m, u2.d, u2.h);
   const pos2 = calcPos(jd2);
   const axes2 = calcASMC(jd2, lat2, lon2);
-  return { prenom2, dateRaw2, dateISO2, heure2, ville2, tz2, genre2, jd2, pos2, AS2:axes2.AS, MC2:axes2.MC };
+  return { prenom2, dateRaw2, dateISO2, heure2, ville2, tz2, genre2, lat2, lon2, jd2, pos2, AS2:axes2.AS, MC2:axes2.MC };
 }
 
 
@@ -8745,6 +8825,95 @@ function yScoreTransitRelation(posT, points, mode) {
   return {score,themes:uniques,touches,relevant:true,anchorCount:anchorTouches.length,peopleCount:people.size};
 }
 
+// V81 — techniques complémentaires de relation.
+// Les progressions et arcs sont croisés avec les ANCRES du contexte choisi de l'autre personne.
+// Les retours planétaires/lunaires restent de simples supports et ne créent jamais une prévision relationnelle à eux seuls.
+function yComplementRelationV81(jd, part, points, mode, baseRelevant=false) {
+  const m=yModeRelationV26(mode), t=calcPos(jd);
+  const charts=[
+    {name:USER.prenom,jdNatal:USER.jd,pos:USER.pos,AS:USER.AS,MC:USER.MC,lat:USER.lat,lon:USER.lon},
+    {name:part.prenom2,jdNatal:part.jd2,pos:part.pos2,AS:part.AS2,MC:part.MC2,lat:part.lat2,lon:part.lon2}
+  ];
+  const calcProg=(ch,age)=>{
+    const jdProg=ch.jdNatal+age, pos=calcPos(jdProg);
+    const ax=(Number.isFinite(Number(ch.lat))&&Number.isFinite(Number(ch.lon)))?calcASMC(jdProg,Number(ch.lat),Number(ch.lon)):{AS:ch.AS,MC:ch.MC};
+    return {...pos,AS:ax.AS,MC:ax.MC};
+  };
+  const touches=[]; const crossDirs=new Set(); let score=0;
+  const addTouch=(tech,src,sourceName,pt,asp,delta)=>{
+    const theme=yThemeTransitRelationV26(src,asp.nature,delta,m);
+    touches.push({tr:tech+' '+src,trCle:tech+'-'+src,sourceQui:sourceName,qui:pt.qui,point:pt.label,clePoint:pt.cle,anchor:true,delta,theme,aspect:asp.a,aspectNature:asp.nature,orb:asp.orb,technique:tech});
+    score+=delta; crossDirs.add(sourceName);
+  };
+  for(const ch of charts){
+    if(!ch.jdNatal||!ch.pos)continue;
+    const otherAnchors=points.filter(pt=>pt.anchor && pt.qui!==ch.name);
+    const age=calcAnneeVieExacte(ch.jdNatal,jd);
+    if(age>=0){
+      try{
+        const prog=calcProg(ch,age);
+        for(const src of ['Soleil','Lune','Venus','Mercure','Mars','AS','MC']){
+          if(prog[src]===undefined)continue;
+          for(const pt of otherAnchors){
+            const asp=yAspect(prog[src],pt.lon,src==='Lune'?.70:.48); if(!asp)continue;
+            const sign=(asp.nature==='tension'||asp.nature==='face-a-face')?-1:1;
+            const base={Soleil:.55,Lune:.70,Venus:.80,Mercure:.60,Mars:.70,AS:.55,MC:.60}[src]||.5;
+            addTouch('Progression',src,ch.name,pt,asp,sign*base*(pt.poids||1));
+          }
+        }
+      }catch(e){}
+      try{
+        const arc=calcArcSoleil(ch.jdNatal,age);
+        const natal={...ch.pos,AS:ch.AS,MC:ch.MC};
+        for(const src of ['Soleil','Lune','Venus','Mars','Jupiter','Saturne','AS','MC']){
+          if(natal[src]===undefined)continue;
+          const dirige=(natal[src]+arc)%360;
+          for(const pt of otherAnchors){
+            const asp=yAspect(dirige,pt.lon,.36); if(!asp)continue;
+            const sign=(asp.nature==='tension'||asp.nature==='face-a-face')?-1:1;
+            const base={Soleil:.65,Lune:.70,Venus:.85,Mars:.75,Jupiter:.70,Saturne:.75,AS:.65,MC:.70}[src]||.6;
+            addTouch('ArcSolaire',src,ch.name,pt,asp,sign*base*(pt.poids||1));
+          }
+        }
+      }catch(e){}
+    }
+  }
+
+  // Les techniques croisées peuvent devenir une preuve relationnelle seulement si les deux thèmes
+  // sont impliqués ; sinon elles ne font que confirmer une prévision déjà prouvée par les transits.
+  const crossRelevant=crossDirs.size>=2 && touches.length>=2;
+  const relevant=!!baseRelevant || crossRelevant;
+  if(!relevant) return {score:0,touches:[],themes:[],relevant:false};
+
+  // Retours planétaires : contexte de cycle seulement.
+  for(const ch of charts){
+    for(const pl of ['Jupiter','Saturne','Uranus','Neptune','Pluton']){
+      if(t[pl]===undefined||!ch.pos||ch.pos[pl]===undefined)continue;
+      let d=Math.abs(t[pl]-ch.pos[pl]); if(d>180)d=360-d;
+      const orb={Jupiter:1.0,Saturne:.9,Uranus:.65,Neptune:.60,Pluton:.55}[pl];
+      if(d<=orb){
+        const theme=yThemeTransitRelationV26(pl,'conjonction',.18,m);
+        touches.push({tr:'Retour '+pl,trCle:'Retour-'+pl,sourceQui:ch.name,qui:ch.name,point:'cycle personnel',clePoint:pl,anchor:false,delta:.18,theme,aspect:0,aspectNature:'conjonction',orb:d,technique:'RetourPlanetaire'});
+        score+=.18;
+      }
+    }
+    // Retour lunaire : timing mensuel, poids très faible.
+    if(t.Lune!==undefined&&ch.pos&&ch.pos.Lune!==undefined){
+      let d=Math.abs(t.Lune-ch.pos.Lune); if(d>180)d=360-d;
+      if(d<=1.5){
+        const theme=yThemeTransitRelationV26('Lune','conjonction',.10,m);
+        touches.push({tr:'Retour lunaire',trCle:'Retour-Lune',sourceQui:ch.name,qui:ch.name,point:'cycle mensuel',clePoint:'Lune',anchor:false,delta:.10,theme,aspect:0,aspectNature:'conjonction',orb:d,technique:'RetourLunaire'});
+        score+=.10;
+      }
+    }
+  }
+
+  const themeScore={};
+  for(const x of touches){if(x.theme)themeScore[x.theme]=(themeScore[x.theme]||0)+Math.abs(x.delta||0);}
+  const themes=Object.keys(themeScore).sort((a,b)=>themeScore[b]-themeScore[a]).slice(0,4);
+  return {score,touches,themes,relevant:true,crossRelevant};
+}
+
 async function yScannerRelation(part, debut, jours, onProg, relationMode) {
   const mode = yModeRelationV26(relationMode);
   const points = yPointsRelation(part, mode);
@@ -8755,7 +8924,13 @@ async function yScannerRelation(part, debut, jours, onProg, relationMode) {
     const date = jdVersDate(jd);
     const posT = calcPos(jd);
     const sc = yScoreTransitRelation(posT, points, mode);
-    res.push({date, jd, score:sc.score, themes:sc.themes, touches:sc.touches, relevant:!!sc.relevant, anchorCount:sc.anchorCount||0});
+    const comp = yComplementRelationV81(jd, part, points, mode, !!sc.relevant);
+    const relevant=!!sc.relevant||!!comp.relevant;
+    const touches=relevant?[...(sc.touches||[]),...(comp.touches||[])]:[];
+    const themeScore={};
+    for(const x of touches){if(x.theme)themeScore[x.theme]=(themeScore[x.theme]||0)+Math.abs(x.delta||0);}
+    const themes=Object.keys(themeScore).sort((a,b)=>themeScore[b]-themeScore[a]).slice(0,4);
+    res.push({date, jd, score:relevant?(sc.score+comp.score):0, themes, touches, relevant, anchorCount:(sc.anchorCount||0)+(comp.crossRelevant?2:0)});
     if (j % 10 === 0 && onProg) { onProg(j / jours); await new Promise(r=>setTimeout(r,0)); }
   }
   if (onProg) onProg(1);
