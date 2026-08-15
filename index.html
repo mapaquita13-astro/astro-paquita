@@ -9206,7 +9206,7 @@ function selDomQ(val, el) {
 }
 
 
-// V78 — « Ma question » analyse désormais les 10 prochaines années.
+// V79 — « Ma question » analyse réellement toute la décennie et expose la couverture annuelle.
 // Sur mobile, on évite un calcul quotidien de 3 650+ jours : un balayage régulier
 // détecte les cycles lents, puis les meilleures zones sont raffinées autour des pics.
 function apQuestionRowsJourV78(jdJ, domaine, analyseGeneraleQ) {
@@ -9229,6 +9229,21 @@ function apQuestionCycleKeyV78(row) {
   return `${row&&row.domain||'general'}|${row&&row.polarite||'mixte'}|${base.join('|')||'ancrage'}`;
 }
 
+// V79 — si l'utilisateur n'a pas choisi de domaine, la question elle-même peut
+// fournir un domaine explicite. Le choix manuel reste toujours prioritaire.
+function apInferDomaineQuestionV79(question){
+  const q=String(question||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,' ');
+  const tests=[
+    ['argent',/\b(argent|finance|finances|financier|financiere|revenu|revenus|salaire|salaires|prime|primes|epargne|economies|budget|dette|dettes|credit|credits|placement|placements|investissement|investissements|patrimoine|heritage|succession)\b/],
+    ['travail',/\b(travail|emploi|carriere|profession|professionnel|professionnelle|poste|entreprise|licenciement|embauche|contrat|promotion|reconversion|activite professionnelle)\b/],
+    ['amour',/\b(amour|amoureux|amoureuse|couple|relation sentimentale|sentiments|rencontre amoureuse|mariage|separation|rupture|conjoint|conjointe)\b/],
+    ['famille',/\b(famille|familial|familiale|parent|parents|mere|pere|enfant|enfants|frere|soeur|proche|proches)\b/],
+    ['sante',/\b(bien etre|bien-etre|recuperation|energie|fatigue|repos|forme|rythme de vie)\b/]
+  ];
+  for(const [dom,re] of tests) if(re.test(q)) return dom;
+  return 'general';
+}
+
 async function apScannerQuestion10AnsV78(jdD, domaine, onProg) {
   const analyseGeneraleQ=domaine==='general'||domaine==='tous';
   const debut=jdVersDate(jdD);
@@ -9246,38 +9261,52 @@ async function apScannerQuestion10AnsV78(jdD, domaine, onProg) {
     return rows;
   };
 
-  // Balayage de fond : 14 jours. Les techniques utilisées ici (Jupiter à Pluton,
-  // progressions, arcs, éclipses, nœuds...) restent actives assez longtemps pour être
-  // détectées ainsi. Les premiers mois sont volontairement regardés plus finement.
+  // V79 — balayage réellement réparti sur toute la décennie.
+  // 10 jours est assez fin pour les cycles lents utilisés par ce moteur et évite
+  // qu'une seule séquence proche monopolise les résultats transmis à l'IA.
   let n=0;
-  for(let j=0;j<horizon;j+=14){
+  for(let j=0;j<horizon;j+=10){
     evalOffset(j);
     n++;
-    if(onProg&&n%12===0)onProg(Math.min(.62,j/horizon*.62));
-    if(n%18===0)await new Promise(r=>setTimeout(r,0));
+    if(onProg&&n%15===0)onProg(Math.min(.56,j/horizon*.56));
+    if(n%24===0)await new Promise(r=>setTimeout(r,0));
   }
   evalOffset(horizon-1);
-  for(let j=0;j<120;j+=4)evalOffset(j);
+  // Les 6 premiers mois restent examinés plus finement pour les questions immédiates.
+  for(let j=0;j<180;j+=3)evalOffset(j);
 
-  // Sélection de graines distinctes avant raffinement : on évite qu'un seul transit
-  // rétrograde monopolise toutes les recherches de précision.
-  const seeds=[];
-  for(const x of [...points].sort((a,b)=>Number(b.row.force||0)-Number(a.row.force||0))){
-    const tropProche=seeds.some(s=>s.key===x.key&&Math.abs(s.offset-x.offset)<=210);
-    if(!tropProche)seeds.push(x);
-    if(seeds.length>=18)break;
+  // Raffinement : au lieu de prendre uniquement les meilleurs points globaux,
+  // on prend les meilleurs points DE CHAQUE ANNÉE puis quelques pics globaux.
+  const coarse=[...points].sort((a,b)=>Number(b.row.force||0)-Number(a.row.force||0));
+  const seedMap=new Map();
+  const years=[];
+  for(let y=debut.getFullYear();y<=fin.getFullYear();y++)years.push(y);
+  for(const y of years){
+    const byYear=coarse.filter(x=>x.date.getFullYear()===y);
+    const local=[];
+    for(const x of byYear){
+      if(local.some(s=>s.key===x.key&&Math.abs(s.offset-x.offset)<=120))continue;
+      local.push(x);
+      seedMap.set(`${x.offset}|${x.key}`,x);
+      if(local.length>=2)break;
+    }
   }
+  for(const x of coarse){
+    if([...seedMap.values()].some(s=>s.key===x.key&&Math.abs(s.offset-x.offset)<=180))continue;
+    seedMap.set(`${x.offset}|${x.key}`,x);
+    if(seedMap.size>=30)break;
+  }
+  const seeds=[...seedMap.values()];
 
-  // Raffinement autour des meilleures zones, tous les 2 jours sur +/- 28 jours.
+  // Raffinement autour de chaque zone repérée, tous les 2 jours sur +/- 30 jours.
   for(let si=0;si<seeds.length;si++){
     const s=seeds[si];
-    for(let d=-28;d<=28;d+=2)evalOffset(s.offset+d);
-    if(onProg)onProg(.62+((si+1)/Math.max(1,seeds.length))*.30);
-    if(si%3===2)await new Promise(r=>setTimeout(r,0));
+    for(let d=-30;d<=30;d+=2)evalOffset(s.offset+d);
+    if(onProg)onProg(.56+((si+1)/Math.max(1,seeds.length))*.34);
+    if(si%4===3)await new Promise(r=>setTimeout(r,0));
   }
 
-  // Regroupement en cycles : même preuve astrologique et passages proches = un seul
-  // événement, avec le jour le plus fort comme point culminant.
+  // Regroupement en cycles : même preuve astrologique et passages proches = un seul événement.
   const groupes=[];
   const uniques=new Map();
   for(const x of points){
@@ -9301,25 +9330,43 @@ async function apScannerQuestion10AnsV78(jdD, domaine, onProg) {
     }
   }
 
-  // Les cycles les plus parlants sont choisis par force, mais avec diversité temporelle
-  // et de domaine. On garde jusqu'à 12 repères sur 10 ans puis on les remet en ordre.
-  const retenus=[];
-  for(const g of [...groupes].sort((a,b)=>Number(b.peak.row.force||0)-Number(a.peak.row.force||0))){
-    const p=g.peak;
-    const memeCycleProche=retenus.some(r=>r.key===g.key&&Math.abs(r.peak.offset-p.offset)<=300);
-    if(memeCycleProche)continue;
-    retenus.push(g);
-    if(retenus.length>=12)break;
+  // Couverture annuelle explicite : une année sans signal reste une année sans signal.
+  // On ne fabrique rien pour la remplir, mais l'IA saura qu'elle a bien été scannée.
+  const yearSummaries=[];
+  for(const y of years){
+    const gs=groupes.filter(g=>g.peak.date.getFullYear()===y)
+      .sort((a,b)=>Number(b.peak.row.force||0)-Number(a.peak.row.force||0));
+    const distinct=[];
+    for(const g of gs){
+      if(distinct.some(d=>d.key===g.key))continue;
+      distinct.push(g);
+      if(distinct.length>=2)break;
+    }
+    yearSummaries.push({year:y,cycles:distinct});
   }
-  retenus.sort((a,b)=>a.peak.offset-b.peak.offset);
+
+  // Détails transmis à l'IA : maximum 2 cycles par année + les cycles très forts
+  // globaux, avec déduplication. Cela évite que 2026 prenne toute la place.
+  const retainedMap=new Map();
+  for(const ys of yearSummaries){
+    for(const g of ys.cycles)retainedMap.set(`${g.peak.offset}|${g.key}`,g);
+  }
+  for(const g of [...groupes].sort((a,b)=>Number(b.peak.row.force||0)-Number(a.peak.row.force||0))){
+    if(Number(g.peak.row.force||0)<5.2)continue;
+    retainedMap.set(`${g.peak.offset}|${g.key}`,g);
+    if(retainedMap.size>=24)break;
+  }
+  const retenus=[...retainedMap.values()]
+    .sort((a,b)=>a.peak.offset-b.peak.offset)
+    .slice(0,24);
 
   let meilleur=null;
-  for(const g of retenus){
+  for(const g of groupes){
     const p=g.peak;
     if(p.row.polarite==='positive'&&(!meilleur||Number(p.row.force||0)>Number(meilleur.row.force||0)))meilleur=p;
   }
   if(onProg)onProg(.96);
-  return {debut,fin,horizon,cycles:retenus,meilleur};
+  return {debut,fin,horizon,cycles:retenus,allCycles:groupes,yearSummaries,meilleur,sampledDays:cache.size};
 }
 
 async function poserQuestion() {
@@ -9369,7 +9416,7 @@ async function poserQuestion() {
 
   // V78 — domaine d'abord, puis balayage réel sur les DIX prochaines années.
   // Aucun événement d'un autre domaine n'est réécrit pour répondre à la question.
-  const domaine = domQ || 'general';
+  const domaine = domQ || apInferDomaineQuestionV79(question);
   const jdD = jdAujourd;
   const analyseGeneraleQ=domaine==='general'||domaine==='tous';
   pl.textContent = 'Recherche des périodes marquantes sur 10 ans…';
@@ -9413,6 +9460,11 @@ async function poserQuestion() {
       }).join('\n')
     : (analyseGeneraleQ?'Aucun domaine nettement activé sur les 10 prochaines années selon les seuils exigeants du moteur.':`Aucun signal propre à ${domLabel||domaine} n'est suffisamment confirmé sur les 10 prochaines années.`);
 
+  const couvertureAnnuelleTxt=(scanQ.yearSummaries||[]).map(y=>{
+    if(!y.cycles||!y.cycles.length)return `${y.year} — aucun signal suffisamment confirmé dans ${analyseGeneraleQ?'les domaines analysés':(domLabel||domaine)}`;
+    return `${y.year} — `+y.cycles.map(g=>`${g.peak.row.label} (${g.peak.row.polarite}, force ${Number(g.peak.row.force||0).toFixed(1)}, pic ${dateFmtQ(g.peak.date)})`).join(' ; ');
+  }).join('\n');
+
   const contexteQuestion=contexteAnalyseUniversel(today, !(domaine==='general'||domaine==='tous'));
   const prompt = `${USER.prenom} pose cette question astrologique : "${question}"
 ${domLabel ? `Domaine concerné : ${domLabel}` : ''}
@@ -9426,8 +9478,8 @@ Ascendant : ${fmt(USER.AS)} · MC : ${fmt(USER.MC)}
 Soleil natal : ${fmt(USER.pos.Soleil)} · Lune natale : ${fmt(USER.pos.Lune)}
 Jupiter natal : ${fmt(USER.pos.Jupiter)} · Saturne natal : ${fmt(USER.pos.Saturne)}
 
-Transits du jour (${today.toLocaleDateString((typeof apLocale==='function'?apLocale():'fr-FR'))}) — contexte général seulement, jamais preuve suffisante d'un domaine :
-${transitResume}
+COUVERTURE DU BALAYAGE SUR LES 10 ANNÉES (${scanQ.sampledDays||0} dates calculées, avec raffinement autour des zones actives) :
+${couvertureAnnuelleTxt}
 
 SIGNAUX DE DOMAINE RÉELLEMENT CONFIRMÉS SUR 10 ANS :
 ${signauxQuestionTxt}
@@ -9445,8 +9497,10 @@ RÈGLES ABSOLUES :
 - Sois honnête : si la réponse est négative, dis-le clairement mais avec bienveillance
 - Donne toujours une piste d'action concrète
 - Si la question est générale, examine les domaines réellement confirmés sans donner priorité à la famille, au couple ou au travail.
-- Si la question est spécialisée, n'utilise QUE les signaux propres au domaine demandé. Un signal d'un autre domaine ne doit jamais être adapté ou renommé pour répondre à la question. Si aucun signal propre n'est confirmé sur 10 ans, dis-le clairement.
-- Sur 10 ans, ne transforme jamais un simple contexte annuel en événement. Cite une période seulement lorsqu'elle figure dans les SIGNAUX DE DOMAINE RÉELLEMENT CONFIRMÉS ci-dessus.
+- Si la question est spécialisée, n'utilise QUE les signaux propres au domaine demandé. Un signal d'un autre domaine ne doit jamais être adapté ou renommé pour répondre à la question.
+- La section COUVERTURE DU BALAYAGE prouve quelles années ont été examinées. Ne dis jamais que les calculs ne couvrent que quelques semaines si cette couverture liste bien les 10 années.
+- Une année notée « aucun signal suffisamment confirmé » signifie seulement qu'aucun événement majeur du domaine ne franchit le seuil cette année ; cela ne signifie pas « absolument rien ne se passe » dans la vie réelle.
+- Sur 10 ans, ne transforme jamais un simple contexte annuel en événement. Cite une période précise seulement lorsqu'elle figure dans les SIGNAUX DE DOMAINE RÉELLEMENT CONFIRMÉS ci-dessus.
 - Une date de point culminant est un repère astrologique, pas la garantie qu'un événement se produira exactement ce jour-là. Pour les cycles longs, parle de période et utilise le point culminant comme repère.
 - Si la question suppose une situation incompatible avec l'âge réel du profil, dis clairement que ce scénario n'est pas applicable et reformule vers ce qui peut réellement concerner cette personne.
 - Ne fabrique jamais une grossesse, un décès, une maladie, un licenciement, une séparation ou un gain financier certain.
@@ -9455,9 +9509,9 @@ RÈGLES ABSOLUES :
   try {
     const data = await appelerClaude({
       feature: 'question',
-      featureContext: { domain: domaine, label: domLabel || 'Général', horizon: '10 ans', engine: 'V78-question-10y' },
+      featureContext: { domain: domaine, label: domLabel || 'Général', horizon: '10 ans', engine: 'V79-question-10y-annual-coverage' },
       model: 'claude-sonnet-4-6', max_tokens: 1600,
-      system: 'Tu es un astrologue expérimenté. L’horizon analysé est de 10 ans. Règle absolue : le domaine demandé ne crée jamais un événement. Pour une question spécialisée, tu n’utilises que les signaux astrologiques déjà classés dans ce domaine et tu ignores les autres, même s’ils sont forts. Tu ne transformes jamais un événement professionnel en événement familial, amoureux, financier ou inversement. Tu regroupes les répétitions d’un même cycle et tu acceptes les périodes sans événement significatif. Pour une question générale, tu compares tous les domaines objectivement. Tu respectes strictement l’âge et l’étape de vie. Tu n’inventes aucun événement et tu ne rassures jamais faussement. Ton direct, chaleureux, sans détour.',
+      system: 'Tu es un astrologue expérimenté. L’horizon analysé est réellement de 10 ans et la couverture année par année est fournie. Règle absolue : le domaine demandé ne crée jamais un événement. Pour une question spécialisée, tu n’utilises que les signaux astrologiques déjà classés dans ce domaine et tu ignores les autres, même s’ils sont forts. Tu ne transformes jamais un événement professionnel en événement familial, amoureux, financier ou inversement. Tu regroupes les répétitions d’un même cycle et tu acceptes les périodes sans événement significatif. Pour une question générale, tu compares tous les domaines objectivement. Tu respectes strictement l’âge et l’étape de vie. Tu n’inventes aucun événement et tu ne rassures jamais faussement. Ton direct, chaleureux, sans détour.',
       messages: [{role: 'user', content: prompt}]
     });
     document.getElementById('q-rapport').innerHTML = formatRapport(texteClaude(data) || 'Erreur');
