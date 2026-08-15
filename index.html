@@ -7774,14 +7774,170 @@ async function yScannerRelationLegacyV25(part, debut, jours, onProg, relationLab
   return res;
 }
 
-function ySelectionnerPics(liste, positif=true, nb=4, ecartMin=7) {
-  const source = liste.filter(x => positif ? x.score > 1.2 : x.score < -1.2).sort((a,b) => positif ? b.score-a.score : a.score-b.score);
-  const out = [];
-  for (const r of source) {
-    if (out.every(o => Math.abs((o.date - r.date) / 86400000) >= ecartMin)) out.push(r);
-    if (out.length >= nb) break;
+// V77 — Déduplication réelle des prévisions Relations.
+// On ne sélectionne plus plusieurs journées appartenant au même transit :
+// on regroupe d'abord les journées en CYCLES astrologiques distincts.
+function yJoursEcartRelation(a,b){ return Math.abs((a-b)/86400000); }
+function yGapCycleRelation(transit){
+  const t=String(transit||'').toLowerCase();
+  if(t.includes('lune')) return 3;
+  if(t.includes('soleil')) return 15;
+  if(t.includes('mercure')) return 45;
+  if(t.includes('vénus') || t.includes('venus')) return 70;
+  if(t.includes('mars')) return 120;
+  if(t.includes('jupiter')) return 260;
+  if(t.includes('saturne')) return 450;
+  return 650; // Uranus, Neptune, Pluton : un même cycle peut couvrir plusieurs passages rétrogrades sur plus d'un an.
+}
+function yGapPassageRelation(transit){
+  const t=String(transit||'').toLowerCase();
+  if(t.includes('lune')) return 1;
+  if(t.includes('soleil')) return 3;
+  if(t.includes('mercure')) return 7;
+  if(t.includes('vénus') || t.includes('venus')) return 10;
+  if(t.includes('mars')) return 20;
+  if(t.includes('jupiter')) return 30;
+  return 45;
+}
+function yCleCycleRelation(r){
+  const t=yTouchePrincipale(r);
+  if(!t) return null;
+  const cleTheme=yCleThemeModeV26(t.theme||'');
+  const tr=t.trCle||t.tr||'Transit';
+  const asp=(t.aspect===0 || t.aspect) ? t.aspect : 'x';
+  const sens=(t.delta||0)>=0?'pos':'neg';
+  // Pas de nom de personne dans la clé : un même transit qui active le même axe chez
+  // les deux thèmes appartient au même phénomène relationnel, pas à deux prévisions.
+  return `${tr}|${t.clePoint||t.point||'point'}|${asp}|${cleTheme}|${sens}`;
+}
+function yAspectTexteRelation(a){
+  const n=Number(a);
+  if(n===0) return 'conjonction';
+  if(n===60) return 'sextile';
+  if(n===90) return 'carré';
+  if(n===120) return 'trigone';
+  if(n===180) return 'opposition';
+  return 'aspect';
+}
+function yConstruireCyclesRelation(liste){
+  const groupes=new Map();
+  (liste||[]).forEach(r=>{
+    if(!r || !r.relevant || !r.touches || !r.touches.length) return;
+    const cle=yCleCycleRelation(r);
+    if(!cle) return;
+    const top=yTouchePrincipale(r);
+    if(!groupes.has(cle)) groupes.set(cle,{cle,topBase:top,rows:[]});
+    groupes.get(cle).rows.push(r);
+  });
+
+  const cycles=[];
+  groupes.forEach(g=>{
+    const rows=g.rows.slice().sort((a,b)=>a.date-b.date);
+    const gapMax=yGapCycleRelation(g.topBase && g.topBase.tr);
+    let paquet=[];
+    const fermer=()=>{
+      if(!paquet.length) return;
+      // Le pic est le jour où le signal relationnel global est le plus fort.
+      const peak=paquet.slice().sort((a,b)=>Math.abs(b.score||0)-Math.abs(a.score||0))[0];
+      const top=yTouchePrincipale(peak) || g.topBase;
+      const positif=(top && (top.delta||0)>=0);
+      const force=Math.max(...paquet.map(r=>Math.abs(r.score||0)),0);
+      if(force<1.2){ paquet=[]; return; }
+
+      const themeMap={};
+      paquet.forEach(r=>yAjouterThemes(themeMap,r.themes,Math.max(1,Math.abs(r.score||0))));
+      const themes=yThemesDominants(themeMap,3);
+
+      // Passages exacts : on garde seulement les maxima réellement séparés,
+      // jamais une carte par jour pour un transit lent.
+      const passageGap=yGapPassageRelation(top && top.tr);
+      const passages=[];
+      paquet.slice().sort((a,b)=>Math.abs(b.score||0)-Math.abs(a.score||0)).forEach(r=>{
+        if(passages.length>=4) return;
+        if(passages.every(x=>yJoursEcartRelation(x.date,r.date)>=passageGap)) passages.push(r);
+      });
+      passages.sort((a,b)=>a.date-b.date);
+
+      // Activations astrologiques distinctes du cycle (maximum 3), pour expliquer sans répéter.
+      const touchMap=new Map();
+      paquet.forEach(r=>(r.touches||[]).forEach(t=>{
+        const k=`${t.trCle||t.tr}|${t.qui}|${t.clePoint||t.point}|${(t.aspect===0||t.aspect)?t.aspect:'x'}`;
+        const prev=touchMap.get(k);
+        if(!prev || Math.abs(t.delta||0)>Math.abs(prev.delta||0)) touchMap.set(k,t);
+      }));
+      const touches=[...touchMap.values()].sort((a,b)=>{
+        const aa=a.anchor?1:0, bb=b.anchor?1:0;
+        if(bb!==aa) return bb-aa;
+        return Math.abs(b.delta||0)-Math.abs(a.delta||0);
+      }).slice(0,3);
+
+      const debut=paquet[0].date, fin=paquet[paquet.length-1].date;
+      cycles.push({
+        ...peak,
+        score:positif?force:-force,
+        themes,
+        touches:touches.length?touches:peak.touches,
+        cycleKey:g.cle,
+        cyclePositive:positif,
+        cycleStrength:force,
+        cycleStart:debut,
+        cycleEnd:fin,
+        cycleSpanDays:Math.round(yJoursEcartRelation(fin,debut))+1,
+        passages:passages.map(x=>x.date),
+        cycleTransit:top?top.tr:'Transit',
+        cyclePoint:top?top.point:'axe relationnel',
+        cyclePointKey:top?(top.clePoint||''):'',
+        cycleAspect:top?top.aspect:null,
+        cycleThemeKey:yCleThemeModeV26(top&&top.theme?top.theme:(themes[0]||''))
+      });
+      paquet=[];
+    };
+
+    rows.forEach(r=>{
+      if(!paquet.length){ paquet=[r]; return; }
+      const prev=paquet[paquet.length-1];
+      if(yJoursEcartRelation(prev.date,r.date)<=gapMax) paquet.push(r);
+      else { fermer(); paquet=[r]; }
+    });
+    fermer();
+  });
+  return cycles.sort((a,b)=>a.cycleStart-b.cycleStart);
+}
+function ySelectionnerCyclesRelation(cycles, positif=true, nb=4){
+  const source=(cycles||[])
+    .filter(c=>!!c.cyclePositive===!!positif && (c.cycleStrength||0)>=1.2)
+    .sort((a,b)=>(b.cycleStrength||0)-(a.cycleStrength||0));
+  const out=[];
+  const themeCount={}, transitCount={};
+  const maxTheme=nb<=4?1:2;
+  const maxTransit=nb<=5?1:2;
+
+  // 1er passage : diversité maximale des phénomènes astrologiques.
+  for(const c of source){
+    const th=c.cycleThemeKey||'general', tr=String(c.cycleTransit||'');
+    if((themeCount[th]||0)>=maxTheme || (transitCount[tr]||0)>=maxTransit) continue;
+    out.push(c); themeCount[th]=(themeCount[th]||0)+1; transitCount[tr]=(transitCount[tr]||0)+1;
+    if(out.length>=nb) break;
   }
-  return out.sort((a,b) => a.date-b.date);
+  // 2e passage : on complète uniquement avec un cycle réellement différent.
+  if(out.length<nb){
+    for(const c of source){
+      if(out.includes(c)) continue;
+      const th=c.cycleThemeKey||'general', tr=String(c.cycleTransit||'');
+      const duplicate=out.some(o=>o.cycleKey===c.cycleKey ||
+        (o.cycleThemeKey===th && String(o.cycleTransit||'')===tr && yJoursEcartRelation(o.date,c.date)<90));
+      if(duplicate || (themeCount[th]||0)>=2 || (transitCount[tr]||0)>=2) continue;
+      out.push(c); themeCount[th]=(themeCount[th]||0)+1; transitCount[tr]=(transitCount[tr]||0)+1;
+      if(out.length>=nb) break;
+    }
+  }
+  return out.sort((a,b)=>a.cycleStart-b.cycleStart);
+}
+// Compatibilité avec l'ancien appel : si une liste journalière arrive encore ici,
+// elle est d'abord transformée en cycles. L'écartMin n'est plus le critère principal.
+function ySelectionnerPics(liste, positif=true, nb=4, ecartMin=7) {
+  const cycles=(liste||[]).some(x=>x&&x.cycleKey)?liste:yConstruireCyclesRelation(liste);
+  return ySelectionnerCyclesRelation(cycles,positif,nb);
 }
 function yClimatLegacyV25(scoreMoyen) {
   if (scoreMoyen >= 2.5) return {label:'très favorable', icone:'💜'};
@@ -7808,13 +7964,14 @@ function yRegrouperMois(liste) {
   return [...map.values()].filter(m=>m.nb>0).map(m => ({date:m.date, score:m.total/m.nb, climat:yClimat(m.total/m.nb), climatPro:yClimatPro(m.total/m.nb)}));
 }
 function yParametresLongueur(jours, per) {
-  if (per === 'date' || jours <= 31) return {pos:4, neg:3, ecart:4, mode:'court'};
-  if (jours <= 90) return {pos:5, neg:4, ecart:10, mode:'court'};
-  if (jours <= 180) return {pos:6, neg:5, ecart:15, mode:'moyen'};
-  if (jours <= 365) return {pos:7, neg:5, ecart:20, mode:'annee'};
-  if (jours <= 730) return {pos:8, neg:6, ecart:30, mode:'long'};
-  if (jours <= 1095) return {pos:10, neg:7, ecart:45, mode:'long'};
-  return {pos:12, neg:8, ecart:60, mode:'long'};
+  // V77 : moins de cartes, mais chacune correspond à un cycle réellement distinct.
+  if (per === 'date' || jours <= 31) return {pos:3, neg:2, ecart:4, mode:'court'};
+  if (jours <= 90) return {pos:4, neg:3, ecart:10, mode:'court'};
+  if (jours <= 180) return {pos:4, neg:3, ecart:15, mode:'moyen'};
+  if (jours <= 365) return {pos:5, neg:4, ecart:20, mode:'annee'};
+  if (jours <= 730) return {pos:6, neg:4, ecart:30, mode:'long'};
+  if (jours <= 1095) return {pos:6, neg:5, ecart:45, mode:'long'};
+  return {pos:7, neg:5, ecart:60, mode:'long'};
 }
 
 function yCleThemeLegacyV25(theme) {
@@ -7946,23 +8103,34 @@ function yTouchePrincipale(r) {
 function yAjouterThemes(mapObj, themes, poids) { (themes || []).forEach(t => { if (t) mapObj[t] = (mapObj[t] || 0) + poids; }); }
 function yThemesDominants(mapObj, max) { return Object.keys(mapObj || {}).sort((a,b) => mapObj[b] - mapObj[a]).slice(0, max || 3); }
 
-function yRegrouperGrandesPeriodes(liste, jours) {
-  const map = new Map();
-  liste.forEach(r => {
-    if(!r || (!r.relevant && (!r.themes || !r.themes.length) && Math.abs(r.score||0)<0.1)) return;
-    const an = r.date.getFullYear();
-    const mois = r.date.getMonth();
-    let key, date, label;
-    if (jours > 730) { const semestre = mois < 6 ? 1 : 2; key = `${an}-S${semestre}`; date = new Date(an, semestre === 1 ? 0 : 6, 1); label = semestre === 1 ? `1er semestre ${an}` : `2e semestre ${an}`; }
-    else if (jours > 365) { const trim = Math.floor(mois / 3) + 1; key = `${an}-T${trim}`; date = new Date(an, (trim-1)*3, 1); label = (trim === 1 ? '1er' : trim + 'e') + ` trimestre ${an}`; }
-    else { key = `${an}-${String(mois+1).padStart(2,'0')}`; date = new Date(an, mois, 1); label = yMoisFr(date); }
-    if (!map.has(key)) map.set(key, {date, label, total:0, nb:0, themes:{}, top:null});
-    const m = map.get(key); m.total += r.score; m.nb += 1; yAjouterThemes(m.themes, r.themes, Math.max(1, Math.abs(r.score || 0)));
-    const t = yTouchePrincipale(r); if (t && (!m.top || Math.abs(t.delta || 0) > Math.abs(m.top.delta || 0))) m.top = t;
+function yRegrouperGrandesPeriodes(liste, jours, cyclesInput) {
+  // V77 — Une tendance de fond n'est affichée que si plusieurs CYCLES DISTINCTS
+  // convergent dans la même grande période. Un cycle isolé est déjà expliqué dans sa carte.
+  if(jours<=365) return [];
+  const cycles=(cyclesInput&&cyclesInput.length)?cyclesInput:yConstruireCyclesRelation(liste);
+  const map=new Map();
+  cycles.forEach(c=>{
+    if(!c || !c.date) return;
+    const an=c.date.getFullYear(), mois=c.date.getMonth();
+    let key,date,label;
+    if(jours>730){
+      const semestre=mois<6?1:2;
+      key=`${an}-S${semestre}`; date=new Date(an,semestre===1?0:6,1);
+      label=semestre===1?`1er semestre ${an}`:`2e semestre ${an}`;
+    } else {
+      const trim=Math.floor(mois/3)+1;
+      key=`${an}-T${trim}`; date=new Date(an,(trim-1)*3,1);
+      label=(trim===1?'1er':trim+'e')+` trimestre ${an}`;
+    }
+    if(!map.has(key)) map.set(key,{date,label,total:0,nb:0,themes:{},transits:new Set()});
+    const m=map.get(key);
+    m.total+=c.score||0; m.nb+=1;
+    yAjouterThemes(m.themes,c.themes,Math.max(1,c.cycleStrength||Math.abs(c.score||0)));
+    if(c.cycleTransit) m.transits.add(c.cycleTransit);
   });
   return [...map.values()]
-    .filter(m=>m.nb>0 && (m.top || Object.keys(m.themes||{}).length))
-    .map(m => ({date:m.date, label:m.label, score:m.total/m.nb, climat:yClimat(m.total/m.nb), climatPro:yClimatPro(m.total/m.nb), themes:yThemesDominants(m.themes, 3), top:m.top}));
+    .filter(m=>m.nb>=2) // convergence réelle : au moins deux cycles distincts
+    .map(m=>({date:m.date,label:m.label,score:m.total/m.nb,themes:yThemesDominants(m.themes,3),cycleCount:m.nb,transitCount:m.transits.size}));
 }
 
 function yHtmlGrandesPeriodesLegacyV25(periodes, jours, relationLabel='') {
@@ -8453,7 +8621,7 @@ function yScoreTransitRelation(posT, points, mode) {
 
       const theme = yThemeTransitRelationV26(tr.cle, asp.nature, delta, m);
       score += delta;
-      touches.push({tr:tr.nom, qui:pt.qui, point:pt.label, clePoint:pt.cle, anchor:ancre, delta, theme});
+      touches.push({tr:tr.nom, trCle:tr.cle, qui:pt.qui, point:pt.label, clePoint:pt.cle, anchor:ancre, delta, theme, aspect:asp.a, aspectNature:asp.nature, orb:asp.orb});
       if (theme) themes.push(theme);
     }
   }
@@ -8667,67 +8835,71 @@ function yClimat(scoreMoyen) { return yClimatModeV26(scoreMoyen, yModeRelationV2
 function yClimatPro(scoreMoyen) { return yClimatModeV26(scoreMoyen, 'pro'); }
 
 function yHtmlGrandesPeriodes(periodes, jours, relationMode) {
-  const mode = yModeRelationV26(relationMode);
-  if (!periodes || !periodes.length || jours <= 90) return '';
-  const titre = jours > 730 ? '☽ Tendances par semestre' : (jours > 365 ? '☽ Tendances par trimestre' : '☽ Tendances par mois');
-  return '<div class="ev-section-titre">'+titre+'</div>' + periodes.map(p => {
-    const cl = yClimatModeV26(p.score, mode);
-    const theme = p.themes && p.themes.length ? p.themes[0] : 'climat relationnel';
-    const positif = p.score >= 0;
-    const tags = (p.themes || []).slice(0,3).map(t => '<span class="fenetre-tag">'+yEsc(t)+'</span>').join('');
-    const top = p.top ? '<p style="margin-top:0.35rem"><strong>Activation repérée :</strong> '+yEsc(p.top.tr)+' sur le plan '+yEsc(p.top.point)+' de '+yEsc(p.top.qui)+'.</p>' : '';
-    return '<div class="ev-cycle"><div class="ev-cycle-titre">'+yEsc(p.label)+' — '+yEsc(cl.icone)+' '+yEsc(cl.label)+'</div><div class="ev-cycle-barre-bg"><div class="ev-cycle-barre" style="width:'+Math.max(8, Math.min(100, 50 + p.score*8))+'%"></div></div><div class="ev-cycle-desc"><p><strong>Axe dominant :</strong> '+yEsc(theme)+'. Score moyen : '+p.score.toFixed(1)+'</p><p>'+yEsc(yTexteThemeModeV26(theme, positif, mode))+'</p>'+top+'<div class="fenetre-planetes">'+tags+'</div></div></div>';
+  const mode=yModeRelationV26(relationMode);
+  if(!periodes || !periodes.length || jours<=365) return '';
+  const titre=jours>730?'☽ Convergences de fond par semestre':'☽ Convergences de fond par trimestre';
+  return '<div class="ev-section-titre">'+titre+'</div>'+periodes.map(p=>{
+    const cl=yClimatModeV26(p.score,mode);
+    const axes=(p.themes||[]).slice(0,3).join(', ')||'plusieurs axes du lien';
+    return '<div class="ev-cycle"><div class="ev-cycle-titre">'+yEsc(p.label)+' — '+yEsc(cl.icone)+' '+yEsc(cl.label)+'</div><div class="ev-cycle-barre-bg"><div class="ev-cycle-barre" style="width:'+Math.max(8,Math.min(100,50+p.score*8))+'%"></div></div><div class="ev-cycle-desc"><p><strong>Convergence :</strong> '+p.cycleCount+' cycles astrologiques distincts se concentrent sur cette période.</p><p><strong>Axes concernés :</strong> '+yEsc(axes)+'.</p><p style="opacity:.78">Les événements précis ne sont pas répétés ici : ils sont détaillés une seule fois dans les cartes ci-dessous.</p></div></div>';
   }).join('');
 }
 
 function yHtmlPics(titre, liste, positif, relationMode) {
-  const mode = yModeRelationV26(relationMode);
-  const cfg = yCfgRelationV26(mode);
-  if (!liste.length) return '';
-  const section = titre || (positif ? cfg.fav : cfg.vig);
-  return '<div class="ev-section-titre">'+yEsc(section)+'</div>' + liste.map((r,idx) => {
-    const theme = yThemePrincipal(r);
-    const tags = (r.themes || []).slice(0,4).map(t => '<span class="fenetre-tag">'+yEsc(t)+'</span>').join('');
-    const label = positif ? cfg.fav : cfg.vig;
-    const detail = yTexteThemeModeV26(theme, positif, mode);
-    const conseil = yConseilThemeModeV26(theme, positif, mode);
-    const touch = yTouchePrincipale(r);
-    const activation = touch ? '<p style="margin-top:0.35rem"><strong>Pourquoi cette date ressort :</strong> '+yEsc(touch.tr)+' active le plan '+yEsc(touch.point)+' de '+yEsc(touch.qui)+'.</p>' : '';
-    return '<div class="fenetre-card"><div class="fenetre-rang">'+(idx+1)+' · '+yEsc(label)+'</div><div class="fenetre-date">'+yDateFr(r.date)+'</div><div class="fenetre-periode">Axe '+(mode==='pro'?'professionnel':'dominant')+' : '+yEsc(theme)+' · score '+r.score.toFixed(1)+'</div><div class="ev-card-desc"><p>'+yEsc(detail)+'</p>'+activation+'<p style="margin-top:0.35rem"><strong>Conseil :</strong> '+yEsc(conseil)+'</p></div><div class="fenetre-planetes">'+tags+'</div></div>';
-  }).join('');
+  const mode=yModeRelationV26(relationMode);
+  const cfg=yCfgRelationV26(mode);
+  if(!liste || !liste.length) return '';
+  const section=titre||(positif?cfg.fav:cfg.vig);
+  const cards=[];
+  let lastConseil='';
+  (liste||[]).forEach((r,idx)=>{
+    const theme=yThemePrincipal(r);
+    const label=positif?cfg.fav:cfg.vig;
+    const detail=yTexteThemeModeV26(theme,positif,mode);
+    let conseil=yConseilThemeModeV26(theme,positif,mode);
+    if(conseil===lastConseil) conseil=''; else lastConseil=conseil;
+    const touch=yTouchePrincipale(r);
+    const debut=r.cycleStart||r.date, fin=r.cycleEnd||r.date;
+    const span=r.cycleSpanDays||1;
+    const dateTxt=span>=3 ? ('Du '+yDateFr(debut)+' au '+yDateFr(fin)) : yDateFr(r.date);
+    const asp=touch ? yAspectTexteRelation(touch.aspect) : 'aspect';
+    const activation=touch ? '<p style="margin-top:0.35rem"><strong>Cause astrologique :</strong> '+yEsc(touch.tr)+' en '+yEsc(asp)+' avec '+yEsc(touch.point)+' de '+yEsc(touch.qui)+'.</p>' : '';
+    const passages=(r.passages||[]).length>1 ? '<p style="margin-top:0.35rem"><strong>Passages clés :</strong> '+(r.passages||[]).map(d=>yDateCourte(d)).join(' · ')+'.</p>' : '';
+    const autres=(r.themes||[]).slice(1,3);
+    const convergence=autres.length ? '<p style="margin-top:0.35rem"><strong>Convergences secondaires :</strong> '+yEsc(autres.join(', '))+'.</p>' : '';
+    const conseilHtml=conseil ? '<p style="margin-top:0.35rem"><strong>Repère pratique :</strong> '+yEsc(conseil)+'</p>' : '';
+    cards.push('<div class="fenetre-card"><div class="fenetre-rang">'+(idx+1)+' · '+yEsc(label)+'</div><div class="fenetre-date">'+dateTxt+'</div><div class="fenetre-periode">Cycle distinct · axe '+(mode==='pro'?'professionnel':'dominant')+' : '+yEsc(theme)+' · intensité '+Number(r.cycleStrength||Math.abs(r.score||0)).toFixed(1)+'</div><div class="ev-card-desc"><p>'+yEsc(detail)+'</p>'+activation+passages+convergence+conseilHtml+'</div></div>');
+  });
+  return '<div class="ev-section-titre">'+yEsc(section)+'</div>'+cards.join('');
 }
 
-function yRapportLocal(part, relationMode, debut, fin, moyenne, picsPos, picsNeg, mois, jours, grandesPeriodes) {
-  const mode = yModeRelationV26(relationMode);
-  const climat = yClimatModeV26(moyenne, mode);
-  const nomA = USER.prenom, nomB = part.prenom2;
-  const axesFavorables = ySyntheseAxes(picsPos, 3);
-  const axesSensibles = ySyntheseAxes(picsNeg, 3);
-  const nbSignaux=(picsPos||[]).length+(picsNeg||[]).length;
-  const fond=(grandesPeriodes||[]).filter(p=>p && ((p.themes&&p.themes.length)||p.top));
-
+function yRapportLocal(part, relationMode, debut, fin, moyenne, picsPos, picsNeg, mois, jours, grandesPeriodes, cycles) {
+  const mode=yModeRelationV26(relationMode);
+  const nomA=USER.prenom, nomB=part.prenom2;
+  const nbPos=(picsPos||[]).length, nbNeg=(picsNeg||[]).length;
+  const nbCycles=(cycles||[]).length;
   const labels={
-    couple:{titre:'DYNAMIQUE DU COUPLE',nature:'le couple : lien affectif, sécurité, engagement, dialogue et évolution concrète du lien',conseil:'Utilise seulement les fenêtres réellement affichées ci-dessous ; si aucune ne ressort, ne force ni décision ni interprétation.'},
-    rencontre:{titre:'DYNAMIQUE DE RENCONTRE',nature:'un début de lien : ouverture relationnelle, rythme, conversation et capacité réelle à faire avancer la rencontre',conseil:'Une fenêtre favorable n’est pas une garantie de relation ; elle indique seulement un moment plus cohérent pour agir si le contexte réel s’y prête.'},
-    ex:{titre:'DYNAMIQUE DU LIEN PASSÉ',nature:'un lien passé : clarification, frontières, mémoire émotionnelle et éventuelle réactivation du lien',conseil:'Une activation ne signifie jamais automatiquement reprise. Elle peut aussi correspondre à une clarification ou à une fermeture du cycle.'},
-    compliquee:{titre:'DYNAMIQUE DE LA RELATION COMPLIQUÉE',nature:'la relation telle qu’elle est réellement : ambiguïtés, communication, limites, tensions et possibilités de clarification',conseil:'Ne déduis pas une évolution positive ou négative sans signal propre au lien ; les périodes neutres restent neutres.'},
-    amitie:{titre:'DYNAMIQUE AMICALE',nature:'l’amitié : réseau choisi, échange, soutien, disponibilité, fiabilité et besoin de liberté',conseil:'Aucun événement amoureux ou familial n’est recyclé ici : seules les activations amicales réellement confirmées sont retenues.'},
-    famille:{titre:'DYNAMIQUE FAMILIALE',nature:'le lien familial : foyer et racines, sécurité familiale, rôles, responsabilités, échanges et organisation entre proches',conseil:'Aucun événement amical, amoureux ou professionnel n’est transformé en événement familial. S’il n’y a pas de signal familial, la période reste simplement peu marquée.'},
-    pro:{titre:'DYNAMIQUE PROFESSIONNELLE',nature:'la collaboration professionnelle : statut, travail quotidien, responsabilités, hiérarchie, communication, décisions et organisation',conseil:'Aucun événement sentimental, familial ou amical n’est transposé au travail. Seules les activations professionnelles réellement confirmées sont retenues.'}
+    couple:{titre:'LECTURE D’ENSEMBLE DU COUPLE',nature:'le couple'},
+    rencontre:{titre:'LECTURE D’ENSEMBLE DE LA RENCONTRE',nature:'ce début de lien'},
+    ex:{titre:'LECTURE D’ENSEMBLE DU LIEN PASSÉ',nature:'ce lien passé'},
+    compliquee:{titre:'LECTURE D’ENSEMBLE DE LA RELATION',nature:'cette relation compliquée'},
+    amitie:{titre:'LECTURE D’ENSEMBLE DE L’AMITIÉ',nature:'cette amitié'},
+    famille:{titre:'LECTURE D’ENSEMBLE DU LIEN FAMILIAL',nature:'ce lien familial'},
+    pro:{titre:'LECTURE D’ENSEMBLE DE LA COLLABORATION',nature:'cette relation professionnelle'}
   };
   const cfg=labels[mode]||labels.couple;
-
-  if(!nbSignaux && !fond.length){
-    return `1. ${cfg.titre}\nDu ${yDateCourte(debut)} au ${yDateCourte(fin)}, aucun mouvement suffisamment confirmé ne ressort spécifiquement pour ${cfg.nature}.\n\n2. CE QUE LE MOTEUR A RETENU\nAucune fenêtre favorable ni vigilance n’atteint le seuil de pertinence propre à ce contexte. Cela ne signifie pas qu’il ne se passera rien dans la vie de ${nomA} ou ${nomB} : cela signifie seulement que les éventuels événements d’autres domaines ne sont pas convertis artificiellement en événement de cette relation.\n\n3. RÈGLE DE LECTURE\n${cfg.conseil}`;
+  if(!nbPos && !nbNeg){
+    return `1. ${cfg.titre}\nDu ${yDateCourte(debut)} au ${yDateCourte(fin)}, aucun cycle suffisamment net ne ressort spécifiquement pour ${cfg.nature}. Les événements appartenant à d’autres domaines ne sont pas recyclés pour remplir cette analyse.\n\n2. INTERPRÉTATION\nUne période peu marquée astrologiquement n’est ni positive ni négative : elle signifie simplement qu’aucun mouvement relationnel majeur n’atteint le seuil retenu.`;
   }
-
-  const fav = axesFavorables.length ? axesFavorables.join(', ') : 'aucun axe favorable distinct';
-  const vig = axesSensibles.length ? axesSensibles.join(', ') : 'aucun axe sensible distinct';
-  const longTxt = fond.length
-    ? `Une tendance de fond réellement active existe sur ${fond.length} période${fond.length>1?'s':''} du découpage long. Les cartes détaillées ci-dessous montrent uniquement ces périodes actives.`
-    : 'Aucune tendance longue distincte ne dépasse le seuil ; les dates ponctuelles sont donc plus informatives que les moyennes mensuelles ou trimestrielles.';
-
-  return `1. ${cfg.titre}\nEntre ${nomA} et ${nomB}, la période du ${yDateCourte(debut)} au ${yDateCourte(fin)} présente un climat ${climat.label}, calculé uniquement à partir des activations pertinentes pour ${cfg.nature}.\n\n2. CE QUI EST RÉELLEMENT ACTIVÉ\nFenêtres favorables confirmées : ${(picsPos||[]).length}. Vigilances confirmées : ${(picsNeg||[]).length}. Axes favorables dominants : ${fav}. Axes sensibles dominants : ${vig}. Les dates et leurs causes sont détaillées une seule fois dans les cartes ci-dessous pour éviter les répétitions.\n\n3. TENDANCE DE FOND\n${longTxt}\n\n4. RÈGLE DE LECTURE\n${cfg.conseil}`;
+  let dynamique='contrastée';
+  if(nbPos && !nbNeg) dynamique='principalement porteuse';
+  else if(nbNeg && !nbPos) dynamique='principalement exigeante';
+  else if(nbPos>=nbNeg+2) dynamique='plutôt porteuse avec quelques points de vigilance';
+  else if(nbNeg>=nbPos+2) dynamique='plutôt exigeante avec quelques ouvertures';
+  const convergence=(grandesPeriodes||[]).length
+    ? `Sur les périodes longues, ${(grandesPeriodes||[]).length} convergence${(grandesPeriodes||[]).length>1?'s':''} de plusieurs cycles est signalée séparément, sans répéter leurs détails.`
+    : `Aucune convergence longue supplémentaire n’est affichée : les cycles individuels donnent ici l’information la plus précise.`;
+  return `1. ${cfg.titre}\nEntre ${nomA} et ${nomB}, la période est ${dynamique}. Le moteur a retenu ${nbPos} cycle${nbPos>1?'s':''} favorable${nbPos>1?'s':''} et ${nbNeg} cycle${nbNeg>1?'s':''} de vigilance parmi ${nbCycles||nbPos+nbNeg} cycle${(nbCycles||nbPos+nbNeg)>1?'s':''} astrologique${(nbCycles||nbPos+nbNeg)>1?'s':''} distinct${(nbCycles||nbPos+nbNeg)>1?'s':''}.\n\n2. COMMENT LIRE LES CARTES\nChaque phénomène astrologique n’est expliqué qu’une seule fois. Lorsqu’un transit comporte plusieurs passages, ils sont regroupés dans la même carte avec leurs dates clés au lieu de produire plusieurs prévisions identiques.\n\n3. TENDANCE DE FOND\n${convergence}`;
 }
 
 function yForcerTexteSelonModeV26(html, mode) {
@@ -8790,15 +8962,16 @@ async function analyserPrevisionsSynastrie() {
   }, mode);
   const moyenne = liste.reduce((s,r)=>s+r.score,0) / Math.max(1,liste.length);
   const paramsLongueur = yParametresLongueur(jours, per);
-  const picsPos = ySelectionnerPics(liste, true, paramsLongueur.pos, paramsLongueur.ecart);
-  const picsNeg = ySelectionnerPics(liste, false, paramsLongueur.neg, paramsLongueur.ecart);
+  const cyclesRelation = yConstruireCyclesRelation(liste);
+  const picsPos = ySelectionnerCyclesRelation(cyclesRelation, true, paramsLongueur.pos);
+  const picsNeg = ySelectionnerCyclesRelation(cyclesRelation, false, paramsLongueur.neg);
   const mois = yRegrouperMois(liste);
-  const grandesPeriodes = yRegrouperGrandesPeriodes(liste, jours);
+  const grandesPeriodes = yRegrouperGrandesPeriodes(liste, jours, cyclesRelation);
 
   pb.style.width='88%'; pl.textContent = 'Rédaction des prévisions '+cfg.short+'…';
-  const rapport = yRapportLocal(part, mode, debut, fin, moyenne, picsPos, picsNeg, mois, jours, grandesPeriodes);
+  const rapport = yRapportLocal(part, mode, debut, fin, moyenne, picsPos, picsNeg, mois, jours, grandesPeriodes, cyclesRelation);
   const climat = yClimatModeV26(moyenne, mode);
-  const cycleBadge = jours > 730 ? 'Cycles longs · tendances par semestre' : (jours > 365 ? 'Cycles longs · tendances par trimestre' : 'Prévision court / moyen terme');
+  const cycleBadge = jours > 730 ? 'Cycles longs regroupés · convergences par semestre' : (jours > 365 ? 'Cycles regroupés · convergences par trimestre' : 'Cycles astrologiques distincts · sans répétitions');
   const entete = `<div class="rapport-bloc" style="margin-bottom:1rem">
     <div class="rapport-bloc-titre">Synthèse rapide</div>
     <div class="rapport-texte">
