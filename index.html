@@ -3920,7 +3920,7 @@ function calcProfection(jdNatal, jdAnalyse) {
 function scoreProfection(posN, AS, MC, dom, profection, jdAnalyse) {
   // La profection sert de contexte annuel : elle ne doit jamais dominer seule une prévision.
   const maisonsParDomaine = {
-    amour:[4,6,7], travail:[5,9,10], finances:[1,7,9], argent:[1,7,9],
+    amour:[4,6,7], travail:[5,9], finances:[1,7], argent:[1,7],
     sante:[0,5], famille:[3,4], voyage:[2,8], spirituel:[8,11], chance:[4,8,10], tous:[0,1,2,3,4,5,6,7,8,9,10,11], general:[0,3,6,9]
   };
   let s = (maisonsParDomaine[dom] || maisonsParDomaine.general).includes(profection.maisonProfectee) ? 0.7 : 0;
@@ -4671,75 +4671,122 @@ function prevLabelDomaineAgeV51(domain,dateRef){
   return PREV_DOMAIN_LABELS_V51[domain]||domain;
 }
 
+function prevNormDegV80(x){ return ((Number(x)||0)%360+360)%360; }
+
+function prevTraditionalRulerV80(lon){
+  const rulers=['Mars','Venus','Mercure','Lune','Soleil','Mercure','Venus','Mars','Jupiter','Saturne','Saturne','Jupiter'];
+  return rulers[Math.floor(prevNormDegV80(lon)/30)] || null;
+}
+
+function prevHouseCuspsV80(AS,MC){
+  // Même géométrie de maisons que le reste du site : angles réels + secteurs intermédiaires
+  // dérivés de l'Ascendant. On centralise ici pour éviter des moteurs contradictoires.
+  const as=prevNormDegV80(AS), mc=prevNormDegV80(MC);
+  return {
+    H1:as,H2:prevNormDegV80(as+30),H3:prevNormDegV80(as+60),H4:prevNormDegV80(mc+180),
+    H5:prevNormDegV80(as+120),H6:prevNormDegV80(as+150),H7:prevNormDegV80(as+180),H8:prevNormDegV80(as+210),
+    H9:prevNormDegV80(as+240),H10:mc,H11:prevNormDegV80(as+300),H12:prevNormDegV80(as+330)
+  };
+}
+
+function prevHouseRulerTargetsV80(posN,AS,MC){
+  const cusps=prevHouseCuspsV80(AS,MC), out={};
+  for(let h=1;h<=12;h++){
+    const ruler=prevTraditionalRulerV80(cusps['H'+h]);
+    if(ruler && posN && Number.isFinite(Number(posN[ruler]))) out['R'+h]=Number(posN[ruler]);
+  }
+  return out;
+}
+
 function prevDomainsForTargetV51(target){
-  // V76 — un point générique peut apporter du CONTEXTE, mais il ne doit pas créer
-  // artificiellement un domaine. Les angles/secteurs explicites restent prioritaires.
+  // V80 — une cible n'est reliée qu'aux domaines qu'elle signifie réellement.
+  // Les planètes génériques restent du contexte ; les cuspides et leurs maîtres sont
+  // les preuves sectorielles. Un même événement peut concerner plusieurs domaines
+  // seulement si la cible astrologique est réellement partagée entre ces domaines.
   const map={
-    MC:[['work',1]],
-    IC:[['home',1],['family',.9]],
-    DS:[['couple',1]],
-    AS:[['identity',1]],
+    MC:[['work',1]], IC:[['home',1],['family',.95]], DS:[['couple',1]], AS:[['identity',1]],
     Soleil:[['identity',.75]],
     Lune:[['family',.35],['home',.25],['daily',.15],['children',.18]],
-    Venus:[['couple',.35],['money',.25],['children',.15]],
-    Mercure:[['studies',.35],['projects',.25],['travel',.15]],
-    Mars:[['daily',.30],['projects',.25],['work',.20]],
-    Jupiter:[['travel',.30],['studies',.25],['projects',.25],['money',.20],['children',.18]],
+    Venus:[['couple',.35],['money',.30],['children',.15]],
+    Mercure:[['studies',.35],['projects',.25],['travel',.15],['work',.15]],
+    Mars:[['daily',.30],['projects',.25],['work',.25]],
+    Jupiter:[['travel',.30],['studies',.25],['projects',.25],['money',.25],['children',.18]],
     Neptune:[['spiritual',.35],['daily',.15]],
-    Saturne:[['work',.25],['daily',.25],['identity',.20]],
+    Saturne:[['work',.25],['daily',.25],['identity',.20],['money',.15],['family',.15]],
     H2:[['money',1]],
     H3:[['studies',1],['travel',.55]],
     H5:[['children',1],['projects',.65],['couple',.55]],
-    H6:[['daily',1],['work',.65]],
-    H8:[['money',.9],['couple',.45]],
+    H6:[['daily',1],['work',.70]],
+    H8:[['money',1],['couple',.45]],
     H9:[['travel',1],['studies',.85]],
     H11:[['projects',1]],
-    H12:[['spiritual',1],['daily',.45]]
+    H12:[['spiritual',1],['daily',.45]],
+    // Maîtres des maisons : preuves sectorielles supplémentaires, jamais reconstruction
+    // à partir d'un autre domaine (ex. évolution pro => finance).
+    R1:[['identity',1]],
+    R2:[['money',1]],
+    R3:[['studies',.95],['travel',.60]],
+    R4:[['family',1],['home',1]],
+    R5:[['children',1],['projects',.70],['couple',.60]],
+    R6:[['daily',1],['work',.75]],
+    R7:[['couple',1]],
+    R8:[['money',1],['couple',.50]],
+    R9:[['travel',1],['studies',.90]],
+    R10:[['work',1]],
+    R11:[['projects',1]],
+    R12:[['spiritual',1],['daily',.50]]
   };
   const arr=map[target]||[];
   return arr.map(x=>Array.isArray(x)?x:[String(x),1]);
 }
 
-function prevDomainAnchorV76(target,domain){
-  // Un « anchor » est une preuve de domaine. Sans au moins un anchor, le domaine
-  // n'est pas créé, même si plusieurs planètes génériques sont actives.
-  const anchors={
-    identity:['AS','Soleil'],
-    work:['MC','H6'],
-    couple:['DS','H5','H8'],
-    family:['IC'],
-    home:['IC'],
-    money:['H2','H8'],
-    children:['H5'],
-    studies:['H3','H9'],
-    travel:['H9'],
-    daily:['H6','H12'],
-    projects:['H11','H5'],
-    spiritual:['H12']
+function prevTechniqueRootV80(famille){
+  return String(famille||'').replace(/-(secondaire|secteur|ruler)$/,'');
+}
+
+function prevDomainAnchorKindV80(target,domain){
+  const t=String(target||'');
+  if(/^R(?:[1-9]|1[0-2])$/.test(t)) return 'ruler';
+  const unique={identity:['AS','Soleil'],work:['MC'],couple:['DS'],money:['H2'],projects:['H11']};
+  if((unique[domain]||[]).includes(t)) return 'direct-unique';
+  const shared={
+    family:['IC'],home:['IC'],children:['H5'],studies:['H3','H9'],travel:['H3','H9'],
+    daily:['H6','H12'],work:['H6'],couple:['H5','H8'],money:['H8'],projects:['H5'],spiritual:['H12']
   };
-  return (anchors[domain]||[]).includes(target);
+  if((shared[domain]||[]).includes(t)) return 'direct-shared';
+  return 'none';
+}
+
+function prevDomainAnchorV76(target,domain){
+  return prevDomainAnchorKindV80(target,domain)!=='none';
 }
 
 function prevDomainProofV77(domain,signals){
-  // V77 — Les maisons à sens multiple (H5, H6, H8, H9, H12) ne suffisent plus
-  // à elles seules pour créer plusieurs domaines. Une ancre non ambiguë suffit ;
-  // une ancre ambiguë exige une confirmation contextuelle indépendante du même domaine.
-  const uniques={
-    identity:['AS','Soleil'], work:['MC'], couple:['DS'], family:['IC'], home:['IC'],
-    money:['H2'], children:[], studies:['H3'], travel:[], daily:[], projects:['H11'], spiritual:[]
-  };
+  // V80 — preuve de domaine stricte mais complète : angle/cuspide exclusive, maître
+  // de maison, ou secteur partagé confirmé indépendamment. Les planètes génériques
+  // ne peuvent jamais créer seules un domaine.
   const u=signals||[];
   const anchors=u.filter(x=>x.anchor);
   if(!anchors.length)return {confirmed:false,type:'none',anchors:[],supports:[]};
-  const unique=anchors.filter(x=>(uniques[domain]||[]).includes(x.target));
-  if(unique.length)return {confirmed:true,type:'unique-anchor',anchors:unique,supports:[]};
 
-  // Les petits coefficients des planètes natales sont du contexte, jamais des ancres.
-  // Ici ils ne servent qu'à lever l'ambiguïté d'une maison déjà réellement activée.
-  const supports=u.filter(x=>!x.anchor && Number(x.poids||0)>=.50);
-  const famA=new Set(anchors.map(x=>x.famille));
-  const independent=supports.filter(x=>!famA.has(x.famille));
-  if(independent.length)return {confirmed:true,type:'ambiguous+support',anchors,supports:independent};
+  const directUnique=anchors.filter(x=>x.anchorKind==='direct-unique');
+  if(directUnique.length)return {confirmed:true,type:'direct-unique',anchors:directUnique,supports:[]};
+
+  // Un maître de maison réellement touché est une preuve sectorielle autonome.
+  // Il peut légitimement activer plusieurs maisons s'il les gouverne réellement ;
+  // ce n'est pas une adaptation d'un domaine vers un autre.
+  const rulers=anchors.filter(x=>x.anchorKind==='ruler');
+  if(rulers.length)return {confirmed:true,type:'house-ruler',anchors:rulers,supports:[]};
+
+  const shared=anchors.filter(x=>x.anchorKind==='direct-shared');
+  const sharedRoots=new Set(shared.map(x=>prevTechniqueRootV80(x.famille)));
+  if(sharedRoots.size>=2)return {confirmed:true,type:'shared-sector-convergence',anchors:shared,supports:[]};
+
+  // Une cuspide partagée (H5/H6/H8/H9/H12, IC) exige un soutien indépendant
+  // du même domaine : une autre technique ou un significateur contextuel assez fort.
+  const anchorRoots=new Set(anchors.map(x=>prevTechniqueRootV80(x.famille)));
+  const supports=u.filter(x=>!x.anchor && Number(x.poids||0)>=.60 && !anchorRoots.has(prevTechniqueRootV80(x.famille)));
+  if(shared.length && supports.length)return {confirmed:true,type:'shared-sector+support',anchors:shared,supports};
   return {confirmed:false,type:'ambiguous-only',anchors,supports:[]};
 }
 
@@ -4838,15 +4885,20 @@ function prevScenarioV51(domain,pol,dateRef){
 
 function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelection){
   const date=jdVersDate(jdJour), jd=jdJour+0.5, t=calcPos(jd), age=calcAnneeVieExacte(jdNatal,jdJour);
-  const IC=(MC+180)%360, DS=(AS+180)%360;
-  const natal={...posN,AS,MC,IC,DS,H2:(AS+30)%360,H3:(AS+60)%360,H5:(AS+120)%360,H6:(AS+150)%360,H8:(AS+210)%360,H9:(AS+240)%360,H11:(AS+300)%360,H12:(AS+330)%360};
+  const houses=prevHouseCuspsV80(AS,MC);
+  const IC=houses.H4, DS=houses.H7;
+  const rulers=prevHouseRulerTargetsV80(posN,AS,MC);
+  const natal={...posN,AS,MC,IC,DS,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
   const targetsMajor=['Soleil','Lune','AS','MC','IC','DS','Venus'];
-  const targetsSec=['Mercure','Mars','Jupiter','Saturne','H2','H3','H5','H6','H8','H9','H11','H12'];
+  const targetsPlanetsSec=['Mercure','Mars','Jupiter','Saturne'];
+  const targetsSector=['H2','H3','H5','H6','H8','H9','H11','H12'];
+  const targetsRuler=Object.keys(rulers);
   const sig=[];
   const add=(famille,poids,pol,texte,target,core=true)=>{
     for(const [domain,factor] of prevDomainsForTargetV51(target)){
       if(!prevEtapeAutoriseDomaineV51(domain,date)) continue;
-      sig.push({famille,poids:poids*factor,pol,texte,target,domain,core:core&&factor>=.7,anchor:prevDomainAnchorV76(target,domain)});
+      const anchorKind=prevDomainAnchorKindV80(target,domain);
+      sig.push({famille,poids:poids*factor,pol,texte,target,domain,core:core&&factor>=.7,anchor:anchorKind!=='none',anchorKind});
     }
   };
   const test=(value,target,aspects,orbe)=>{if(value===undefined||natal[target]===undefined)return null;const a=ecartAspectExact(value,natal[target],aspects);return a.ecart<=orbe?a:null;};
@@ -4859,9 +4911,17 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
       const a=test(t[pl],target,[0,60,90,120,180],orb); if(!a)continue;
       add('transit-'+pl.toLowerCase(),base,prevPolariteV51(pl,a.aspect),`${pl} ${a.aspect}° ${target} (${a.ecart.toFixed(2)}°)`,target,true);
     }
-    for(const target of targetsSec){
-      const a=test(t[pl],target,[0,60,90,120,180],orb*.75); if(!a)continue;
-      add('transit-'+pl.toLowerCase()+'-secondaire',base*.62,prevPolariteV51(pl,a.aspect),`${pl} confirme fortement ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+    for(const target of targetsPlanetsSec){
+      const a=test(t[pl],target,[0,60,90,120,180],orb*.70); if(!a)continue;
+      add('transit-'+pl.toLowerCase()+'-secondaire',base*.58,prevPolariteV51(pl,a.aspect),`${pl} contexte ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,false);
+    }
+    for(const target of targetsSector){
+      const a=test(t[pl],target,[0,60,90,120,180],orb*.78); if(!a)continue;
+      add('transit-'+pl.toLowerCase()+'-secteur',base*.92,prevPolariteV51(pl,a.aspect),`${pl} active ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+    }
+    for(const target of targetsRuler){
+      const a=test(t[pl],target,[0,60,90,120,180],orb*.72); if(!a)continue;
+      add('transit-'+pl.toLowerCase()+'-ruler',base*.94,prevPolariteV51(pl,a.aspect),`${pl} active le maître de maison ${target.slice(1)} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
     }
   }
 
@@ -4878,10 +4938,15 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
         }
         // Les secteurs financiers, études, projets, enfants et rythme peuvent aussi devenir majeurs,
         // mais seulement avec un contact progressé très serré ET une autre technique indépendante.
-        for(const target of targetsSec){
-          const a=test(p[src],target,[0,60,90,120,180],.38); if(!a)continue;
+        for(const target of targetsSector){
+          const a=test(p[src],target,[0,60,90,120,180],.40); if(!a)continue;
           const pol=src==='Venus'?prevPolariteV51('Venus',a.aspect):'mixte';
-          add('progression-secondaire',1.95,pol,`${src} progressé confirme ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+          add('progression-secteur',2.25,pol,`${src} progressé active ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+        }
+        for(const target of targetsRuler){
+          const a=test(p[src],target,[0,60,90,120,180],.36); if(!a)continue;
+          const pol=src==='Venus'?prevPolariteV51('Venus',a.aspect):'mixte';
+          add('progression-ruler',2.35,pol,`${src} progressé active le maître de maison ${target.slice(1)} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
         }
       }
     }catch(e){}
@@ -4898,10 +4963,15 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
           const pol=['Jupiter','Venus','Saturne','Pluton','Uranus','Neptune','Mars'].includes(src)?prevPolariteV51(src,a.aspect):'mixte';
           add('arc-solaire',3.05,pol,`${src} dirigé ${a.aspect}° ${target} (${a.ecart.toFixed(2)}°)`,target,true);
         }
-        for(const target of targetsSec){
+        for(const target of targetsSector){
+          const a=test(dirige,target,[0,60,90,120,180],.34); if(!a)continue;
+          const pol=['Jupiter','Venus','Saturne','Pluton','Uranus','Neptune','Mars'].includes(src)?prevPolariteV51(src,a.aspect):'mixte';
+          add('arc-solaire-secteur',2.50,pol,`${src} dirigé active ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+        }
+        for(const target of targetsRuler){
           const a=test(dirige,target,[0,60,90,120,180],.32); if(!a)continue;
           const pol=['Jupiter','Venus','Saturne','Pluton','Uranus','Neptune','Mars'].includes(src)?prevPolariteV51(src,a.aspect):'mixte';
-          add('arc-solaire-secondaire',2.3,pol,`${src} dirigé confirme ${target} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
+          add('arc-solaire-ruler',2.65,pol,`${src} dirigé active le maître de maison ${target.slice(1)} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`,target,true);
         }
       }
     }catch(e){}
@@ -4914,9 +4984,13 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
         let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
         if(d<=1.45)add('eclipse',3.0,'mixte',`Éclipse sur ${target} (${d.toFixed(2)}°)`,target,true);
       }
-      for(const target of ['H2','H3','H5','H6','H8','H9','H11','H12']){
+      for(const target of targetsSector){
         let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
-        if(d<=.8)add('eclipse-secondaire',2.0,'mixte',`Éclipse confirme ${target} (${d.toFixed(2)}°)`,target,true);
+        if(d<=.8)add('eclipse-secteur',2.0,'mixte',`Éclipse active ${target} (${d.toFixed(2)}°)`,target,true);
+      }
+      for(const target of targetsRuler){
+        let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
+        if(d<=.65)add('eclipse-ruler',1.75,'mixte',`Éclipse touche le maître de maison ${target.slice(1)} (${d.toFixed(2)}°)`,target,true);
       }
     }
   }catch(e){}
@@ -4967,9 +5041,9 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
       u.push({famille:'revolution-solaire',poids:.75,pol:rsContexte>0?'positive':'difficile',texte:`Contexte annuel ${rsContexte>0?'porteur':'exigeant'} (${rsContexte.toFixed(1)})`,target:'RS',domain,core:false,anchor:false});
     }
 
-    const fam=new Set(u.map(x=>x.famille));
-    const coreFamilies=new Set(u.filter(x=>x.core&&x.poids>=1.8).map(x=>x.famille));
-    const anchorFamilies=new Set(anchorSignals.filter(x=>x.poids>=1.0).map(x=>x.famille));
+    const fam=new Set(u.map(x=>prevTechniqueRootV80(x.famille)));
+    const coreFamilies=new Set(u.filter(x=>x.core&&x.poids>=1.8).map(x=>prevTechniqueRootV80(x.famille)));
+    const anchorFamilies=new Set(anchorSignals.filter(x=>x.poids>=1.0).map(x=>prevTechniqueRootV80(x.famille)));
     const pos=u.filter(x=>x.pol==='positive').reduce((a,b)=>a+b.poids,0);
     const neg=u.filter(x=>x.pol==='difficile').reduce((a,b)=>a+b.poids,0);
     const mix=u.filter(x=>x.pol==='mixte').reduce((a,b)=>a+b.poids,0);
@@ -7190,13 +7264,24 @@ function apReconcileIntentScoreV75(jd,intent,baseScore){
   if(!row)return {score:0,v51:null,eligible:false,signed:0};
 
   const signed=apSignedDomainScoreV76(row);
-  const domainScore=Math.max(0,Math.min(100,50+signed*6));
-  // L'ancien score général ne sert plus que de contexte secondaire (15 %). Il ne peut
-  // jamais créer l'intention ni inverser un signal de domaine réellement prouvé.
-  const contextScore=Math.max(0,Math.min(100,Number(baseScore)||0));
-  const score=Math.max(0,Math.min(100,domainScore*.85+contextScore*.15));
-  const eligible=Number(row.anchorCount||0)>0 && Number(row.force||0)>=1.8;
+  // V80 — le classement d'une fenêtre spécialisée dépend EXCLUSIVEMENT du domaine
+  // réellement prouvé. Un excellent score général ou professionnel ne peut plus
+  // améliorer artificiellement une fenêtre Argent, Amour, Famille, etc.
+  const score=Math.max(0,Math.min(100,50+signed*6));
+  const eligible=Number(row.anchorCount||0)>0 && Number(row.force||0)>=2.0;
   return {score,v51:row,eligible,signed};
+}
+
+function apDomainTagsV80(row){
+  if(!row)return [];
+  const tags=[];
+  for(const s of (row.signatures||[])){
+    if(!s||!s.texte)continue;
+    const txt=String(s.texte).replace(/\s+/g,' ').trim();
+    if(txt && !tags.includes(txt))tags.push(txt);
+    if(tags.length>=6)break;
+  }
+  return tags;
 }
 
 async function lancerFenetre() {
@@ -7228,7 +7313,7 @@ async function lancerFenetre() {
         const coh=apReconcileIntentScoreV75(jdJ,intentionF,baseIntentScore);
         if (coh.eligible && coh.signed > 0) {
           const date = jdVersDate(jdJ);
-          resultats.push({ jd: jdJ, date, score: coh.score, scoreArgent:intentionF==='argent'?coh.score:res.scoreArgent, raw: coh.signed, moneyStrength:res.moneyStrength, moneyFamilies:res.moneyFamilies||[], tags: res.tags, v51:coh.v51 });
+          resultats.push({ jd: jdJ, date, score: coh.score, scoreArgent:intentionF==='argent'?coh.score:res.scoreArgent, raw: coh.signed, moneyStrength:res.moneyStrength, moneyFamilies:res.moneyFamilies||[], tags: apDomainTagsV80(coh.v51), v51:coh.v51 });
         }
       } catch(e) {}
     }
@@ -7244,35 +7329,28 @@ async function lancerFenetre() {
   const triés = [...resultats].sort((a,b) => b.score - a.score);
   const top = [];
 
-  // V57 — « Argent » : on ne cherche ni les jours de paie ordinaires,
-  // ni uniquement des événements rarissimes. On classe les périodes où le thème
-  // financier est réellement soutenu, avec plusieurs niveaux de force.
+  // V80 — « Argent » utilise exactement le même moteur sectoriel que les autres
+  // domaines. Une activation H2/H8 ou du maître de II/VIII peut donc être retenue même
+  // si l'ancien score de tags financiers n'avait rien détecté. À l'inverse, un signal
+  // pro ou patrimonial non financier ne peut pas entrer dans ce classement.
   if (intentionF === 'argent') {
     const argentTries = [...resultats]
-      .filter(r => (r.moneyStrength || 0) > 0)
+      .filter(r => r.v51 && r.v51.domain==='money' && Number(r.v51.anchorCount||0)>0)
       .sort((a,b) => {
-        const ra = (a.scoreArgent || 0) + Math.min(10,(a.moneyFamilies||[]).length*3);
-        const rb = (b.scoreArgent || 0) + Math.min(10,(b.moneyFamilies||[]).length*3);
-        return rb - ra;
+        const fa=Number(a.v51.force||0), fb=Number(b.v51.force||0);
+        if(Math.abs(fb-fa)>.05)return fb-fa;
+        return (b.scoreArgent||b.score||0)-(a.scoreArgent||a.score||0);
       });
 
-    // Premier passage : vraies convergences ou indice financier net.
-    const forts = argentTries.filter(r =>
-      ((r.moneyFamilies||[]).length >= 2 && (r.scoreArgent||0) >= 42) ||
-      ((r.moneyStrength||0) >= 3.2 && (r.scoreArgent||0) >= 40)
-    );
+    // D'abord les convergences fortes, puis les périodes marquées réellement financières.
+    const forts = argentTries.filter(r => ['fort','exceptionnel'].includes(r.v51.niveau) || Number(r.v51.force||0)>=4.2);
     for (const r of forts) {
       if (top.length >= 5) break;
       if (!top.some(t => Math.abs(t.jd - r.jd) < 45)) top.push(r);
     }
-
-    // Deuxième passage : si le thème natal n'offre pas cinq fenêtres fortes,
-    // on montre les meilleures périodes financières plus modérées au lieu d'afficher « rien ».
     if (top.length < 5) {
-      const souples = argentTries.filter(r =>
-        (r.scoreArgent||0) >= 34 && (r.moneyStrength||0) >= 1.1
-      );
-      for (const r of souples) {
+      const marques = argentTries.filter(r => Number(r.v51.force||0)>=2.2);
+      for (const r of marques) {
         if (top.length >= 5) break;
         if (!top.some(t => Math.abs(t.jd - r.jd) < 45)) top.push(r);
       }
@@ -7286,7 +7364,7 @@ async function lancerFenetre() {
 
   try {
     window.AP_LAST_WINDOWS = top.map(r => {
-      const domIntent=({argent:'finances',travail:'travail',amour:'amour',demenager:'famille',voyage:'voyage',sante:'sante',creation:'spirituel',examen:'spirituel',enfant:'famille',investir:'finances'})[intentionF]||'general';
+      const domIntent=({argent:'finances',travail:'travail',amour:'amour',demenager:'famille',voyage:'voyage',sante:'sante',creation:'general',examen:'general',enfant:'famille',investir:'finances'})[intentionF]||'general';
       const sig=apConvergenceFromRowV76(r.v51,domIntent,r.date);
       const fam=sig&&sig.familles?sig.familles.length:0;
       const rel=fam>=3||(sig&&sig.poids>=7)?'very_convergent':fam>=2||(sig&&sig.poids>=4)?'confirmed':'light';
@@ -8474,37 +8552,39 @@ function yPointsRelation(part, mode) {
   // approximation égale déjà employée par le moteur multidomaine du site.
   const specs = {
     couple: [
-      ['Descendant','lien de couple',1.45,true], ['H5','vie affective / expression du lien',1.20,true],
-      ['H8','intimité / engagement profond',1.05,true], ['Venus','attachement affectif',1.00,false],
+      ['Descendant','lien de couple',1.45,true], ['R7','maître du lien de couple',1.20,true], ['H5','vie affective / expression du lien',1.15,true],
+      ['R5','maître du secteur affectif',.95,true], ['H8','intimité / engagement profond',1.00,true], ['R8','maître de l’engagement profond',.85,true], ['Venus','attachement affectif',1.00,false],
       ['Lune','sécurité émotionnelle',0.90,false], ['Mars','initiative / désir',0.80,false], ['Mercure','dialogue',0.60,false]
     ],
     rencontre: [
-      ['Descendant','ouverture relationnelle',1.35,true], ['H5','rencontre / élan affectif',1.35,true],
+      ['Descendant','ouverture relationnelle',1.35,true], ['R7','maître de l’ouverture relationnelle',1.10,true], ['H5','rencontre / élan affectif',1.30,true], ['R5','maître du secteur de rencontre',1.00,true],
       ['Venus','attirance / agrément',1.10,false], ['Mars','initiative',0.95,false],
       ['Mercure','conversation',0.85,false], ['Lune','réceptivité',0.65,false]
     ],
     ex: [
-      ['Descendant','ancien lien relationnel',1.30,true], ['H8','attache / séparation profonde',1.20,true],
+      ['Descendant','ancien lien relationnel',1.30,true], ['R7','maître du lien relationnel',1.05,true], ['H8','attache / séparation profonde',1.15,true], ['R8','maître des enjeux de séparation',.95,true],
       ['Lune','mémoire émotionnelle',1.00,false], ['Saturne','frontières / passé',1.00,false],
       ['Pluton','emprise / transformation',0.90,false], ['Mercure','clarification',0.80,false], ['Venus','apaisement',0.50,false]
     ],
     compliquee: [
-      ['Descendant','lien à clarifier',1.35,true], ['H8','enjeux profonds / ambiguïtés',1.15,true],
+      ['Descendant','lien à clarifier',1.35,true], ['R7','maître du lien à clarifier',1.05,true], ['H8','enjeux profonds / ambiguïtés',1.10,true], ['R8','maître des enjeux profonds',.95,true],
       ['Saturne','cadre / limites',1.10,false], ['Pluton','rapport de force',1.00,false],
       ['Mercure','mise au point',0.90,false], ['Lune','réactivité émotionnelle',0.85,false], ['Mars','tension / initiative',0.75,false]
     ],
     amitie: [
-      ['H11','amitié / réseau choisi',1.55,true], ['Mercure','échange amical',1.00,false],
+      ['H11','amitié / réseau choisi',1.55,true], ['R11','maître du secteur amical',1.25,true], ['Mercure','échange amical',1.00,false],
       ['Jupiter','soutien / ouverture',0.95,false], ['Uranus','liberté / évolution du lien',0.80,false],
       ['Lune','disponibilité humaine',0.70,false], ['Saturne','fiabilité / distance',0.65,false]
     ],
     famille: [
-      ['IC','foyer / racines familiales',1.55,true], ['Lune','sécurité / lien familial',1.25,true],
-      ['Saturne','responsabilités familiales',1.05,false], ['Mercure','échanges familiaux',0.80,false],
-      ['Jupiter','soutien / expansion familiale',0.70,false], ['Soleil','rôle dans la famille',0.60,false]
+      ['IC','foyer / racines familiales',1.55,true], ['R4','maître du secteur familial',1.30,true],
+      ['Lune','sécurité / lien familial',1.15,false], ['Saturne','responsabilités familiales',1.05,false],
+      ['Mercure','échanges familiaux',0.80,false], ['Jupiter','soutien / expansion familiale',0.70,false],
+      ['Soleil','rôle dans la famille',0.60,false]
     ],
     pro: [
-      ['MC','statut / direction professionnelle',1.60,true], ['H6','travail quotidien / organisation',1.35,true],
+      ['MC','statut / direction professionnelle',1.60,true], ['R10','maître du secteur professionnel',1.35,true],
+      ['H6','travail quotidien / organisation',1.25,true], ['R6','maître du travail quotidien',1.05,true],
       ['Saturne','responsabilités / hiérarchie',1.15,false], ['Mercure','communication professionnelle',1.05,false],
       ['Jupiter','opportunité / développement',0.85,false], ['Mars','exécution / décision',0.75,false],
       ['Soleil','rôle / reconnaissance',0.60,false]
@@ -8524,6 +8604,12 @@ function yPointsRelation(part, mode) {
     if(cle==='H6') return yNorm(AS+150);
     if(cle==='H8') return yNorm(AS+210);
     if(cle==='H11') return yNorm(AS+300);
+    if(/^R(?:[1-9]|1[0-2])$/.test(cle)){
+      const h=Number(cle.slice(1));
+      const cusps=prevHouseCuspsV80(AS,MC);
+      const ruler=prevTraditionalRulerV80(cusps['H'+h]);
+      return ruler && pos && pos[ruler] !== undefined ? pos[ruler] : undefined;
+    }
     return pos && pos[cle] !== undefined ? pos[cle] : undefined;
   }
   function pushPerson(name,pos,AS,MC){
@@ -8629,7 +8715,7 @@ function yScoreTransitRelation(posT, points, mode) {
   }
 
   // V76 — Une prévision de relation doit avoir une PREUVE DU CONTEXTE choisi.
-  // Sans contact à une ancre (MC/H6 pro, IC/Lune famille, H11 amitié, DS/H5/H8 amour),
+  // Sans contact à une ancre sectorielle (MC/H6/R10/R6 pro, IC/R4 famille, H11/R11 amitié, DS/H5/H8 et leurs maîtres pour l'amoureux),
   // le jour reste neutre. Et pour parler du lien entre deux personnes, les deux thèmes
   // doivent être impliqués le même jour ; sinon on ne transforme pas l'événement individuel
   // de l'un en événement de la relation.
@@ -9206,7 +9292,7 @@ function selDomQ(val, el) {
 }
 
 
-// V79 — « Ma question » analyse réellement toute la décennie et expose la couverture annuelle.
+// V80 — « Ma question » analyse toute la décennie avec le moteur sectoriel central (cuspides + maîtres de maisons).
 // Sur mobile, on évite un calcul quotidien de 3 650+ jours : un balayage régulier
 // détecte les cycles lents, puis les meilleures zones sont raffinées autour des pics.
 function apQuestionRowsJourV78(jdJ, domaine, analyseGeneraleQ) {
@@ -10312,7 +10398,7 @@ function apRel(sig){const n=sig&&sig.familles?sig.familles.length:0;const p=sig&
 function apRelHtml(sig){const r=apRel(sig);return `<span class="ap-chip ${r.cls}">${apEsc(apT(r.key))}${r.n?` · ${r.n} ${apEsc(apT('families'))}`:''}</span>`;}
 function apValidIntent(i,date=new Date()){try{return typeof intentionCompatibleAge==='function'?intentionCompatibleAge(i,date):true;}catch(e){return true;}}
 function apCandidateIntents(date=new Date()){return ['argent','travail','amour','demenager','voyage','creation','examen','investir'].filter(i=>apValidIntent(i,date));}
-function apScoreIntent(date,intent){try{const jd=apJDFromDate(date);const r=scoreJourFenetre(jd,USER.pos,USER.AS,USER.MC,intent);const base=intent==='argent'?(r.scoreArgent||r.score):r.score;const coh=apReconcileIntentScoreV75(jd,intent,base);if(!coh.eligible||!coh.v51)return null;const dom=({argent:'finances',travail:'travail',amour:'amour',demenager:'famille',voyage:'voyage',sante:'sante',creation:'spirituel',examen:'spirituel',enfant:'famille',investir:'finances'})[intent]||'general';const sig=apConvergenceFromRowV76(coh.v51,dom,new Date(date));return{date:new Date(date),jd,intent,score:Number(coh.score)||0,raw:Number(coh.signed)||0,tags:r.tags||[],sig,v51:coh.v51,eligible:true};}catch(e){return null;}}
+function apScoreIntent(date,intent){try{const jd=apJDFromDate(date);const r=scoreJourFenetre(jd,USER.pos,USER.AS,USER.MC,intent);const base=intent==='argent'?(r.scoreArgent||r.score):r.score;const coh=apReconcileIntentScoreV75(jd,intent,base);if(!coh.eligible||!coh.v51)return null;const dom=({argent:'finances',travail:'travail',amour:'amour',demenager:'famille',voyage:'voyage',sante:'sante',creation:'general',examen:'general',enfant:'famille',investir:'finances'})[intent]||'general';const sig=apConvergenceFromRowV76(coh.v51,dom,new Date(date));return{date:new Date(date),jd,intent,score:Number(coh.score)||0,raw:Number(coh.signed)||0,tags:apDomainTagsV80(coh.v51),sig,v51:coh.v51,eligible:true};}catch(e){return null;}}
 function apCluster(list,minDays=45,max=12){const out=[];for(const x of list){if(out.length>=max)break;if(!out.some(y=>Math.abs(y.jd-x.jd)<minDays))out.push(x);}return out;}
 function apDomainDescription(intent,score){const pos=score>=50;const all={
 fr:{argent:pos?['rentrée d’argent non routinière','amélioration financière','accord ou paiement favorable']:['dépense ou tension financière','prudence sur un engagement financier'],travail:pos?['évolution d’activité','reconnaissance ou nouveau projet','opportunité professionnelle']:['réorganisation du travail','responsabilité plus lourde ou changement de rythme'],amour:pos?['rapprochement relationnel','rencontre ou engagement','relation qui se clarifie positivement']:['mise au point relationnelle','distance ou réévaluation du lien'],demenager:pos?['changement de foyer favorable','installation ou projet immobilier']:['retard ou contrainte autour du logement','réorganisation du foyer'],voyage:pos?['voyage ou ouverture vers l’extérieur','mobilité favorable']:['déplacement plus compliqué','projet de voyage à réajuster'],creation:pos?['projet créatif qui prend forme','initiative personnelle porteuse']:['projet à restructurer','créativité freinée temporairement'],examen:pos?['réussite ou progression dans les études','période favorable aux examens']:['effort d’étude plus exigeant','orientation à ajuster'],investir:pos?['fenêtre plus porteuse pour structurer un investissement','décision patrimoniale mieux soutenue']:['prudence sur les engagements','risque de décision précipitée']},
