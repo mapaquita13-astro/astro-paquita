@@ -613,15 +613,15 @@ body {
 
 /* Grands événements V43 : lecture concrète, sans jargon ni chronologie répétitive */
 .ev-concrete-title{font-weight:800;color:#3b1b39;margin:.9rem 0 .45rem;font-size:.93rem}
-.ev-scenario{display:grid;grid-template-columns:68px 1fr;gap:.55rem;align-items:start;padding:.55rem 0;border-top:1px solid #eadfd3}
-.ev-proba{font-weight:800;color:#6a285e;font-size:.84rem;white-space:nowrap}
-.ev-scenario-text{color:#4c3b49;font-size:.88rem;line-height:1.45}
+.ev-scenario{display:grid;grid-template-columns:minmax(132px, 170px) minmax(0,1fr);gap:.55rem;align-items:start;padding:.55rem 0;border-top:1px solid #eadfd3}
+.ev-proba{font-weight:800;color:#6a285e;font-size:.84rem;line-height:1.3;white-space:normal;word-break:normal}
+.ev-scenario-text{color:#4c3b49;font-size:.88rem;line-height:1.45;min-width:0}
 .ev-proba-note{font-size:.7rem;color:#887682;line-height:1.4;margin-top:.55rem;font-style:italic}
 .ev-domain-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin:.55rem 0}
 .ev-domain-tag{font-size:.72rem;border:1px solid #dfccb2;background:#fff9f1;color:#51344d;border-radius:999px;padding:.28rem .55rem;font-weight:700}
 .ev-period-line{font-size:.9rem;color:#4b3948;line-height:1.55;margin:.35rem 0}
 @media(max-width:700px){
-  .ev-scenario{grid-template-columns:62px 1fr}.ev-scenario-text{font-size:.9rem}.ev-proba{font-size:.82rem}
+  .ev-scenario{grid-template-columns:1fr;gap:.18rem}.ev-scenario-text{font-size:.9rem}.ev-proba{font-size:.82rem}
 }
 
 .fenetre-card {
@@ -1020,8 +1020,9 @@ select.champ-input, select.profils-select {
   .ev-hero-sub{text-align:left;font-size:.79rem;margin-bottom:1rem}
   .ev-section-titre{text-align:left!important;font-size:.72rem!important;letter-spacing:.12em!important;margin-top:1.1rem!important}
   .ev-card{border-radius:16px!important;padding:.95rem!important;margin-bottom:.75rem!important}
-  .ev-card-header{align-items:flex-start!important;gap:.55rem!important;flex-wrap:wrap}
-  .ev-card-titre{font-size:1.05rem!important;line-height:1.2;flex:1 1 180px}
+  .ev-card-header{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:.45rem!important;flex-wrap:nowrap!important}
+  .ev-card-titre{font-size:1.05rem!important;line-height:1.2;flex:0 0 auto;min-width:0}
+  .ev-card-badge{align-self:flex-start!important;max-width:100%;white-space:normal!important;letter-spacing:.06em!important;line-height:1.2}
   .ev-meta-grid{grid-template-columns:1fr 1fr}
   .ev-card-desc{font-size:.84rem!important;line-height:1.55!important}
   .ev-cycle{border-radius:14px!important;padding:.85rem!important}
