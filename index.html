@@ -5466,7 +5466,7 @@ function apDailyHintV84(domain,source,pol){
   return bucket[source]||'activation ponctuelle du domaine à observer concrètement dans la journée';
 }
 
-function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom){
+function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache){
   const keys=apDomainKeysForSelectionV76(dom);
   if(!keys.length)return {hasSignal:false,signals:[],bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
   const houses=prevHouseCuspsV80(AS,MC), rulers=prevHouseRulerTargetsV80(posN,AS,MC);
@@ -5488,7 +5488,7 @@ function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom){
   const aspW={0:1,60:.82,90:.95,120:.88,180:1};
   const raw=[]; const posBy=Array(24).fill(0),negBy=Array(24).fill(0),mixBy=Array(24).fill(0);
   for(let h=0;h<24;h++){
-    let t={}; try{t=calcPos(jdJour+h/24);}catch(e){continue;}
+    let t={}; try{t=(posCache&&posCache[h])?posCache[h]:calcPos(jdJour+h/24);}catch(e){continue;}
     for(const source of sources){
       if(t[source]===undefined)continue;
       for(const tg of targets){
@@ -5520,11 +5520,11 @@ function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom){
   return {hasSignal:signals.length>0,signals,bestScore,worstScore,bestHour,worstHour,dominantScore,totalMix,targets};
 }
 
-function apDailyMicroAllV84(jdJour,posN,AS,MC){
+function apDailyMicroAllV84(jdJour,posN,AS,MC,posCache){
   const sels=['travail','finances','amour','famille','voyage','sante','spirituel'];
   const all=[];
   for(const dom of sels){
-    const r=apDailyMicroDomainV84(jdJour,posN,AS,MC,dom);
+    const r=apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache);
     for(const s of (r.signals||[]))all.push({...s,selection:dom});
   }
   const uniq=new Map();
@@ -5534,6 +5534,123 @@ function apDailyMicroAllV84(jdJour,posN,AS,MC){
   }
   const signals=[...uniq.values()].sort((a,b)=>b.importance-a.importance||a.ecart-b.ecart).slice(0,12);
   return {hasSignal:signals.length>0,signals,bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
+}
+
+
+// ============================================================
+// V85 — MICRO-CHRONOLOGIE SEMAINE / MOIS
+// La prévision quotidienne V84 reste inchangée. Pour 7 à 30 jours, on calcule
+// aussi les activations rapides des VRAIES ancres sectorielles afin d'éviter les
+// prévisions vides/vagues quand aucun « grand tournant » n'est présent.
+// Ces activations ne deviennent jamais des événements majeurs : elles décrivent
+// seulement des jours/périodes concrètement plus actifs.
+// ============================================================
+function apDailyMicroAllFastV85(jdJour,posN,AS,MC,posCache){
+  const selections=['travail','finances','amour','famille','voyage','sante','spirituel'];
+  const allowed=new Set(selections.flatMap(apDomainKeysForSelectionV76));
+  const houses=prevHouseCuspsV80(AS,MC), rulers=prevHouseRulerTargetsV80(posN,AS,MC);
+  const natal={...posN,AS,MC,IC:houses.H4,DS:houses.H7,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
+  const possible=['MC','IC','DS','H2','H3','H5','H6','H8','H9','H11','H12',...Object.keys(rulers)];
+  const targets=[];
+  for(const target of possible){
+    for(const [domain,factor] of prevDomainsForTargetV51(target)){
+      if(allowed.has(domain)&&Number.isFinite(Number(natal[target]))) targets.push({target,deg:Number(natal[target]),domain,factor});
+    }
+  }
+  if(!targets.length)return {hasSignal:false,signals:[],bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
+  const sources=['Lune','Mercure','Venus','Mars','Soleil'];
+  const orb={Lune:1.35,Mercure:.70,Venus:.75,Mars:.72,Soleil:.78};
+  const base={Lune:.70,Mercure:1.00,Venus:1.10,Mars:1.15,Soleil:.90};
+  const aspW={0:1,60:.82,90:.95,120:.88,180:1};
+  const raw=[]; const posBy=Array(24).fill(0),negBy=Array(24).fill(0),mixBy=Array(24).fill(0);
+  for(let h=0;h<24;h++){
+    let t={}; try{t=(posCache&&posCache[h])?posCache[h]:calcPos(jdJour+h/24);}catch(e){continue;}
+    for(const source of sources){
+      if(t[source]===undefined)continue;
+      for(const tg of targets){
+        const a=ecartAspectExact(t[source],tg.deg,[0,60,90,120,180]);
+        if(!a||a.ecart>orb[source])continue;
+        const pol=apDailyPolarityV84(source,a.aspect);
+        const closeness=Math.max(.25,1-(a.ecart/orb[source])*.72);
+        const strength=base[source]*tg.factor*(aspW[a.aspect]||.8)*closeness;
+        if(pol==='positive')posBy[h]+=strength; else if(pol==='difficile')negBy[h]+=strength; else mixBy[h]+=strength;
+        raw.push({source,target:tg.target,domain:tg.domain,aspect:a.aspect,ecart:a.ecart,pol,heure:h,importance:strength+(pol==='mixte'?.12:0),hint:apDailyHintV84(tg.domain,source,pol)});
+      }
+    }
+  }
+  const uniq=new Map();
+  for(const s of raw){
+    const k=[s.source,s.target,s.domain,s.aspect].join('|');
+    const old=uniq.get(k); if(!old||s.ecart<old.ecart)uniq.set(k,s);
+  }
+  const signals=[...uniq.values()].sort((a,b)=>b.importance-a.importance||a.ecart-b.ecart).slice(0,16);
+  const argMax=a=>a.reduce((bi,v,i)=>v>a[bi]?i:bi,0);
+  const bestHour=argMax(posBy),worstHour=argMax(negBy);
+  const totalPos=posBy.reduce((a,b)=>a+b,0),totalNeg=negBy.reduce((a,b)=>a+b,0),totalMix=mixBy.reduce((a,b)=>a+b,0);
+  let dominantScore=(totalPos-totalNeg)/Math.max(1,Math.sqrt(24)); if(Math.abs(dominantScore)<.15&&totalMix>0)dominantScore=0;
+  return {hasSignal:signals.length>0,signals,bestScore:posBy[bestHour],worstScore:-negBy[worstHour],bestHour,worstHour,dominantScore,totalMix,targets};
+}
+
+function apPeriodMicroGroupsV85(resultats,nbJours){
+  const rows=[];
+  for(const r of resultats){
+    const m=r.microDomaine;
+    if(!m||!m.hasSignal||!(m.signals||[]).length)continue;
+    for(const s of m.signals){
+      const sourceBonus=s.source==='Lune'?-.18:(s.source==='Mars'||s.source==='Venus'||s.source==='Mercure'?.15:0);
+      rows.push({date:r.date,source:s.source,target:s.target,domain:s.domain,aspect:s.aspect,pol:s.pol,heure:s.heure,hint:s.hint,force:(s.importance||0)+sourceBonus,ecart:s.ecart});
+    }
+  }
+  rows.sort((a,b)=>a.date-b.date||b.force-a.force);
+  const gapMax=nbJours<=7?1:3;
+  const groups=[];
+  for(const x of rows){
+    const key=[x.domain,x.target,x.pol].join('|');
+    let g=[...groups].reverse().find(q=>q.key===key&&(x.date-q.fin)/86400000<=gapMax);
+    if(!g){g={key,domain:x.domain,pol:x.pol,debut:x.date,fin:x.date,peak:x,force:x.force,sources:new Set([x.source]),hints:new Set([x.hint])};groups.push(g);}
+    else{
+      g.fin=x.date; g.sources.add(x.source); g.hints.add(x.hint);
+      if(x.force>g.force){g.force=x.force;g.peak=x;}
+    }
+  }
+  // Évite que la Lune seule remplisse la période si des déclencheurs plus structurants existent.
+  const scored=groups.map(g=>({...g,rank:g.force+([...g.sources].some(s=>s!=='Lune')?.25:-.15)})).sort((a,b)=>b.rank-a.rank);
+  const max=nbJours<=7?5:7;
+  const kept=[];
+  for(const g of scored){
+    const duplicate=kept.some(k=>k.domain===g.domain&&k.pol===g.pol&&k.peak.hint===g.peak.hint&&Math.abs((g.debut-k.debut)/86400000)<=2);
+    if(!duplicate)kept.push(g);
+    if(kept.length>=max)break;
+  }
+  return kept.sort((a,b)=>a.debut-b.debut);
+}
+
+function apMarkedPeriodGroupsV85(resultats,dom,analyseGenerale,nbJours){
+  const keys=analyseGenerale?null:apDomainKeysForSelectionV76(dom);
+  const rows=[];
+  for(const r of resultats){
+    for(const e of (r.exceptionnelsDomaines||[])){
+      if(e.niveau==='faible')continue;
+      if(keys&&!keys.includes(e.domain))continue;
+      rows.push({date:r.date,...e});
+    }
+  }
+  rows.sort((a,b)=>a.date-b.date||b.force-a.force);
+  const gapMax=nbJours<=7?2:nbJours<=31?6:nbJours<=100?15:35;
+  const groups=[];
+  for(const x of rows){
+    const root=(x.anchorFamilies&&x.anchorFamilies[0])||(x.coreFamilies&&x.coreFamilies[0])||(x.familles&&x.familles[0])||'cycle';
+    const key=[x.domain,x.polarite,root].join('|');
+    let g=[...groups].reverse().find(q=>q.key===key&&(x.date-q.fin)/86400000<=gapMax);
+    if(!g){g={key,domain:x.domain,label:x.label,polarite:x.polarite,niveau:x.niveau,debut:x.date,fin:x.date,peak:x,force:x.force,familles:new Set(x.familles||[]),scenarios:new Set(x.scenarios||[])};groups.push(g);}
+    else{
+      g.fin=x.date;(x.familles||[]).forEach(f=>g.familles.add(f));(x.scenarios||[]).forEach(s=>g.scenarios.add(s));
+      if(x.force>g.force){g.force=x.force;g.peak=x;g.label=x.label;g.niveau=x.niveau;}
+      if(x.niveau==='exceptionnel')g.niveau='exceptionnel'; else if(x.niveau==='fort'&&g.niveau==='marque')g.niveau='fort';
+    }
+  }
+  const max=nbJours<=7?4:nbJours<=31?6:nbJours<=100?8:10;
+  return groups.sort((a,b)=>b.force-a.force).slice(0,max).sort((a,b)=>a.debut-b.debut);
 }
 
 async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
@@ -5546,9 +5663,11 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
     let sFixe = 0;
     try { sFixe = scorerJour(jdJ, posN, AS, MC, dom, jdNatal); } catch(e) { sFixe = 0; }
     let maxS=-999,maxH=12,minS=999,minH=12;
+    const rawPosCache=Array(24);
     for(let h=0;h<24;h++){
       try {
         let posT = calcPos(jdJ+h/24);
+        rawPosCache[h]=posT;
         posT = enrichirComplet(posT, jdNatal, anneeVie, jdJ+h/24, posN, AS, MC, dom);
         const score = scorerComplet(posT, posN, AS, MC, dom, jdNatal, anneeVie, jdJ+h/24) + sFixe;
         if(score>maxS){maxS=score;maxH=h;}
@@ -5579,12 +5698,15 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
     let exceptionnelsDomaines=[];
     try{exceptionnelsDomaines=analyserExceptionnelsTousDomainesV51(jdJ,posN,AS,MC,jdNatal,'general');}catch(e){exceptionnelsDomaines=[];}
 
-    // V84 — sur une date précise uniquement, on ajoute une couche de timing fin
-    // construite sur les vraies ancres du domaine. Elle ne sert jamais à fabriquer
-    // un grand événement ni à contaminer les prévisions longues.
+    // V85 — timing fin pour le jour + micro-chronologie pour semaine/mois.
+    // Pour 7/30 jours, cette couche est conservée comme INFORMATION DE TIMING :
+    // elle ne modifie jamais le niveau « grand événement » du domaine.
     let microDomaine=null;
-    if(nb===1){
-      try{microDomaine=analyseGenerale?apDailyMicroAllV84(jdJ,posN,AS,MC):apDailyMicroDomainV84(jdJ,posN,AS,MC,dom);}catch(e){microDomaine=null;}
+    if(nb<=31){
+      try{
+        if(nb===1) microDomaine=analyseGenerale?apDailyMicroAllV84(jdJ,posN,AS,MC,rawPosCache):apDailyMicroDomainV84(jdJ,posN,AS,MC,dom,rawPosCache);
+        else microDomaine=analyseGenerale?apDailyMicroAllFastV85(jdJ,posN,AS,MC,rawPosCache):apDailyMicroDomainV84(jdJ,posN,AS,MC,dom,rawPosCache);
+      }catch(e){microDomaine=null;}
     }
 
     let domainRow=null;
@@ -6080,8 +6202,11 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     'bas',2,espacement
   );
   const scoreMoyen = resultats.reduce((s,r)=>s+(Number.isFinite(r.scoreDominant)?r.scoreDominant:r.score),0)/Math.max(1,resultats.length);
-  const preuveDomaine = analyseGeneraleP || resultats.some(r=>r.domainRow||(nbJours===1&&r.microDomaine&&r.microDomaine.hasSignal));
-  const tendance = !preuveDomaine ? 'aucun mouvement marquant confirmé dans ce domaine'
+  const preuveFondP = analyseGeneraleP ? resultats.some(r=>(r.exceptionnelsDomaines||[]).some(e=>e.niveau!=='faible')) : resultats.some(r=>r.domainRow);
+  const preuveMicroP = nbJours<=31 && resultats.some(r=>r.microDomaine&&r.microDomaine.hasSignal);
+  const preuveDomaine = preuveFondP || preuveMicroP;
+  const tendance = !preuveDomaine ? 'aucun mouvement suffisamment confirmé dans ce domaine'
+    : (!preuveFondP&&preuveMicroP) ? 'pas de grand tournant, mais plusieurs activations concrètes ponctuelles'
     : scoreMoyen > 4 ? 'globalement favorable'
     : scoreMoyen > 1 ? 'plutôt favorable'
     : scoreMoyen > -1 ? 'neutre ou peu marquée'
@@ -6127,6 +6252,57 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     const dlab=PREV_DOMAIN_LABELS_V51[s.domain]||DOM_LABELS[domP]||s.domain;
     return `${String(s.heure).padStart(2,'0')}h — ${sens} — ${dlab} — indice interne : ${s.source} ${s.aspect}° ${s.target} (écart ${s.ecart.toFixed(2)}°) — manifestation concrète possible : ${s.hint}`;
   }).join('\n'):'Aucun déclencheur horaire sectoriel suffisamment exact : ne fabrique pas une heure clé.';
+
+
+  // V85 — données adaptées à la granularité de la période.
+  const microGroupesP=(nbJours>1&&nbJours<=31)?apPeriodMicroGroupsV85(resultats,nbJours):[];
+  const microPeriodeTxt=microGroupesP.length?microGroupesP.map(g=>{
+    const dates=g.debut.toDateString()===g.fin.toDateString()?fmtL(g.debut):`${fmtL(g.debut)} → ${fmtL(g.fin)}`;
+    const sens=g.pol==='positive'?'OUVERTURE':g.pol==='difficile'?'VIGILANCE':'ACTIVATION';
+    const dlab=PREV_DOMAIN_LABELS_V51[g.domain]||DOM_LABELS[domP]||g.domain;
+    const sources=[...g.sources].join(', ');
+    return `${dates} — ${sens} — ${dlab} — déclencheurs distincts : ${sources} — manifestation concrète la plus nette : ${g.peak.hint}`;
+  }).join('\n'):'Aucune micro-période sectorielle suffisamment exacte : ne remplis pas artificiellement les jours.';
+
+  const groupesMarquesP=nbJours>1?apMarkedPeriodGroupsV85(resultats,domP,analyseGeneraleP,nbJours):[];
+  const marquesTxt=groupesMarquesP.length?groupesMarquesP.map(g=>{
+    const dates=g.debut.toDateString()===g.fin.toDateString()?fmtL(g.debut):`${fmtL(g.debut)} → ${fmtL(g.fin)}`;
+    const sens=g.polarite==='positive'?'FAVORABLE':g.polarite==='difficile'?'DIFFICILE':'CONTRASTÉ';
+    const scen=[...g.scenarios].slice(0,3).join(' / ');
+    return `${dates} — ${g.label} — ${sens} — niveau ${g.niveau} — force ${g.force.toFixed(1)} — scénarios concrets déjà associés : ${scen||'à traduire uniquement à partir des preuves du domaine'}`;
+  }).join('\n'):'Aucune période sectorielle marquée au-dessus du seuil intermédiaire.';
+
+  const granulariteV85 = nbJours<=7
+    ? `GRANULARITÉ SEMAINE : raconte un FIL CHRONOLOGIQUE. Ne fais pas sept horoscopes génériques. Ne cite que les jours qui se distinguent réellement. Si un même phénomène dure plusieurs jours, regroupe-le en une seule séquence et indique le jour de pic. Les activations rapides servent à parler d'appels, messages, rendez-vous, décisions, dépenses, démarches, discussions, déplacements ou organisation — jamais à inventer un tournant de vie.`
+    : nbJours<=31
+    ? `GRANULARITÉ MOIS : construis une chronologie en 2 à 5 PHASES RÉELLES. Regroupe les répétitions d'un même phénomène. Utilise la micro-chronologie pour identifier les jours de concrétisation à l'intérieur d'une phase, mais n'énumère pas 30 jours. Une période calme doit rester calme.`
+    : nbJours<=100
+    ? `GRANULARITÉ TRIMESTRE : structure la réponse en phases de plusieurs semaines. Les périodes de niveau « marqué » comptent même si elles ne sont pas des grands tournants. N'utilise les dates journalières que comme pics d'une phase ; ne transforme pas le trimestre en liste de jours.`
+    : `GRANULARITÉ ANNÉE : raconte une chronologie de cycles et de phases, pas une succession de dates isolées. Les niveaux « marqué », « fort » et « exceptionnel » doivent être hiérarchisés. Une année peut avoir des mois calmes ; ne fabrique rien pour les remplir.`;
+
+  const structureV85 = nbJours<=7
+    ? `Rédige 4 parties :
+1. FIL DE LA SEMAINE — 4 à 7 phrases maximum, chronologiques.
+2. JOURS / SÉQUENCES QUI COMPTENT — 2 à 5 blocs maximum ; pour chacun : date/période + ce qui peut se manifester concrètement + pourquoi cette séquence se distingue dans le domaine, sans jargon.
+3. VIGILANCES RÉELLES — uniquement celles soutenues par les données ; sinon dis qu'aucune vigilance nette ne se détache.
+4. À FAIRE CETTE SEMAINE — 2 ou 3 actions concrètes.`
+    : nbJours<=31
+    ? `Rédige 4 parties :
+1. CE QUI CARACTÉRISE LE MOIS — 4 à 6 phrases maximum.
+2. LES PHASES QUI COMPTENT — 2 à 5 périodes distinctes, avec début/fin ou date de pic et manifestation concrète.
+3. DATES DE CONCRÉTISATION / VIGILANCE — seulement les dates qui ajoutent une information nouvelle ; ne répète jamais une phase déjà expliquée.
+4. CE QUI RESTE CALME + ACTIONS — précise les sujets sans activation nette et donne 2 ou 3 actions utiles.`
+    : nbJours<=100
+    ? `Rédige 4 parties :
+1. TENDANCE DU TRIMESTRE — ce qui domine réellement, sans généralités.
+2. PHASES DU TRIMESTRE — 2 à 5 séquences de plusieurs semaines, niveau marqué/fort/exceptionnel hiérarchisé.
+3. PICS OU TOURNANTS — seulement les dates qui constituent un vrai pic ; aucune répétition.
+4. CE QUI PEUT CONCRÈTEMENT BOUGER + CE QUI RESTE CALME.`
+    : `Rédige 4 parties :
+1. FIL DE L'ANNÉE — les domaines/axes réellement dominants.
+2. CYCLES ET PHASES — 3 à 7 périodes maximum, du plus structurant au plus secondaire mais présentées chronologiquement.
+3. MOMENTS DE CONCRÉTISATION / VIGILANCE — uniquement les vrais pics.
+4. BILAN PRATIQUE — ce qui peut évoluer concrètement et ce qui ne présente pas de signal suffisant.`;
 
   const GUIDE_DOMAINE = {
     amour:'Parle de rencontre, évolution d’une relation existante, engagement, rapprochement, mise au point, prise de distance ou séparation uniquement si les indicateurs le justifient.',
@@ -6189,34 +6365,38 @@ INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, « énergie
 ${contexteAge}
 Tendance calculée : ${tendance}. Score moyen : ${scoreMoyen.toFixed(1)}.
 
-${titreTourneV76} :
-${exceptionnelsTxt||'Aucun tournant suffisamment confirmé dans la portée demandée sur cette période.'}
+${titreTourneV76} — uniquement les niveaux forts/exceptionnels :
+${exceptionnelsTxt||'Aucun tournant fort ou exceptionnel suffisamment confirmé dans la portée demandée sur cette période.'}
+
+PÉRIODES RÉELLEMENT MARQUÉES — inclut le niveau intermédiaire « marqué » :
+${marquesTxt}
+
+${nbJours<=31?'MICRO-CHRONOLOGIE CONCRÈTE — déclencheurs rapides sur ancres réelles du domaine, jamais des grands événements :\n'+microPeriodeTxt:''}
 
 DATES FAVORABLES DISTINCTES :
-${topTxt||'Aucune date nettement favorable.'}
+${topTxt||'Aucune date nettement favorable selon le moteur de fond.'}
 
 DATES DE VIGILANCE DISTINCTES :
-${pireTxt||'Aucune date de vigilance particulière.'}
+${pireTxt||'Aucune date de vigilance particulière selon le moteur de fond.'}
 
 CONVERGENCES TECHNIQUES INTERNES REGROUPÉES EN PÉRIODES :
 ${convergenceTxt||'Aucune convergence technique forte sur cette période.'}
 
-OBJECTIF : la personne veut savoir CE QUI A LE PLUS DE CHANCES DE SE PASSER dans sa vie concrète concernant ${DOM_LABELS[domP]}. Elle ne veut ni cours d’astrologie ni phrases abstraites.
+OBJECTIF : dire ce qui a le plus de chances de se manifester CONCRÈTEMENT dans ${DOM_LABELS[domP]}, avec une granularité adaptée à ${nbJours} jours. Une absence de grand tournant ne signifie pas une absence de situations, démarches, échanges ou décisions ponctuelles ; inversement, les petits déclencheurs ne doivent jamais être gonflés en événements majeurs.
 ${guideDomaine}
+${granulariteV85}
 
-Rédige 4 parties :
-1. CE QUI RESSORT VRAIMENT — maximum 4 phrases. N’évoque que les tendances suffisamment soutenues par les calculs. S’il n’y a rien de remarquable, dis "Aucun événement particulièrement marquant ne ressort sur cette période".
-2. LES SCÉNARIOS LES PLUS PLAUSIBLES — 2 à 4 scénarios concrets et différents, classés du plus soutenu au plus secondaire. Pour chacun, précise le domaine de vie et ce que cela pourrait donner dans la réalité. Ne donne pas de faux pourcentage statistique.
-3. QUAND — regroupe les dates qui appartiennent au même phénomène en UNE période. Cite seulement les dates utiles. Pour une semaine/mois/trimestre/année, n’invente PAS d’heure exacte : parle de journée ou de période, sauf événement réellement horaire.
-4. CE QUE ${USER.prenom.toUpperCase()} PEUT FAIRE — 2 ou 3 actions concrètes adaptées au domaine.
+${structureV85}
 
 RÈGLES ABSOLUES :
+- La hiérarchie est : tournant fort/exceptionnel > période marquée > micro-déclencheur concret. Ne mélange jamais ces niveaux.
 - Aucun jargon astrologique et aucun nom de technique/planète dans la réponse finale.
-- Pas de répétition de la même idée sous plusieurs titres ou plusieurs dates.
-- Pas de phrase bateau : "une transformation", "une consolidation", "un nouveau cycle", "une énergie" sont interdits si tu ne précises pas ce qui change concrètement.
+- Pas de répétition : une même activation = une seule phase, même si elle apparaît plusieurs jours ou plusieurs fois dans les données.
+- Chaque phrase prédictive doit contenir un OBJET CONCRET lorsque les données le permettent : échange, dossier, décision, rendez-vous, paiement, dépense, contrat, organisation, déplacement, discussion, relation, foyer, projet, etc.
+- Pas de phrase bateau : "une transformation", "une consolidation", "un nouveau cycle", "une énergie", "des opportunités" sont interdits sans objet concret.
 - Ne prédis jamais une grossesse, un décès, une maladie, un licenciement ou une rupture comme une certitude. Présente seulement des scénarios possibles si les indicateurs fournis les soutiennent clairement.
 - N’invente rien qui ne soit pas appuyé par les données ci-dessus.
-- Si plusieurs techniques convergent, donne plus de poids à cette période qu’à un simple bon/mauvais score journalier.
+- Pour semaine/mois, n'invente aucune heure exacte : la micro-chronologie sert à sélectionner des JOURS, pas à afficher des horaires. Les horaires restent réservés à la prévision d'une journée précise.
 ${reglePorteeV76}
 - Traite le positif, le difficile et le contrasté avec le MÊME niveau de priorité quand ils appartiennent réellement à la portée demandée.
 - Respecte strictement l'âge et l'étape de vie indiqués : aucune carrière ou couple pour un bébé/enfant, et aucun emploi supposé pour un senior en analyse générale.`;
