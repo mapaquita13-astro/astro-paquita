@@ -5364,6 +5364,178 @@ function regrouperConvergences(resultats){
   return groupes.sort((a,b)=>b.meilleur.convergence.poids-a.meilleur.convergence.poids).slice(0,6);
 }
 
+
+// ============================================================
+// V84 — MICRO-CLIMAT JOURNALIER PAR DOMAINE
+// Objectif : rendre la prévision du jour précise sans réintroduire l'ancienne
+// adaptation artificielle des domaines. Les transits rapides ne créent JAMAIS
+// un grand événement : ils ne servent qu'à dater/qualifier la journée lorsqu'ils
+// touchent une ancre réelle du domaine (angle, cuspide ou maître de maison).
+// ============================================================
+function apDailyPolarityV84(source,aspect){
+  if(source==='Soleil'||source==='Lune'){
+    if(aspect===60||aspect===120)return 'positive';
+    if(aspect===90||aspect===180)return 'difficile';
+    return 'mixte';
+  }
+  return prevPolariteV51(source,aspect);
+}
+
+function apDailyHintV84(domain,source,pol){
+  const positive=pol==='positive', difficult=pol==='difficile';
+  const D={
+    work:{
+      Mercure:positive?'échange, mail, dossier, rendez-vous ou négociation plus fluide':difficult?'malentendu, retard de réponse, dossier à reprendre ou discussion à cadrer':'échange ou décision professionnelle à clarifier',
+      Venus:positive?'coopération, appui, reconnaissance ou climat relationnel plus souple':difficult?'désaccord de forme, attente de reconnaissance ou compromis à revoir':'relation professionnelle ou accord à ajuster',
+      Mars:positive?'initiative, action rapide, prise de décision ou tâche à débloquer':difficult?'pression, conflit de priorité, impatience ou surcharge ponctuelle':'besoin d’agir ou de trancher sur un sujet professionnel',
+      Soleil:positive?'visibilité, décision, prise de responsabilité ou moment pour se positionner':difficult?'pression autour d’une décision, d’un responsable ou d’une priorité':'mise en lumière d’un sujet professionnel',
+      Lune:positive?'échange réactif, retour rapide ou ambiance de travail plus réceptive':difficult?'réactivité, changement de rythme ou tension passagère dans l’organisation':'variation d’ambiance ou de rythme dans le travail'
+    },
+    money:{
+      Mercure:positive?'négociation, facture, banque, contrat, paiement ou démarche financière facilitée':difficult?'erreur, retard, discussion de prix ou papier financier à vérifier':'échange ou décision concernant argent, paiement ou contrat',
+      Venus:positive?'accord financier, achat choisi, remboursement, négociation ou confort matériel favorisé':difficult?'dépense de confort, envie d’achat ou accord financier à réévaluer':'question de valeur, achat ou accord matériel',
+      Mars:positive?'action utile sur un paiement, budget, vente, achat ou négociation':difficult?'dépense urgente, tension sur un montant ou décision financière impulsive':'mouvement financier demandant une décision rapide',
+      Soleil:positive?'décision claire concernant budget, revenu, achat ou organisation matérielle':difficult?'pression autour d’une dépense, d’un paiement ou d’un arbitrage':'mise au premier plan d’un sujet financier',
+      Lune:positive?'petite amélioration pratique, règlement ou réaction favorable sur un sujet d’argent':difficult?'petite dépense, imprévu matériel ou inquiétude passagère':'mouvement matériel ou budgétaire ponctuel'
+    },
+    couple:{
+      Mercure:positive?'conversation, message, clarification ou proposition plus facile':difficult?'malentendu, mot maladroit ou discussion qui demande de la précision':'échange relationnel important à clarifier',
+      Venus:positive?'rapprochement, geste tendre, rendez-vous ou climat plus harmonieux':difficult?'attente affective, déception légère ou besoin de rééquilibrer les attentes':'question d’affection, de proximité ou de valeur dans le lien',
+      Mars:positive?'initiative, désir, décision ou mise au point franche mais constructive':difficult?'irritation, impatience, désaccord ou réaction trop vive':'tension ou besoin d’agir dans le lien',
+      Soleil:positive?'moment pour exprimer clairement une intention ou donner une place au lien':difficult?'ego, susceptibilité ou besoin de repositionnement':'mise en lumière de la relation ou d’une attente',
+      Lune:positive?'réceptivité, disponibilité ou échange émotionnel plus naturel':difficult?'hypersensibilité, humeur changeante ou réaction émotionnelle ponctuelle':'climat émotionnel du lien plus visible'
+    },
+    family:{
+      Mercure:positive?'discussion familiale, organisation, nouvelle ou démarche plus facile':difficult?'malentendu familial, information à vérifier ou organisation à reprendre':'échange ou décision familiale à clarifier',
+      Venus:positive?'apaisement, aide, visite, geste de soutien ou moment agréable en famille':difficult?'attente de reconnaissance ou petit désaccord sur les besoins de chacun':'besoin d’harmonie ou de compromis familial',
+      Mars:positive?'action concrète pour régler une organisation, une tâche ou une décision familiale':difficult?'tension, impatience ou conflit d’organisation dans le foyer ou avec un proche':'besoin d’agir sur une question familiale',
+      Soleil:positive?'décision familiale, prise de responsabilité ou sujet du foyer mis au clair':difficult?'pression autour d’une responsabilité ou d’une décision familiale':'mise au premier plan d’un sujet familial',
+      Lune:positive?'soutien, proximité ou climat familial plus réceptif':difficult?'susceptibilité, fatigue relationnelle ou petit changement d’organisation':'ambiance familiale plus sensible ou mouvante'
+    },
+    home:{
+      Mercure:positive?'démarche, rendez-vous, devis, papier ou décision liée au logement facilitée':difficult?'papier, devis, organisation ou communication autour du logement à vérifier':'démarche ou décision concernant le foyer/logement',
+      Venus:positive?'amélioration du cadre de vie, achat utile ou accord lié au logement':difficult?'dépense de confort ou désaccord sur un choix pour le foyer':'question de confort ou d’accord liée au logement',
+      Mars:positive?'travaux, rangement, démarche ou décision concrète qui avance':difficult?'panne, contrariété, travaux urgents ou tension sur l’organisation du foyer':'action concrète nécessaire dans le foyer',
+      Soleil:positive?'décision claire ou priorité donnée au logement et au cadre de vie':difficult?'pression autour d’une décision de foyer ou de logement':'sujet du foyer placé au premier plan',
+      Lune:positive?'moment favorable pour s’occuper du foyer ou régler une petite question domestique':difficult?'imprévu domestique, changement de rythme ou besoin de calme chez soi':'variation ponctuelle dans le foyer'
+    },
+    children:{
+      Mercure:positive?'échange, nouvelle, organisation ou démarche concernant un enfant/projet personnel facilitée':difficult?'discussion ou organisation à reprendre autour d’un enfant/projet':'information ou organisation concernant un enfant ou projet personnel',
+      Venus:positive?'moment agréable, soutien ou satisfaction autour d’un enfant/projet créatif':difficult?'attente ou petit désaccord affectif autour d’un enfant/projet':'besoin d’équilibre autour d’un enfant ou projet',
+      Mars:positive?'initiative utile, activité ou décision qui fait avancer un projet personnel':difficult?'impatience, surcharge ou conflit de rythme autour d’un enfant/projet':'action ou tension autour d’un enfant/projet personnel',
+      Soleil:positive?'mise en valeur, décision ou étape visible d’un projet personnel':difficult?'pression ou besoin de recadrer un projet personnel':'mise au premier plan d’un enfant/projet',
+      Lune:positive?'réceptivité, disponibilité ou petit moment satisfaisant autour d’un enfant/projet':difficult?'humeur, imprévu ou changement de rythme autour d’un enfant/projet':'variation ponctuelle autour d’un enfant/projet'
+    },
+    travel:{
+      Mercure:positive?'réservation, trajet, dossier, rendez-vous ou démarche administrative plus fluide':difficult?'retard, erreur d’horaire, papier ou communication de déplacement à vérifier':'démarche, trajet ou organisation de déplacement à clarifier',
+      Venus:positive?'déplacement agréable, accord, réservation ou rencontre utile favorisée':difficult?'dépense ou compromis à revoir autour d’un déplacement':'question de confort ou d’accord liée à un déplacement',
+      Mars:positive?'déplacement, démarche ou décision rapide qui débloque une situation':difficult?'précipitation, contretemps, tension logistique ou trajet plus fatigant':'action rapide liée à un déplacement ou une démarche',
+      Soleil:positive?'décision, validation ou étape claire dans un projet de mobilité':difficult?'pression de délai ou décision de mobilité à reprendre':'mise au premier plan d’un déplacement ou projet d’horizon',
+      Lune:positive?'trajet ou adaptation de planning qui se passe plus facilement':difficult?'changement de programme, attente ou petit contretemps':'variation de planning ou de déplacement'
+    },
+    studies:{
+      Mercure:positive?'compréhension, entretien, dossier, examen ou travail intellectuel plus fluide':difficult?'distraction, erreur, dossier à corriger ou consigne à clarifier':'travail intellectuel ou démarche d’étude à clarifier',
+      Venus:positive?'échange agréable, soutien ou travail créatif facilité':difficult?'motivation fluctuante ou compromis à revoir':'climat d’étude ou de collaboration à ajuster',
+      Mars:positive?'concentration active, décision ou effort qui fait avancer un dossier':difficult?'stress, précipitation ou conflit de méthode':'effort ou tension dans les études/démarches',
+      Soleil:positive?'moment pour présenter, décider ou se positionner clairement':difficult?'pression de résultat ou besoin de revoir une priorité':'mise au premier plan d’un sujet d’étude/orientation',
+      Lune:positive?'bonne réceptivité ou adaptation à un rythme d’apprentissage':difficult?'distraction, fatigue passagère ou changement de rythme':'variation de concentration ou d’organisation'
+    },
+    daily:{
+      Mercure:positive?'organisation, rendez-vous, planning ou démarche quotidienne plus fluide':difficult?'dispersion, oubli, surcharge d’informations ou planning à corriger':'organisation quotidienne à clarifier',
+      Venus:positive?'rythme plus doux, coopération ou moment propice à récupérer':difficult?'tendance à trop en faire pour le confort ou à repousser une contrainte':'équilibre entre confort et obligations',
+      Mars:positive?'élan utile pour agir, bouger ou régler une tâche en retard':difficult?'nervosité, précipitation ou surcharge ponctuelle':'niveau d’activité plus intense',
+      Soleil:positive?'priorités plus claires et bonne capacité à structurer la journée':difficult?'pression, fatigue de concentration ou journée trop chargée':'priorité du jour plus visible',
+      Lune:positive?'rythme plus souple et meilleure écoute de ses besoins':difficult?'fatigue passagère, humeur changeante ou besoin de ralentir':'variation de rythme et de récupération'
+    },
+    projects:{
+      Mercure:positive?'contact, message, réunion, réseau ou idée de projet qui avance':difficult?'malentendu, délai ou information à revoir dans un projet':'échange ou coordination de projet à clarifier',
+      Venus:positive?'soutien, rencontre utile, accord ou collaboration agréable':difficult?'attente de validation ou compromis à revoir avec un groupe':'relation ou accord autour d’un projet',
+      Mars:positive?'initiative, relance ou décision qui fait avancer le projet':difficult?'conflit de priorité, impatience ou effort mal coordonné':'action ou tension dans un projet',
+      Soleil:positive?'visibilité, décision ou étape claire pour un objectif':difficult?'pression de résultat ou besoin de redéfinir une priorité':'mise au premier plan d’un projet',
+      Lune:positive?'retour, soutien ou interaction utile avec un groupe/réseau':difficult?'réaction changeante d’un groupe ou petit imprévu':'ambiance ponctuelle autour d’un projet/réseau'
+    },
+    spiritual:{
+      Mercure:positive?'prise de recul, écriture, réflexion ou conversation qui clarifie une décision':difficult?'rumination, hésitation ou information difficile à intégrer':'réflexion intérieure à clarifier',
+      Venus:positive?'moment plus doux, créatif ou propice à retrouver ce qui fait du bien':difficult?'idéalisation ou difficulté à distinguer envie et besoin réel':'besoin de rééquilibrer ses priorités',
+      Mars:positive?'décision concrète après une période d’hésitation':difficult?'tension intérieure, impatience ou besoin de ne pas agir trop vite':'besoin d’agir après une réflexion intérieure',
+      Soleil:positive?'priorité ou intention plus claire, décision alignée avec ce qui compte':difficult?'questionnement sur une priorité ou un choix de direction':'mise au premier plan d’une question de sens',
+      Lune:positive?'intuition plus lisible ou besoin de calme utile pour décider':difficult?'hypersensibilité ou besoin de recul avant de conclure':'climat intérieur plus sensible'
+    }
+  };
+  const bucket=D[domain]||D.projects;
+  return bucket[source]||'activation ponctuelle du domaine à observer concrètement dans la journée';
+}
+
+function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom){
+  const keys=apDomainKeysForSelectionV76(dom);
+  if(!keys.length)return {hasSignal:false,signals:[],bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
+  const houses=prevHouseCuspsV80(AS,MC), rulers=prevHouseRulerTargetsV80(posN,AS,MC);
+  const natal={...posN,AS,MC,IC:houses.H4,DS:houses.H7,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
+  const possible=['MC','IC','DS','H2','H3','H5','H6','H8','H9','H11','H12',...Object.keys(rulers)];
+  const targets=[];
+  for(const target of possible){
+    let best=null;
+    for(const [domain,factor] of prevDomainsForTargetV51(target)){
+      if(keys.includes(domain)&&(!best||factor>best.factor))best={domain,factor};
+    }
+    if(best&&Number.isFinite(Number(natal[target])))targets.push({target,deg:Number(natal[target]),domain:best.domain,factor:best.factor});
+  }
+  if(!targets.length)return {hasSignal:false,signals:[],bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
+
+  const sources=['Lune','Mercure','Venus','Mars','Soleil'];
+  const orb={Lune:1.35,Mercure:.70,Venus:.75,Mars:.72,Soleil:.78};
+  const base={Lune:.70,Mercure:1.00,Venus:1.10,Mars:1.15,Soleil:.90};
+  const aspW={0:1,60:.82,90:.95,120:.88,180:1};
+  const raw=[]; const posBy=Array(24).fill(0),negBy=Array(24).fill(0),mixBy=Array(24).fill(0);
+  for(let h=0;h<24;h++){
+    let t={}; try{t=calcPos(jdJour+h/24);}catch(e){continue;}
+    for(const source of sources){
+      if(t[source]===undefined)continue;
+      for(const tg of targets){
+        const a=ecartAspectExact(t[source],tg.deg,[0,60,90,120,180]);
+        if(!a||a.ecart>orb[source])continue;
+        const pol=apDailyPolarityV84(source,a.aspect);
+        const closeness=Math.max(.25,1-(a.ecart/orb[source])*.72);
+        const strength=base[source]*tg.factor*(aspW[a.aspect]||.8)*closeness;
+        if(pol==='positive')posBy[h]+=strength;
+        else if(pol==='difficile')negBy[h]+=strength;
+        else mixBy[h]+=strength;
+        raw.push({source,target:tg.target,domain:tg.domain,aspect:a.aspect,ecart:a.ecart,pol,heure:h,importance:strength+(pol==='mixte'?.12:0),hint:apDailyHintV84(tg.domain,source,pol)});
+      }
+    }
+  }
+  const uniq=new Map();
+  for(const s of raw){
+    const k=[s.source,s.target,s.domain,s.aspect].join('|');
+    const old=uniq.get(k);
+    if(!old||s.ecart<old.ecart)uniq.set(k,s);
+  }
+  const signals=[...uniq.values()].sort((a,b)=>b.importance-a.importance||a.ecart-b.ecart).slice(0,10);
+  const argMax=a=>a.reduce((bi,v,i)=>v>a[bi]?i:bi,0), argMaxAbs=a=>a.reduce((bi,v,i)=>Math.abs(v)>Math.abs(a[bi])?i:bi,0);
+  const bestHour=argMax(posBy), worstHour=argMax(negBy);
+  const bestScore=posBy[bestHour], worstScore=-negBy[worstHour];
+  const totalPos=posBy.reduce((a,b)=>a+b,0),totalNeg=negBy.reduce((a,b)=>a+b,0),totalMix=mixBy.reduce((a,b)=>a+b,0);
+  let dominantScore=(totalPos-totalNeg)/Math.max(1,Math.sqrt(24));
+  if(Math.abs(dominantScore)<.15&&totalMix>0)dominantScore=0;
+  return {hasSignal:signals.length>0,signals,bestScore,worstScore,bestHour,worstHour,dominantScore,totalMix,targets};
+}
+
+function apDailyMicroAllV84(jdJour,posN,AS,MC){
+  const sels=['travail','finances','amour','famille','voyage','sante','spirituel'];
+  const all=[];
+  for(const dom of sels){
+    const r=apDailyMicroDomainV84(jdJour,posN,AS,MC,dom);
+    for(const s of (r.signals||[]))all.push({...s,selection:dom});
+  }
+  const uniq=new Map();
+  for(const s of all){
+    const k=[s.source,s.target,s.domain,s.aspect,s.heure].join('|');
+    const old=uniq.get(k); if(!old||s.importance>old.importance)uniq.set(k,s);
+  }
+  const signals=[...uniq.values()].sort((a,b)=>b.importance-a.importance||a.ecart-b.ecart).slice(0,12);
+  return {hasSignal:signals.length>0,signals,bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
+}
+
 async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
   const res=[];
   const jdNatal = USER ? USER.jd : jdD;
@@ -5407,14 +5579,29 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
     let exceptionnelsDomaines=[];
     try{exceptionnelsDomaines=analyserExceptionnelsTousDomainesV51(jdJ,posN,AS,MC,jdNatal,'general');}catch(e){exceptionnelsDomaines=[];}
 
+    // V84 — sur une date précise uniquement, on ajoute une couche de timing fin
+    // construite sur les vraies ancres du domaine. Elle ne sert jamais à fabriquer
+    // un grand événement ni à contaminer les prévisions longues.
+    let microDomaine=null;
+    if(nb===1){
+      try{microDomaine=analyseGenerale?apDailyMicroAllV84(jdJ,posN,AS,MC):apDailyMicroDomainV84(jdJ,posN,AS,MC,dom);}catch(e){microDomaine=null;}
+    }
+
     let domainRow=null;
     let critique=false, positifExceptionnel=false, scoreDominant=0;
     if(!analyseGenerale){
       domainRow=apBestDomainRowV76(exceptionnelsDomaines,dom);
+      const microActif=nb===1&&microDomaine&&microDomaine.hasSignal;
       if(domainRow){
         const signed=apSignedDomainScoreV76(domainRow);
         scoreDominant=signed;
-        if(domainRow.polarite==='positive'){
+        if(microActif){
+          // Le cycle de fond garde la priorité ; le micro-climat précise les heures.
+          maxH=microDomaine.bestHour; minH=microDomaine.worstHour;
+          maxS=Math.max(microDomaine.bestScore, signed>0?Math.min(4,signed):0);
+          minS=Math.min(microDomaine.worstScore, signed<0?Math.max(-4,signed):0);
+          if(Math.abs(microDomaine.dominantScore)>Math.abs(scoreDominant)&&domainRow.niveau==='faible')scoreDominant=microDomaine.dominantScore;
+        }else if(domainRow.polarite==='positive'){
           maxS=Math.max(.1,signed); minS=0;
         }else if(domainRow.polarite==='difficile'){
           maxS=0; minS=Math.min(-.1,signed);
@@ -5425,6 +5612,13 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
         convergence=apConvergenceFromRowV76(domainRow,dom,date);
         critique=(domainRow.niveau==='fort'||domainRow.niveau==='exceptionnel')&&(domainRow.polarite==='difficile'||domainRow.polarite==='mixte');
         positifExceptionnel=(domainRow.niveau==='fort'||domainRow.niveau==='exceptionnel')&&(domainRow.polarite==='positive'||domainRow.polarite==='mixte');
+      }else if(microActif){
+        // Une activation rapide d'une vraie ancre décrit le climat concret du JOUR,
+        // mais reste volontairement distincte d'un tournant majeur de vie.
+        maxH=microDomaine.bestHour; minH=microDomaine.worstHour;
+        maxS=microDomaine.bestScore; minS=microDomaine.worstScore;
+        scoreDominant=microDomaine.dominantScore;
+        convergence={niveau:'faible',familles:[],poids:0,signatures:[],impact:impactConcretCible(null,dom,date)};
       }else{
         // Aucun ancrage propre au domaine : aucun événement spécialisé n'est fabriqué.
         maxS=0; minS=0; scoreDominant=0;
@@ -5450,7 +5644,7 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
       else if(positifExceptionnel&&!critique)scoreDominant=Math.max(minS,maxS);
     }
 
-    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,positifExceptionnel,declencheurs,convergence,exceptionnelsDomaines,domainRow});
+    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,positifExceptionnel,declencheurs,convergence,exceptionnelsDomaines,domainRow,microDomaine});
     if(j%5===0){onProg(j/nb);await new Promise(r=>setTimeout(r,0));}
   }
   return res;
@@ -5878,7 +6072,7 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   const analyseGeneraleP=domP==='general'||domP==='tous';
   const espacement = nbJours<=7 ? 1 : nbJours<=31 ? 3 : nbJours<=100 ? 7 : 14;
   const top3=selectionnerMomentsDistincts(
-    resultats.map(r=>({...r,score:Number.isFinite(r.scoreDominant)?r.scoreDominant:r.score})).filter(r=>r.score>0),
+    resultats.map(r=>({...r,score:nbJours===1?r.score:(Number.isFinite(r.scoreDominant)?r.scoreDominant:r.score)})).filter(r=>r.score>0),
     'haut',3,espacement
   );
   const pires3=selectionnerMomentsDistincts(
@@ -5886,7 +6080,7 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     'bas',2,espacement
   );
   const scoreMoyen = resultats.reduce((s,r)=>s+(Number.isFinite(r.scoreDominant)?r.scoreDominant:r.score),0)/Math.max(1,resultats.length);
-  const preuveDomaine = analyseGeneraleP || resultats.some(r=>r.domainRow);
+  const preuveDomaine = analyseGeneraleP || resultats.some(r=>r.domainRow||(nbJours===1&&r.microDomaine&&r.microDomaine.hasSignal));
   const tendance = !preuveDomaine ? 'aucun mouvement marquant confirmé dans ce domaine'
     : scoreMoyen > 4 ? 'globalement favorable'
     : scoreMoyen > 1 ? 'plutôt favorable'
@@ -5924,6 +6118,16 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     return `${dates} — convergence ${c.niveau} — domaine concret : ${c.impact} — familles indépendantes : ${(c.familles||[]).join(', ')||'aucune'} — ${sig}`;
   }).join('\n');
 
+  // V84 — informations fines destinées uniquement à la prévision d'une date précise.
+  // Elles donnent à l'IA des faits de timing concrets sans leur permettre d'inventer
+  // un événement majeur lorsque le moteur de fond n'en confirme aucun.
+  const microJour=nbJours===1&&resultats[0]?resultats[0].microDomaine:null;
+  const microTxt=(microJour&&microJour.signals&&microJour.signals.length)?microJour.signals.slice(0,8).map(s=>{
+    const sens=s.pol==='positive'?'OUVERTURE':s.pol==='difficile'?'VIGILANCE':'ACTIVATION';
+    const dlab=PREV_DOMAIN_LABELS_V51[s.domain]||DOM_LABELS[domP]||s.domain;
+    return `${String(s.heure).padStart(2,'0')}h — ${sens} — ${dlab} — indice interne : ${s.source} ${s.aspect}° ${s.target} (écart ${s.ecart.toFixed(2)}°) — manifestation concrète possible : ${s.hint}`;
+  }).join('\n'):'Aucun déclencheur horaire sectoriel suffisamment exact : ne fabrique pas une heure clé.';
+
   const GUIDE_DOMAINE = {
     amour:'Parle de rencontre, évolution d’une relation existante, engagement, rapprochement, mise au point, prise de distance ou séparation uniquement si les indicateurs le justifient.',
     travail:'Parle de poste, responsabilités, promotion, changement d’équipe ou de direction, contrat, recherche d’emploi, reconversion, départ ou reconnaissance uniquement si les indicateurs le justifient.',
@@ -5952,25 +6156,34 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   const prompt = nbJours===1
     ? `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
 ${contexteAge}
-Tendance calculée : ${tendance}. Meilleur score horaire : ${(resultats[0]&&Number.isFinite(resultats[0].score)?resultats[0].score.toFixed(1):'0')} ; score de vigilance : ${(resultats[0]&&Number.isFinite(resultats[0].scoreMin)?resultats[0].scoreMin.toFixed(1):'0')}.
-Fenêtre horaire la plus favorable calculée : ${top3[0]?String(top3[0].heure).padStart(2,'0')+'h00':'aucune fenêtre nette'}.
-${titreTourneV76} :
-${exceptionnelsTxt||'Aucun tournant suffisamment confirmé dans la portée demandée.'}
-Convergences techniques internes :
-${convergenceTxt||'Aucune convergence technique forte : journée plutôt ordinaire.'}
+Tendance de fond calculée : ${tendance}. Meilleur score horaire : ${(resultats[0]&&Number.isFinite(resultats[0].score)?resultats[0].score.toFixed(1):'0')} ; score de vigilance : ${(resultats[0]&&Number.isFinite(resultats[0].scoreMin)?resultats[0].scoreMin.toFixed(1):'0')}.
+Fenêtre horaire la plus favorable calculée : ${top3[0]?String(top3[0].heure).padStart(2,'0')+'h00':'aucune fenêtre favorable nette'}.
+Fenêtre de vigilance calculée : ${pires3[0]?String(pires3[0].heure).padStart(2,'0')+'h00':'aucune vigilance horaire nette'}.
 
-OBJECTIF : la personne veut savoir CE QUI PEUT CONCRÈTEMENT SE PASSER aujourd’hui dans ${DOM_LABELS[domP]}, pas recevoir un cours d’astrologie.
+${titreTourneV76} :
+${exceptionnelsTxt||'Aucun tournant majeur suffisamment confirmé dans la portée demandée aujourd’hui.'}
+
+DÉCLENCHEURS CONCRETS DU JOUR — TIMING FIN, PAS DES « GRANDS ÉVÉNEMENTS » :
+${microTxt}
+
+Convergences de fond :
+${convergenceTxt||'Aucune convergence de fond forte : cela n’empêche pas des situations quotidiennes concrètes.'}
+
+OBJECTIF : dire à ${USER.prenom} ce qui est le plus susceptible de se manifester CONCRÈTEMENT aujourd’hui dans ${DOM_LABELS[domP]}. Une journée peut être ordinaire tout en ayant des heures utiles, des échanges, décisions, dépenses, démarches, tensions ou opportunités ponctuelles. Ne confonds jamais « pas de grand tournant » avec « rien à dire aujourd’hui ».
 ${guideDomaine}
 
-Réponds en 3 blocs courts :
-1. AUJOURD’HUI — 2 à 4 phrases très concrètes sur le scénario dominant et ce qui est le plus probable.
-2. À SURVEILLER / À SAISIR — 2 ou 3 possibilités concrètes, classées de la plus plausible à la plus secondaire. Si rien de remarquable ne ressort, dis-le clairement.
-3. MOMENT CLÉ — si une alerte exceptionnelle domine la journée, présente-la d'abord. Une ouverture positive exceptionnelle ne doit pas être noyée dans des banalités ; une alerte lourde ne doit pas être minimisée par deux heures favorables. Si les deux coexistent, présente la journée comme un tournant majeur mais contrasté.
+Réponds en 4 blocs précis :
+1. CE QUI DOMINE AUJOURD’HUI — 3 à 5 phrases concrètes. Utilise des noms et des verbes précis : appel, message, rendez-vous, décision, dépense, document, discussion, tâche, déplacement, accord, désaccord, organisation, etc., uniquement quand les déclencheurs ci-dessus le permettent.
+2. HORAIRES UTILES — jusqu’à 3 créneaux. Donne une fenêtre d’environ 1 à 2 heures autour des heures calculées et précise À QUOI elle sert ou ce qu’il faut surveiller. Si aucun déclencheur exact n’existe, dis simplement qu’aucune heure ne se détache franchement.
+3. MANIFESTATIONS POSSIBLES — 2 à 4 scénarios différents et concrets, du plus soutenu au plus secondaire. Chaque scénario doit être relié à une donnée fournie ci-dessus ; aucune banalité générique.
+4. CONSEIL DU JOUR — 1 ou 2 actions directement utilisables.
 
 ${reglePorteeV76}
-- Un événement favorable, difficile ou contrasté a la même priorité s'il appartient réellement à la portée demandée.
+- Les déclencheurs rapides précisent la JOURNÉE et les horaires ; ils ne prouvent jamais à eux seuls un changement majeur de vie.
+- S’il existe un tournant majeur confirmé, il passe avant le micro-climat. Sinon, exploite réellement les déclencheurs quotidiens au lieu de conclure « rien de marquant ».
+- Ne répète pas la même idée dans plusieurs blocs.
 
-INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, "énergies", "vibrations", "transformation" sans dire de quoi il s’agit, phrases vagues comme "quelque chose se prépare". Ne transforme jamais une possibilité en certitude.`
+INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, « énergies », « vibrations », « transformation » sans objet concret, phrases vagues comme « quelque chose se prépare », « restez ouverte aux possibilités », « écoutez votre intuition » sans action précise. Ne transforme jamais une possibilité en certitude.`
 
     : `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
 ${contexteAge}
