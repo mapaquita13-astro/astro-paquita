@@ -4678,19 +4678,92 @@ function prevTraditionalRulerV80(lon){
   return rulers[Math.floor(prevNormDegV80(lon)/30)] || null;
 }
 
-function prevHouseCuspsV80(AS,MC){
-  // Même géométrie de maisons que le reste du site : angles réels + secteurs intermédiaires
-  // dérivés de l'Ascendant. On centralise ici pour éviter des moteurs contradictoires.
-  const as=prevNormDegV80(AS), mc=prevNormDegV80(MC);
+// V87 — Domification Placidus réelle.
+// Jusqu'à V86, les maisons intermédiaires étaient espacées artificiellement de 30°
+// depuis l'Ascendant. Cela pouvait déplacer H2/H3/H5/H6/H8/H9/H11/H12 de plusieurs
+// dizaines de degrés et donc fausser le domaine attribué à un événement.
+//
+// Ici on calcule les cuspides Placidus à partir de l'ARMC (dérivée du MC), de
+// l'obliquité à la date natale et de la latitude. Les formules suivent la division
+// temporelle des semi-arcs diurnes/nocturnes. Aux latitudes où Placidus devient
+// mathématiquement indéterminé, on utilise Porphyre comme repli stable au lieu de
+// revenir aux maisons égales.
+function prevObliquityV87(jd){
+  const J=Number(jd);
+  const T=Number.isFinite(J)?(J-2451545)/36525:0;
+  return 23.439291111-0.013004167*T;
+}
+function prevRaDecEclV87(lon,epsDeg){
+  const l=prevNormDegV80(lon)*Math.PI/180, e=Number(epsDeg)*Math.PI/180;
+  const ra=prevNormDegV80(Math.atan2(Math.sin(l)*Math.cos(e),Math.cos(l))*180/Math.PI);
+  const dec=Math.asin(Math.sin(e)*Math.sin(l))*180/Math.PI;
+  return {ra,dec};
+}
+function prevEclLonFromRaV87(ra,epsDeg){
+  const a=prevNormDegV80(ra)*Math.PI/180, e=Number(epsDeg)*Math.PI/180;
+  return prevNormDegV80(Math.atan2(Math.sin(a)/Math.cos(e),Math.cos(a))*180/Math.PI);
+}
+function prevSignedDegV87(x){ return ((Number(x)||0)+540)%360-180; }
+function prevSolvePlacidusCuspV87(kind,armc,lat,eps,guess){
+  const phi=Number(lat)*Math.PI/180;
+  if(!Number.isFinite(phi) || Math.abs(Number(lat))>=89.5) return null;
+  let lon=prevNormDegV80(guess);
+  for(let i=0;i<60;i++){
+    const rd=prevRaDecEclV87(lon,eps);
+    const x=-Math.tan(phi)*Math.tan(rd.dec*Math.PI/180);
+    // Un degré circumpolaire n'a pas de lever/coucher : Placidus n'est alors
+    // pas défini pour cette cuspide à cette latitude.
+    if(!Number.isFinite(x) || x<=-1 || x>=1) return null;
+    const H0=Math.acos(Math.max(-1,Math.min(1,x)))*180/Math.PI;
+    let targetRA;
+    if(kind===11) targetRA=armc+H0/3;
+    else if(kind===12) targetRA=armc+2*H0/3;
+    else if(kind===2) targetRA=armc+60+2*H0/3;
+    else if(kind===3) targetRA=armc+120+H0/3;
+    else return null;
+    const next=prevEclLonFromRaV87(targetRA,eps);
+    const delta=prevSignedDegV87(next-lon);
+    lon=prevNormDegV80(lon+delta);
+    if(Math.abs(delta)<1e-8) return lon;
+  }
+  return lon;
+}
+function prevPorphyryCuspsV87(AS,MC){
+  const as=prevNormDegV80(AS), mc=prevNormDegV80(MC), ic=prevNormDegV80(mc+180);
+  const q10to1=prevNormDegV80(as-mc), q1to4=prevNormDegV80(ic-as);
+  const h11=prevNormDegV80(mc+q10to1/3), h12=prevNormDegV80(mc+2*q10to1/3);
+  const h2=prevNormDegV80(as+q1to4/3), h3=prevNormDegV80(as+2*q1to4/3);
   return {
-    H1:as,H2:prevNormDegV80(as+30),H3:prevNormDegV80(as+60),H4:prevNormDegV80(mc+180),
-    H5:prevNormDegV80(as+120),H6:prevNormDegV80(as+150),H7:prevNormDegV80(as+180),H8:prevNormDegV80(as+210),
-    H9:prevNormDegV80(as+240),H10:mc,H11:prevNormDegV80(as+300),H12:prevNormDegV80(as+330)
+    H1:as,H2:h2,H3:h3,H4:ic,H5:prevNormDegV80(h11+180),H6:prevNormDegV80(h12+180),
+    H7:prevNormDegV80(as+180),H8:prevNormDegV80(h2+180),H9:prevNormDegV80(h3+180),
+    H10:mc,H11:h11,H12:h12,_system:'Porphyry'
+  };
+}
+function prevHouseCuspsV80(AS,MC,jdNatal,lat,lon){
+  const as=prevNormDegV80(AS), mc=prevNormDegV80(MC);
+  const J=Number(jdNatal!==undefined&&jdNatal!==null?jdNatal:(typeof USER!=='undefined'&&USER?USER.jd:NaN));
+  const la=Number(lat!==undefined&&lat!==null?lat:(typeof USER!=='undefined'&&USER?USER.lat:NaN));
+  // La longitude n'est pas nécessaire ici : l'ARMC est déduite du MC réel.
+  // On garde le paramètre pour que tous les appels transportent explicitement les
+  // coordonnées du profil et éviter tout mélange entre deux personnes en Relations.
+  void lon;
+  if(!Number.isFinite(J) || !Number.isFinite(la)) return prevPorphyryCuspsV87(as,mc);
+  const eps=prevObliquityV87(J);
+  const armc=prevRaDecEclV87(mc,eps).ra;
+  const h11=prevSolvePlacidusCuspV87(11,armc,la,eps,prevNormDegV80(mc+30));
+  const h12=prevSolvePlacidusCuspV87(12,armc,la,eps,prevNormDegV80(mc+60));
+  const h2=prevSolvePlacidusCuspV87(2,armc,la,eps,prevNormDegV80(as+30));
+  const h3=prevSolvePlacidusCuspV87(3,armc,la,eps,prevNormDegV80(as+60));
+  if(![h11,h12,h2,h3].every(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v)))) return prevPorphyryCuspsV87(as,mc);
+  return {
+    H1:as,H2:h2,H3:h3,H4:prevNormDegV80(mc+180),H5:prevNormDegV80(h11+180),H6:prevNormDegV80(h12+180),
+    H7:prevNormDegV80(as+180),H8:prevNormDegV80(h2+180),H9:prevNormDegV80(h3+180),
+    H10:mc,H11:h11,H12:h12,_system:'Placidus'
   };
 }
 
-function prevHouseRulerTargetsV80(posN,AS,MC){
-  const cusps=prevHouseCuspsV80(AS,MC), out={};
+function prevHouseRulerTargetsV80(posN,AS,MC,jdNatal,lat,lon){
+  const cusps=prevHouseCuspsV80(AS,MC,jdNatal,lat,lon), out={};
   for(let h=1;h<=12;h++){
     const ruler=prevTraditionalRulerV80(cusps['H'+h]);
     if(ruler && posN && Number.isFinite(Number(posN[ruler]))) out['R'+h]=Number(posN[ruler]);
@@ -5054,9 +5127,9 @@ function prevV82Apply(jdJour,jd,t,posN,natal,jdNatal,age,targetsMajor,targetsSec
 
 function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelection){
   const date=jdVersDate(jdJour), jd=jdJour+0.5, t=calcPos(jd), age=calcAnneeVieExacte(jdNatal,jdJour);
-  const houses=prevHouseCuspsV80(AS,MC);
+  const houses=prevHouseCuspsV80(AS,MC,jdNatal,USER?.lat,USER?.lon);
   const IC=houses.H4, DS=houses.H7;
-  const rulers=prevHouseRulerTargetsV80(posN,AS,MC);
+  const rulers=prevHouseRulerTargetsV80(posN,AS,MC,jdNatal,USER?.lat,USER?.lon);
   const natal={...posN,AS,MC,IC,DS,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
   const targetsMajor=['Soleil','Lune','AS','MC','IC','DS','Venus'];
   const targetsPlanetsSec=['Mercure','Mars','Jupiter','Saturne'];
@@ -5469,7 +5542,7 @@ function apDailyHintV84(domain,source,pol){
 function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache){
   const keys=apDomainKeysForSelectionV76(dom);
   if(!keys.length)return {hasSignal:false,signals:[],bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
-  const houses=prevHouseCuspsV80(AS,MC), rulers=prevHouseRulerTargetsV80(posN,AS,MC);
+  const houses=prevHouseCuspsV80(AS,MC,USER?.jd,USER?.lat,USER?.lon), rulers=prevHouseRulerTargetsV80(posN,AS,MC,USER?.jd,USER?.lat,USER?.lon);
   const natal={...posN,AS,MC,IC:houses.H4,DS:houses.H7,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
   const possible=['MC','IC','DS','H2','H3','H5','H6','H8','H9','H11','H12',...Object.keys(rulers)];
   const targets=[];
@@ -5658,7 +5731,7 @@ function apDailyEventProfileV86(r,dom,analyseGenerale){
 function apDailyMicroAllFastV85(jdJour,posN,AS,MC,posCache){
   const selections=['travail','finances','amour','famille','voyage','sante','spirituel'];
   const allowed=new Set(selections.flatMap(apDomainKeysForSelectionV76));
-  const houses=prevHouseCuspsV80(AS,MC), rulers=prevHouseRulerTargetsV80(posN,AS,MC);
+  const houses=prevHouseCuspsV80(AS,MC,USER?.jd,USER?.lat,USER?.lon), rulers=prevHouseRulerTargetsV80(posN,AS,MC,USER?.jd,USER?.lat,USER?.lon);
   const natal={...posN,AS,MC,IC:houses.H4,DS:houses.H7,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
   const possible=['MC','IC','DS','H2','H3','H5','H6','H8','H9','H11','H12',...Object.keys(rulers)];
   const targets=[];
@@ -9342,8 +9415,8 @@ function yPointsRelation(part, mode) {
 
   // V76 — Le type de relation change les ANCRES réellement observées.
   // On ne prend plus les mêmes points pour Pro, Famille, Amitié et Couple avant
-  // de simplement changer les mots. Les maisons intermédiaires utilisent la même
-  // approximation égale déjà employée par le moteur multidomaine du site.
+  // de simplement changer les mots. Les maisons intermédiaires utilisent désormais
+  // les cuspides Placidus natales réelles de chaque personne (V87).
   const specs = {
     couple: [
       ['Descendant','lien de couple',1.45,true], ['R7','maître du lien de couple',1.20,true], ['H5','vie affective / expression du lien',1.15,true],
@@ -9390,32 +9463,29 @@ function yPointsRelation(part, mode) {
   function lonFor(person, cle){
     const pos = person.pos;
     const AS = person.AS, MC = person.MC;
+    const cusps=prevHouseCuspsV80(AS,MC,person.jd,person.lat,person.lon);
     if(cle==='Ascendant') return AS;
-    if(cle==='Descendant') return yNorm(AS+180);
+    if(cle==='Descendant') return cusps.H7;
     if(cle==='MC') return MC;
-    if(cle==='IC') return yNorm(MC+180);
-    if(cle==='H5') return yNorm(AS+120);
-    if(cle==='H6') return yNorm(AS+150);
-    if(cle==='H8') return yNorm(AS+210);
-    if(cle==='H11') return yNorm(AS+300);
+    if(cle==='IC') return cusps.H4;
+    if(/^H(?:[1-9]|1[0-2])$/.test(cle)) return cusps[cle];
     if(/^R(?:[1-9]|1[0-2])$/.test(cle)){
       const h=Number(cle.slice(1));
-      const cusps=prevHouseCuspsV80(AS,MC);
       const ruler=prevTraditionalRulerV80(cusps['H'+h]);
       return ruler && pos && pos[ruler] !== undefined ? pos[ruler] : undefined;
     }
     return pos && pos[cle] !== undefined ? pos[cle] : undefined;
   }
-  function pushPerson(name,pos,AS,MC){
-    const person={pos,AS,MC};
+  function pushPerson(name,pos,AS,MC,jd,lat,lon){
+    const person={pos,AS,MC,jd,lat,lon};
     for(const [cle,label,poids,anchor] of use){
-      const lon=lonFor(person,cle);
-      if(lon===undefined || lon===null || !Number.isFinite(Number(lon))) continue;
-      out.push({qui:name,cle,label,lon:Number(lon),sensible:anchor?3:2,poids,anchor:!!anchor});
+      const lonPoint=lonFor(person,cle);
+      if(lonPoint===undefined || lonPoint===null || !Number.isFinite(Number(lonPoint))) continue;
+      out.push({qui:name,cle,label,lon:Number(lonPoint),sensible:anchor?3:2,poids,anchor:!!anchor});
     }
   }
-  pushPerson(a.prenom,a.pos,a.AS,a.MC);
-  pushPerson(b.prenom2,b.pos2,b.AS2,b.MC2);
+  pushPerson(a.prenom,a.pos,a.AS,a.MC,a.jd,a.lat,a.lon);
+  pushPerson(b.prenom2,b.pos2,b.AS2,b.MC2,b.jd2,b.lat2,b.lon2);
   return out;
 }
 
