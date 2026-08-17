@@ -11,8 +11,9 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v75-coherence-globale-admin-clair">
+<meta name="astro-build" content="v88-audit-expert-ephemerides-orbes">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════
@@ -3360,9 +3361,9 @@ function validerSaisie() {
 // ============================================================
 function parseDate(raw){const p=raw.trim().split('/');if(p.length!==3||p[2].length!==4)return null;return`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;}
 function julianDay(y,mo,d,h){if(mo<=2){y--;mo+=12;}const A=Math.floor(y/100),B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(mo+1))+d+B-1524.5+h/24;}
-function calcSoleil(jd){const T=(jd-2451545)/36525;let L0=280.46646+36000.76983*T;let M=(357.52911+35999.05029*T)*Math.PI/180;const C=(1.914602-0.004817*T)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M);return((L0+C)%360+360)%360;}
-function calcLune(jd){const T=(jd-2451545)/36525;const D=(297.85036+445267.11148*T)*Math.PI/180,M=(357.52772+35999.05034*T)*Math.PI/180,Mp=(134.96298+477198.867398*T)*Math.PI/180,F=(93.27191+483202.017538*T)*Math.PI/180;let lon=218.3165+481267.8813*T;lon+=6.28875*Math.sin(Mp)+1.27402*Math.sin(2*D-Mp)+0.65831*Math.sin(2*D)+0.2135*Math.sin(2*Mp)-0.18479*Math.sin(M)-0.1144*Math.sin(2*F)-0.05877*Math.sin(2*D+Mp)+0.04987*Math.sin(D);return((lon%360)+360)%360;}
-function calcPlanete(jd,p){const T=(jd-2451545)/36525,d2r=Math.PI/180,r2d=180/Math.PI;const els={mercure:{L:252.25032350+149472.67411175*T,a:0.38709927,e:0.20563593,I:7.00497902,O:48.33076593,w:77.45779628},venus:{L:181.97980085+58517.81538729*T,a:0.72333566,e:0.00677672,I:3.39467605,O:76.67984255,w:131.60246718},mars:{L:355.45332867+19140.30268499*T,a:1.52371034,e:0.09339410,I:1.84969142,O:49.55953891,w:336.06023395},jupiter:{L:34.39644051+3034.74612775*T,a:5.202887,e:0.04838624,I:1.30439695,O:100.47390909,w:14.72847983},saturne:{L:49.95424423+1222.49362201*T,a:9.53667594,e:0.05386179,I:2.48599187,O:113.66242448,w:92.59887831},uranus:{L:313.23810451+428.48202785*T,a:19.18916464,e:0.04725744,I:0.77263783,O:74.01692503,w:170.95427630},neptune:{L:-55.12002969+218.45945325*T,a:30.06992276,e:0.00859048,I:1.77004347,O:131.78422574,w:44.96476227},pluton:{L:238.92903833+145.20780515*T,a:39.48211675,e:0.24882730,I:17.14001206,O:110.30393684,w:224.06891629}};
+function calcSoleilApproxV88(jd){const T=(jd-2451545)/36525;let L0=280.46646+36000.76983*T;let M=(357.52911+35999.05029*T)*Math.PI/180;const C=(1.914602-0.004817*T)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M);return((L0+C)%360+360)%360;}
+function calcLuneApproxV88(jd){const T=(jd-2451545)/36525;const D=(297.85036+445267.11148*T)*Math.PI/180,M=(357.52772+35999.05034*T)*Math.PI/180,Mp=(134.96298+477198.867398*T)*Math.PI/180,F=(93.27191+483202.017538*T)*Math.PI/180;let lon=218.3165+481267.8813*T;lon+=6.28875*Math.sin(Mp)+1.27402*Math.sin(2*D-Mp)+0.65831*Math.sin(2*D)+0.2135*Math.sin(2*Mp)-0.18479*Math.sin(M)-0.1144*Math.sin(2*F)-0.05877*Math.sin(2*D+Mp)+0.04987*Math.sin(D);return((lon%360)+360)%360;}
+function calcPlaneteApproxV88(jd,p){const T=(jd-2451545)/36525,d2r=Math.PI/180,r2d=180/Math.PI;const els={mercure:{L:252.25032350+149472.67411175*T,a:0.38709927,e:0.20563593,I:7.00497902,O:48.33076593,w:77.45779628},venus:{L:181.97980085+58517.81538729*T,a:0.72333566,e:0.00677672,I:3.39467605,O:76.67984255,w:131.60246718},mars:{L:355.45332867+19140.30268499*T,a:1.52371034,e:0.09339410,I:1.84969142,O:49.55953891,w:336.06023395},jupiter:{L:34.39644051+3034.74612775*T,a:5.202887,e:0.04838624,I:1.30439695,O:100.47390909,w:14.72847983},saturne:{L:49.95424423+1222.49362201*T,a:9.53667594,e:0.05386179,I:2.48599187,O:113.66242448,w:92.59887831},uranus:{L:313.23810451+428.48202785*T,a:19.18916464,e:0.04725744,I:0.77263783,O:74.01692503,w:170.95427630},neptune:{L:-55.12002969+218.45945325*T,a:30.06992276,e:0.00859048,I:1.77004347,O:131.78422574,w:44.96476227},pluton:{L:238.92903833+145.20780515*T,a:39.48211675,e:0.24882730,I:17.14001206,O:110.30393684,w:224.06891629}};
 const el=els[p];if(!el)return 0;
 let M=((el.L-el.w)%360+360)%360*d2r,E=M;for(let i=0;i<10;i++)E=M+el.e*Math.sin(E);
 const xv=el.a*(Math.cos(E)-el.e),yv=el.a*Math.sqrt(1-el.e*el.e)*Math.sin(E);
@@ -3370,13 +3371,66 @@ const v=Math.atan2(yv,xv)*r2d,r=Math.sqrt(xv*xv+yv*yv);
 const lp=((v+el.w)%360+360)%360*d2r,I_r=el.I*d2r,O_r=el.O*d2r;
 const xh=r*(Math.cos(O_r)*Math.cos(lp-O_r)-Math.sin(O_r)*Math.sin(lp-O_r)*Math.cos(I_r));
 const yh=r*(Math.sin(O_r)*Math.cos(lp-O_r)+Math.cos(O_r)*Math.sin(lp-O_r)*Math.cos(I_r));
-const slon=(calcSoleil(jd)+180)*d2r;
+const slon=(calcSoleilApproxV88(jd)+180)*d2r;
 return((Math.atan2(yh-Math.sin(slon),xh-Math.cos(slon))*r2d)%360+360)%360;}
 function calcNoeud(jd){const T=(jd-2451545)/36525;return((125.04452-1934.136261*T)%360+360)%360;}
+// V88 — éphémérides géocentriques haute précision.
+// Astronomy Engine est utilisé en priorité (positions apparentes, écliptique vraie de date).
+// Les anciennes formules restent uniquement comme repli si le CDN est indisponible.
+function astroEngineReadyV88(){
+  return typeof window!=='undefined' && window.Astronomy && Astronomy.GeoVector && Astronomy.Ecliptic;
+}
+function astroDateFromJDV88(jd){ return new Date((jd-2440587.5)*86400000); }
+function astroNormV88(x){ return ((Number(x)%360)+360)%360; }
+function astroBodyV88(p){
+  if(!astroEngineReadyV88()||!Astronomy.Body)return null;
+  const m={mercure:'Mercury',venus:'Venus',mars:'Mars',jupiter:'Jupiter',saturne:'Saturn',uranus:'Uranus',neptune:'Neptune',pluton:'Pluto'};
+  return Astronomy.Body[m[String(p||'').toLowerCase()]]||null;
+}
+function astroGeoLonV88(jd,kind){
+  if(!astroEngineReadyV88()) return null;
+  try{
+    const date=astroDateFromJDV88(jd);
+    if(kind==='soleil'){
+      const s=Astronomy.SunPosition(date); return Number.isFinite(s?.elon)?astroNormV88(s.elon):null;
+    }
+    if(kind==='lune'){
+      const m=Astronomy.EclipticGeoMoon(date); return Number.isFinite(m?.lon)?astroNormV88(m.lon):null;
+    }
+    const body=astroBodyV88(kind); if(!body)return null;
+    const vec=Astronomy.GeoVector(body,date,true);
+    const ecl=Astronomy.Ecliptic(vec);
+    return Number.isFinite(ecl?.elon)?astroNormV88(ecl.elon):null;
+  }catch(e){ return null; }
+}
+function calcSoleil(jd){ const v=astroGeoLonV88(jd,'soleil'); return v===null?calcSoleilApproxV88(jd):v; }
+function calcLune(jd){ const v=astroGeoLonV88(jd,'lune'); return v===null?calcLuneApproxV88(jd):v; }
+function calcPlanete(jd,p){ const v=astroGeoLonV88(jd,p); return v===null?calcPlaneteApproxV88(jd,p):v; }
+
+// Déclinaison géocentrique vraie de date, utilisée seulement pour une information OOB fiable.
+function astroDeclinationV88(jd,nom){
+  if(!astroEngineReadyV88())return null;
+  try{
+    const map={Soleil:'Sun',Lune:'Moon',Mercure:'Mercury',Venus:'Venus',Mars:'Mars',Jupiter:'Jupiter',Saturne:'Saturn',Uranus:'Uranus',Neptune:'Neptune',Pluton:'Pluto'};
+    const body=Astronomy.Body?.[map[nom]]; if(!body)return null;
+    const date=astroDateFromJDV88(jd),vec=Astronomy.GeoVector(body,date,true);
+    const rot=Astronomy.Rotation_EQJ_EQD(date),eqd=Astronomy.RotateVector(rot,vec);
+    const dec=Math.atan2(eqd.z,Math.hypot(eqd.x,eqd.y))*180/Math.PI;
+    return Number.isFinite(dec)?dec:null;
+  }catch(e){return null;}
+}
+
 function calcASMC(jd,lat,lon){const T=(jd-2451545)/36525;let GMST=280.46061837+360.98564736629*(jd-2451545)+0.000387933*T*T;const LMST=(((GMST+lon)%360)+360)%360,eps=(23.439291111-0.013004167*T)*Math.PI/180,LMST_r=LMST*Math.PI/180,lat_r=lat*Math.PI/180;let MC=Math.atan2(Math.tan(LMST_r),Math.cos(eps))*180/Math.PI;MC=((MC%360)+360)%360;if(LMST>180){if(MC<180)MC+=180;}else{if(MC>180)MC-=180;}MC=((MC%360)+360)%360;let AS=((Math.atan2(-Math.cos(LMST_r),Math.sin(eps)*Math.tan(lat_r)+Math.cos(eps)*Math.sin(LMST_r))*180/Math.PI)%360+360)%360;AS=(AS+180)%360;return{AS,MC};}
 
 function calcObliquite(jd){const T=(jd-2451545)/36525;return 23.439291111-0.013004167*T-0.000000164*T*T;}
-function calcPos(jd){return{Soleil:calcSoleil(jd),Lune:calcLune(jd),Mercure:calcPlanete(jd,'mercure'),Venus:calcPlanete(jd,'venus'),Mars:calcPlanete(jd,'mars'),Jupiter:calcPlanete(jd,'jupiter'),Saturne:calcPlanete(jd,'saturne'),Uranus:calcPlanete(jd,'uranus'),Neptune:calcPlanete(jd,'neptune'),Pluton:calcPlanete(jd,'pluton'),Noeud:calcNoeud(jd)};}
+const ASTRO_POS_CACHE_V88=new Map();
+function calcPos(jd){
+  // V88 — cache d'éphémérides : indispensable pour les scans 10 ans (Fenêtre/Timeline/Question).
+  // La clé au millionième de jour garde une précision sub-seconde tout en mutualisant les appels identiques.
+  const key=Number(jd).toFixed(6);const hit=ASTRO_POS_CACHE_V88.get(key);if(hit)return hit;
+  const out={Soleil:calcSoleil(jd),Lune:calcLune(jd),Mercure:calcPlanete(jd,'mercure'),Venus:calcPlanete(jd,'venus'),Mars:calcPlanete(jd,'mars'),Jupiter:calcPlanete(jd,'jupiter'),Saturne:calcPlanete(jd,'saturne'),Uranus:calcPlanete(jd,'uranus'),Neptune:calcPlanete(jd,'neptune'),Pluton:calcPlanete(jd,'pluton'),Noeud:calcNoeud(jd)};
+  if(ASTRO_POS_CACHE_V88.size>25000)ASTRO_POS_CACHE_V88.clear();ASTRO_POS_CACHE_V88.set(key,out);return out;
+}
 function convUTC(ds,hs,tz){
   // Luxon est utilisé quand il est disponible. Sur certains iPhone ou en ouverture locale,
   // le CDN peut ne pas charger : on garde alors un repli pour éviter que tout le site bloque.
@@ -3829,10 +3883,12 @@ const REGLES=[
   {t:'P-MC',a:90,n:'Pluton',s:{amour:-2,travail:-3,finances:-3,sante:-2,chance:-3}},
 ];
 
+// V88 — ancienne couche de climat général : orbes resserrés pour qu'elle ne noie
+// plus les moteurs sectoriels experts. Les grands cycles sont traités plus finement en V51.
 const ORBES={
-  Lune:1.5,Soleil:2,Mercure:1.5,Venus:2,Mars:2,
-  Jupiter:2.5,Saturne:2.5,Uranus:2,Neptune:2,Pluton:2,
-  'P-Soleil':1,'P-Lune':1,'P-Venus':1,'P-Mars':1,'P-Mercure':1,'P-AS':1,'P-MC':1
+  Lune:1.20,Soleil:1.15,Mercure:.85,Venus:.95,Mars:.95,
+  Jupiter:1.25,Saturne:1.15,Uranus:1.05,Neptune:.95,Pluton:.90,
+  'P-Soleil':.55,'P-Lune':.65,'P-Venus':.50,'P-Mars':.50,'P-Mercure':.45,'P-AS':.45,'P-MC':.45
 };
 
 // PROGRESSIONS SECONDAIRES
@@ -3934,11 +3990,11 @@ function scoreProfection(posN, AS, MC, dom, profection, jdAnalyse) {
       let diff=Math.abs(deg-cible); if(diff>180)diff=360-diff;
       for (const a of [0,60,90,120,180]) {
         const ecart=Math.abs(diff-a);
-        if(ecart<=2.2){
+        if(ecart<=1.20){
           const harmonique=(a===0||a===60||a===120);
           const ben=['Jupiter','Venus','Soleil'].includes(profection.maitreAnnee);
           const dur=['Saturne','Mars'].includes(profection.maitreAnnee);
-          let v=0.45*(1-ecart/2.2);
+          let v=0.45*(1-ecart/1.20);
           if(harmonique && ben) s+=v; else if(!harmonique && dur) s-=v; else s+=harmonique?v*0.35:-v*0.25;
         }
       }
@@ -3977,7 +4033,7 @@ function scoreRevolutionSolaire(jdNatal, jdAnalyse, posN, AS, MC, dom) {
   const points = { ...posRS, AS: AS_rs, MC: MC_rs };
   const natal = { ...posN, AS, MC };
   const aspects = [0, 60, 90, 120, 180];
-  const orbe = 3;
+  const orbe = 1.20;
   for (const [nomT, degT] of Object.entries(points)) {
     for (const [nomN, degN] of Object.entries(natal)) {
       let diff = Math.abs(degT - degN);
@@ -4019,15 +4075,29 @@ const ECLIPSES_OFFICIELLES_2025_2030 = [
   ['2036-02-11','lunaire'],['2036-02-27','solaire'],['2036-07-23','solaire'],['2036-08-07','lunaire'],['2036-08-21','solaire']
 ];
 
+const ECLIPSE_CACHE_V88 = new Map();
 function calcEclipses(jdAnalyse) {
-  // Une éclipse n'est activée ici que près de sa date réelle ; plus d'estimation par lunaison moyenne.
+  // Les dates de la table servent à identifier la lunaison éclipsée.
+  // V88 affine ensuite au moment exact de Nouvelle/Pleine Lune, au lieu d'imposer 12:00 UT.
   const out=[];
   for(const [iso,type] of ECLIPSES_OFFICIELLES_2025_2030){
-    const [y,m,d]=iso.split('-').map(Number);
-    const jdE=julianDay(y,m,d,12);
-    if(Math.abs(jdAnalyse-jdE)>1.25) continue;
-    const lon = type==='solaire' ? calcSoleil(jdE) : calcLune(jdE);
-    out.push({jd:jdE,type,lon,dateISO:iso,source:'NASA/GSFC'});
+    const key=iso+'|'+type;
+    let e=ECLIPSE_CACHE_V88.get(key);
+    if(!e){
+      const [y,m,d]=iso.split('-').map(Number);
+      let jdE=julianDay(y,m,d,12);
+      try{
+        if(astroEngineReadyV88() && Astronomy.SearchMoonPhase){
+          const start=astroDateFromJDV88(jdE-2.2);
+          const phase=Astronomy.SearchMoonPhase(type==='solaire'?0:180,start,4.4);
+          if(phase?.date) jdE=phase.date.getTime()/86400000+2440587.5;
+        }
+      }catch(err){}
+      const lon=type==='solaire'?calcSoleil(jdE):calcLune(jdE);
+      e={jd:jdE,type,lon,dateISO:iso,source:'table éclipses + syzygie astronomique'};
+      ECLIPSE_CACHE_V88.set(key,e);
+    }
+    if(Math.abs(jdAnalyse-e.jd)<=1.35)out.push(e);
   }
   return out;
 }
@@ -4039,8 +4109,8 @@ function scoreEclipses(eclipses, posN, AS, MC, dom) {
     for (const [nom, deg] of Object.entries(natal)) {
       let diff = Math.abs(ecl.lon - deg);
       if (diff > 180) diff = 360 - diff;
-      if (diff < 5) { // Éclipse sur point natal = très significatif
-        const poids = (1 - diff/5) * 3;
+      if (diff < 2.0) { // V88 : contact d'éclipse réellement serré
+        const poids = (1 - diff/2.0) * 2.2;
         // Éclipse solaire = plus puissante
         const mult = ecl.type === 'solaire' ? 1.5 : 1;
         // Sur Saturne/Mars/Pluton natal = négatif
@@ -4071,7 +4141,7 @@ function scoreArcSoleil(jdNatal, anneeVie, posN, AS, MC, dom) {
   const natal = { ...posN, AS, MC };
   let s = 0;
   const aspects = [0, 60, 90, 120, 180, 45, 135];
-  const orbe = 1; // Orbe serré pour arc de Soleil
+  const orbe = .55; // V88 : couche héritée alignée sur l'arc solaire expert
   for (const [nom, deg] of Object.entries(natal)) {
     // Position dirigée = position natale + arc
     const degDirige = (deg + arc) % 360;
@@ -4152,52 +4222,57 @@ function scoreAntiscia(posT, posN, AS, MC, dom) {
 // ============================================================
 // PART DE FORTUNE ET POINTS ARABES
 // ============================================================
-function calcPartFortune(AS, soleil, lune) {
-  return ((AS + lune - soleil) % 360 + 360) % 360;
+function prevHouseNumberFromCuspsV88(lon,cusps){
+  const x=((lon%360)+360)%360;
+  for(let h=1;h<=12;h++){
+    const a=Number(cusps?.['H'+h]), b=Number(cusps?.['H'+(h===12?1:h+1)]);
+    if(!Number.isFinite(a)||!Number.isFinite(b))continue;
+    const span=((b-a)%360+360)%360,dist=((x-a)%360+360)%360;
+    if(dist<span || Math.abs(dist-span)<1e-9)return h;
+  }
+  return null;
 }
-
-function calcPartEsprit(AS, soleil, lune) {
-  return ((AS + soleil - lune) % 360 + 360) % 360;
+function prevChartIsNightV88(jd,lat,lon,soleil,AS,MC){
+  try{
+    const c=prevHouseCuspsV80(Number(AS),Number(MC),jd,Number(lat),Number(lon));
+    const h=prevHouseNumberFromCuspsV88(soleil,c);
+    if(h===null)return false;
+    return h>=1&&h<=6;
+  }catch(e){return false;}
+}
+function calcPartFortune(AS, soleil, lune, nocturne=false) {
+  return nocturne ? ((AS + soleil - lune)%360+360)%360 : ((AS + lune - soleil)%360+360)%360;
+}
+function calcPartEsprit(AS, soleil, lune, nocturne=false) {
+  return nocturne ? ((AS + lune - soleil)%360+360)%360 : ((AS + soleil - lune)%360+360)%360;
 }
 
 function scorePartsFortune(posT, posN, AS, MC, dom) {
-  const partF = calcPartFortune(AS, posN.Soleil, posN.Lune);
-  const partFT = calcPartFortune(AS, posT.Soleil, posT.Lune);
-  let s = 0;
-  // Transit Jupiter sur Part de Fortune natale
-  let diff = Math.abs(posT.Jupiter - partF); if (diff > 180) diff = 360 - diff;
-  if (diff < 3) s += dom==='finances'||dom==='chance'||dom==='tous' ? 2 : 1;
-  // Transit Saturne sur Part de Fortune natale
-  diff = Math.abs(posT.Saturne - partF); if (diff > 180) diff = 360 - diff;
-  if (diff < 3) s -= 1.5;
-  // Part de Fortune transitée sur Jupiter natal
-  diff = Math.abs(partFT - posN.Jupiter); if (diff > 180) diff = 360 - diff;
-  if (diff < 3) s += 1;
+  let nuit=false;
+  try{if(USER)nuit=prevChartIsNightV88(USER.jd,USER.lat,USER.lon,posN.Soleil,AS,MC);}catch(e){}
+  const partF=calcPartFortune(AS,posN.Soleil,posN.Lune,nuit);
+  let s=0,diff=Math.abs(posT.Jupiter-partF);if(diff>180)diff=360-diff;
+  if(diff<1.2)s+=(1-diff/1.2)*(dom==='finances'||dom==='chance'||dom==='tous'||dom==='general'?1.0:.35);
+  diff=Math.abs(posT.Saturne-partF);if(diff>180)diff=360-diff;
+  if(diff<1.0)s-=(1-diff/1.0)*.65;
   return s;
 }
 
 // ============================================================
 // PLANÈTES HORS-LIMITES (déclinaison)
 // ============================================================
-function calcDeclinaison(jd, planete) {
-  // Approximation de la déclinaison
-  const eps = calcObliquite(jd) * Math.PI / 180;
-  const lon = planete * Math.PI / 180;
-  return Math.asin(Math.sin(eps) * Math.sin(lon)) * 180 / Math.PI;
+function calcDeclinaison(jd, planete, nomPlanete) {
+  const precise=nomPlanete?astroDeclinationV88(jd,nomPlanete):null;
+  if(precise!==null)return precise;
+  // Repli indicatif uniquement : longitude seule ne suffit pas à une vraie déclinaison.
+  const eps=calcObliquite(jd)*Math.PI/180,lon=Number(planete)*Math.PI/180;
+  return Math.asin(Math.sin(eps)*Math.sin(lon))*180/Math.PI;
 }
-
 function scoreHorsLimites(jd, posT) {
-  const eps = calcObliquite(jd);
-  let s = 0;
-  for (const [nom, deg] of Object.entries(posT)) {
-    if (typeof deg !== 'number') continue;
-    const decl = Math.abs(Math.asin(Math.sin(eps * Math.PI/180) * Math.sin(deg * Math.PI/180)) * 180 / Math.PI);
-    if (decl > eps) { // Hors-limites
-      if (nom === 'Mars' || nom === 'Saturne' || nom === 'Pluton') s -= 0.5;
-      if (nom === 'Venus' || nom === 'Jupiter') s += 0.3;
-    }
-  }
-  return s;
+  // V88 : une planète hors-limites décrit une intensification, pas une polarité bonne/mauvaise.
+  // Elle ne modifie donc plus le score prévisionnel. Cela évite l'ancien raccourci
+  // « bénéfique OOB = positif / maléfique OOB = négatif ».
+  return 0;
 }
 
 // ============================================================
@@ -4228,8 +4303,8 @@ function scoreRetourLunaire(jdNatal, jdAnalyse, posN, AS, MC, dom) {
   for (const [nomT, degT] of Object.entries(rl)) {
     for (const [nomN, degN] of Object.entries(natal)) {
       let diff = Math.abs(degT - degN); if (diff > 180) diff = 360 - diff;
-      if (diff < 5) {
-        const poids = (1 - diff/5) * 0.8;
+      if (diff < 1.50) {
+        const poids = (1 - diff/1.50) * 0.8;
         const est_ben = nomT === 'Jupiter' || nomT === 'Venus';
         const est_mal = nomT === 'Saturne' || nomT === 'Mars' || nomT === 'Pluton';
         if (est_ben) s += poids;
@@ -4252,54 +4327,19 @@ function enrichirComplet(posT, jdNatal, anneeVie, jdAnalyse, posN, AS, MC, dom) 
 }
 
 function scorerComplet(posT, posN, AS, MC, dom, jdNatal, anneeVie, jdAnalyse) {
-  // V76 : en prévision spécialisée, le moteur V76 qualifie d'abord le domaine.
-  // Le vieux score générique ne doit plus injecter de points dans le domaine choisi.
+  // V88 — architecture unifiée : cette ancienne couche ne sert plus qu'au micro-climat
+  // général (transits + progressions déjà présents dans posT). Les Nœuds, antiscia,
+  // Parts, RS, profections, éclipses, arcs et retours sont traités UNE SEULE FOIS par
+  // le moteur V51/V82, où ils sont hiérarchisés en preuves/confirmations/déclencheurs.
   if(dom!=='general' && dom!=='tous') return 0;
-  let s = scorer(posT, posN, AS, MC, dom);
-
-  // 2. Nœuds lunaires
-  s += scoreNoeudTransit(posT, posN, AS, MC, dom);
-
-  // 3. Antiscia
-  s += scoreAntiscia(posT, posN, AS, MC, dom);
-
-  // 4. Parts arabes
-  s += scorePartsFortune(posT, posN, AS, MC, dom);
-
-  // 5. Hors-limites
-  s += scoreHorsLimites(jdAnalyse, posT);
-
-  return s;
+  return scorer(posT, posN, AS, MC, dom);
 }
 
 function scorerJour(jdJour, posN, AS, MC, dom, jdNatal) {
-  // V76 : les techniques annuelles/génériques ne créent jamais un domaine.
-  // Elles restent disponibles en lecture générale, mais pas comme preuve spécialisée.
-  if(dom!=='general' && dom!=='tous') return 0;
-  // Score global pour un jour donné (à la meilleure heure)
-  const anneeVie = calcAnneeVieExacte(jdNatal, jdJour);
-
-  // Scores fixes pour ce jour (indépendants de l'heure)
-  let sFixe = 0;
-
-  // Profection
-  const profection = calcProfection(jdNatal, jdJour);
-  sFixe += scoreProfection(posN, AS, MC, dom, profection, jdJour);
-
-  // Révolution solaire (calculée une fois par jour)
-  if (USER) sFixe += scoreRevolutionSolaire(jdNatal, jdJour, posN, AS, MC, dom);
-
-  // Éclipses (une fois par jour)
-  const eclipses = calcEclipses(jdJour);
-  sFixe += scoreEclipses(eclipses, posN, AS, MC, dom);
-
-  // Arc de Soleil
-  if (anneeVie >= 0) sFixe += scoreArcSoleil(jdNatal, anneeVie, posN, AS, MC, dom);
-
-  // Retour lunaire
-  if (USER) sFixe += scoreRetourLunaire(jdNatal, jdJour, posN, AS, MC, dom);
-
-  return sFixe;
+  // V88 — aucun second score annuel fixe ici : cela doublonnait la RS, la profection,
+  // les éclipses, les arcs et le retour lunaire déjà évalués par le moteur central.
+  // Le jour est donc composé de : micro-climat horaire + événements V51/V82 qualifiés.
+  return 0;
 }
 
 
@@ -4328,7 +4368,8 @@ function impactConcretCible(cible, dom, dateRef){
 }
 
 function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
-  const jd=jdJour+heure/24;
+  // V88 : l'heure reçue est une heure LOCALE du profil ; conversion UTC avant calcul.
+  const jd=apJDForLocalHourV86(jdJour,heure);
   const t=calcPos(jd);
   const natal={...posN,AS,MC};
   const age=calcAnneeVieExacte(jdNatal,jdJour);
@@ -4337,7 +4378,7 @@ function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
 
   // 1) Transits lents : prioritaires lorsqu'ils touchent un point personnel/angle avec un orbe serré.
   for(const pl of ['Pluton','Uranus','Saturne','Neptune','Jupiter']){
-    const orbe=pl==='Jupiter'?1.6:1.35;
+    const orbe={Pluton:.95,Uranus:1.0,Saturne:1.05,Neptune:.85,Jupiter:1.15}[pl];
     for(const cible of ['Soleil','Lune','AS','MC','Venus']){
       if(t[pl]===undefined||natal[cible]===undefined)continue;
       const a=ecartAspectExact(t[pl],natal[cible],[0,60,90,120,180]);
@@ -4356,7 +4397,7 @@ function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
         for(const cible of ['Soleil','Lune','AS','MC','Venus']){
           if(prog[pp]===undefined||natal[cible]===undefined)continue;
           const a=ecartAspectExact(prog[pp],natal[cible],[0,60,90,120,180]);
-          if(a.ecart<=0.8)ajouter('progression',2.2,`${pp} progressé ${a.aspect}° ${cible} (écart ${a.ecart.toFixed(2)}°)`,cible);
+          if(a.ecart<=(pp==='Lune'?.65:.50))ajouter('progression',2.2,`${pp} progressé ${a.aspect}° ${cible} (écart ${a.ecart.toFixed(2)}°)`,cible);
         }
       }
     }catch(e){}
@@ -4372,7 +4413,7 @@ function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
         for(const cible of ['Soleil','Lune','AS','MC']){
           if(src===cible||natal[cible]===undefined)continue;
           const a=ecartAspectExact(dirige,natal[cible],[0,60,90,120,180]);
-          if(a.ecart<=0.75)ajouter('arc-solaire',2.6,`${src} dirigé ${a.aspect}° ${cible} (écart ${a.ecart.toFixed(2)}°)`,cible);
+          if(a.ecart<=0.45)ajouter('arc-solaire',2.6,`${src} dirigé ${a.aspect}° ${cible} (écart ${a.ecart.toFixed(2)}°)`,cible);
         }
       }
     }catch(e){}
@@ -4383,7 +4424,7 @@ function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
     for(const ecl of calcEclipses(jdJour)){
       for(const cible of ['Soleil','Lune','AS','MC']){
         let d=Math.abs(ecl.lon-natal[cible]);if(d>180)d=360-d;
-        if(d<=2)ajouter('eclipse',3.1,`Éclipse ${ecl.type} officielle sur ${cible} (écart ${d.toFixed(2)}°)`,cible);
+        if(d<=1.45)ajouter('eclipse',3.1,`Éclipse ${ecl.type} officielle sur ${cible} (écart ${d.toFixed(2)}°)`,cible);
       }
     }
   }catch(e){}
@@ -4394,7 +4435,7 @@ function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
     if(mp&&t[mp]!==undefined){
       for(const cible of ['Soleil','Lune','AS','MC']){
         const a=ecartAspectExact(t[mp],natal[cible],[0,60,90,120,180]);
-        if(a.ecart<=1.5)ajouter('profection',1.25,`Maître annuel ${mp} active ${cible}`,cible);
+        if(a.ecart<=.80)ajouter('profection',1.25,`Maître annuel ${mp} active ${cible}`,cible);
       }
     }
   }catch(e){}
@@ -4413,7 +4454,7 @@ function analyserSignaturesJour(jdJour, heure, posN, AS, MC, dom, jdNatal){
     for(const cible of ['Soleil','Lune','AS','MC']){
       let d=Math.abs(t.Noeud-natal[cible]);if(d>180)d=360-d;
       let ds=Math.abs(((t.Noeud+180)%360)-natal[cible]);if(ds>180)ds=360-ds;
-      if(Math.min(d,ds)<=1.2)ajouter('noeuds',1.35,`Axe nodal active ${cible}`,cible);
+      if(Math.min(d,ds)<=.80)ajouter('noeuds',1.35,`Axe nodal active ${cible}`,cible);
     }
   }
 
@@ -4754,7 +4795,7 @@ function prevHouseCuspsV80(AS,MC,jdNatal,lat,lon){
   const h12=prevSolvePlacidusCuspV87(12,armc,la,eps,prevNormDegV80(mc+60));
   const h2=prevSolvePlacidusCuspV87(2,armc,la,eps,prevNormDegV80(as+30));
   const h3=prevSolvePlacidusCuspV87(3,armc,la,eps,prevNormDegV80(as+60));
-  if(![h11,h12,h2,h3].every(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v)))) return prevPorphyryCuspsV87(as,mc);
+  if(![h11,h12,h2,h3].every(v=>Number.isFinite(Number(v)))) return prevPorphyryCuspsV87(as,mc);
   return {
     H1:as,H2:h2,H3:h3,H4:prevNormDegV80(mc+180),H5:prevNormDegV80(h11+180),H6:prevNormDegV80(h12+180),
     H7:prevNormDegV80(as+180),H8:prevNormDegV80(h2+180),H9:prevNormDegV80(h3+180),
@@ -5107,7 +5148,7 @@ function prevV82Apply(jdJour,jd,t,posN,natal,jdNatal,age,targetsMajor,targetsSec
 
   // 18 — Parts arabes : Part de Fortune + Part d'Esprit natales.
   try{
-    const pf=calcPartFortune(natal.AS,posN.Soleil,posN.Lune),pe=calcPartEsprit(natal.AS,posN.Soleil,posN.Lune);
+    const nuit=USER?prevChartIsNightV88(jdNatal,USER.lat,USER.lon,posN.Soleil,natal.AS,natal.MC):false,pf=calcPartFortune(natal.AS,posN.Soleil,posN.Lune,nuit),pe=calcPartEsprit(natal.AS,posN.Soleil,posN.Lune,nuit);
     for(const pl of ['Jupiter','Saturne','Uranus','Neptune','Pluton','Venus'])for(const [nm,pt] of [['Fortune',pf],['Esprit',pe]]){const a=prevAspectV82(t[pl],pt,[0,90,180],.58);if(a)addGlobalSupport('part-'+nm.toLowerCase(),.38,prevPolariteV51(pl,a.aspect),`${pl} active la Part de ${nm} (${a.aspect}°, ${a.ecart.toFixed(2)}°)`);}
   }catch(e){}
 
@@ -5935,8 +5976,12 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
       const exceptionnelsForts=exceptionnelsDomaines.filter(e=>e.niveau==='fort'||e.niveau==='exceptionnel');
       const negExceptionnel=exceptionnelsForts.some(e=>e.polarite==='difficile'||e.polarite==='mixte');
       const posExceptionnel=exceptionnelsForts.some(e=>e.polarite==='positive'||e.polarite==='mixte');
-      critique=negExceptionnel||declencheurs.some(d=>d.type==='neg'&&Number(d.force)>=5);
-      positifExceptionnel=posExceptionnel||declencheurs.some(d=>d.type==='pos'&&Number(d.force)>=6);
+      // V88 : l'ancien catalogue de déclencheurs est seulement descriptif.
+      // Seul le moteur multidomaine convergent V51 peut qualifier une journée de forte/exceptionnelle.
+      critique=negExceptionnel;
+      positifExceptionnel=posExceptionnel;
+      if(!negExceptionnel&&!posExceptionnel)declencheurs=[];
+      else declencheurs=declencheurs.filter(d=>negExceptionnel?d.type==='neg':d.type==='pos').slice(0,3);
 
       // V81 — même en prévision « Général », le moteur multidomaine central participe
       // au classement des jours. Ainsi retours, progressions/arcs complémentaires et
@@ -6013,8 +6058,8 @@ const DECLENCHEURS = [
     test:(t,n,prog)=>{
       return verifierAspects(t,n,prog,['Mars','P-Mars'],['Pluton','Saturne'],[0,90,180],1);
     },
-    label:'⚠ Mars déclenche une force destructrice',
-    desc:'Énergie intense et potentiellement explosive. Vigilance recommandée — évitez les confrontations inutiles et les prises de risque physiques.'
+    label:'⚠ Mars — activation intense à cadrer',
+    desc:'Activation très intense : privilégier le cadrage, éviter les réactions impulsives et distinguer tension ponctuelle d’événement durable.'
   },
   { id:'eclipse-natal', type:'neg', force:5,
     test:(t,n,prog,eclipses)=>{
@@ -6040,7 +6085,7 @@ const DECLENCHEURS = [
       return diff<2;
     },
     label:'⚠ Lune progressée sur Saturne ou Pluton natal',
-    desc:'La Lune progressée traverse une zone de profondeur. Période d\'intériorisation, parfois de deuil ou de séparation, mais aussi de maturation importante.'
+    desc:'La Lune progressée traverse une zone de profondeur : intériorisation, maturation, responsabilités ou changement émotionnel selon le domaine réellement confirmé.'
   },
   { id:'arc-sat-plu', type:'neg', force:5,
     test:(t,n,prog,ecl,arc)=>{
@@ -6093,8 +6138,8 @@ const DECLENCHEURS = [
       }
       return false;
     },
-    label:'⚡ Uranus — rupture soudaine',
-    desc:'Uranus apporte de l\'imprévu et du changement soudain. Ce qui bascule peut aussi libérer. Restez flexible et ouvert à l\'inattendu.'
+    label:'⚡ Uranus — changement imprévu / besoin de liberté',
+    desc:'Uranus accentue l’imprévu, l’autonomie et le changement de rythme. La manifestation concrète dépend du domaine réellement activé.'
   },
 
   // ===== POSITIFS MAJEURS =====
@@ -6103,7 +6148,7 @@ const DECLENCHEURS = [
       return verifierAspects(t,n,prog,['Jupiter','P-Soleil'],['Soleil','Lune','AS','MC','Jupiter'],[0,60,120],1);
     },
     label:'✨ Jupiter active un point vital',
-    desc:'Belle période d\'expansion et de chance. Les opportunités sont réelles et les efforts portent leurs fruits — c\'est le moment d\'oser et d\'avancer.'
+    desc:'Période d’expansion potentielle. Les possibilités concrètes dépendent du domaine confirmé et des autres techniques convergentes.'
   },
   { id:'arc-jup-harm', type:'pos', force:5,
     test:(t,n,prog,ecl,arc)=>{
@@ -6162,11 +6207,11 @@ const DECLENCHEURS = [
 
 // Orbes par planète pour les déclencheurs
 const ORBES_DEC = {
-  Pluton: 1.5, Neptune: 1.5, Uranus: 1.5, Saturne: 1.5,
-  Jupiter: 2, Mars: 1.5, Venus: 2, Soleil: 1.5,
-  Mercure: 1.5, Lune: 1,
-  'P-Soleil': 1, 'P-Lune': 1, 'P-Venus': 1,
-  'P-Mars': 1, 'P-AS': 1, 'P-MC': 1
+  Pluton:.90, Neptune:.85, Uranus:.95, Saturne:1.00,
+  Jupiter:1.10, Mars:.80, Venus:.78, Soleil:.78,
+  Mercure:.65, Lune:1.20,
+  'P-Soleil':.45, 'P-Lune':.60, 'P-Venus':.45,
+  'P-Mars':.45, 'P-Mercure':.40, 'P-AS':.40, 'P-MC':.40
 };
 
 function verifierAspects(transit, natal, prog, plTrans, plNatal, aspects, orbeDefaut) {
@@ -7810,311 +7855,11 @@ function rafraichirVerrousFenetre() {
   });
 }
 
-function scoreJourFenetre(jdJour, posN, AS, MC, intention) {
-  const posT = calcPos(jdJour);
-  const natal = { ...posN, AS, MC };
-  const IC = (MC + 180) % 360;
-  const SIGNES = ['Bélier','Taureau','Gémeaux','Cancer','Lion','Vierge','Balance','Scorpion','Sagittaire','Capricorne','Verseau','Poissons'];
-
-  const delta = (a, b) => { let d = Math.abs(((a - b) % 360 + 360) % 360); return d > 180 ? 360 - d : d; };
-  const harmScore = (a, b, orbe, poids) => {
-    for (const a0 of [0, 60, 120]) {
-      const d = delta(a, b); const e = Math.abs(d - a0);
-      if (e <= orbe) return poids * (1 - e / orbe) * (a0 === 0 ? 1.5 : 1);
-    } return 0;
-  };
-  const durScore = (a, b, orbe, poids) => {
-    for (const a0 of [90, 180, 45, 135]) {
-      const d = delta(a, b); const e = Math.abs(d - a0);
-      if (e <= orbe) return poids * (1 - e / orbe);
-    } return 0;
-  };
-  const conj = (a, b, orbe) => delta(a, b) <= orbe;
-
-  const jupT=posT.Jupiter, venT=posT.Venus, merT=posT.Mercure;
-  const satT=posT.Saturne, marT=posT.Mars, lunT=posT.Lune, solT=posT.Soleil;
-  const pluT=posT.Pluton, urT=posT.Uranus, nepT=posT.Neptune, noeudT=posT.Noeud;
-  const luneSign = Math.floor(((lunT % 360) + 360) % 360 / 30);
-  const luneSolDiff = ((lunT - solT + 360) % 360);
-
-  // Mercure rétrograde
-  const merDemain = calcPlanete(jdJour + 1, 'mercure');
-  let dMer = merDemain - merT; if (dMer > 180) dMer -= 360; if (dMer < -180) dMer += 360;
-  const merRetro = dMer < 0 && Math.abs(dMer) < 2;
-
-  // Stations Jupiter/Saturne
-  const jupDemain = calcPlanete(jdJour + 1, 'jupiter');
-  const satDemain = calcPlanete(jdJour + 1, 'saturne');
-  let dJup = jupDemain - jupT; if (dJup > 180) dJup -= 360; if (dJup < -180) dJup += 360;
-  let dSat = satDemain - satT; if (dSat > 180) dSat -= 360; if (dSat < -180) dSat += 360;
-  const jupStation = Math.abs(dJup) < 0.05;
-  const satStation = Math.abs(dSat) < 0.03;
-
-  // Retours
-  const jupRetour = conj(jupT, posN.Jupiter, 4);
-  const satRetour = conj(satT, posN.Saturne, 3);
-
-  // Lune Progressée (1 degré par mois = 13/365 par jour)
-  const joursEcoules = jdJour - USER.jd;
-  const luneProg = ((posN.Lune + joursEcoules * 13 / 365) % 360 + 360) % 360;
-
-  // Eclipses
-  const eclipses = calcEclipses(jdJour);
-  let eclipseBonus = 0; let eclipseTag = '';
-  for (const ecl of eclipses) {
-    const dJn = delta(ecl.lon, posN.Jupiter);
-    const dASn = delta(ecl.lon, AS);
-    const dMCn = delta(ecl.lon, MC);
-    if (dJn < 4 && ecl.type === 'solaire') { eclipseBonus += 8; eclipseTag = 'Eclipse solaire -> Jupiter natal'; }
-    else if (dJn < 4) { eclipseBonus += 5; eclipseTag = 'Eclipse lunaire -> Jupiter natal'; }
-    if (dASn < 3) { eclipseBonus = Math.max(eclipseBonus, 6); eclipseTag = 'Eclipse sur AC'; }
-    if (dMCn < 3) { eclipseBonus = Math.max(eclipseBonus, 7); eclipseTag = 'Eclipse sur MC'; }
-  }
-
-  // Revolution Solaire
-  let rsJupMC = false; let rsJupAS = false; let posRS = null;
-  try {
-    const anneeRS = new Date(jdVersDate(jdJour)).getFullYear();
-    const jdRS = calcRevolutionSolaire(USER.jd, anneeRS);
-    const posRSraw = calcPos(jdRS);
-    const { AS: AS_rs, MC: MC_rs } = calcASMC(jdRS, USER.lat, USER.lon);
-    posRS = { ...posRSraw, AS: AS_rs, MC: MC_rs };
-    if (conj(posRS.Jupiter, MC, 5)) rsJupMC = true;
-    if (conj(posRS.Jupiter, AS, 5)) rsJupAS = true;
-  } catch(e) {}
-
-  // Profection
-  const profection = calcProfection(USER.jd, jdJour);
-  const maison = profection.maisonProfectee;
-  const bonusMaisons = {
-    argent:[1,4,7,10], travail:[0,5,9], investir:[1,7,9,10],
-    amour:[0,4,6,10], demenager:[0,3,11], voyage:[0,2,8,11],
-    sante:[0,5,11], creation:[0,2,4,8], examen:[0,2,8,10], enfant:[0,3,4,10]
-  };
-  const profBonus = (bonusMaisons[intention]||[]).includes(maison) ? 5 : 0;
-
-  // EXCLUSIONS
-  const INTERDIT = -999;
-  if (merRetro && ['investir','examen','voyage','travail'].includes(intention))
-    return { score: INTERDIT, pct: 0, tags: ['Mercure retrograde - periode interdite'] };
-  if (intention === 'sante') {
-    if (luneSign === 7) return { score: INTERDIT, pct: 0, tags: ['Rythme moins favorable à la récupération'] };
-    if (durScore(marT, satT, 5, 1) > 0.6) return { score: INTERDIT, pct: 0, tags: ['Tension de rythme - récupération à privilégier'] };
-  }
-  if (['amour','enfant'].includes(intention)) {
-    for (const pt of ['AS','Soleil','Venus']) {
-      if (!natal[pt]) continue;
-      if (durScore(satT, natal[pt], 3, 1) > 0.7)
-        return { score: INTERDIT, pct: 0, tags: ['Saturne dur sur ' + pt + ' - periode de retrait'] };
-    }
-  }
-  if (['argent','investir'].includes(intention)) {
-    if (durScore(marT, pluT, 4, 1) > 0.5)
-      return { score: INTERDIT, pct: 0, tags: ['Mars carre Pluton - risque de perte'] };
-  }
-  if (intention === 'voyage') {
-    for (const pt of ['AS','Soleil']) {
-      if (!natal[pt]) continue;
-      if (conj(satT, natal[pt], 4))
-        return { score: INTERDIT, pct: 0, tags: ['Saturne conj ' + pt + ' - obstacles voyage'] };
-    }
-  }
-
-  let score = 0;
-  const tags = [];
-
-  // COUCHE 1 : Jupiter
-  {
-    const jm = jupStation ? 2.0 : 1.0;
-    const pts = [['MC',MC,6],['AS',AS,5],['Soleil',natal.Soleil,5],['Lune',natal.Lune,4],['Jupiter',natal.Jupiter,3],['Venus',natal.Venus,3],['Mercure',natal.Mercure,2]];
-    for (const [nm,dg,p] of pts) {
-      const h = harmScore(jupT, dg, 5, p * jm);
-      if (h > 0) { score += h; if (h >= p * 0.8) tags.push('Jup -> ' + nm); }
-      score -= durScore(jupT, dg, 3, p * 0.3);
-    }
-    if (jupRetour) { score += 12; tags.push('Jupiter retour natal'); }
-  }
-
-  // COUCHE 1 : Saturne
-  {
-    const sm = satStation ? 1.5 : 1.0;
-    const pts = [['MC',MC,4],['AS',AS,3],['Soleil',natal.Soleil,3],['Lune',natal.Lune,3],['Mercure',natal.Mercure,2]];
-    for (const [nm,dg,p] of pts) {
-      const h = harmScore(satT, dg, 4, p * 0.8 * sm);
-      if (h > 0) { score += h; if (h >= p * 0.5) tags.push('Sat harm ' + nm); }
-      const d = durScore(satT, dg, 4, p * sm);
-      if (d > 0) { score -= d * 1.2; tags.push('Sat dur ' + nm + ' ⚠'); }
-    }
-    if (satRetour) { score -= 5; tags.push('Saturne retour natal ⚠'); }
-  }
-
-  // COUCHE 1 : Venus
-  {
-    const pts = [['AS',AS,5],['Soleil',natal.Soleil,4],['Lune',natal.Lune,4],['Jupiter',natal.Jupiter,3],['Venus',natal.Venus,3]];
-    for (const [nm,dg,p] of pts) {
-      const h = harmScore(venT, dg, 3, p * 0.9);
-      if (h > 0) { score += h; if (h >= p * 0.6) tags.push('Venus -> ' + nm); }
-      score -= durScore(venT, dg, 2, p * 0.4);
-    }
-  }
-
-  // COUCHE 1 : Mars
-  {
-    const pts = [['MC',MC,3],['AS',AS,3],['Soleil',natal.Soleil,3],['Jupiter',natal.Jupiter,2]];
-    for (const [nm,dg,p] of pts) {
-      const h = harmScore(marT, dg, 2, p * 0.5);
-      if (h > 0) { score += h; tags.push('Mars harm ' + nm); }
-      const d = durScore(marT, dg, 3, p * 1.2);
-      if (d > 0) { score -= d; tags.push('Mars dur ' + nm + ' ⚠'); }
-    }
-  }
-
-  // COUCHE 1 : Mercure
-  if (!merRetro) {
-    const pts = [['MC',MC,3],['Jupiter',natal.Jupiter,2],['Soleil',natal.Soleil,2],['Mercure',natal.Mercure,2]];
-    for (const [nm,dg,p] of pts) {
-      const h = harmScore(merT, dg, 2, p * 0.7);
-      if (h > 0) { score += h; tags.push('Mer -> ' + nm); }
-      score -= durScore(merT, dg, 2, p * 0.5);
-    }
-  } else { score -= 2; }
-
-  // Neptune (malus)
-  { const d1=durScore(nepT,MC,3,3); if(d1>0.5){score-=d1;tags.push('Nep dur MC ⚠');}
-    const d2=durScore(nepT,natal.Jupiter,3,2); if(d2>0.5){score-=d2;tags.push('Nep dur Jup ⚠');}
-    score -= durScore(nepT,natal.Mercure,3,2); }
-
-  // Pluton
-  { const d1=durScore(pluT,natal.Soleil,3,4); if(d1>0.5){score-=d1;tags.push('Plu dur Sol ⚠');}
-    const d2=durScore(pluT,AS,3,3); if(d2>0.5) score-=d2;
-    const h1=harmScore(pluT,MC,3,2); if(h1>0.5){score+=h1;tags.push('Plu harm MC');} }
-
-  // Uranus
-  { const d1=durScore(urT,AS,3,3); if(d1>0.5){score-=d1;tags.push('Ur dur AC ⚠');}
-    const h1=harmScore(urT,natal.Mercure,2,2); if(h1>0.5){score+=h1;tags.push('Ur originalite');} }
-
-  // COUCHE 2 : Lune Progressee
-  { const h=harmScore(luneProg,natal.Jupiter,5,6); if(h>0){score+=h;tags.push('Lune prog -> Jup');}
-    const h2=harmScore(luneProg,MC,5,5); if(h2>0){score+=h2;tags.push('Lune prog -> MC');}
-    const h3=harmScore(luneProg,AS,5,4); if(h3>0){score+=h3;tags.push('Lune prog -> AC');}
-    const h4=harmScore(luneProg,natal.Venus,4,3); if(h4>0){score+=h4;tags.push('Lune prog -> Venus');}
-    const d=durScore(luneProg,natal.Saturne,4,3); if(d>0){score-=d;tags.push('Lune prog dur Sat ⚠');} }
-
-  // COUCHE 3 : Part de Fortune
-  { const partFT=calcPartFortune(AS,solT,lunT);
-    const partFN=calcPartFortune(AS,posN.Soleil,posN.Lune);
-    const h1=harmScore(partFT,posN.Jupiter,3,4); if(h1>0){score+=h1;tags.push('Part For -> Jup natal');}
-    const h2=harmScore(jupT,partFN,3,4); if(h2>0){score+=h2;tags.push('Jup -> Part For natal');} }
-
-  // COUCHE 4 : Eclipses
-  if (eclipseBonus > 0) { score += eclipseBonus; tags.push(eclipseTag); }
-
-  // COUCHE 5 : Revolution Solaire
-  if (rsJupMC) { score += 8; tags.push('RS Jupiter sur MC'); }
-  if (rsJupAS) { score += 7; tags.push('RS Jupiter sur AC'); }
-  if (posRS && !rsJupMC) {
-    const h=harmScore(posRS.Jupiter,MC,4,5); if(h>0){score+=h;tags.push('RS Jupiter favorable');} }
-
-  // COUCHE 6 : Noeuds lunaires
-  { const noeudSud=(noeudT+180)%360;
-    if(conj(noeudT,posN.Jupiter,3)){score+=3;tags.push('Noeud N -> Jup natal');}
-    if(conj(noeudT,MC,3)){score+=3;tags.push('Noeud N -> MC');}
-    if(conj(noeudSud,natal.Saturne,3)){score-=2;tags.push('Noeud S -> Sat ⚠');} }
-
-  // COUCHE 7 : Lune par signe
-  { const signesFav={argent:[1,8,10],travail:[1,5,9],investir:[5,8,9,10],amour:[1,3,6,10],demenager:[0,3,5,9],voyage:[2,5,8,10],sante:[1,3,6],creation:[0,4,5,6],examen:[2,5,9],enfant:[1,3,7,10]};
-    const signesNef={argent:[7,11],travail:[3,11],investir:[3,11],amour:[7,9],demenager:[0,6,8],voyage:[3,7],sante:[7,8],creation:[7,9],examen:[7,11],enfant:[6,8,9]};
-    if((signesFav[intention]||[]).includes(luneSign)){score+=2;tags.push('Lune ' + SIGNES[luneSign] + ' fav');}
-    if((signesNef[intention]||[]).includes(luneSign)) score-=2;
-    if(luneSolDiff>45&&luneSolDiff<180) score+=1; }
-
-  // COUCHE 8 : Profection
-  score += profBonus;
-  if (profBonus > 0) tags.push('Profection H' + (maison+1) + ' active');
-
-  // COUCHE 9 : Bonus specifique par intention
-  if (intention === 'argent') {
-    const partFN=calcPartFortune(AS,posN.Soleil,posN.Lune);
-    if(conj(jupT,partFN,3)){score+=8;tags.push('Jupiter sur Part Fortune');}
-    if(harmScore(venT,posN.Jupiter,2,5)>0&&luneSolDiff<180) score+=4;
-  } else if (intention === 'travail') {
-    if(conj(jupT,MC,4)){score+=6;tags.push('Jupiter conjoint MC');}
-    if(conj(solT,MC,2)){score+=4;tags.push('Soleil conjoint MC');}
-    if(harmScore(satT,MC,3,5)>0&&!conj(satT,MC,4)) score+=3;
-  } else if (intention === 'investir') {
-    if(harmScore(jupT,posN.Saturne,4,6)>0){score+=5;tags.push('Jupiter sextile Saturne natal');}
-    if(!merRetro&&conj(merT,posN.Jupiter,2)){score+=4;tags.push('Mercure conjoint Jupiter');}
-  } else if (intention === 'amour') {
-    if(conj(venT,AS,2)){score+=8;tags.push('Venus sur Ascendant');}
-    if(harmScore(marT,posN.Venus,2,5)>0){score+=4;tags.push('Mars harmonique Venus natal');}
-  } else if (intention === 'demenager') {
-    if(conj(jupT,IC,4)){score+=8;tags.push('Jupiter conjoint IC');}
-    if(luneSolDiff<15||luneSolDiff>345) score-=5;
-  } else if (intention === 'voyage') {
-    const jupSign=Math.floor(((jupT%360)+360)%360/30);
-    if(jupSign===2||jupSign===8){score+=4;tags.push('Jupiter en ' + SIGNES[jupSign]);}
-    if(!merRetro&&harmScore(merT,AS,2,4)>0){score+=3;tags.push('Mercure harmonique AC');}
-  } else if (intention === 'sante') {
-    if(luneSign===3){score+=5;tags.push('Lune Cancer - récupération');}
-    if(luneSign===1){score+=3;tags.push('Lune Taureau - recuperation');}
-    if(conj(jupT,AS,3)){score+=6;tags.push('Jupiter conjoint AC - vitalite');}
-    const marDur=durScore(marT,AS,3,5)+durScore(marT,natal.Soleil,3,5);
-    if(marDur>1) score-=marDur*2;
-  } else if (intention === 'creation') {
-    if(conj(venT,natal.Mercure,2)){score+=6;tags.push('Venus conjoint Mercure natal');}
-    if(harmScore(urT,natal.Mercure,3,4)>0||harmScore(urT,AS,3,4)>0){score+=3;tags.push('Uranus originalite');}
-    if(conj(solT,MC,2)){score+=4;tags.push('Soleil conjoint MC');}
-  } else if (intention === 'examen') {
-    if(!merRetro&&conj(merT,MC,2)){score+=8;tags.push('Mercure conjoint MC');}
-    if(conj(jupT,natal.Mercure,3)){score+=6;tags.push('Jupiter conjoint Mercure natal');}
-    if(luneSign===2){score+=4;tags.push('Lune Gemeaux - clarte');}
-    if(luneSign===5){score+=3;tags.push('Lune Vierge - precision');}
-  } else if (intention === 'enfant') {
-    if(conj(venT,posN.Lune,2)){score+=8;tags.push('Venus conjoint Lune natale');}
-    if(conj(jupT,posN.Venus,3)){score+=6;tags.push('Jupiter conjoint Venus natale');}
-    if(luneSign===3&&luneSolDiff>45){score+=5;tags.push('Lune Cancer croissante');}
-  }
-
-  // NORMALISATION sur 100
-  const scoreMin = -8; const scoreMax = 75;
-  const scorePct = Math.round(Math.max(0, Math.min(100, ((score - scoreMin) / (scoreMax - scoreMin)) * 100)));
-
-  // V57 — Indice financier distinct du score général.
-  // On le calcule AVANT de tronquer les tags d'affichage, sinon un vrai signal financier
-  // peut disparaître simplement parce que six autres tags ont été ajoutés plus tôt.
-  const tagsComplets = [...new Set(tags)];
-  let moneyStrength = 0;
-  const moneyFamilies = new Set();
-  if (intention === 'argent') {
-    for (const tag of tagsComplets) {
-      if (/Jupiter sur Part Fortune|Jup -> Part For natal|Part For -> Jup natal/i.test(tag)) {
-        moneyStrength += 3.5; moneyFamilies.add('fortune');
-      } else if (/Jup -> Venus|Venus -> Jupiter/i.test(tag)) {
-        moneyStrength += 2.4; moneyFamilies.add('jupiter-venus');
-      } else if (/Lune prog -> Jup|Lune prog -> Venus/i.test(tag)) {
-        moneyStrength += 1.8; moneyFamilies.add('progression');
-      } else if (/Profection H2|Profection H5|Profection H8|Profection H11/i.test(tag)) {
-        moneyStrength += 1.2; moneyFamilies.add('profection');
-      } else if (/RS Jupiter/i.test(tag)) {
-        moneyStrength += 1.6; moneyFamilies.add('revolution-solaire');
-      } else if (/Noeud N -> Jup natal|Jupiter retour natal/i.test(tag)) {
-        moneyStrength += 1.4; moneyFamilies.add('cycle-jupiter');
-      }
-    }
-  }
-  const scoreArgent = intention === 'argent'
-    ? Math.round(Math.max(0, Math.min(100, scorePct * 0.68 + moneyStrength * 6 + Math.min(12, moneyFamilies.size * 3))))
-    : scorePct;
-
-  return {
-    score: scorePct,
-    scoreArgent,
-    raw: score,
-    moneyStrength,
-    moneyFamilies:[...moneyFamilies],
-    tags: tagsComplets.slice(0, 6)
-  };
-}
+// V88 — l'ancien moteur scoreJourFenetre a été retiré.
+// Il cumulait des règles fixes (signes lunaires, exclusions, « chance », orbes larges,
+// pseudo-Lune progressée) incompatibles avec la règle centrale du site.
+// Fenêtre idéale et Comparateur utilisent désormais directement V51/V82 via
+// apReconcileIntentScoreV75(), exactement comme les autres modules prévisionnels.
 
 
 function apIntentDomainsV75(intent){
@@ -8175,12 +7920,14 @@ async function lancerFenetre() {
     for (let k = j; k < Math.min(j + CHUNK, nbJours); k++) {
       const jdJ = jdAujourdhui + k;
       try {
-        const res = scoreJourFenetre(jdJ, USER.pos, USER.AS, USER.MC, intentionF);
-        const baseIntentScore=intentionF==='argent'?(res.scoreArgent||res.score):res.score;
-        const coh=apReconcileIntentScoreV75(jdJ,intentionF,baseIntentScore);
+        // V88 — Fenêtre idéale utilise directement le moteur sectoriel unifié.
+        // L'ancien score « électionnel » contenait des interdictions arbitraires,
+        // une fausse Lune progressée et des orbes très larges ; il n'entre plus dans le classement.
+        const coh=apReconcileIntentScoreV75(jdJ,intentionF,0);
         if (coh.eligible && coh.signed > 0) {
           const date = jdVersDate(jdJ);
-          resultats.push({ jd: jdJ, date, score: coh.score, scoreArgent:intentionF==='argent'?coh.score:res.scoreArgent, raw: coh.signed, moneyStrength:res.moneyStrength, moneyFamilies:res.moneyFamilies||[], tags: apDomainTagsV80(coh.v51), v51:coh.v51 });
+          const fam=[...new Set([...(coh.v51?.anchorFamilies||[]),...(coh.v51?.coreFamilies||[])])];
+          resultats.push({ jd: jdJ, date, score: coh.score, scoreArgent:coh.score, raw: coh.signed, moneyStrength:0, moneyFamilies:intentionF==='argent'?fam:[], tags: apDomainTagsV80(coh.v51), v51:coh.v51 });
         }
       } catch(e) {}
     }
@@ -8449,34 +8196,8 @@ function majDateCibleSynastrie() {
   wrap.style.display = sel.value === 'date' ? 'block' : 'none';
 }
 
-function majInfoPeriodeSynastrie() {
-  const per = document.getElementById('y-periode');
-  const info = document.getElementById('y-periode-info');
-  if (!per || !info) return;
-  const pro = yTypeRelationActuel() === 'pro';
-  const v = per.value;
-  if (v === 'date') {
-    info.innerHTML = pro
-      ? 'Date précise : analyse centrée sur 31 jours, avec les journées professionnelles utiles et les points de vigilance autour de la date choisie.'
-      : 'Date précise : analyse centrée sur 31 jours, avec les jours favorables et les jours de vigilance autour de la date choisie.';
-  } else if (Number(v) >= 1095) {
-    info.innerHTML = pro
-      ? 'Cycles longs : analyse professionnelle sur plusieurs années, avec <strong>tendances par semestre</strong>, fenêtres de coopération, points de vigilance et lecture de fond de la collaboration.'
-      : 'Cycles longs : analyse sur plusieurs années, avec <strong>tendances par semestre</strong>, fenêtres favorables, dates de vigilance et lecture de fond du couple.';
-  } else if (Number(v) >= 730) {
-    info.innerHTML = pro
-      ? 'Cycles longs : analyse professionnelle sur 2 ans, avec <strong>tendances par trimestre</strong>, fenêtres utiles, points sensibles et lecture de fond de la collaboration.'
-      : 'Cycles longs : analyse sur 2 ans, avec <strong>tendances par trimestre</strong>, fenêtres favorables, dates de vigilance et lecture de fond du couple.';
-  } else if (Number(v) >= 365) {
-    info.innerHTML = pro
-      ? 'Vision annuelle : analyse par mois des phases de coopération, décisions, cadrage, tensions ou réorganisations professionnelles.'
-      : 'Vision annuelle : analyse par mois, avec les périodes les plus porteuses et les périodes à aborder avec tact.';
-  } else {
-    info.innerHTML = pro
-      ? 'Mode court : lecture professionnelle des dates utiles, des échanges à cadrer et des risques de tension opérationnelle.'
-      : 'Mode court : météo relationnelle détaillée sur les dates favorables et sensibles.';
-  }
-}
+// V88 : ancienne définition majInfoPeriodeSynastrie supprimée (doublon legacy).
+
 
 function yAspect(lonTransit, lonNatal, orbMax) {
   const aspects = [
@@ -9552,22 +9273,25 @@ function yScoreTransitRelation(posT, points, mode) {
     if(poidsTransit < 0.2) continue;
 
     for (const pt of points) {
-      const asp = yAspect(lonT, pt.lon, tr.cle === 'Lune' ? 2.25 : 1.35);
+      const orbRelV88={Soleil:.85,Lune:1.45,Mercure:.65,Venus:.75,Mars:.78,Jupiter:1.05,Saturne:.95,Uranus:.90,Neptune:.82,Pluton:.82}[tr.cle]||.8;
+      const asp = yAspect(lonT, pt.lon, orbRelV88);
       if (!asp) continue;
       let delta = 0;
       const ancre = !!pt.anchor;
 
-      if (['Venus','Jupiter'].includes(tr.cle)) delta = (asp.nature === 'tension' ? 0.55 : 1.65) * poidsTransit;
-      else if (tr.cle === 'Soleil') delta = (asp.nature === 'tension' ? 0.25 : 0.80) * poidsTransit;
-      else if (tr.cle === 'Mercure') delta = (asp.nature === 'tension' ? -0.50 : 1.00) * poidsTransit;
-      else if (tr.cle === 'Mars') delta = (asp.nature === 'tension' ? -1.35 : 1.10) * poidsTransit;
-      else if (tr.cle === 'Saturne') delta = (asp.nature === 'tension' || asp.nature === 'face-a-face' ? -1.75 : 0.70) * poidsTransit;
-      else if (tr.cle === 'Uranus') delta = (asp.nature === 'tension' || asp.nature === 'face-a-face' ? -1.45 : 0.80) * poidsTransit;
-      else if (tr.cle === 'Neptune') delta = (asp.nature === 'tension' || asp.nature === 'face-a-face' ? -1.25 : 0.65) * poidsTransit;
-      else if (tr.cle === 'Pluton') delta = (asp.nature === 'tension' || asp.nature === 'face-a-face' ? -1.60 : 0.75) * poidsTransit;
-      else if (tr.cle === 'Lune') delta = (asp.nature === 'tension' ? -0.55 : 0.65) * poidsTransit;
+      const dur = asp.nature === 'tension' || asp.nature === 'face-a-face';
+      const fusion = asp.nature === 'fusion';
+      if (['Venus','Jupiter'].includes(tr.cle)) delta = (dur ? -0.70 : 1.55) * poidsTransit;
+      else if (tr.cle === 'Soleil') delta = (dur ? -0.45 : (fusion ? 0.45 : 0.78)) * poidsTransit;
+      else if (tr.cle === 'Mercure') delta = (dur ? -0.70 : 0.95) * poidsTransit;
+      else if (tr.cle === 'Mars') delta = (dur ? -1.30 : (fusion ? -0.28 : 0.85)) * poidsTransit;
+      else if (tr.cle === 'Saturne') delta = (dur ? -1.70 : (fusion ? -0.60 : 0.52)) * poidsTransit;
+      else if (tr.cle === 'Uranus') delta = (dur ? -1.40 : (fusion ? -0.38 : 0.52)) * poidsTransit;
+      else if (tr.cle === 'Neptune') delta = (dur ? -1.20 : (fusion ? -0.34 : 0.42)) * poidsTransit;
+      else if (tr.cle === 'Pluton') delta = (dur ? -1.55 : (fusion ? -0.58 : 0.48)) * poidsTransit;
+      else if (tr.cle === 'Lune') delta = (dur ? -0.52 : (fusion ? 0.18 : 0.52)) * poidsTransit;
 
-      const precision = Math.max(0.30, 1.45 - asp.orb) / 1.45;
+      const precision = Math.max(0.20, orbRelV88 - asp.orb) / Math.max(.25,orbRelV88);
       delta *= precision * (pt.poids || 1) * (ancre ? 1.12 : 1);
       if(Math.abs(delta)<0.08) continue;
 
@@ -9730,7 +9454,7 @@ function yComplementRelationV82(jd,part,points,mode,alreadyRelevant=false){
     // 16/17 midpoints personnels utilisés uniquement comme confirmations du lien déjà actif.
     const mids=[];if(ch.pos.Soleil!==undefined&&ch.pos.Lune!==undefined)mids.push(['MidpointSoleilLune',prevMidpointV82(ch.pos.Soleil,ch.pos.Lune)]);if(ch.pos.Venus!==undefined&&ch.pos.Mars!==undefined)mids.push(['MidpointVenusMars',prevMidpointV82(ch.pos.Venus,ch.pos.Mars)]);for(const [tech,mid] of mids)for(const pl of ['Jupiter','Saturne','Uranus','Neptune','Pluton']){const a=prevAspectV82(t[pl],mid,[0,90,180],.48);if(a&&anchors[0])add(tech,pl,ch,anchors[0],a.aspect,.04);}
     // 18 Parts arabes
-    try{const pf=calcPartFortune(ch.AS,ch.pos.Soleil,ch.pos.Lune),pe=calcPartEsprit(ch.AS,ch.pos.Soleil,ch.pos.Lune);for(const pt0 of [pf,pe])for(const pl of ['Jupiter','Saturne','Uranus','Neptune','Pluton','Venus']){const a=prevAspectV82(t[pl],pt0,[0,90,180],.48);if(a&&anchors[0])add('PartArabe',pl,ch,anchors[0],a.aspect,.04);}}catch(e){}
+    try{const nuit=prevChartIsNightV88(ch.jdNatal,ch.lat,ch.lon,ch.pos.Soleil,ch.AS,ch.MC),pf=calcPartFortune(ch.AS,ch.pos.Soleil,ch.pos.Lune,nuit),pe=calcPartEsprit(ch.AS,ch.pos.Soleil,ch.pos.Lune,nuit);for(const pt0 of [pf,pe])for(const pl of ['Jupiter','Saturne','Uranus','Neptune','Pluton','Venus']){const a=prevAspectV82(t[pl],pt0,[0,90,180],.48);if(a&&anchors[0])add('PartArabe',pl,ch,anchors[0],a.aspect,.04);}}catch(e){}
     // 19 maître de l'année
     try{const prof=prevProfectionLordV82(ch.jdNatal,jd,ch.AS),lord=prof.lord;if(lord&&t[lord]!==undefined)for(const pt of anchors){const a=prevAspectV82(t[lord],pt.lon,[0,60,90,120,180],.5);if(a)add('MaitreAnnee',lord,ch,pt,a.aspect,.05);}}catch(e){}
     // 20 révolution solaire détaillée
@@ -10363,6 +10087,16 @@ async function apScannerQuestion10AnsV78(jdD, domaine, onProg) {
     if(n%24===0)await new Promise(r=>setTimeout(r,0));
   }
   evalOffset(horizon-1);
+  // V88 — les éclipses sont des pics brefs : un pas de 10 jours peut les manquer.
+  // On injecte donc explicitement chaque date d'éclipse comprise dans l'horizon,
+  // puis le raffinement de +/-30 jours s'appliquera si un domaine réel est touché.
+  try{
+    for(const [iso] of ECLIPSES_OFFICIELLES_2025_2030){
+      const d=new Date(iso+'T12:00:00Z');
+      const off=Math.round((d-debut)/86400000);
+      if(off>=0&&off<horizon)evalOffset(off);
+    }
+  }catch(e){}
   // Les 6 premiers mois restent examinés plus finement pour les questions immédiates.
   for(let j=0;j<180;j+=3)evalOffset(j);
 
@@ -11403,7 +11137,7 @@ function apRel(sig){const n=sig&&sig.familles?sig.familles.length:0;const p=sig&
 function apRelHtml(sig){const r=apRel(sig);return `<span class="ap-chip ${r.cls}">${apEsc(apT(r.key))}${r.n?` · ${r.n} ${apEsc(apT('families'))}`:''}</span>`;}
 function apValidIntent(i,date=new Date()){try{return typeof intentionCompatibleAge==='function'?intentionCompatibleAge(i,date):true;}catch(e){return true;}}
 function apCandidateIntents(date=new Date()){return ['argent','travail','amour','demenager','voyage','creation','examen','investir'].filter(i=>apValidIntent(i,date));}
-function apScoreIntent(date,intent){try{const jd=apJDFromDate(date);const r=scoreJourFenetre(jd,USER.pos,USER.AS,USER.MC,intent);const base=intent==='argent'?(r.scoreArgent||r.score):r.score;const coh=apReconcileIntentScoreV75(jd,intent,base);if(!coh.eligible||!coh.v51)return null;const dom=({argent:'finances',travail:'travail',amour:'amour',demenager:'famille',voyage:'voyage',sante:'sante',creation:'general',examen:'general',enfant:'famille',investir:'finances'})[intent]||'general';const sig=apConvergenceFromRowV76(coh.v51,dom,new Date(date));return{date:new Date(date),jd,intent,score:Number(coh.score)||0,raw:Number(coh.signed)||0,tags:apDomainTagsV80(coh.v51),sig,v51:coh.v51,eligible:true};}catch(e){return null;}}
+function apScoreIntent(date,intent){try{const jd=apJDFromDate(date);const coh=apReconcileIntentScoreV75(jd,intent,0);if(!coh.eligible||!coh.v51)return null;const dom=({argent:'finances',travail:'travail',amour:'amour',demenager:'famille',voyage:'voyage',sante:'sante',creation:'general',examen:'general',enfant:'famille',investir:'finances'})[intent]||'general';const sig=apConvergenceFromRowV76(coh.v51,dom,new Date(date));return{date:new Date(date),jd,intent,score:Number(coh.score)||0,raw:Number(coh.signed)||0,tags:apDomainTagsV80(coh.v51),sig,v51:coh.v51,eligible:true};}catch(e){return null;}}
 function apCluster(list,minDays=45,max=12){const out=[];for(const x of list){if(out.length>=max)break;if(!out.some(y=>Math.abs(y.jd-x.jd)<minDays))out.push(x);}return out;}
 function apDomainDescription(intent,score){const pos=score>=50;const all={
 fr:{argent:pos?['rentrée d’argent non routinière','amélioration financière','accord ou paiement favorable']:['dépense ou tension financière','prudence sur un engagement financier'],travail:pos?['évolution d’activité','reconnaissance ou nouveau projet','opportunité professionnelle']:['réorganisation du travail','responsabilité plus lourde ou changement de rythme'],amour:pos?['rapprochement relationnel','rencontre ou engagement','relation qui se clarifie positivement']:['mise au point relationnelle','distance ou réévaluation du lien'],demenager:pos?['changement de foyer favorable','installation ou projet immobilier']:['retard ou contrainte autour du logement','réorganisation du foyer'],voyage:pos?['voyage ou ouverture vers l’extérieur','mobilité favorable']:['déplacement plus compliqué','projet de voyage à réajuster'],creation:pos?['projet créatif qui prend forme','initiative personnelle porteuse']:['projet à restructurer','créativité freinée temporairement'],examen:pos?['réussite ou progression dans les études','période favorable aux examens']:['effort d’étude plus exigeant','orientation à ajuster'],investir:pos?['fenêtre plus porteuse pour structurer un investissement','décision patrimoniale mieux soutenue']:['prudence sur les engagements','risque de décision précipitée']},
@@ -11493,8 +11227,78 @@ const timeline=document.createElement('div');timeline.className='mod-panneau';ti
 const comp=document.createElement('div');comp.className='mod-panneau';comp.id='mod-compare';comp.innerHTML=`<div class="ap-panel"><h2 data-ap="compare_title"></h2><p class="ap-muted" data-ap="compare_sub"></p><div class="ap-form-row"><div class="ap-field"><label data-ap="intention"></label><select id="ap-compare-intent">${['argent','travail','amour','demenager','voyage','creation','examen','investir'].map(i=>`<option value="${i}">${apEsc(apIntentLabel(i))}</option>`).join('')}</select></div><div></div></div><div class="ap-grid2" style="margin-top:.7rem">${[1,2,3,4].map(i=>`<div class="ap-field"><label>${apT('date')} ${i}</label><input id="ap-cdate-${i}" type="date"></div>`).join('')}</div><div class="ap-dashboard-actions"><button class="ap-btn primary" onclick="apCompareDates()" data-ap="compare_run"></button><button class="ap-btn" onclick="apFindAvoid()" data-ap="avoid_run"></button></div><div id="ap-compare-results" class="ap-compare-results"></div></div>`;sec.appendChild(comp);
 const journal=document.createElement('div');journal.className='mod-panneau';journal.id='mod-journal';journal.innerHTML=apJournalHtml();sec.appendChild(journal);}
 function apJournalHtml(){return `<div class="ap-panel"><h2 data-ap="context_title"></h2><p class="ap-muted" data-ap="context_sub"></p><div class="ap-grid2"><div class="ap-field"><label data-ap="relationship"></label><select id="ap-life-relationship"><option value="">${apT('not_set')}</option><option value="single">${apT('single')}</option><option value="couple">${apT('couple')}</option><option value="complicated">${apT('complicated')}</option></select></div><div class="ap-field"><label data-ap="activity"></label><select id="ap-life-activity"><option value="">${apT('not_set')}</option><option value="student">${apT('student')}</option><option value="employee">${apT('employee')}</option><option value="self_employed">${apT('self_employed')}</option><option value="unemployed">${apT('unemployed')}</option><option value="retired">${apT('retired')}</option><option value="other">${apT('other')}</option></select></div><div class="ap-field"><label data-ap="children"></label><select id="ap-life-children"><option value="">${apT('not_set')}</option><option value="none">${apT('none')}</option><option value="yes">${apT('yes')}</option></select></div><div class="ap-field"><label data-ap="housing"></label><select id="ap-life-housing"><option value="">${apT('not_set')}</option><option value="owner">${apT('owner')}</option><option value="tenant">${apT('tenant')}</option><option value="hosted">${apT('hosted')}</option><option value="other">${apT('other')}</option></select></div></div><div class="ap-dashboard-actions"><button class="ap-btn primary" onclick="apSaveContext()" data-ap="save_context"></button></div><div class="ap-notice" style="margin-top:.65rem" data-ap="privacy_context"></div></div><div class="ap-panel"><h2 data-ap="journal_title"></h2><p class="ap-muted" data-ap="journal_sub"></p><div class="ap-form-row"><div class="ap-field"><label data-ap="date"></label><input id="ap-jdate" type="date"></div><div class="ap-field"><label data-ap="category"></label><select id="ap-jcat"><option value="general">${apT('general')}</option><option value="work">${apT('work')}</option><option value="money">${apT('money')}</option><option value="love">${apT('love')}</option><option value="family">${apT('family')}</option><option value="home">${apT('home')}</option><option value="studies">${apT('studies')}</option></select></div></div><div class="ap-field" style="margin-top:.65rem"><label data-ap="note"></label><textarea id="ap-jtext"></textarea></div><button class="ap-btn gold" onclick="apAddJournal()" data-ap="journal_add"></button><div id="ap-journal-list" class="ap-journal-list"></div></div><div class="ap-panel"><h2 data-ap="saved_windows"></h2><div id="ap-window-list" class="ap-window-list"></div></div><div class="ap-panel"><h3 data-ap="notification_title"></h3><p class="ap-muted" data-ap="notification_explain"></p><button class="ap-btn" onclick="apEnableNotifications()" data-ap="notification_enable"></button></div>`;}
-window.apRunTimeline=async function(){if(!USER){alert(apT('no_profile'));return;}if(!PREMIUM){ouvrirCompte();return;}apTrack('timeline',{horizon:'10 years'});const prog=document.getElementById('ap-timeline-progress'),list=document.getElementById('ap-timeline-list'),yearsEl=document.getElementById('ap-years');prog.textContent=apT('loading');list.innerHTML='';yearsEl.innerHTML='';const start=new Date(),items=[],yearStats={};const timelineEnd=new Date(start);timelineEnd.setDate(timelineEnd.getDate()+3652);prog.innerHTML=`<div style="font-weight:700;margin-bottom:.35rem">Période analysée : ${apEsc(apFmtDate(start))} → ${apEsc(apFmtDate(timelineEnd))}</div>${apT('loading')}`;const total=Math.ceil(3652/14);let idx=0;for(let day=0;day<=3652;day+=14){const d=new Date(start);d.setDate(d.getDate()+day);const sigs=apV51Signals(d,'marque').slice(0,4);for(const x of sigs){items.push(x);const y=d.getFullYear();if(!yearStats[y])yearStats[y]={year:y,sum:0,count:0,max:0,domains:{},strong:0};const ys=yearStats[y],mag=x.strength;ys.sum+=mag;ys.count++;ys.max=Math.max(ys.max,mag);ys.strong+=x.niveau==='exceptionnel'?3:x.niveau==='fort'?2:1;ys.domains[x.domain]=(ys.domains[x.domain]||0)+mag;}idx++;if(idx%12===0){prog.textContent=`${Math.min(99,Math.round(idx/total*100))}%`;await new Promise(r=>setTimeout(r,0));}}const clustered=[];for(const x of items.sort((a,b)=>b.strength-a.strength)){if(clustered.length>=14)break;if(!clustered.some(y=>Math.abs(y.jd-x.jd)<60))clustered.push(x);}const ranked=clustered.sort((a,b)=>a.date-b.date);window.AP_TIMELINE_RESULTS=ranked;list.innerHTML=ranked.length?ranked.map(x=>`<div class="ap-timeline-item"><div class="ap-timeline-date">${apEsc(apFmtDate(x.date,{month:'long',year:'numeric'}))}</div><div class="ap-timeline-title">${apEsc(apEventTitle(x))}</div><div class="ap-timeline-desc">${apEsc(apT(apV51LevelKey(x.niveau)))} · ${apRelHtml(x.sig)}${apV51Hint(x)?`<div class="ap-muted" style="margin-top:.35rem">${apEsc(apV51Hint(x))}</div>`:''}<button class="ap-btn" style="min-height:30px;padding:.25rem .55rem;margin-top:.35rem" onclick="apSaveTimelineWindow('${x.date.toISOString().slice(0,10)}','domain:${x.domain}',${Math.round(x.score)},'${apRel(x.sig).key}')">☆ ${apT('save')}</button></div></div>`).join(''):`<div class="ap-notice">${apT('dashboard_none')}</div>`;const ys=Object.values(yearStats).filter(y=>y.count>0).map(y=>{const dom=Object.entries(y.domains).sort((a,b)=>b[1]-a[1])[0]?.[0]||'identity';const avg=y.sum/Math.max(1,y.count);return{...y,score:Math.min(100,Math.round(35+y.max*7+Math.min(15,y.strong*1.5)+avg*2)),dom};}).sort((a,b)=>b.score-a.score).slice(0,6).sort((a,b)=>a.year-b.year);yearsEl.innerHTML=ys.length?`<h3>${apT('strong_years')}</h3><div class="ap-year-grid">${ys.map(y=>`<div class="ap-year-card"><strong>${y.year}</strong><span>${apEsc(apDomainLabelV51(y.dom))}</span><div class="ap-scorebar"><i style="width:${y.score}%"></i></div></div>`).join('')}</div>`:'';prog.innerHTML=`<div style="font-weight:700">Période analysée : ${apEsc(apFmtDate(start))} → ${apEsc(apFmtDate(timelineEnd))}</div>`;try{if(typeof appelerClaude==='function'&&ranked.length){const summary=ranked.slice(0,10).map(x=>`${x.date.toISOString().slice(0,10)} | domain=${x.domain} | polarity=${x.polarite} | level=${x.niveau} | independent_families=${apRel(x.sig).n}`).join('\n');const data=await appelerClaude({feature:'timeline',featureContext:{horizon:'10 years'},model:'claude-sonnet-4-6',max_tokens:1000,system:'You summarise a ten-year astrology timing scan across ALL life domains. No domain is privileged. Do not invent events. Prioritise only independently convergent periods and translate them into concrete possibilities, with uncertainty. Do not present astrology as scientific certainty.',messages:[{role:'user',content:`Profile: ${USER.prenom}. Strongest calculated periods across all life domains:\n${summary}\nGive a concise overview of the 3-5 most important periods. Cover different life areas only when the calculations genuinely support them; do not force family, love, work or money.`}]});const txt=typeof texteClaude==='function'?texteClaude(data):'';if(txt)yearsEl.insertAdjacentHTML('beforeend',`<div class="ap-panel ap-no-auto-translate" style="margin-top:.8rem"><h3>${apT('dashboard_main')}</h3><div class="rapport-texte">${formatRapport(txt)}</div></div>`);}}catch(e){}};
+function apTimelineCycleKeyV88(x){
+  const roots=[...new Set(((x.coreFamilies&&x.coreFamilies.length?x.coreFamilies:x.families)||[]).map(prevTechniqueRootV80))].sort();
+  const anchors=[...new Set((x.signatures||[]).filter(s=>s.anchor).map(s=>String(s.target||'')))].sort();
+  return [x.domain,x.polarite,roots.slice(0,2).join('+')||'cycle',anchors.slice(0,2).join('+')||'anchor'].join('|');
+}
+function apTimelineClustersV88(items){
+  const groups=[];
+  for(const x of [...items].sort((a,b)=>a.date-b.date||b.strength-a.strength)){
+    const key=apTimelineCycleKeyV88(x);
+    let g=null;
+    for(let i=groups.length-1;i>=0;i--){
+      const q=groups[i];
+      const gap=(x.date-q.end)/86400000;
+      if(gap>210)break;
+      if(q.key===key&&gap<=190){g=q;break;}
+    }
+    if(!g){groups.push({key,start:x.date,end:x.date,peak:x,count:1});continue;}
+    g.end=x.date;g.count++;
+    if(x.strength>g.peak.strength)g.peak=x;
+  }
+  return groups;
+}
+function apTimelinePeriodLabelV88(g){
+  const days=Math.abs((g.end-g.start)/86400000);
+  if(days<35)return apFmtDate(g.peak.date,{month:'long',year:'numeric'});
+  const a=apFmtDate(g.start,{month:'short',year:'numeric'}), b=apFmtDate(g.end,{month:'short',year:'numeric'});
+  return `${a} → ${b} · pic ${apFmtDate(g.peak.date,{month:'short',year:'numeric'})}`;
+}
+window.apRunTimeline=async function(){
+  if(!USER){alert(apT('no_profile'));return;}
+  if(!PREMIUM){ouvrirCompte();return;}
+  apTrack('timeline',{horizon:'10 years',engine:'V88-cycles'});
+  const prog=document.getElementById('ap-timeline-progress'),list=document.getElementById('ap-timeline-list'),yearsEl=document.getElementById('ap-years');
+  prog.textContent=apT('loading');list.innerHTML='';yearsEl.innerHTML='';
+  const start=new Date(),items=[]; const timelineEnd=new Date(start);timelineEnd.setDate(timelineEnd.getDate()+3652);
+  prog.innerHTML=`<div style="font-weight:700;margin-bottom:.35rem">Période analysée : ${apEsc(apFmtDate(start))} → ${apEsc(apFmtDate(timelineEnd))}</div>${apT('loading')}`;
+  const total=Math.ceil(3652/14);let idx=0;
+  for(let day=0;day<=3652;day+=14){
+    const d=new Date(start);d.setDate(d.getDate()+day);
+    items.push(...apV51Signals(d,'marque').slice(0,5));
+    idx++;if(idx%12===0){prog.textContent=`${Math.min(99,Math.round(idx/total*100))}%`;await new Promise(r=>setTimeout(r,0));}
+  }
+  // Les éclipses sont brèves et peuvent tomber entre deux points du pas de 14 jours.
+  try{for(const [iso] of ECLIPSES_OFFICIELLES_2025_2030){const d=new Date(iso+'T12:00:00Z');if(d<start||d>timelineEnd)continue;items.push(...apV51Signals(d,'marque').slice(0,5));}}catch(e){}
 
+  // V88 : une Timeline = cycles, pas répétition du même transit tous les 14 jours.
+  const groups=apTimelineClustersV88(items);
+  const strongest=[...groups].sort((a,b)=>b.peak.strength-a.peak.strength);
+  const chosen=[];const perDomain={};
+  for(const g of strongest){
+    const d=g.peak.domain; if((perDomain[d]||0)>=4)continue;
+    chosen.push(g);perDomain[d]=(perDomain[d]||0)+1;
+    if(chosen.length>=14)break;
+  }
+  // Si les calculs ne donnent réellement qu'un ou deux domaines, on ne force pas la variété.
+  if(chosen.length<8){for(const g of strongest){if(chosen.includes(g))continue;chosen.push(g);if(chosen.length>=Math.min(14,strongest.length))break;}}
+  const ranked=chosen.sort((a,b)=>a.peak.date-b.peak.date);
+  window.AP_TIMELINE_RESULTS=ranked.map(g=>g.peak);
+
+  list.innerHTML=ranked.length?ranked.map(g=>{const x=g.peak;return `<div class="ap-timeline-item"><div class="ap-timeline-date">${apEsc(apTimelinePeriodLabelV88(g))}</div><div class="ap-timeline-title">${apEsc(apEventTitle(x))}</div><div class="ap-timeline-desc">${apEsc(apT(apV51LevelKey(x.niveau)))} · ${apRelHtml(x.sig)}${apV51Hint(x)?`<div class="ap-muted" style="margin-top:.35rem">${apEsc(apV51Hint(x))}</div>`:''}<button class="ap-btn" style="min-height:30px;padding:.25rem .55rem;margin-top:.35rem" onclick="apSaveTimelineWindow('${x.date.toISOString().slice(0,10)}','domain:${x.domain}',${Math.round(x.score)},'${apRel(x.sig).key}')">☆ ${apT('save')}</button></div></div>`;}).join(''):`<div class="ap-notice">${apT('dashboard_none')}</div>`;
+
+  // Années fortes : chaque cycle compte UNE fois. Un transit de six mois ne gonfle plus artificiellement l'année.
+  const yearStats={};
+  for(const g of groups){
+    const x=g.peak,y=x.date.getFullYear(); if(!yearStats[y])yearStats[y]={year:y,sum:0,count:0,max:0,domains:{},strong:0};
+    const ys=yearStats[y],mag=x.strength;ys.sum+=mag;ys.count++;ys.max=Math.max(ys.max,mag);ys.strong+=x.niveau==='exceptionnel'?3:x.niveau==='fort'?2:1;ys.domains[x.domain]=(ys.domains[x.domain]||0)+mag;
+  }
+  const ys=Object.values(yearStats).filter(y=>y.count>0).map(y=>{const dom=Object.entries(y.domains).sort((a,b)=>b[1]-a[1])[0]?.[0]||'identity';const avg=y.sum/Math.max(1,y.count);return{...y,score:Math.min(100,Math.round(35+y.max*7+Math.min(15,y.strong*1.5)+avg*2)),dom};}).sort((a,b)=>b.score-a.score).slice(0,6).sort((a,b)=>a.year-b.year);
+  yearsEl.innerHTML=ys.length?`<h3>${apT('strong_years')}</h3><div class="ap-year-grid">${ys.map(y=>`<div class="ap-year-card"><strong>${y.year}</strong><span>${apEsc(apDomainLabelV51(y.dom))}</span><div class="ap-scorebar"><i style="width:${y.score}%"></i></div></div>`).join('')}</div>`:'';
+  prog.innerHTML=`<div style="font-weight:700">Période analysée : ${apEsc(apFmtDate(start))} → ${apEsc(apFmtDate(timelineEnd))}</div>`;
+  try{if(typeof appelerClaude==='function'&&ranked.length){const summary=ranked.slice(0,10).map(g=>{const x=g.peak;return `${x.date.toISOString().slice(0,10)} | cycle=${apTimelineCycleKeyV88(x)} | domain=${x.domain} | polarity=${x.polarite} | level=${x.niveau} | independent_families=${apRel(x.sig).n}`;}).join('\n');const data=await appelerClaude({feature:'timeline',featureContext:{horizon:'10 years',engine:'V88-cycles'},model:'claude-sonnet-4-6',max_tokens:1000,system:'You summarise a ten-year astrology timing scan across ALL life domains. No domain is privileged. Treat repeated passages of the same configuration as one cycle. Do not invent events. Prioritise only independently convergent periods and translate them into concrete possibilities, with uncertainty. Do not present astrology as scientific certainty.',messages:[{role:'user',content:`Profile: ${USER.prenom}. Strongest DISTINCT calculated cycles across all life domains:\n${summary}\nGive a concise overview of the 3-5 most important cycles. Do not repeat the same cycle in several formulations. Cover different life areas only when the calculations genuinely support them; do not force family, love, work or money.`}]});const txt=typeof texteClaude==='function'?texteClaude(data):'';if(txt)yearsEl.insertAdjacentHTML('beforeend',`<div class="ap-panel ap-no-auto-translate" style="margin-top:.8rem"><h3>${apT('dashboard_main')}</h3><div class="rapport-texte">${formatRapport(txt)}</div></div>`);}}catch(e){}
+};
 window.apSaveTimelineWindow=async function(date,intent,score,reliability){apTrack('saved_window',{date,intent});if(!TOKEN){ouvrirCompte();return;}const isDom=String(intent||'').startsWith('domain:');const row={start_date:date,end_date:date,intent,label:isDom?apDomainLabelV51(String(intent).slice(7)):apEventTitle({intent,score}),score,reliability,notify_days:10};try{const r=await fetch(BACKEND_URL+'/api/me/windows',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify(row)});if(!r.ok)throw new Error();alert(apT('saved'));apLoadWindows();}catch(e){alert(apT('error'));}};
 
 
