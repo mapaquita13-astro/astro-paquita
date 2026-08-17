@@ -11,9 +11,9 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v88-audit-expert-ephemerides-orbes">
+<meta name="astro-build" content="v89-audit-coherence-sectorielle">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/astronomy-engine@2.1.19/astronomy.browser.min.js';"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════
@@ -3451,453 +3451,8 @@ function convUTC(ds,hs,tz){
 function jdVersDate(jd){const z=Math.floor(jd+0.5),a=z<2299161?z:z+1+Math.floor((z-1867216.25)/36524.25)-Math.floor((z-1867216.25)/36524.25/4),b=a+1524,c=Math.floor((b-122.1)/365.25),d=Math.floor(365.25*c),e=Math.floor((b-d)/30.6001),day=b-d-Math.floor(30.6001*e),month=e<14?e-1:e-13,year=month>2?c-4716:c-4715;return new Date(year,month-1,day);}
 
 // ============================================================
-// TABLE PONDÉRATION
-// ============================================================
-const REGLES=[
-  // JUPITER
-  {t:'Jupiter',a:0,n:'Soleil',s:{amour:3,travail:5,finances:5,sante:4,chance:5}},
-  {t:'Jupiter',a:120,n:'Soleil',s:{amour:3,travail:4,finances:4,sante:4,chance:5}},
-  {t:'Jupiter',a:60,n:'Soleil',s:{amour:2,travail:3,finances:3,sante:3,chance:4}},
-  {t:'Jupiter',a:90,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Jupiter',a:180,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Jupiter',a:45,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Jupiter',a:135,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Jupiter',a:0,n:'Lune',s:{amour:4,travail:3,finances:3,sante:3,chance:4}},
-  {t:'Jupiter',a:120,n:'Lune',s:{amour:3,travail:2,finances:3,sante:3,chance:3}},
-  {t:'Jupiter',a:60,n:'Lune',s:{amour:2,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Jupiter',a:90,n:'Lune',s:{amour:-2,travail:-1,finances:-2,sante:-2,chance:-2}},
-  {t:'Jupiter',a:180,n:'Lune',s:{amour:-2,travail:-1,finances:-2,sante:-2,chance:-2}},
-  {t:'Jupiter',a:0,n:'Venus',s:{amour:5,travail:2,finances:4,sante:3,chance:4}},
-  {t:'Jupiter',a:120,n:'Venus',s:{amour:4,travail:2,finances:4,sante:2,chance:4}},
-  {t:'Jupiter',a:60,n:'Venus',s:{amour:3,travail:1,finances:3,sante:2,chance:3}},
-  {t:'Jupiter',a:90,n:'Venus',s:{amour:-2,travail:-1,finances:-2,sante:-1,chance:-1}},
-  {t:'Jupiter',a:0,n:'Mars',s:{amour:2,travail:4,finances:3,sante:3,chance:3}},
-  {t:'Jupiter',a:120,n:'Mars',s:{amour:1,travail:3,finances:2,sante:3,chance:3}},
-  {t:'Jupiter',a:90,n:'Mars',s:{amour:-1,travail:-2,finances:-2,sante:-2,chance:-1}},
-  {t:'Jupiter',a:0,n:'Jupiter',s:{amour:2,travail:4,finances:5,sante:3,chance:5}},
-  {t:'Jupiter',a:120,n:'Jupiter',s:{amour:2,travail:3,finances:4,sante:3,chance:5}},
-  {t:'Jupiter',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Jupiter',a:0,n:'Saturne',s:{amour:1,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Jupiter',a:120,n:'Saturne',s:{amour:1,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Jupiter',a:90,n:'Saturne',s:{amour:-2,travail:-3,finances:-3,sante:-2,chance:-3}},
-  {t:'Jupiter',a:180,n:'Saturne',s:{amour:-2,travail:-3,finances:-3,sante:-2,chance:-3}},
-  {t:'Jupiter',a:0,n:'Uranus',s:{amour:2,travail:3,finances:3,sante:2,chance:4}},
-  {t:'Jupiter',a:120,n:'Uranus',s:{amour:1,travail:2,finances:2,sante:1,chance:3}},
-  {t:'Jupiter',a:90,n:'Uranus',s:{amour:-1,travail:-2,finances:-2,sante:-1,chance:-1}},
-  {t:'Jupiter',a:0,n:'Neptune',s:{amour:2,travail:2,finances:2,sante:2,chance:3}},
-  {t:'Jupiter',a:0,n:'Pluton',s:{amour:1,travail:3,finances:3,sante:2,chance:3}},
-  {t:'Jupiter',a:120,n:'Pluton',s:{amour:1,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Jupiter',a:90,n:'Pluton',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Jupiter',a:0,n:'MC',s:{amour:2,travail:5,finances:4,sante:2,chance:4}},
-  {t:'Jupiter',a:120,n:'MC',s:{amour:2,travail:4,finances:3,sante:2,chance:3}},
-  {t:'Jupiter',a:60,n:'MC',s:{amour:1,travail:3,finances:2,sante:1,chance:2}},
-  {t:'Jupiter',a:90,n:'MC',s:{amour:-1,travail:-3,finances:-2,sante:-1,chance:-2}},
-  {t:'Jupiter',a:180,n:'MC',s:{amour:-1,travail:-3,finances:-2,sante:-1,chance:-2}},
-  {t:'Jupiter',a:0,n:'AS',s:{amour:3,travail:3,finances:3,sante:3,chance:4}},
-  {t:'Jupiter',a:120,n:'AS',s:{amour:2,travail:2,finances:2,sante:2,chance:3}},
-  {t:'Jupiter',a:90,n:'AS',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  // SATURNE
-  {t:'Saturne',a:0,n:'Soleil',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'Saturne',a:90,n:'Soleil',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'Saturne',a:180,n:'Soleil',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'Saturne',a:45,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Saturne',a:135,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Saturne',a:150,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Saturne',a:120,n:'Soleil',s:{amour:1,travail:2,finances:1,sante:2,chance:1}},
-  {t:'Saturne',a:60,n:'Soleil',s:{amour:1,travail:1,finances:1,sante:1,chance:1}},
-  {t:'Saturne',a:0,n:'Lune',s:{amour:-4,travail:-2,finances:-2,sante:-4,chance:-3}},
-  {t:'Saturne',a:90,n:'Lune',s:{amour:-4,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Saturne',a:180,n:'Lune',s:{amour:-4,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Saturne',a:45,n:'Lune',s:{amour:-3,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Saturne',a:135,n:'Lune',s:{amour:-3,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Saturne',a:0,n:'Venus',s:{amour:-4,travail:-2,finances:-3,sante:-2,chance:-3}},
-  {t:'Saturne',a:90,n:'Venus',s:{amour:-4,travail:-2,finances:-3,sante:-2,chance:-3}},
-  {t:'Saturne',a:180,n:'Venus',s:{amour:-4,travail:-2,finances:-3,sante:-2,chance:-3}},
-  {t:'Saturne',a:45,n:'Venus',s:{amour:-2,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Saturne',a:0,n:'Mars',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-2}},
-  {t:'Saturne',a:90,n:'Mars',s:{amour:-2,travail:-3,finances:-2,sante:-3,chance:-2}},
-  {t:'Saturne',a:180,n:'Mars',s:{amour:-2,travail:-3,finances:-2,sante:-3,chance:-2}},
-  {t:'Saturne',a:0,n:'Jupiter',s:{amour:-1,travail:-2,finances:-3,sante:-1,chance:-3}},
-  {t:'Saturne',a:90,n:'Jupiter',s:{amour:-2,travail:-3,finances:-4,sante:-2,chance:-4}},
-  {t:'Saturne',a:0,n:'MC',s:{amour:-2,travail:-4,finances:-3,sante:-2,chance:-3}},
-  {t:'Saturne',a:90,n:'MC',s:{amour:-2,travail:-4,finances:-3,sante:-2,chance:-3}},
-  {t:'Saturne',a:180,n:'MC',s:{amour:-2,travail:-4,finances:-3,sante:-2,chance:-3}},
-  {t:'Saturne',a:45,n:'MC',s:{amour:-1,travail:-3,finances:-2,sante:-1,chance:-2}},
-  {t:'Saturne',a:135,n:'MC',s:{amour:-1,travail:-3,finances:-2,sante:-1,chance:-2}},
-  {t:'Saturne',a:120,n:'MC',s:{amour:1,travail:2,finances:1,sante:1,chance:1}},
-  {t:'Saturne',a:0,n:'AS',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Saturne',a:90,n:'AS',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Saturne',a:0,n:'Pluton',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Saturne',a:90,n:'Pluton',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  // MARS
-  {t:'Mars',a:0,n:'Soleil',s:{amour:1,travail:3,finances:1,sante:3,chance:2}},
-  {t:'Mars',a:120,n:'Soleil',s:{amour:1,travail:4,finances:2,sante:4,chance:3}},
-  {t:'Mars',a:60,n:'Soleil',s:{amour:1,travail:3,finances:1,sante:3,chance:2}},
-  {t:'Mars',a:90,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-2}},
-  {t:'Mars',a:180,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-2}},
-  {t:'Mars',a:45,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Mars',a:135,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Mars',a:150,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Mars',a:0,n:'Lune',s:{amour:-1,travail:1,finances:0,sante:1,chance:0}},
-  {t:'Mars',a:90,n:'Lune',s:{amour:-3,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Mars',a:180,n:'Lune',s:{amour:-3,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Mars',a:45,n:'Lune',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Mars',a:120,n:'Lune',s:{amour:1,travail:1,finances:1,sante:2,chance:1}},
-  {t:'Mars',a:0,n:'Venus',s:{amour:3,travail:1,finances:1,sante:2,chance:2}},
-  {t:'Mars',a:120,n:'Venus',s:{amour:2,travail:1,finances:1,sante:2,chance:2}},
-  {t:'Mars',a:90,n:'Venus',s:{amour:-3,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Mars',a:180,n:'Venus',s:{amour:-3,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Mars',a:45,n:'Venus',s:{amour:-2,travail:0,finances:0,sante:0,chance:0}},
-  {t:'Mars',a:0,n:'Mars',s:{amour:1,travail:3,finances:1,sante:3,chance:2}},
-  {t:'Mars',a:120,n:'Mars',s:{amour:2,travail:4,finances:2,sante:4,chance:3}},
-  {t:'Mars',a:90,n:'Mars',s:{amour:-1,travail:-2,finances:-2,sante:-3,chance:-2}},
-  {t:'Mars',a:180,n:'Mars',s:{amour:-2,travail:-3,finances:-2,sante:-3,chance:-2}},
-  {t:'Mars',a:45,n:'Mars',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Mars',a:0,n:'Jupiter',s:{amour:1,travail:3,finances:3,sante:2,chance:3}},
-  {t:'Mars',a:120,n:'Jupiter',s:{amour:1,travail:3,finances:3,sante:3,chance:3}},
-  {t:'Mars',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-1}},
-  {t:'Mars',a:0,n:'Saturne',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-2}},
-  {t:'Mars',a:90,n:'Saturne',s:{amour:-2,travail:-3,finances:-3,sante:-3,chance:-3}},
-  {t:'Mars',a:180,n:'Saturne',s:{amour:-2,travail:-3,finances:-3,sante:-3,chance:-3}},
-  {t:'Mars',a:0,n:'Uranus',s:{amour:-1,travail:1,finances:0,sante:-1,chance:1}},
-  {t:'Mars',a:90,n:'Uranus',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-1}},
-  {t:'Mars',a:180,n:'Uranus',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-1}},
-  {t:'Mars',a:0,n:'Neptune',s:{amour:-1,travail:-1,finances:-2,sante:-2,chance:-2}},
-  {t:'Mars',a:90,n:'Neptune',s:{amour:-1,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Mars',a:0,n:'Pluton',s:{amour:-2,travail:-1,finances:-2,sante:-3,chance:-2}},
-  {t:'Mars',a:90,n:'Pluton',s:{amour:-3,travail:-2,finances:-2,sante:-4,chance:-3}},
-  {t:'Mars',a:180,n:'Pluton',s:{amour:-3,travail:-2,finances:-2,sante:-4,chance:-3}},
-  {t:'Mars',a:0,n:'MC',s:{amour:1,travail:4,finances:2,sante:3,chance:3}},
-  {t:'Mars',a:120,n:'MC',s:{amour:1,travail:5,finances:2,sante:3,chance:3}},
-  {t:'Mars',a:60,n:'MC',s:{amour:0,travail:3,finances:1,sante:2,chance:2}},
-  {t:'Mars',a:90,n:'MC',s:{amour:-1,travail:-3,finances:-2,sante:-2,chance:-2}},
-  {t:'Mars',a:180,n:'MC',s:{amour:-1,travail:-3,finances:-2,sante:-2,chance:-2}},
-  {t:'Mars',a:45,n:'MC',s:{amour:-1,travail:-2,finances:-1,sante:-1,chance:-1}},
-  {t:'Mars',a:135,n:'MC',s:{amour:-1,travail:-2,finances:-1,sante:-1,chance:-1}},
-  {t:'Mars',a:0,n:'AS',s:{amour:1,travail:1,finances:0,sante:1,chance:1}},
-  {t:'Mars',a:90,n:'AS',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Mars',a:180,n:'AS',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  // VENUS
-  {t:'Venus',a:0,n:'Venus',s:{amour:5,travail:2,finances:3,sante:3,chance:3}},
-  {t:'Venus',a:120,n:'Venus',s:{amour:5,travail:2,finances:3,sante:3,chance:3}},
-  {t:'Venus',a:60,n:'Venus',s:{amour:4,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Venus',a:90,n:'Venus',s:{amour:-3,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:180,n:'Venus',s:{amour:-3,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:45,n:'Venus',s:{amour:-1,travail:0,finances:-1,sante:0,chance:-1}},
-  {t:'Venus',a:0,n:'Soleil',s:{amour:3,travail:2,finances:2,sante:2,chance:2}},
-  {t:'Venus',a:120,n:'Soleil',s:{amour:3,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Venus',a:60,n:'Soleil',s:{amour:2,travail:1,finances:1,sante:1,chance:1}},
-  {t:'Venus',a:90,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:0,n:'Lune',s:{amour:5,travail:1,finances:2,sante:3,chance:2}},
-  {t:'Venus',a:120,n:'Lune',s:{amour:4,travail:1,finances:2,sante:3,chance:2}},
-  {t:'Venus',a:60,n:'Lune',s:{amour:3,travail:1,finances:1,sante:2,chance:2}},
-  {t:'Venus',a:90,n:'Lune',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:180,n:'Lune',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:45,n:'Lune',s:{amour:-1,travail:0,finances:0,sante:-1,chance:0}},
-  {t:'Venus',a:0,n:'Mars',s:{amour:4,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Venus',a:120,n:'Mars',s:{amour:3,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Venus',a:90,n:'Mars',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:0,n:'Jupiter',s:{amour:3,travail:2,finances:4,sante:2,chance:4}},
-  {t:'Venus',a:120,n:'Jupiter',s:{amour:3,travail:2,finances:4,sante:2,chance:4}},
-  {t:'Venus',a:60,n:'Jupiter',s:{amour:2,travail:1,finances:3,sante:1,chance:3}},
-  {t:'Venus',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-1}},
-  {t:'Venus',a:0,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Venus',a:90,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Venus',a:180,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Venus',a:45,n:'Saturne',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:135,n:'Saturne',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:0,n:'Neptune',s:{amour:2,travail:1,finances:1,sante:2,chance:1}},
-  {t:'Venus',a:90,n:'Neptune',s:{amour:-2,travail:-1,finances:-2,sante:-1,chance:-1}},
-  {t:'Venus',a:0,n:'Pluton',s:{amour:2,travail:1,finances:2,sante:1,chance:2}},
-  {t:'Venus',a:90,n:'Pluton',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:180,n:'Pluton',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Venus',a:0,n:'AS',s:{amour:4,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Venus',a:120,n:'AS',s:{amour:4,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Venus',a:90,n:'AS',s:{amour:-1,travail:0,finances:0,sante:0,chance:0}},
-  {t:'Venus',a:0,n:'MC',s:{amour:2,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Venus',a:120,n:'MC',s:{amour:2,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Venus',a:90,n:'MC',s:{amour:-1,travail:-2,finances:-1,sante:0,chance:-1}},
-  // LUNE
-  {t:'Lune',a:0,n:'Jupiter',s:{amour:2,travail:2,finances:3,sante:2,chance:4}},
-  {t:'Lune',a:120,n:'Jupiter',s:{amour:2,travail:2,finances:3,sante:2,chance:4}},
-  {t:'Lune',a:60,n:'Jupiter',s:{amour:1,travail:1,finances:2,sante:1,chance:3}},
-  {t:'Lune',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Lune',a:180,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Lune',a:0,n:'Venus',s:{amour:5,travail:1,finances:2,sante:3,chance:3}},
-  {t:'Lune',a:120,n:'Venus',s:{amour:4,travail:1,finances:2,sante:3,chance:3}},
-  {t:'Lune',a:60,n:'Venus',s:{amour:3,travail:1,finances:1,sante:2,chance:2}},
-  {t:'Lune',a:90,n:'Venus',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Lune',a:180,n:'Venus',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Lune',a:45,n:'Venus',s:{amour:-1,travail:0,finances:0,sante:0,chance:0}},
-  {t:'Lune',a:0,n:'Soleil',s:{amour:2,travail:2,finances:2,sante:3,chance:3}},
-  {t:'Lune',a:120,n:'Soleil',s:{amour:2,travail:2,finances:2,sante:3,chance:3}},
-  {t:'Lune',a:60,n:'Soleil',s:{amour:1,travail:1,finances:1,sante:2,chance:2}},
-  {t:'Lune',a:90,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Lune',a:180,n:'Soleil',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:45,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Lune',a:0,n:'Lune',s:{amour:3,travail:1,finances:1,sante:3,chance:2}},
-  {t:'Lune',a:120,n:'Lune',s:{amour:3,travail:1,finances:1,sante:3,chance:2}},
-  {t:'Lune',a:90,n:'Lune',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Lune',a:180,n:'Lune',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Lune',a:0,n:'Mars',s:{amour:-1,travail:1,finances:0,sante:1,chance:0}},
-  {t:'Lune',a:90,n:'Mars',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:180,n:'Mars',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:45,n:'Mars',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Lune',a:135,n:'Mars',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Lune',a:0,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Lune',a:90,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Lune',a:180,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Lune',a:45,n:'Saturne',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:135,n:'Saturne',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:150,n:'Saturne',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:0,n:'Uranus',s:{amour:1,travail:1,finances:1,sante:1,chance:2}},
-  {t:'Lune',a:90,n:'Uranus',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Lune',a:180,n:'Uranus',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Lune',a:0,n:'Neptune',s:{amour:1,travail:0,finances:0,sante:1,chance:0}},
-  {t:'Lune',a:90,n:'Neptune',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Lune',a:180,n:'Neptune',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Lune',a:0,n:'Pluton',s:{amour:-1,travail:0,finances:0,sante:-1,chance:0}},
-  {t:'Lune',a:90,n:'Pluton',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-3}},
-  {t:'Lune',a:180,n:'Pluton',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-3}},
-  {t:'Lune',a:45,n:'Pluton',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:135,n:'Pluton',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Lune',a:0,n:'MC',s:{amour:2,travail:3,finances:2,sante:2,chance:2}},
-  {t:'Lune',a:120,n:'MC',s:{amour:2,travail:3,finances:2,sante:2,chance:2}},
-  {t:'Lune',a:90,n:'MC',s:{amour:-1,travail:-2,finances:-1,sante:-1,chance:-1}},
-  {t:'Lune',a:180,n:'MC',s:{amour:-1,travail:-2,finances:-1,sante:-1,chance:-1}},
-  {t:'Lune',a:0,n:'AS',s:{amour:3,travail:2,finances:1,sante:2,chance:2}},
-  {t:'Lune',a:90,n:'AS',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  // SOLEIL
-  {t:'Soleil',a:0,n:'Jupiter',s:{amour:2,travail:3,finances:4,sante:3,chance:5}},
-  {t:'Soleil',a:120,n:'Jupiter',s:{amour:2,travail:3,finances:4,sante:3,chance:4}},
-  {t:'Soleil',a:60,n:'Jupiter',s:{amour:1,travail:2,finances:3,sante:2,chance:3}},
-  {t:'Soleil',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Soleil',a:180,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Soleil',a:0,n:'Venus',s:{amour:3,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Soleil',a:120,n:'Venus',s:{amour:3,travail:1,finances:2,sante:2,chance:2}},
-  {t:'Soleil',a:90,n:'Venus',s:{amour:-1,travail:0,finances:-1,sante:0,chance:0}},
-  {t:'Soleil',a:0,n:'Soleil',s:{amour:2,travail:3,finances:2,sante:4,chance:3}},
-  {t:'Soleil',a:120,n:'Soleil',s:{amour:2,travail:3,finances:2,sante:4,chance:3}},
-  {t:'Soleil',a:90,n:'Soleil',s:{amour:-1,travail:-2,finances:-1,sante:-2,chance:-2}},
-  {t:'Soleil',a:180,n:'Soleil',s:{amour:-1,travail:-2,finances:-1,sante:-2,chance:-2}},
-  {t:'Soleil',a:0,n:'Mars',s:{amour:1,travail:3,finances:1,sante:3,chance:2}},
-  {t:'Soleil',a:120,n:'Mars',s:{amour:1,travail:3,finances:1,sante:3,chance:2}},
-  {t:'Soleil',a:90,n:'Mars',s:{amour:-1,travail:-2,finances:-1,sante:-2,chance:-1}},
-  {t:'Soleil',a:0,n:'Saturne',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Soleil',a:90,n:'Saturne',s:{amour:-2,travail:-3,finances:-3,sante:-3,chance:-3}},
-  {t:'Soleil',a:180,n:'Saturne',s:{amour:-2,travail:-3,finances:-3,sante:-3,chance:-3}},
-  {t:'Soleil',a:45,n:'Saturne',s:{amour:-1,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Soleil',a:135,n:'Saturne',s:{amour:-1,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Soleil',a:0,n:'Uranus',s:{amour:1,travail:2,finances:2,sante:1,chance:3}},
-  {t:'Soleil',a:120,n:'Uranus',s:{amour:1,travail:2,finances:2,sante:2,chance:3}},
-  {t:'Soleil',a:90,n:'Uranus',s:{amour:-1,travail:-1,finances:-2,sante:-2,chance:-1}},
-  {t:'Soleil',a:180,n:'Uranus',s:{amour:-1,travail:-1,finances:-2,sante:-2,chance:-1}},
-  {t:'Soleil',a:0,n:'Neptune',s:{amour:1,travail:0,finances:0,sante:1,chance:1}},
-  {t:'Soleil',a:90,n:'Neptune',s:{amour:-1,travail:-2,finances:-3,sante:-2,chance:-3}},
-  {t:'Soleil',a:0,n:'Pluton',s:{amour:1,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Soleil',a:120,n:'Pluton',s:{amour:1,travail:2,finances:2,sante:2,chance:2}},
-  {t:'Soleil',a:90,n:'Pluton',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Soleil',a:180,n:'Pluton',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Soleil',a:45,n:'Pluton',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Soleil',a:135,n:'Pluton',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Soleil',a:0,n:'MC',s:{amour:1,travail:4,finances:2,sante:2,chance:3}},
-  {t:'Soleil',a:120,n:'MC',s:{amour:1,travail:4,finances:2,sante:2,chance:3}},
-  {t:'Soleil',a:90,n:'MC',s:{amour:-1,travail:-2,finances:-1,sante:-1,chance:-1}},
-  {t:'Soleil',a:180,n:'MC',s:{amour:-1,travail:-2,finances:-1,sante:-1,chance:-1}},
-  {t:'Soleil',a:0,n:'AS',s:{amour:2,travail:2,finances:1,sante:2,chance:2}},
-  {t:'Soleil',a:90,n:'AS',s:{amour:-1,travail:-1,finances:0,sante:-1,chance:-1}},
-  // MERCURE
-  {t:'Mercure',a:0,n:'Mercure',s:{amour:1,travail:3,finances:2,sante:1,chance:2}},
-  {t:'Mercure',a:120,n:'Mercure',s:{amour:1,travail:3,finances:2,sante:1,chance:2}},
-  {t:'Mercure',a:90,n:'Mercure',s:{amour:-1,travail:-2,finances:-2,sante:-1,chance:-1}},
-  {t:'Mercure',a:180,n:'Mercure',s:{amour:-1,travail:-2,finances:-2,sante:-1,chance:-1}},
-  {t:'Mercure',a:0,n:'MC',s:{amour:1,travail:3,finances:2,sante:1,chance:2}},
-  {t:'Mercure',a:120,n:'MC',s:{amour:1,travail:3,finances:1,sante:1,chance:1}},
-  {t:'Mercure',a:90,n:'MC',s:{amour:0,travail:-2,finances:-1,sante:0,chance:-1}},
-  {t:'Mercure',a:0,n:'Jupiter',s:{amour:1,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Mercure',a:120,n:'Jupiter',s:{amour:1,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Mercure',a:90,n:'Saturne',s:{amour:-1,travail:-2,finances:-1,sante:-1,chance:-1}},
-  // URANUS
-  {t:'Uranus',a:0,n:'Soleil',s:{amour:1,travail:2,finances:2,sante:1,chance:3}},
-  {t:'Uranus',a:120,n:'Soleil',s:{amour:1,travail:2,finances:2,sante:2,chance:3}},
-  {t:'Uranus',a:60,n:'MC',s:{amour:1,travail:3,finances:2,sante:1,chance:2}},
-  {t:'Uranus',a:90,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-1}},
-  {t:'Uranus',a:180,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-1}},
-  {t:'Uranus',a:0,n:'Lune',s:{amour:-1,travail:1,finances:1,sante:-1,chance:2}},
-  {t:'Uranus',a:90,n:'Lune',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Uranus',a:180,n:'Lune',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'Uranus',a:0,n:'MC',s:{amour:1,travail:2,finances:1,sante:1,chance:2}},
-  {t:'Uranus',a:90,n:'MC',s:{amour:-1,travail:-2,finances:-2,sante:-1,chance:-1}},
-  {t:'Uranus',a:180,n:'MC',s:{amour:-1,travail:-2,finances:-2,sante:-1,chance:-1}},
-  {t:'Uranus',a:0,n:'Venus',s:{amour:2,travail:1,finances:1,sante:1,chance:2}},
-  {t:'Uranus',a:90,n:'Venus',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'Uranus',a:0,n:'Jupiter',s:{amour:1,travail:2,finances:2,sante:1,chance:3}},
-  {t:'Uranus',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-1}},
-  {t:'Uranus',a:0,n:'Saturne',s:{amour:0,travail:1,finances:1,sante:0,chance:1}},
-  {t:'Uranus',a:90,n:'Saturne',s:{amour:-1,travail:-2,finances:-2,sante:-1,chance:-2}},
-  {t:'Uranus',a:0,n:'Mars',s:{amour:-1,travail:1,finances:0,sante:-2,chance:0}},
-  {t:'Uranus',a:90,n:'Mars',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-1}},
-  {t:'Uranus',a:180,n:'Mars',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-1}},
-  // NEPTUNE
-  {t:'Neptune',a:0,n:'Soleil',s:{amour:1,travail:0,finances:0,sante:1,chance:1}},
-  {t:'Neptune',a:120,n:'Soleil',s:{amour:2,travail:1,finances:1,sante:2,chance:1}},
-  {t:'Neptune',a:90,n:'Soleil',s:{amour:-1,travail:-2,finances:-3,sante:-2,chance:-3}},
-  {t:'Neptune',a:180,n:'Soleil',s:{amour:-1,travail:-2,finances:-3,sante:-2,chance:-3}},
-  {t:'Neptune',a:0,n:'Jupiter',s:{amour:1,travail:1,finances:1,sante:1,chance:2}},
-  {t:'Neptune',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-3,sante:-1,chance:-3}},
-  {t:'Neptune',a:0,n:'Lune',s:{amour:1,travail:0,finances:0,sante:1,chance:0}},
-  {t:'Neptune',a:90,n:'Lune',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Neptune',a:180,n:'Lune',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Neptune',a:0,n:'Venus',s:{amour:2,travail:1,finances:1,sante:1,chance:1}},
-  {t:'Neptune',a:90,n:'Venus',s:{amour:-2,travail:-1,finances:-2,sante:-1,chance:-1}},
-  {t:'Neptune',a:0,n:'MC',s:{amour:1,travail:1,finances:1,sante:1,chance:1}},
-  {t:'Neptune',a:90,n:'MC',s:{amour:-1,travail:-2,finances:-2,sante:-1,chance:-2}},
-  {t:'Neptune',a:0,n:'Mars',s:{amour:-1,travail:-1,finances:-2,sante:-2,chance:-2}},
-  {t:'Neptune',a:90,n:'Mars',s:{amour:-1,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'Neptune',a:0,n:'Saturne',s:{amour:0,travail:0,finances:0,sante:0,chance:0}},
-  {t:'Neptune',a:90,n:'Saturne',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-2}},
-  // PLUTON
-  {t:'Pluton',a:0,n:'Soleil',s:{amour:0,travail:2,finances:2,sante:-1,chance:1}},
-  {t:'Pluton',a:120,n:'Soleil',s:{amour:1,travail:2,finances:2,sante:2,chance:2}},
-  {t:'Pluton',a:90,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Pluton',a:180,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Pluton',a:45,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Pluton',a:135,n:'Soleil',s:{amour:-1,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'Pluton',a:0,n:'Lune',s:{amour:-1,travail:0,finances:0,sante:-1,chance:0}},
-  {t:'Pluton',a:90,n:'Lune',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-3}},
-  {t:'Pluton',a:180,n:'Lune',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-3}},
-  {t:'Pluton',a:0,n:'Venus',s:{amour:1,travail:1,finances:2,sante:0,chance:1}},
-  {t:'Pluton',a:90,n:'Venus',s:{amour:-3,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Pluton',a:180,n:'Venus',s:{amour:-3,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'Pluton',a:0,n:'Mars',s:{amour:-1,travail:1,finances:1,sante:-2,chance:0}},
-  {t:'Pluton',a:90,n:'Mars',s:{amour:-2,travail:-2,finances:-2,sante:-4,chance:-2}},
-  {t:'Pluton',a:180,n:'Mars',s:{amour:-2,travail:-2,finances:-2,sante:-4,chance:-2}},
-  {t:'Pluton',a:0,n:'Jupiter',s:{amour:1,travail:3,finances:3,sante:1,chance:3}},
-  {t:'Pluton',a:120,n:'Jupiter',s:{amour:1,travail:2,finances:2,sante:1,chance:2}},
-  {t:'Pluton',a:90,n:'Jupiter',s:{amour:-2,travail:-2,finances:-3,sante:-2,chance:-3}},
-  {t:'Pluton',a:0,n:'Saturne',s:{amour:-1,travail:1,finances:1,sante:-1,chance:0}},
-  {t:'Pluton',a:90,n:'Saturne',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'Pluton',a:0,n:'MC',s:{amour:-1,travail:2,finances:2,sante:0,chance:1}},
-  {t:'Pluton',a:90,n:'MC',s:{amour:-2,travail:-3,finances:-2,sante:-2,chance:-2}},
-  {t:'Pluton',a:180,n:'MC',s:{amour:-2,travail:-3,finances:-2,sante:-2,chance:-2}},
-  {t:'Pluton',a:0,n:'AS',s:{amour:-1,travail:1,finances:1,sante:-1,chance:0}},
-  {t:'Pluton',a:90,n:'AS',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  // PROGRESSIONS SECONDAIRES sur natal (préfixe P-)
-  {t:'P-Soleil',a:0,n:'Soleil',s:{amour:3,travail:4,finances:3,sante:4,chance:4}},
-  {t:'P-Soleil',a:90,n:'Soleil',s:{amour:-3,travail:-3,finances:-3,sante:-3,chance:-3}},
-  {t:'P-Soleil',a:180,n:'Soleil',s:{amour:-3,travail:-3,finances:-3,sante:-3,chance:-3}},
-  {t:'P-Soleil',a:120,n:'Soleil',s:{amour:2,travail:3,finances:2,sante:3,chance:3}},
-  {t:'P-Soleil',a:0,n:'Lune',s:{amour:3,travail:2,finances:2,sante:3,chance:3}},
-  {t:'P-Soleil',a:90,n:'Lune',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'P-Soleil',a:180,n:'Lune',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'P-Soleil',a:120,n:'Lune',s:{amour:2,travail:1,finances:1,sante:2,chance:2}},
-  {t:'P-Soleil',a:0,n:'Mars',s:{amour:-1,travail:2,finances:1,sante:2,chance:1}},
-  {t:'P-Soleil',a:90,n:'Mars',s:{amour:-3,travail:-3,finances:-2,sante:-4,chance:-3}},
-  {t:'P-Soleil',a:180,n:'Mars',s:{amour:-3,travail:-3,finances:-2,sante:-4,chance:-3}},
-  {t:'P-Soleil',a:0,n:'Saturne',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Soleil',a:90,n:'Saturne',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Soleil',a:180,n:'Saturne',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Soleil',a:0,n:'Jupiter',s:{amour:2,travail:4,finances:4,sante:3,chance:5}},
-  {t:'P-Soleil',a:120,n:'Jupiter',s:{amour:2,travail:3,finances:3,sante:2,chance:4}},
-  {t:'P-Soleil',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'P-Soleil',a:0,n:'Venus',s:{amour:4,travail:2,finances:3,sante:2,chance:3}},
-  {t:'P-Soleil',a:120,n:'Venus',s:{amour:3,travail:1,finances:2,sante:2,chance:2}},
-  {t:'P-Soleil',a:90,n:'Venus',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'P-Soleil',a:0,n:'Pluton',s:{amour:-1,travail:2,finances:2,sante:-1,chance:1}},
-  {t:'P-Soleil',a:90,n:'Pluton',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Soleil',a:180,n:'Pluton',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Soleil',a:0,n:'Uranus',s:{amour:-1,travail:1,finances:1,sante:-1,chance:2}},
-  {t:'P-Soleil',a:90,n:'Uranus',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-1}},
-  {t:'P-Soleil',a:180,n:'Uranus',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-1}},
-  {t:'P-Soleil',a:0,n:'MC',s:{amour:1,travail:4,finances:3,sante:2,chance:3}},
-  {t:'P-Soleil',a:90,n:'MC',s:{amour:-2,travail:-4,finances:-3,sante:-2,chance:-3}},
-  {t:'P-Soleil',a:180,n:'MC',s:{amour:-2,travail:-4,finances:-3,sante:-2,chance:-3}},
-  {t:'P-Soleil',a:0,n:'AS',s:{amour:2,travail:2,finances:2,sante:2,chance:2}},
-  {t:'P-Soleil',a:90,n:'AS',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'P-Lune',a:0,n:'Soleil',s:{amour:3,travail:2,finances:2,sante:3,chance:3}},
-  {t:'P-Lune',a:90,n:'Soleil',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'P-Lune',a:180,n:'Soleil',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-3}},
-  {t:'P-Lune',a:120,n:'Soleil',s:{amour:2,travail:2,finances:2,sante:2,chance:2}},
-  {t:'P-Lune',a:0,n:'Lune',s:{amour:4,travail:1,finances:1,sante:4,chance:2}},
-  {t:'P-Lune',a:90,n:'Lune',s:{amour:-3,travail:-1,finances:-1,sante:-3,chance:-2}},
-  {t:'P-Lune',a:180,n:'Lune',s:{amour:-3,travail:-1,finances:-1,sante:-3,chance:-2}},
-  {t:'P-Lune',a:0,n:'Venus',s:{amour:5,travail:1,finances:2,sante:3,chance:3}},
-  {t:'P-Lune',a:90,n:'Venus',s:{amour:-3,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'P-Lune',a:180,n:'Venus',s:{amour:-3,travail:-1,finances:-1,sante:-2,chance:-2}},
-  {t:'P-Lune',a:0,n:'Mars',s:{amour:-1,travail:1,finances:0,sante:1,chance:0}},
-  {t:'P-Lune',a:90,n:'Mars',s:{amour:-3,travail:-2,finances:-1,sante:-3,chance:-2}},
-  {t:'P-Lune',a:180,n:'Mars',s:{amour:-3,travail:-2,finances:-1,sante:-3,chance:-2}},
-  {t:'P-Lune',a:0,n:'Jupiter',s:{amour:2,travail:3,finances:3,sante:2,chance:4}},
-  {t:'P-Lune',a:120,n:'Jupiter',s:{amour:2,travail:2,finances:2,sante:2,chance:3}},
-  {t:'P-Lune',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-2,sante:-1,chance:-2}},
-  {t:'P-Lune',a:0,n:'Saturne',s:{amour:-4,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Lune',a:90,n:'Saturne',s:{amour:-4,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Lune',a:180,n:'Saturne',s:{amour:-4,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Lune',a:0,n:'Pluton',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'P-Lune',a:90,n:'Pluton',s:{amour:-4,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Lune',a:180,n:'Pluton',s:{amour:-4,travail:-3,finances:-3,sante:-4,chance:-4}},
-  {t:'P-Lune',a:0,n:'Uranus',s:{amour:0,travail:1,finances:1,sante:0,chance:2}},
-  {t:'P-Lune',a:90,n:'Uranus',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'P-Lune',a:0,n:'MC',s:{amour:2,travail:3,finances:2,sante:2,chance:2}},
-  {t:'P-Lune',a:90,n:'MC',s:{amour:-2,travail:-3,finances:-2,sante:-2,chance:-2}},
-  {t:'P-Lune',a:180,n:'MC',s:{amour:-2,travail:-3,finances:-2,sante:-2,chance:-2}},
-  {t:'P-Lune',a:0,n:'AS',s:{amour:3,travail:2,finances:1,sante:3,chance:2}},
-  {t:'P-Lune',a:90,n:'AS',s:{amour:-2,travail:-1,finances:-1,sante:-2,chance:-1}},
-  {t:'P-Venus',a:0,n:'Venus',s:{amour:5,travail:2,finances:3,sante:3,chance:3}},
-  {t:'P-Venus',a:90,n:'Venus',s:{amour:-3,travail:-1,finances:-2,sante:-2,chance:-2}},
-  {t:'P-Venus',a:0,n:'Soleil',s:{amour:3,travail:2,finances:2,sante:2,chance:2}},
-  {t:'P-Venus',a:90,n:'Soleil',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'P-Venus',a:0,n:'Mars',s:{amour:3,travail:1,finances:1,sante:2,chance:2}},
-  {t:'P-Venus',a:90,n:'Mars',s:{amour:-2,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'P-Venus',a:0,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'P-Venus',a:90,n:'Saturne',s:{amour:-3,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'P-Venus',a:0,n:'Jupiter',s:{amour:3,travail:2,finances:3,sante:2,chance:3}},
-  {t:'P-Venus',a:0,n:'Pluton',s:{amour:1,travail:1,finances:2,sante:0,chance:1}},
-  {t:'P-Venus',a:90,n:'Pluton',s:{amour:-3,travail:-1,finances:-2,sante:-2,chance:-2}},
-  {t:'P-Mars',a:0,n:'Mars',s:{amour:1,travail:3,finances:2,sante:3,chance:2}},
-  {t:'P-Mars',a:90,n:'Mars',s:{amour:-2,travail:-3,finances:-2,sante:-4,chance:-3}},
-  {t:'P-Mars',a:180,n:'Mars',s:{amour:-2,travail:-3,finances:-2,sante:-4,chance:-3}},
-  {t:'P-Mars',a:0,n:'Soleil',s:{amour:0,travail:2,finances:1,sante:2,chance:1}},
-  {t:'P-Mars',a:90,n:'Soleil',s:{amour:-2,travail:-3,finances:-2,sante:-3,chance:-2}},
-  {t:'P-Mars',a:180,n:'Soleil',s:{amour:-2,travail:-3,finances:-2,sante:-3,chance:-2}},
-  {t:'P-Mars',a:0,n:'Saturne',s:{amour:-2,travail:-2,finances:-2,sante:-3,chance:-2}},
-  {t:'P-Mars',a:90,n:'Saturne',s:{amour:-3,travail:-3,finances:-3,sante:-4,chance:-3}},
-  {t:'P-Mars',a:0,n:'Pluton',s:{amour:-2,travail:-1,finances:-1,sante:-3,chance:-1}},
-  {t:'P-Mars',a:90,n:'Pluton',s:{amour:-3,travail:-2,finances:-2,sante:-5,chance:-3}},
-  {t:'P-Mars',a:180,n:'Pluton',s:{amour:-3,travail:-2,finances:-2,sante:-5,chance:-3}},
-  {t:'P-Mars',a:0,n:'Jupiter',s:{amour:1,travail:3,finances:2,sante:2,chance:2}},
-  {t:'P-Mars',a:90,n:'Jupiter',s:{amour:-1,travail:-1,finances:-1,sante:-1,chance:-1}},
-  {t:'P-AS',a:0,n:'Soleil',s:{amour:2,travail:3,finances:2,sante:2,chance:3}},
-  {t:'P-AS',a:90,n:'Soleil',s:{amour:-2,travail:-2,finances:-2,sante:-2,chance:-2}},
-  {t:'P-AS',a:0,n:'Jupiter',s:{amour:2,travail:3,finances:3,sante:2,chance:4}},
-  {t:'P-AS',a:90,n:'Saturne',s:{amour:-3,travail:-3,finances:-3,sante:-3,chance:-3}},
-  {t:'P-AS',a:0,n:'Venus',s:{amour:4,travail:1,finances:2,sante:2,chance:2}},
-  {t:'P-AS',a:0,n:'Pluton',s:{amour:-1,travail:1,finances:1,sante:-1,chance:0}},
-  {t:'P-AS',a:90,n:'Pluton',s:{amour:-3,travail:-2,finances:-2,sante:-3,chance:-2}},
-  {t:'P-MC',a:0,n:'Soleil',s:{amour:1,travail:4,finances:3,sante:2,chance:3}},
-  {t:'P-MC',a:90,n:'Soleil',s:{amour:-1,travail:-3,finances:-2,sante:-2,chance:-2}},
-  {t:'P-MC',a:0,n:'Jupiter',s:{amour:1,travail:4,finances:3,sante:2,chance:4}},
-  {t:'P-MC',a:90,n:'Saturne',s:{amour:-2,travail:-4,finances:-3,sante:-2,chance:-3}},
-  {t:'P-MC',a:0,n:'Venus',s:{amour:2,travail:2,finances:2,sante:1,chance:2}},
-  {t:'P-MC',a:0,n:'Pluton',s:{amour:-1,travail:2,finances:2,sante:0,chance:1}},
-  {t:'P-MC',a:90,n:'Pluton',s:{amour:-2,travail:-3,finances:-3,sante:-2,chance:-3}},
-];
-
-// V88 — ancienne couche de climat général : orbes resserrés pour qu'elle ne noie
-// plus les moteurs sectoriels experts. Les grands cycles sont traités plus finement en V51.
-const ORBES={
-  Lune:1.20,Soleil:1.15,Mercure:.85,Venus:.95,Mars:.95,
-  Jupiter:1.25,Saturne:1.15,Uranus:1.05,Neptune:.95,Pluton:.90,
-  'P-Soleil':.55,'P-Lune':.65,'P-Venus':.50,'P-Mars':.50,'P-Mercure':.45,'P-AS':.45,'P-MC':.45
-};
-
-// PROGRESSIONS SECONDAIRES
-// ============================================================
-// PROGRESSIONS SECONDAIRES — formule exacte
-// 1 jour après la naissance = 1 an de vie
-// anneeVie = nombre d'années tropiques écoulées depuis la naissance
-// jdProg = jdNatal + anneeVie (en jours = nombre d'années)
-// ============================================================
+// V89 — ancien tableau de pondération générique supprimé : le moteur sectoriel V51/V82 est la source unique des prévisions.
+// Les progressions secondaires restent calculées ci-dessous avec le rapport jour-pour-an.
 function calcAnneeVieExacte(jdNatal, jdAnalyse) {
   // Année tropique = 365.24219 jours
   // On calcule le nombre précis d'années écoulées
@@ -3915,49 +3470,9 @@ function calcProgressions(jdNatal, anneeVie) {
   return { ...pos, AS, MC };
 }
 
-function enrichirAvecProgressions(posT, jdNatal, anneeVie) {
-  const prog = calcProgressions(jdNatal, anneeVie);
-  return {
-    ...posT,
-    'P-Soleil': prog.Soleil,
-    'P-Lune':   prog.Lune,
-    'P-Venus':  prog.Venus,
-    'P-Mars':   prog.Mars,
-    'P-Mercure':prog.Mercure,
-    'P-AS':     prog.AS,
-    'P-MC':     prog.MC,
-  };
-}
 
 
-function valeurRegleDomaine(r,dom){
-  const v=r.s||{};
-  const avg=()=>Object.values(v).reduce((a,b)=>a+(Number(b)||0),0)/Math.max(1,Object.keys(v).length);
-  if(dom==='amour')return Number(v.amour)||0;
-  if(dom==='travail')return Number(v.travail)||0;
-  if(dom==='finances'||dom==='argent')return Number(v.finances)||0;
-  if(dom==='sante')return Number(v.sante)||0;
-  if(dom==='chance')return Number(v.chance)||0;
-  if(dom==='tous'||dom==='general')return avg();
 
-  // V76 — RÈGLE CENTRALE :
-  // Famille, voyage et spirituel ne sont plus reconstruits artificiellement à
-  // partir des scores d'autres domaines. Leur pertinence est établie uniquement
-  // par les ancres astrologiques du moteur multidomaine V76.
-  if(['famille','voyage','spirituel'].includes(dom)) return 0;
-  return 0;
-}
-
-function scorer(posT,posN,AS,MC,dom){
-  let s=0;const nm={...posN,AS,MC};
-  for(const r of REGLES){
-    const dT=posT[r.t],dN=nm[r.n];if(dT===undefined||dN===undefined)continue;
-    let diff=Math.abs(dT-dN);if(diff>180)diff=360-diff;
-    const ecart=Math.abs(diff-r.a),orbe=ORBES[r.t]||2;
-    if(ecart<=orbe){const poids=1-(ecart/orbe)*0.4,val=valeurRegleDomaine(r,dom);s+=val*poids;}
-  }
-  return s;
-}
 
 // ============================================================
 // PROFECTIONS ANNUELLES
@@ -3973,35 +3488,6 @@ function calcProfection(jdNatal, jdAnalyse) {
   return { maisonProfectee, age, ageExact, signeActive, maitreAnnee: maitres[signeActive] };
 }
 
-function scoreProfection(posN, AS, MC, dom, profection, jdAnalyse) {
-  // La profection sert de contexte annuel : elle ne doit jamais dominer seule une prévision.
-  const maisonsParDomaine = {
-    amour:[4,6,7], travail:[5,9], finances:[1,7], argent:[1,7],
-    sante:[0,5], famille:[3,4], voyage:[2,8], spirituel:[8,11], chance:[4,8,10], tous:[0,1,2,3,4,5,6,7,8,9,10,11], general:[0,3,6,9]
-  };
-  let s = (maisonsParDomaine[dom] || maisonsParDomaine.general).includes(profection.maisonProfectee) ? 0.7 : 0;
-  if (!jdAnalyse || !profection.maitreAnnee) return s;
-  try {
-    const t = calcPos(jdAnalyse + 0.5);
-    const deg = t[profection.maitreAnnee];
-    const natal = {Soleil:posN.Soleil,Lune:posN.Lune,AS,MC};
-    if (deg === undefined) return s;
-    for (const cible of Object.values(natal)) {
-      let diff=Math.abs(deg-cible); if(diff>180)diff=360-diff;
-      for (const a of [0,60,90,120,180]) {
-        const ecart=Math.abs(diff-a);
-        if(ecart<=1.20){
-          const harmonique=(a===0||a===60||a===120);
-          const ben=['Jupiter','Venus','Soleil'].includes(profection.maitreAnnee);
-          const dur=['Saturne','Mars'].includes(profection.maitreAnnee);
-          let v=0.45*(1-ecart/1.20);
-          if(harmonique && ben) s+=v; else if(!harmonique && dur) s-=v; else s+=harmonique?v*0.35:-v*0.25;
-        }
-      }
-    }
-  } catch(e) {}
-  return s;
-}
 
 // ============================================================
 // RÉVOLUTION SOLAIRE
@@ -4076,56 +3562,75 @@ const ECLIPSES_OFFICIELLES_2025_2030 = [
 ];
 
 const ECLIPSE_CACHE_V88 = new Map();
-function calcEclipses(jdAnalyse) {
-  // Les dates de la table servent à identifier la lunaison éclipsée.
-  // V88 affine ensuite au moment exact de Nouvelle/Pleine Lune, au lieu d'imposer 12:00 UT.
-  const out=[];
-  for(const [iso,type] of ECLIPSES_OFFICIELLES_2025_2030){
-    const key=iso+'|'+type;
-    let e=ECLIPSE_CACHE_V88.get(key);
-    if(!e){
-      const [y,m,d]=iso.split('-').map(Number);
-      let jdE=julianDay(y,m,d,12);
-      try{
-        if(astroEngineReadyV88() && Astronomy.SearchMoonPhase){
-          const start=astroDateFromJDV88(jdE-2.2);
-          const phase=Astronomy.SearchMoonPhase(type==='solaire'?0:180,start,4.4);
-          if(phase?.date) jdE=phase.date.getTime()/86400000+2440587.5;
-        }
-      }catch(err){}
-      const lon=type==='solaire'?calcSoleil(jdE):calcLune(jdE);
-      e={jd:jdE,type,lon,dateISO:iso,source:'table éclipses + syzygie astronomique'};
-      ECLIPSE_CACHE_V88.set(key,e);
+const ECLIPSE_YEAR_CACHE_V89 = new Map();
+function prevEclipseFactorV89(type,kind){
+  try{
+    if(type==='lunaire'){
+      if(Astronomy?.EclipseKind && kind===Astronomy.EclipseKind.Penumbral) return .65;
+      if(Astronomy?.EclipseKind && kind===Astronomy.EclipseKind.Partial) return .85;
+      return 1;
     }
-    if(Math.abs(jdAnalyse-e.jd)<=1.35)out.push(e);
+    if(Astronomy?.EclipseKind && kind===Astronomy.EclipseKind.Partial) return .85;
+    return 1;
+  }catch(e){return 1;}
+}
+function prevEclipseFallbackYearV89(year){
+  return ECLIPSES_OFFICIELLES_2025_2030.filter(([iso])=>Number(iso.slice(0,4))===year).map(([iso,type])=>{
+    const [y,m,d]=iso.split('-').map(Number); let jdE=julianDay(y,m,d,12);
+    try{
+      if(astroEngineReadyV88() && Astronomy.SearchMoonPhase){
+        const phase=Astronomy.SearchMoonPhase(type==='solaire'?0:180,astroDateFromJDV88(jdE-2.2),4.4);
+        if(phase?.date)jdE=phase.date.getTime()/86400000+2440587.5;
+      }
+    }catch(e){}
+    return {jd:jdE,type,date:astroDateFromJDV88(jdE),kind:null,factor:1,source:'table de secours + syzygie astronomique'};
+  });
+}
+function prevEclipseYearV89(year){
+  year=Number(year); if(ECLIPSE_YEAR_CACHE_V89.has(year))return ECLIPSE_YEAR_CACHE_V89.get(year);
+  let out=[];
+  if(astroEngineReadyV88() && Astronomy.SearchGlobalSolarEclipse && Astronomy.NextGlobalSolarEclipse && Astronomy.SearchLunarEclipse && Astronomy.NextLunarEclipse){
+    try{
+      const begin=new Date(Date.UTC(year,0,1,0,0,0)), end=new Date(Date.UTC(year,11,31,23,59,59));
+      let s=Astronomy.SearchGlobalSolarEclipse(new Date(Date.UTC(year,0,1)-40*86400000));
+      for(let guard=0;s&&guard<8;guard++){
+        const d=s.peak?.date; if(!(d instanceof Date))break;
+        if(d>end)break;
+        if(d>=begin){const jd=d.getTime()/86400000+2440587.5;out.push({jd,type:'solaire',date:d,kind:s.kind,factor:prevEclipseFactorV89('solaire',s.kind),source:'Astronomy Engine — éclipse solaire exacte'});}
+        s=Astronomy.NextGlobalSolarEclipse(s.peak);
+      }
+      let l=Astronomy.SearchLunarEclipse(new Date(Date.UTC(year,0,1)-40*86400000));
+      for(let guard=0;l&&guard<8;guard++){
+        const d=l.peak?.date; if(!(d instanceof Date))break;
+        if(d>end)break;
+        if(d>=begin){const jd=d.getTime()/86400000+2440587.5;out.push({jd,type:'lunaire',date:d,kind:l.kind,factor:prevEclipseFactorV89('lunaire',l.kind),source:'Astronomy Engine — éclipse lunaire exacte'});}
+        l=Astronomy.NextLunarEclipse(l.peak);
+      }
+    }catch(e){out=[];}
+  }
+  if(!out.length)out=prevEclipseFallbackYearV89(year);
+  const uniq=new Map();
+  for(const e of out){const k=`${e.type}|${Math.round(e.jd*24)}`;if(!uniq.has(k))uniq.set(k,e);}
+  out=[...uniq.values()].sort((a,b)=>a.jd-b.jd); ECLIPSE_YEAR_CACHE_V89.set(year,out); return out;
+}
+function prevEclipseRangeV89(startDate,endDate){
+  const a=startDate instanceof Date?startDate:new Date(startDate), b=endDate instanceof Date?endDate:new Date(endDate);
+  if(isNaN(a)||isNaN(b))return [];
+  const out=[];for(let y=a.getUTCFullYear();y<=b.getUTCFullYear();y++)for(const e of prevEclipseYearV89(y))if(e.date>=a&&e.date<=b)out.push(e);
+  return out.sort((x,y)=>x.jd-y.jd);
+}
+function calcEclipses(jdAnalyse) {
+  const d=astroDateFromJDV88(jdAnalyse), years=[d.getUTCFullYear()-1,d.getUTCFullYear(),d.getUTCFullYear()+1];
+  const out=[];
+  for(const y of years)for(const raw of prevEclipseYearV89(y)){
+    if(Math.abs(jdAnalyse-raw.jd)>1.35)continue;
+    const key=`${raw.type}|${raw.jd.toFixed(6)}`;let e=ECLIPSE_CACHE_V88.get(key);
+    if(!e){const lon=raw.type==='solaire'?calcSoleil(raw.jd):calcLune(raw.jd);e={...raw,lon,dateISO:raw.date.toISOString().slice(0,10)};ECLIPSE_CACHE_V88.set(key,e);}
+    out.push(e);
   }
   return out;
 }
 
-function scoreEclipses(eclipses, posN, AS, MC, dom) {
-  let s = 0;
-  const natal = { ...posN, AS, MC };
-  for (const ecl of eclipses) {
-    for (const [nom, deg] of Object.entries(natal)) {
-      let diff = Math.abs(ecl.lon - deg);
-      if (diff > 180) diff = 360 - diff;
-      if (diff < 2.0) { // V88 : contact d'éclipse réellement serré
-        const poids = (1 - diff/2.0) * 2.2;
-        // Éclipse solaire = plus puissante
-        const mult = ecl.type === 'solaire' ? 1.5 : 1;
-        // Sur Saturne/Mars/Pluton natal = négatif
-        if (nom === 'Saturne' || nom === 'Pluton') s -= poids * mult;
-        else if (nom === 'Mars') s -= poids * 0.8 * mult;
-        // Sur Jupiter/Venus = positif
-        else if (nom === 'Jupiter') s += poids * 0.8 * mult;
-        else if (nom === 'Venus') s += poids * 0.6 * mult;
-        // Sur Soleil/Lune/AS/MC = neutre mais fort (événement marquant)
-        else s -= poids * 0.3 * mult; // perturbation générale
-      }
-    }
-  }
-  return s;
-}
 
 // ============================================================
 // ARC DE SOLEIL
@@ -4136,61 +3641,10 @@ function calcArcSoleil(jdNatal, anneeVie) {
   return ((solProg - solNatal + 360) % 360); // Arc en degrés
 }
 
-function scoreArcSoleil(jdNatal, anneeVie, posN, AS, MC, dom) {
-  const arc = calcArcSoleil(jdNatal, anneeVie);
-  const natal = { ...posN, AS, MC };
-  let s = 0;
-  const aspects = [0, 60, 90, 120, 180, 45, 135];
-  const orbe = .55; // V88 : couche héritée alignée sur l'arc solaire expert
-  for (const [nom, deg] of Object.entries(natal)) {
-    // Position dirigée = position natale + arc
-    const degDirige = (deg + arc) % 360;
-    // Aspect entre position dirigée et natal
-    for (const [nom2, deg2] of Object.entries(natal)) {
-      if (nom === nom2) continue;
-      let diff = Math.abs(degDirige - deg2);
-      if (diff > 180) diff = 360 - diff;
-      for (const a of aspects) {
-        const ecart = Math.abs(diff - a);
-        if (ecart <= orbe) {
-          const est_harm = a === 0 || a === 60 || a === 120;
-          const est_ben = nom === 'Jupiter' || nom === 'Venus';
-          const est_mal = nom === 'Saturne' || nom === 'Mars' || nom === 'Pluton';
-          const poids = (1 - ecart/orbe) * 2; // Arc de Soleil très puissant
-          if (est_harm && est_ben) s += poids;
-          if (!est_harm && est_mal) s -= poids;
-          if (est_harm && est_mal) s += poids * 0.3;
-          if (!est_harm && est_ben) s -= poids * 0.3;
-        }
-      }
-    }
-  }
-  return s * 0.4;
-}
 
 // ============================================================
 // NŒUDS LUNAIRES (transits)
 // ============================================================
-function scoreNoeudTransit(posT, posN, AS, MC, dom) {
-  const noeudT = posT.Noeud;
-  const noeudSudT = (noeudT + 180) % 360;
-  const natal = { ...posN, AS, MC };
-  let s = 0;
-  for (const [nom, deg] of Object.entries(natal)) {
-    let diffN = Math.abs(noeudT - deg); if (diffN > 180) diffN = 360 - diffN;
-    let diffS = Math.abs(noeudSudT - deg); if (diffS > 180) diffS = 360 - diffS;
-    if (diffN < 3) { // Nœud Nord sur point natal
-      s += nom === 'Jupiter' ? 1.5 : nom === 'Venus' ? 1 :
-           nom === 'Saturne' ? -1 : nom === 'Mars' ? -0.5 :
-           nom === 'AS' || nom === 'MC' ? 1 : 0.5;
-    }
-    if (diffS < 3) { // Nœud Sud sur point natal (plus difficile)
-      s -= nom === 'Saturne' ? 1.5 : nom === 'Mars' ? 1 :
-           nom === 'Jupiter' ? 0.5 : 0.5;
-    }
-  }
-  return s;
-}
 
 // ============================================================
 // ANTISCIA
@@ -4200,24 +3654,6 @@ function calcAntiscia(deg) {
   return (180 - deg + 360) % 360;
 }
 
-function scoreAntiscia(posT, posN, AS, MC, dom) {
-  let s = 0;
-  const natal = { ...posN, AS, MC };
-  for (const [nomT, degT] of Object.entries(posT)) {
-    const antiscia = calcAntiscia(degT);
-    for (const [nomN, degN] of Object.entries(natal)) {
-      let diff = Math.abs(antiscia - degN);
-      if (diff > 180) diff = 360 - diff;
-      if (diff < 1.5) { // Antiscia en conjonction avec point natal
-        const est_ben = nomT === 'Jupiter' || nomT === 'Venus';
-        const est_mal = nomT === 'Saturne' || nomT === 'Mars' || nomT === 'Pluton';
-        if (est_ben) s += 1;
-        if (est_mal) s -= 1;
-      }
-    }
-  }
-  return s * 0.3;
-}
 
 // ============================================================
 // PART DE FORTUNE ET POINTS ARABES
@@ -4247,16 +3683,6 @@ function calcPartEsprit(AS, soleil, lune, nocturne=false) {
   return nocturne ? ((AS + lune - soleil)%360+360)%360 : ((AS + soleil - lune)%360+360)%360;
 }
 
-function scorePartsFortune(posT, posN, AS, MC, dom) {
-  let nuit=false;
-  try{if(USER)nuit=prevChartIsNightV88(USER.jd,USER.lat,USER.lon,posN.Soleil,AS,MC);}catch(e){}
-  const partF=calcPartFortune(AS,posN.Soleil,posN.Lune,nuit);
-  let s=0,diff=Math.abs(posT.Jupiter-partF);if(diff>180)diff=360-diff;
-  if(diff<1.2)s+=(1-diff/1.2)*(dom==='finances'||dom==='chance'||dom==='tous'||dom==='general'?1.0:.35);
-  diff=Math.abs(posT.Saturne-partF);if(diff>180)diff=360-diff;
-  if(diff<1.0)s-=(1-diff/1.0)*.65;
-  return s;
-}
 
 // ============================================================
 // PLANÈTES HORS-LIMITES (déclinaison)
@@ -4267,12 +3693,6 @@ function calcDeclinaison(jd, planete, nomPlanete) {
   // Repli indicatif uniquement : longitude seule ne suffit pas à une vraie déclinaison.
   const eps=calcObliquite(jd)*Math.PI/180,lon=Number(planete)*Math.PI/180;
   return Math.asin(Math.sin(eps)*Math.sin(lon))*180/Math.PI;
-}
-function scoreHorsLimites(jd, posT) {
-  // V88 : une planète hors-limites décrit une intensification, pas une polarité bonne/mauvaise.
-  // Elle ne modifie donc plus le score prévisionnel. Cela évite l'ancien raccourci
-  // « bénéfique OOB = positif / maléfique OOB = négatif ».
-  return 0;
 }
 
 // ============================================================
@@ -4293,54 +3713,12 @@ function calcRetourLunaire(jdNatal, jdAnalyse) {
   return jdRL;
 }
 
-function scoreRetourLunaire(jdNatal, jdAnalyse, posN, AS, MC, dom) {
-  const jdRL = calcRetourLunaire(jdNatal, jdAnalyse);
-  const posRL = calcPos(jdRL);
-  let { AS: AS_rl, MC: MC_rl } = calcASMC(jdRL, USER.lat, USER.lon);
-  let s = 0;
-  const natal = { ...posN, AS, MC };
-  const rl = { ...posRL, AS: AS_rl, MC: MC_rl };
-  for (const [nomT, degT] of Object.entries(rl)) {
-    for (const [nomN, degN] of Object.entries(natal)) {
-      let diff = Math.abs(degT - degN); if (diff > 180) diff = 360 - diff;
-      if (diff < 1.50) {
-        const poids = (1 - diff/1.50) * 0.8;
-        const est_ben = nomT === 'Jupiter' || nomT === 'Venus';
-        const est_mal = nomT === 'Saturne' || nomT === 'Mars' || nomT === 'Pluton';
-        if (est_ben) s += poids;
-        if (est_mal) s -= poids;
-      }
-    }
-  }
-  return s * 0.3;
-}
 
 // ============================================================
 // ENRICHISSEMENT COMPLET
 // ============================================================
-function enrichirComplet(posT, jdNatal, anneeVie, jdAnalyse, posN, AS, MC, dom) {
-  // 1. Progressions secondaires
-  if (anneeVie >= 0) {
-    posT = enrichirAvecProgressions(posT, jdNatal, anneeVie);
-  }
-  return posT;
-}
 
-function scorerComplet(posT, posN, AS, MC, dom, jdNatal, anneeVie, jdAnalyse) {
-  // V88 — architecture unifiée : cette ancienne couche ne sert plus qu'au micro-climat
-  // général (transits + progressions déjà présents dans posT). Les Nœuds, antiscia,
-  // Parts, RS, profections, éclipses, arcs et retours sont traités UNE SEULE FOIS par
-  // le moteur V51/V82, où ils sont hiérarchisés en preuves/confirmations/déclencheurs.
-  if(dom!=='general' && dom!=='tous') return 0;
-  return scorer(posT, posN, AS, MC, dom);
-}
 
-function scorerJour(jdJour, posN, AS, MC, dom, jdNatal) {
-  // V88 — aucun second score annuel fixe ici : cela doublonnait la RS, la profection,
-  // les éclipses, les arcs et le retour lunaire déjà évalués par le moteur central.
-  // Le jour est donc composé de : micro-climat horaire + événements V51/V82 qualifiés.
-  return 0;
-}
 
 
 function ecartAspectExact(a,b,aspects=[0,60,90,120,180]){
@@ -4911,8 +4289,9 @@ function prevDomainProofV77(domain,signals){
   // Une cuspide partagée (H5/H6/H8/H9/H12, IC) exige un soutien indépendant
   // du même domaine : une autre technique ou un significateur contextuel assez fort.
   const anchorRoots=new Set(anchors.map(x=>prevTechniqueRootV80(x.famille)));
-  const supports=u.filter(x=>!x.anchor && Number(x.poids||0)>=.60 && !anchorRoots.has(prevTechniqueRootV80(x.famille)));
-  if(shared.length && supports.length)return {confirmed:true,type:'shared-sector+support',anchors:shared,supports};
+  const sharedTargets=new Set(shared.map(x=>String(x.target||'')));
+  const supports=u.filter(x=>!x.anchor && Number(x.poids||0)>=.60 && !anchorRoots.has(prevTechniqueRootV80(x.famille)) && !sharedTargets.has(String(x.target||'')));
+  if(shared.length && supports.length)return {confirmed:true,type:'shared-sector+independent-support',anchors:shared,supports};
   return {confirmed:false,type:'ambiguous-only',anchors,supports:[]};
 }
 
@@ -5332,15 +4711,15 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
     for(const ecl of calcEclipses(jdJour)){
       for(const target of ['Soleil','Lune','AS','MC','IC','DS']){
         let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
-        if(d<=1.45)add('eclipse',3.0,'mixte',`Éclipse sur ${target} (${d.toFixed(2)}°)`,target,true);
+        if(d<=1.45)add('eclipse',3.0*Number(ecl.factor||1),'mixte',`Éclipse sur ${target} (${d.toFixed(2)}°)`,target,true);
       }
       for(const target of targetsSector){
         let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
-        if(d<=.8)add('eclipse-secteur',2.0,'mixte',`Éclipse active ${target} (${d.toFixed(2)}°)`,target,true);
+        if(d<=.8)add('eclipse-secteur',2.0*Number(ecl.factor||1),'mixte',`Éclipse active ${target} (${d.toFixed(2)}°)`,target,true);
       }
       for(const target of targetsRuler){
         let d=Math.abs(ecl.lon-natal[target]); if(d>180)d=360-d;
-        if(d<=.65)add('eclipse-ruler',1.75,'mixte',`Éclipse touche le maître de maison ${target.slice(1)} (${d.toFixed(2)}°)`,target,true);
+        if(d<=.65)add('eclipse-ruler',1.75*Number(ecl.factor||1),'mixte',`Éclipse touche le maître de maison ${target.slice(1)} (${d.toFixed(2)}°)`,target,true);
       }
     }
   }catch(e){}
@@ -5391,16 +4770,14 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
     const classicAnchorSignals=anchorSignals.filter(x=>!['progression-converse','arc-solaire-converse','transit-progresse','station-planetaire','franchissement-cuspide','antiscia','contra-antiscia','revolution-solaire'].includes(prevTechniqueRootV80(x.famille)));
     if(!classicAnchorSignals.length) continue;
 
-    // V81 — les retours planétaires/lunaires sont injectés seulement APRÈS preuve du domaine.
-    // Ils renforcent le contexte et le timing sans pouvoir fabriquer Travail/Finance/Famille/etc.
-    // Les supports globaux sont plafonnés : l'ajout de techniques ne doit pas transformer
-    // une accumulation de petits indices en faux « grand événement ».
-    for(const gs of [...globalSupports].sort((a,b)=>Math.abs(b.poids)-Math.abs(a.poids)).slice(0,6)) u.push({...gs,domain});
-
-    // La RS peut seulement moduler un domaine déjà prouvé ; elle ne peut pas le créer.
-    if(Math.abs(rsContexte)>=1.35){
-      u.push({famille:'revolution-solaire',poids:.75,pol:rsContexte>0?'positive':'difficile',texte:`Contexte annuel ${rsContexte>0?'porteur':'exigeant'} (${rsContexte.toFixed(1)})`,target:'RS',domain,core:false,anchor:false});
-    }
+    // V89 — CONTEXTE GLOBAL ≠ PREUVE SECTORIELLE.
+    // Retours planétaires, retour lunaire, phase progressée globale et score global de RS
+    // peuvent aider à dater/interpréter un cycle, mais ils n'augmentent PLUS la force de
+    // Travail/Finance/Famille/etc. sans contact sectoriel propre. Les variantes ciblées de
+    // ces techniques (RS sur une ancre, maître de l'année sur une ancre...) restent, elles,
+    // dans `u` via addSupport car elles touchent réellement le domaine.
+    const contextSupports=[...globalSupports].sort((a,b)=>Math.abs(b.poids)-Math.abs(a.poids)).slice(0,6);
+    if(Math.abs(rsContexte)>=1.35)contextSupports.push({famille:'revolution-solaire-globale',poids:0,pol:'mixte',texte:`Contexte annuel global RS (${rsContexte.toFixed(1)})`,target:'RS',core:false,anchor:false});
 
     const fam=new Set(u.map(x=>prevTechniqueRootV80(x.famille)));
     const coreFamilies=new Set(u.filter(x=>x.core&&x.poids>=1.8).map(x=>prevTechniqueRootV80(x.famille)));
@@ -5427,7 +4804,7 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
     if(pol==='mixte'&&anchorFamilies.size>=2&&coreFamilies.size>=2&&(posEff+negEff)>=8.0)niveau='fort';
 
     const label=prevLabelDomaineAgeV51(domain,date);
-    out.push({domain,label,polarite:pol,niveau,force,poidsPos:posEff,poidsNeg:negEff,familles:[...fam],coreFamilies:[...coreFamilies],anchorFamilies:[...anchorFamilies],anchorCount:anchorSignals.length,domainProof:domainProof.type,signatures:u.slice(0,8),scenarios:prevScenarioV51(domain,pol==='positive'?'positive':'difficile',date)});
+    out.push({domain,label,polarite:pol,niveau,force,poidsPos:posEff,poidsNeg:negEff,familles:[...fam],coreFamilies:[...coreFamilies],anchorFamilies:[...anchorFamilies],anchorCount:anchorSignals.length,domainProof:domainProof.type,signatures:u.slice(0,8),contextSupports:contextSupports.slice(0,7),scenarios:prevScenarioV51(domain,pol==='positive'?'positive':'difficile',date)});
   }
   return out.sort((a,b)=>b.force-a.force);
 }
@@ -5636,9 +5013,9 @@ function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache){
 
 function apDailyMicroAllV84(jdJour,posN,AS,MC,posCache){
   const sels=['travail','finances','amour','famille','voyage','sante','spirituel'];
-  const all=[];
+  const all=[],parts=[];
   for(const dom of sels){
-    const r=apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache);
+    const r=apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache);parts.push({dom,r});
     for(const s of (r.signals||[]))all.push({...s,selection:dom});
   }
   const uniq=new Map();
@@ -5647,7 +5024,10 @@ function apDailyMicroAllV84(jdJour,posN,AS,MC,posCache){
     const old=uniq.get(k); if(!old||s.importance>old.importance)uniq.set(k,s);
   }
   const signals=[...uniq.values()].sort((a,b)=>b.importance-a.importance||a.ecart-b.ecart).slice(0,12);
-  return {hasSignal:signals.length>0,signals,bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
+  const best=parts.reduce((a,b)=>Number(b.r?.bestScore||0)>Number(a.r?.bestScore||0)?b:a,{dom:'',r:{bestScore:0,bestHour:12}});
+  const worst=parts.reduce((a,b)=>Number(b.r?.worstScore||0)<Number(a.r?.worstScore||0)?b:a,{dom:'',r:{worstScore:0,worstHour:12}});
+  const dominant=parts.reduce((s,x)=>s+Number(x.r?.dominantScore||0),0)/Math.max(1,parts.length);
+  return {hasSignal:signals.length>0,signals,bestScore:Number(best.r.bestScore||0),worstScore:Number(worst.r.worstScore||0),bestHour:Number(best.r.bestHour||12),worstHour:Number(worst.r.worstHour||12),dominantScore:dominant,bestDomain:best.dom,worstDomain:worst.dom};
 }
 
 
@@ -5884,41 +5264,16 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
   for(let j=0;j<nb;j++){
     const jdJ=jdD+j, date=jdVersDate(jdJ);
     const anneeVie = calcAnneeVieExacte(jdNatal, jdJ);
-    let sFixe = 0;
-    try { sFixe = scorerJour(jdJ, posN, AS, MC, dom, jdNatal); } catch(e) { sFixe = 0; }
-    let maxS=-999,maxH=12,minS=999,minH=12;
+    // V89 — les prévisions importantes ne sont plus classées par l'ancien score générique.
+    // On calcule les 24 positions uniquement pour le timing fin. Le classement provient
+    // ensuite de V51/V82 (preuves de domaine) + micro-déclencheurs sectoriels réels.
+    let maxS=0,maxH=12,minS=0,minH=12;
     const rawPosCache=Array(24);
     for(let h=0;h<24;h++){
-      try {
-        const jdH=apJDForLocalHourV86(jdJ,h);
-        let posT = calcPos(jdH);
-        rawPosCache[h]=posT;
-        posT = enrichirComplet(posT, jdNatal, anneeVie, jdH, posN, AS, MC, dom);
-        const score = scorerComplet(posT, posN, AS, MC, dom, jdNatal, anneeVie, jdH) + sFixe;
-        if(score>maxS){maxS=score;maxH=h;}
-        if(score<minS){minS=score;minH=h;}
-      } catch(e) {}
+      try { rawPosCache[h]=calcPos(apJDForLocalHourV86(jdJ,h)); } catch(e) {}
     }
-
-    // Les déclencheurs génériques servent uniquement à une lecture générale. En analyse
-    // spécialisée, un déclencheur sans preuve de domaine ne doit jamais être recyclé.
     let declencheurs=[];
-    if(analyseGenerale){
-      for(const h of [...new Set([maxH,minH])]){
-        try{
-          const jdH=apJDForLocalHourV86(jdJ,h);
-          let pt=calcPos(jdH); pt=enrichirComplet(pt,jdNatal,anneeVie,jdH,posN,AS,MC,dom);
-          declencheurs.push(...detecterDeclencheurs(pt,posN,AS,MC,jdNatal,anneeVie,jdJ));
-        }catch(e){}
-      }
-      declencheurs=[...new Map(declencheurs.map(x=>[(x.id||x.label),x])).values()];
-    }
-
     let convergence=null;
-    if(analyseGenerale){
-      try { convergence=analyserSignaturesJour(jdJ,Math.abs(minS)>Math.abs(maxS)?minH:maxH,posN,AS,MC,dom,jdNatal); }
-      catch(e) { convergence={niveau:'faible',familles:[],poids:0,signatures:[],impact:impactConcretCible(null,dom,date)}; }
-    }
 
     // V76 : on calcule tous les domaines objectivement, puis on filtre seulement après.
     let exceptionnelsDomaines=[];
@@ -5973,27 +5328,29 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
         convergence={niveau:'faible',familles:[],poids:0,signatures:[],impact:impactConcretCible(null,dom,date)};
       }
     }else{
-      const exceptionnelsForts=exceptionnelsDomaines.filter(e=>e.niveau==='fort'||e.niveau==='exceptionnel');
+      const activeRows=exceptionnelsDomaines.filter(e=>e.niveau!=='faible').sort((a,b)=>b.force-a.force);
+      const exceptionnelsForts=activeRows.filter(e=>e.niveau==='fort'||e.niveau==='exceptionnel');
       const negExceptionnel=exceptionnelsForts.some(e=>e.polarite==='difficile'||e.polarite==='mixte');
       const posExceptionnel=exceptionnelsForts.some(e=>e.polarite==='positive'||e.polarite==='mixte');
-      // V88 : l'ancien catalogue de déclencheurs est seulement descriptif.
-      // Seul le moteur multidomaine convergent V51 peut qualifier une journée de forte/exceptionnelle.
-      critique=negExceptionnel;
-      positifExceptionnel=posExceptionnel;
-      if(!negExceptionnel&&!posExceptionnel)declencheurs=[];
-      else declencheurs=declencheurs.filter(d=>negExceptionnel?d.type==='neg':d.type==='pos').slice(0,3);
+      critique=negExceptionnel; positifExceptionnel=posExceptionnel;
 
-      // V81 — même en prévision « Général », le moteur multidomaine central participe
-      // au classement des jours. Ainsi retours, progressions/arcs complémentaires et
-      // déclencheurs rapides ne restent pas cantonnés aux seuls modules spécialisés.
-      const posRows=exceptionnelsDomaines.filter(e=>e.polarite==='positive'&&e.niveau!=='faible').sort((a,b)=>b.force-a.force);
-      const negRows=exceptionnelsDomaines.filter(e=>e.polarite==='difficile'&&e.niveau!=='faible').sort((a,b)=>b.force-a.force);
-      if(posRows.length) maxS=Math.max(maxS, Math.max(.1,apSignedDomainScoreV76(posRows[0])));
-      if(negRows.length) minS=Math.min(minS, Math.min(-.1,apSignedDomainScoreV76(negRows[0])));
+      const posRows=activeRows.filter(e=>e.polarite==='positive').sort((a,b)=>b.force-a.force);
+      const negRows=activeRows.filter(e=>e.polarite==='difficile').sort((a,b)=>b.force-a.force);
+      if(posRows.length)maxS=Math.max(.1,apSignedDomainScoreV76(posRows[0]));
+      if(negRows.length)minS=Math.min(-.1,apSignedDomainScoreV76(negRows[0]));
 
+      // Sur 1 à 30 jours, une journée sans grand cycle peut quand même comporter une
+      // activation concrète. Elle est classée uniquement à partir des ancres sectorielles
+      // du micro-moteur, jamais par un aspect générique sans domaine.
+      if(microDomaine&&microDomaine.hasSignal){
+        maxH=Number(microDomaine.bestHour||12);minH=Number(microDomaine.worstHour||12);
+        maxS=Math.max(maxS,Math.min(3.6,Number(microDomaine.bestScore||0)));
+        minS=Math.min(minS,Math.max(-3.6,Number(microDomaine.worstScore||0)));
+      }
+      const strongest=activeRows[0]||null;
+      convergence=strongest?apConvergenceFromRowV76(strongest,'general',date):{niveau:'faible',familles:[],poids:0,signatures:[],impact:impactConcretCible(null,'general',date)};
       scoreDominant=(Math.abs(minS)>Math.abs(maxS)?minS:maxS);
-      if(critique&&!positifExceptionnel)scoreDominant=Math.min(minS,maxS);
-      else if(positifExceptionnel&&!critique)scoreDominant=Math.max(minS,maxS);
+      if(strongest&&strongest.polarite==='mixte'&&Math.abs(scoreDominant)<.1)scoreDominant=0;
     }
 
     let dailyEventProfile=null;
@@ -6015,258 +5372,8 @@ function scoreLabel(s){
 }
 
 // ============================================================
-// DÉCLENCHEURS CRITIQUES
+// V89 — ancien catalogue de déclencheurs génériques supprimé : le timing est fourni par les ancres sectorielles V84/V86.
 // ============================================================
-
-const DECLENCHEURS = [
-  // ===== NÉGATIFS MAJEURS =====
-  { id:'sat-sol-dur', type:'neg', force:5,
-    test:(t,n,prog)=>{
-      const pts = ['Soleil','Lune','AS','MC'];
-      const sat = t['Saturne']; if(sat===undefined) return false;
-      for(const pt of pts){
-        const deg = n[pt]; if(deg===undefined) continue;
-        let diff = Math.abs(sat-deg); if(diff>180) diff=360-diff;
-        for(const a of [0,90,180,45,135]){
-          if(Math.abs(diff-a)<=2) return true;
-        }
-      }
-      return false;
-    },
-    label:'⚠ Saturne active un point vital',
-    desc:'Période de contrainte ou de responsabilité importante. Saturne invite à consolider, à faire face — ce qui se construit dans ces moments tient dans la durée.'
-  },
-  { id:'plu-sol-dur', type:'neg', force:5,
-    test:(t,n,prog)=>{
-      // Pluton transit sur Soleil, Lune, AS ou MC natal UNIQUEMENT
-      // On exclut Pluton sur Pluton natal (transit générationnel sans valeur journalière)
-      const pts = ['Soleil','Lune','AS','MC'];
-      const plu = t['Pluton']; if(plu===undefined) return false;
-      for(const pt of pts){
-        const deg = n[pt]; if(deg===undefined) continue;
-        let diff = Math.abs(plu-deg); if(diff>180) diff=360-diff;
-        for(const a of [0,90,180,45,135]){
-          if(Math.abs(diff-a)<=2) return true;
-        }
-      }
-      return false;
-    },
-    label:'⚠ Pluton en aspect radical',
-    desc:'Période de transformation profonde. Ce qui change maintenant change en profondeur — une rupture possible, mais aussi une reconstruction sur des bases plus solides.'
-  },
-  { id:'mars-plu-dur', type:'neg', force:4,
-    test:(t,n,prog)=>{
-      return verifierAspects(t,n,prog,['Mars','P-Mars'],['Pluton','Saturne'],[0,90,180],1);
-    },
-    label:'⚠ Mars — activation intense à cadrer',
-    desc:'Activation très intense : privilégier le cadrage, éviter les réactions impulsives et distinguer tension ponctuelle d’événement durable.'
-  },
-  { id:'eclipse-natal', type:'neg', force:5,
-    test:(t,n,prog,eclipses)=>{
-      if(!eclipses || !eclipses.length) return false;
-      const natal={...n};
-      for(const ecl of eclipses){
-        for(const [nom,deg] of Object.entries(natal)){
-          let diff=Math.abs(ecl.lon-deg); if(diff>180)diff=360-diff;
-          if(diff<2 && (nom==='Soleil'||nom==='Lune'||nom==='AS'||nom==='MC')) return true;
-        }
-      }
-      return false;
-    },
-    label:'⚠ Éclipse sur point natal majeur',
-    desc:'Une éclipse active un point clé de votre thème. Les éclipses marquent souvent des tournants importants — changements, révélations, ou nouveaux départs.'
-  },
-  { id:'prog-lune-sat', type:'neg', force:4,
-    test:(t,n,prog)=>{
-      if(!prog) return false;
-      let diff=Math.abs(prog.Lune-n.Saturne); if(diff>180)diff=360-diff;
-      if(diff<2) return true;
-      diff=Math.abs(prog.Lune-n.Pluton); if(diff>180)diff=360-diff;
-      return diff<2;
-    },
-    label:'⚠ Lune progressée sur Saturne ou Pluton natal',
-    desc:'La Lune progressée traverse une zone de profondeur : intériorisation, maturation, responsabilités ou changement émotionnel selon le domaine réellement confirmé.'
-  },
-  { id:'arc-sat-plu', type:'neg', force:5,
-    test:(t,n,prog,ecl,arc)=>{
-      if(arc===undefined||arc===null) return false;
-      const cibles=[n.Soleil,n.Lune,n.AS,n.MC];
-      const planetesDures=[n.Saturne,n.Pluton,n.Mars];
-      for(const pd of planetesDures){
-        const posDirigee=(pd+arc)%360;
-        for(const c of cibles){
-          let diff=Math.abs(posDirigee-c); if(diff>180)diff=360-diff;
-          if(diff<1.5) return true;
-        }
-      }
-      return false;
-    },
-    label:'⚠ Arc de Soleil active une planète difficile sur point vital',
-    desc:'Un axe fondamental de votre thème est activé par progression. Période charnière — ce qui se passe maintenant laissera une empreinte durable.'
-  },
-  { id:'multi-lourds', type:'neg', force:6,
-    test:(t,n,prog)=>{
-      let count=0;
-      const lourdes=['Saturne','Pluton','Mars','Uranus'];
-      const sensibles=[n.Soleil, n.Lune, n.AS, n.MC];
-      const aspects=[0,90,180,45,135];
-      for(const pl of lourdes){
-        const deg=t[pl]; if(deg===undefined) continue;
-        for(const s of sensibles){
-          if(s===undefined) continue;
-          let diff=Math.abs(deg-s); if(diff>180)diff=360-diff;
-          for(const a of aspects){
-            if(Math.abs(diff-a)<2){ count++; break; }
-          }
-        }
-      }
-      return count>=3; // au moins 3 aspects lourds simultanés sur points personnels
-    },
-    label:'🔴 Convergence de forces difficiles — journée critique',
-    desc:'Configuration rare : plusieurs forces majeures convergent sur votre thème. Journée d\'exception — restez vigilant et ne prenez pas de décisions irréversibles à la légère.'
-  },
-  { id:'ura-dur', type:'neg', force:3,
-    test:(t,n,prog)=>{
-      const pts = ['Soleil','Lune','AS','MC'];
-      const ura = t['Uranus']; if(ura===undefined) return false;
-      for(const pt of pts){
-        const deg = n[pt]; if(deg===undefined) continue;
-        let diff = Math.abs(ura-deg); if(diff>180) diff=360-diff;
-        for(const a of [0,90,180]){
-          if(Math.abs(diff-a)<=2) return true;
-        }
-      }
-      return false;
-    },
-    label:'⚡ Uranus — changement imprévu / besoin de liberté',
-    desc:'Uranus accentue l’imprévu, l’autonomie et le changement de rythme. La manifestation concrète dépend du domaine réellement activé.'
-  },
-
-  // ===== POSITIFS MAJEURS =====
-  { id:'jup-sol-harm', type:'pos', force:5,
-    test:(t,n,prog)=>{
-      return verifierAspects(t,n,prog,['Jupiter','P-Soleil'],['Soleil','Lune','AS','MC','Jupiter'],[0,60,120],1);
-    },
-    label:'✨ Jupiter active un point vital',
-    desc:'Période d’expansion potentielle. Les possibilités concrètes dépendent du domaine confirmé et des autres techniques convergentes.'
-  },
-  { id:'arc-jup-harm', type:'pos', force:5,
-    test:(t,n,prog,ecl,arc)=>{
-      if(arc===undefined||arc===null) return false;
-      const jupDirige=(n.Jupiter+arc)%360;
-      const cibles=[n.Soleil,n.Lune,n.AS,n.MC,n.Venus];
-      for(const c of cibles){
-        let diff=Math.abs(jupDirige-c); if(diff>180)diff=360-diff;
-        if(diff<1.5) return true;
-      }
-      return false;
-    },
-    label:'✨ Arc de Soleil — Jupiter sur point vital',
-    desc:'Configuration exceptionnellement favorable. Jupiter en progression sur un axe majeur — période de grande réussite, d\'abondance et d\'opportunités rares.'
-  },
-  { id:'prog-lune-jup', type:'pos', force:4,
-    test:(t,n,prog)=>{
-      if(!prog) return false;
-      let diff=Math.abs(prog.Lune-n.Jupiter); if(diff>180)diff=360-diff;
-      if(diff<2) return true;
-      diff=Math.abs(prog.Lune-n.Venus); if(diff>180)diff=360-diff;
-      return diff<2;
-    },
-    label:'✨ Lune progressée sur Jupiter ou Vénus natal',
-    desc:'Belle période de bonheur et d\'abondance émotionnelle. Le cœur est ouvert, les rencontres sont chaleureuses, la vie se déploie avec douceur.'
-  },
-  { id:'multi-positifs', type:'pos', force:6,
-    test:(t,n,prog)=>{
-      let count=0;
-      const benefiques=['Jupiter','Venus'];
-      const sensibles=[n.Soleil,n.Lune,n.AS,n.MC];
-      for(const pl of benefiques){
-        const deg=t[pl]; if(deg===undefined) continue;
-        for(const s of sensibles){
-          let diff=Math.abs(deg-s); if(diff>180)diff=360-diff;
-          if(diff<1.5) count++;
-        }
-      }
-      if(prog){
-        let diff=Math.abs(prog.Soleil-n.Jupiter); if(diff>180)diff=360-diff;
-        if(diff<1) count++;
-      }
-      return count>=2;
-    },
-    label:'🌟 Convergence de forces favorables — journée exceptionnelle',
-    desc:'Configuration rare et précieuse : plusieurs forces bénéfiques convergent. Journée exceptionnelle — les grandes décisions prises aujourd\'hui ont toutes les chances d\'être couronnées de succès.'
-  },
-  { id:'ven-as-mc', type:'pos', force:3,
-    test:(t,n,prog)=>{
-      return verifierAspects(t,n,prog,['Venus'],['AS','MC','Venus'],[0,60,120],1);
-    },
-    label:'💫 Vénus — harmonie et attractivité',
-    desc:'Journée légère et harmonieuse. Charme naturel, relations douces, plaisirs — profitez-en pour soigner vos liens et vous faire du bien.'
-  },
-];
-
-// Orbes par planète pour les déclencheurs
-const ORBES_DEC = {
-  Pluton:.90, Neptune:.85, Uranus:.95, Saturne:1.00,
-  Jupiter:1.10, Mars:.80, Venus:.78, Soleil:.78,
-  Mercure:.65, Lune:1.20,
-  'P-Soleil':.45, 'P-Lune':.60, 'P-Venus':.45,
-  'P-Mars':.45, 'P-Mercure':.40, 'P-AS':.40, 'P-MC':.40
-};
-
-function verifierAspects(transit, natal, prog, plTrans, plNatal, aspects, orbeDefaut) {
-  const posT = {...transit};
-  if(prog) Object.assign(posT, {
-    'P-Soleil':prog.Soleil,'P-Lune':prog.Lune,'P-Venus':prog.Venus,
-    'P-Mars':prog.Mars,'P-Mercure':prog.Mercure,'P-AS':prog.AS,'P-MC':prog.MC
-  });
-  const posN = {...natal};
-  for(const pT of plTrans){
-    const degT = posT[pT]; if(degT===undefined||degT===null) continue;
-    const orbe = ORBES_DEC[pT] || orbeDefaut || 2;
-    for(const pN of plNatal){
-      const degN = posN[pN]; if(degN===undefined||degN===null) continue;
-      let diff=Math.abs(degT-degN); if(diff>180)diff=360-diff;
-      for(const a of aspects){
-        if(Math.abs(diff-a)<=orbe) return true;
-      }
-    }
-  }
-  return false;
-}
-
-function detecterDeclencheurs(posT, posN, AS, MC, jdNatal, anneeVie, jdJour) {
-  // Construire le natal complet avec AS et MC explicitement
-  const natal = {
-    Soleil: posN.Soleil, Lune: posN.Lune, Mercure: posN.Mercure,
-    Venus: posN.Venus, Mars: posN.Mars, Jupiter: posN.Jupiter,
-    Saturne: posN.Saturne, Uranus: posN.Uranus, Neptune: posN.Neptune,
-    Pluton: posN.Pluton, Noeud: posN.Noeud,
-    AS: AS, MC: MC
-  };
-
-  let prog = null;
-  try {
-    if(anneeVie >= 0) prog = calcProgressions(jdNatal, anneeVie);
-  } catch(e) {}
-
-  let arc = null;
-  try { if(anneeVie >= 0) arc = calcArcSoleil(jdNatal, anneeVie); } catch(e) {}
-
-  let eclipses = [];
-  try { eclipses = calcEclipses(jdJour); } catch(e) {}
-
-  const declenches = [];
-  for(const d of DECLENCHEURS){
-    try {
-      if(d.test(posT, natal, prog, eclipses, arc)) {
-        declenches.push(d);
-      }
-    } catch(e) {}
-  }
-  return declenches.sort((a,b) => b.force - a.force);
-}
-
 function formatRapport(texte){
   texte = texte.replace(/^-{3,}\s*$/gm, '');
   return texte.split('\n').map(l => {
@@ -9432,7 +8539,14 @@ function yComplementRelationV82(jd,part,points,mode,alreadyRelevant=false){
     {name:USER.prenom,jdNatal:USER.jd,pos:USER.pos,AS:USER.AS,MC:USER.MC,lat:USER.lat,lon:USER.lon},
     {name:part.prenom2,jdNatal:part.jd2,pos:part.pos2,AS:part.AS2,MC:part.MC2,lat:part.lat2,lon:part.lon2}
   ];
-  const add=(tech,src,ch,pt,asp,w)=>{const pol=(asp===90||asp===180)?-1:1,theme=yThemeTransitRelationV26(src,pol<0?'tension':'harmonie',pol*w,m);touches.push({tr:tech+' '+src,trCle:tech+'-'+src,sourceQui:ch.name,qui:pt?pt.qui:ch.name,point:pt?pt.label:'cycle',clePoint:pt?pt.cle:src,anchor:false,delta:pol*w,theme,aspect:asp,aspectNature:pol<0?'tension':'harmonie',orb:0,technique:tech});score+=pol*w;};
+  const add=(tech,src,ch,pt,asp,w)=>{
+    const planetes=new Set(['Jupiter','Saturne','Uranus','Neptune','Pluton','Venus','Mars','Mercure']);
+    let nature=planetes.has(src)?prevPolariteV51(src,asp):((asp===90||asp===180)?'difficile':'mixte');
+    const sign=nature==='positive'?1:nature==='difficile'?-1:0,delta=sign*w;
+    const aspNature=sign<0?'tension':sign>0?'harmonie':'activation';
+    const theme=yThemeTransitRelationV26(src,aspNature,delta,m);
+    touches.push({tr:tech+' '+src,trCle:tech+'-'+src,sourceQui:ch.name,qui:pt?pt.qui:ch.name,point:pt?pt.label:'cycle',clePoint:pt?pt.cle:src,anchor:false,delta,theme,aspect:asp,aspectNature:aspNature,orb:0,technique:tech});score+=delta;
+  };
   for(const ch of charts){
     if(!ch.jdNatal||!ch.pos)continue;const age=calcAnneeVieExacte(ch.jdNatal,jd),anchors=points.filter(p=>p.anchor&&p.qui!==ch.name);
     let p=null,pc=null;try{const jdp=ch.jdNatal+age,pp=calcPos(jdp),ax=calcASMC(jdp,ch.lat,ch.lon);p={...pp,AS:ax.AS,MC:ax.MC};}catch(e){}try{pc=calcConverseProgressionsV82(ch.jdNatal,age,ch.lat,ch.lon);}catch(e){}
@@ -9996,7 +9110,7 @@ ${contexteAnalyseUniversel(today,false)}
 
 Rédige uniquement une synthèse de 3 à 4 phrases maximum. Respecte strictement la polarité calculée de chaque période : favorable, difficile ou mixte. N'assombris pas une période favorable et n'embellis pas une période difficile. Si une période est mixte, explique clairement qu'elle contient à la fois ouverture et ajustement. Ne donne aucune priorité automatique à la famille, au couple ou au travail. Parle de vie concrète adaptée à l'âge réel. Aucun jargon astrologique. N'invente aucun événement précis et ne présente jamais une grossesse, un décès, une rupture, un licenciement ou un problème médical comme une certitude.`;
     try{
-      const data=await appelerClaude({feature:'events',featureContext:{horizon:'24 mois',label:'Grands événements',engine:'v74-balanced-v51'},model:'claude-sonnet-4-6',max_tokens:350,system:'Tu rédiges une synthèse concrète à partir d’un calcul déjà classé en favorable, difficile ou mixte. Tu respectes ce classement et tu ne modifies jamais la polarité pour dramatiser. Aucun jargon astrologique.',messages:[{role:'user',content:prompt}]});
+      const data=await appelerClaude({feature:'events',featureContext:{horizon:'24 mois',label:'Grands événements',engine:'V89-sector-proof'},model:'claude-sonnet-4-6',max_tokens:350,system:'Tu rédiges une synthèse concrète à partir d’un calcul déjà classé en favorable, difficile ou mixte. Tu respectes ce classement et tu ne modifies jamais la polarité pour dramatiser. Aucun jargon astrologique.',messages:[{role:'user',content:prompt}]});
       if(report) report.innerHTML=formatRapport(texteClaude(data)||'');
     }catch(e){
       if(globalWrap) globalWrap.style.display='none';
@@ -10091,9 +9205,8 @@ async function apScannerQuestion10AnsV78(jdD, domaine, onProg) {
   // On injecte donc explicitement chaque date d'éclipse comprise dans l'horizon,
   // puis le raffinement de +/-30 jours s'appliquera si un domaine réel est touché.
   try{
-    for(const [iso] of ECLIPSES_OFFICIELLES_2025_2030){
-      const d=new Date(iso+'T12:00:00Z');
-      const off=Math.round((d-debut)/86400000);
+    for(const ecl of prevEclipseRangeV89(debut,fin)){
+      const d=ecl.date,off=Math.round((d-debut)/86400000);
       if(off>=0&&off<horizon)evalOffset(off);
     }
   }catch(e){}
@@ -11230,7 +10343,11 @@ function apJournalHtml(){return `<div class="ap-panel"><h2 data-ap="context_titl
 function apTimelineCycleKeyV88(x){
   const roots=[...new Set(((x.coreFamilies&&x.coreFamilies.length?x.coreFamilies:x.families)||[]).map(prevTechniqueRootV80))].sort();
   const anchors=[...new Set((x.signatures||[]).filter(s=>s.anchor).map(s=>String(s.target||'')))].sort();
-  return [x.domain,x.polarite,roots.slice(0,2).join('+')||'cycle',anchors.slice(0,2).join('+')||'anchor'].join('|');
+  // V89 — deux configurations différentes d'une même planète sur la même ancre ne
+  // doivent pas être fusionnées. On conserve la nature/aspect du signal mais on retire
+  // seulement l'écart exact, qui varie à chaque passage direct/rétrograde.
+  const configs=[...new Set((x.signatures||[]).filter(s=>s.anchor&&s.core).map(s=>String(s.texte||'').replace(/\(écart\s*[0-9.]+°\)/gi,'').replace(/,\s*[0-9.]+°\)/g,')').trim()).filter(Boolean))].sort();
+  return [x.domain,x.polarite,roots.slice(0,2).join('+')||'cycle',anchors.slice(0,2).join('+')||'anchor',configs.slice(0,2).join('+')||'config'].join('|');
 }
 function apTimelineClustersV88(items){
   const groups=[];
@@ -11258,7 +10375,7 @@ function apTimelinePeriodLabelV88(g){
 window.apRunTimeline=async function(){
   if(!USER){alert(apT('no_profile'));return;}
   if(!PREMIUM){ouvrirCompte();return;}
-  apTrack('timeline',{horizon:'10 years',engine:'V88-cycles'});
+  apTrack('timeline',{horizon:'10 years',engine:'V89-cycles'});
   const prog=document.getElementById('ap-timeline-progress'),list=document.getElementById('ap-timeline-list'),yearsEl=document.getElementById('ap-years');
   prog.textContent=apT('loading');list.innerHTML='';yearsEl.innerHTML='';
   const start=new Date(),items=[]; const timelineEnd=new Date(start);timelineEnd.setDate(timelineEnd.getDate()+3652);
@@ -11270,7 +10387,7 @@ window.apRunTimeline=async function(){
     idx++;if(idx%12===0){prog.textContent=`${Math.min(99,Math.round(idx/total*100))}%`;await new Promise(r=>setTimeout(r,0));}
   }
   // Les éclipses sont brèves et peuvent tomber entre deux points du pas de 14 jours.
-  try{for(const [iso] of ECLIPSES_OFFICIELLES_2025_2030){const d=new Date(iso+'T12:00:00Z');if(d<start||d>timelineEnd)continue;items.push(...apV51Signals(d,'marque').slice(0,5));}}catch(e){}
+  try{for(const ecl of prevEclipseRangeV89(start,timelineEnd)){const d=ecl.date;items.push(...apV51Signals(d,'marque').slice(0,5));}}catch(e){}
 
   // V88 : une Timeline = cycles, pas répétition du même transit tous les 14 jours.
   const groups=apTimelineClustersV88(items);
@@ -11327,7 +10444,7 @@ function apLoadContext(){const c=apGetLifeContext();[['relationship','ap-life-re
 
 // -------- V65 Historical validation (admin only, blind first) --------
 let AP_VALIDATION_BLIND=null;
-window.apBlindValidate=function(){if(!(USER_CONNECTE&&USER_CONNECTE.role==='admin'))return;if(!USER){alert(apT('no_profile'));return;}const v=document.getElementById('ap-validation-date')?.value||'';if(!v)return;apTrack('historical_validation',{date:v});const d=new Date(v+'T12:00:00'),jd=apJDFromDate(d);let rows=[];try{rows=analyserExceptionnelsTousDomainesV51(jd,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[];}catch(e){}rows=rows.filter(r=>r.niveau!=='faible').sort((a,b)=>b.force-a.force);let triggers=[];try{const posT=calcPos(jd);const prog=calcProgressions(USER.jd,calcAnneeVieExacte(USER.jd,jd));triggers=detecterDeclencheurs(posT,USER.pos,USER.AS,USER.MC,USER.jd,calcAnneeVieExacte(USER.jd,jd),jd)||[];}catch(e){}AP_VALIDATION_BLIND={date:v,rows,triggers};const el=document.getElementById('ap-validation-result');el.innerHTML=`<div class="ap-validation-signals">${rows.slice(0,7).map(r=>{const sig={familles:(r.coreFamilies&&r.coreFamilies.length?r.coreFamilies:r.familles)||[],poids:r.force};return`<div class="ap-signal"><b>${apEsc(apDomainLabelV51(r.domain))}</b><span>${apEsc(apPolarityLabel(r.polarite))} · ${apEsc(apT(apV51LevelKey(r.niveau)))} · ${apRelHtml(sig)}</span></div>`;}).join('')}</div>${!rows.length?`<div class="ap-notice">${apT('dashboard_none')}</div>`:''}${triggers.length?`<div class="ap-notice warn" style="margin-top:.55rem">${triggers.slice(0,5).map(t=>apEsc(t.desc||t.label||'')).join('<br>')}</div>`:''}`;document.getElementById('ap-validation-after').style.display='block';document.getElementById('ap-validation-real').value='';document.getElementById('ap-validation-compare').style.display='none';};
+window.apBlindValidate=function(){if(!(USER_CONNECTE&&USER_CONNECTE.role==='admin'))return;if(!USER){alert(apT('no_profile'));return;}const v=document.getElementById('ap-validation-date')?.value||'';if(!v)return;apTrack('historical_validation',{date:v});const d=new Date(v+'T12:00:00'),jd=apJDFromDate(d);let rows=[];try{rows=analyserExceptionnelsTousDomainesV51(jd,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[];}catch(e){}rows=rows.filter(r=>r.niveau!=='faible').sort((a,b)=>b.force-a.force);let triggers=[];AP_VALIDATION_BLIND={date:v,rows,triggers};const el=document.getElementById('ap-validation-result');el.innerHTML=`<div class="ap-validation-signals">${rows.slice(0,7).map(r=>{const sig={familles:(r.coreFamilies&&r.coreFamilies.length?r.coreFamilies:r.familles)||[],poids:r.force};return`<div class="ap-signal"><b>${apEsc(apDomainLabelV51(r.domain))}</b><span>${apEsc(apPolarityLabel(r.polarite))} · ${apEsc(apT(apV51LevelKey(r.niveau)))} · ${apRelHtml(sig)}</span></div>`;}).join('')}</div>${!rows.length?`<div class="ap-notice">${apT('dashboard_none')}</div>`:''}${triggers.length?`<div class="ap-notice warn" style="margin-top:.55rem">${triggers.slice(0,5).map(t=>apEsc(t.desc||t.label||'')).join('<br>')}</div>`:''}`;document.getElementById('ap-validation-after').style.display='block';document.getElementById('ap-validation-real').value='';document.getElementById('ap-validation-compare').style.display='none';};
 window.apCompareHistorical=function(){if(!(USER_CONNECTE&&USER_CONNECTE.role==='admin'))return;if(!AP_VALIDATION_BLIND)return;const real=document.getElementById('ap-validation-real').value.trim();const e=document.getElementById('ap-validation-compare');if(!real)return;e.style.display='block';const top=AP_VALIDATION_BLIND.rows.slice(0,3).map(r=>apDomainLabelV51(r.domain)).join(', ');e.textContent=`Calcul aveugle enregistré en premier. Domaines calculés les plus forts : ${top}. Événement réel saisi ensuite : ${real}. Cette comparaison sert à calibrer le moteur ; l’événement réel n’a pas été utilisé dans le calcul.`;};
 
 // -------- V66 Journal + saved windows --------
