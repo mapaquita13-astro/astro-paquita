@@ -5538,6 +5538,116 @@ function apDailyMicroAllV84(jdJour,posN,AS,MC,posCache){
 
 
 // ============================================================
+// V86 — HIÉRARCHIE DES ÉVÉNEMENTS D'UNE JOURNÉE
+// Une prévision quotidienne ne doit pas confondre :
+// 1) cycle de fond actif, 2) déclencheur concret du jour, 3) simple micro-climat.
+// Un événement principal exige soit un pic exact d'une technique de fond,
+// soit un déclencheur rapide qui rejoint une vraie ancre déjà activée,
+// soit plusieurs déclencheurs rapides indépendants convergeant sur le même sujet.
+// La Lune seule ne suffit jamais à fabriquer un « événement important ».
+// ============================================================
+function apJDForLocalHourV86(jdJour,hour){
+  try{
+    const d=jdVersDate(jdJour);
+    const pad=n=>String(n).padStart(2,'0');
+    const ds=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const hs=`${pad(Math.max(0,Math.min(23,Math.floor(hour))))}:00`;
+    const u=convUTC(ds,hs,(USER&&USER.tz)||'Europe/Paris');
+    return julianDay(u.y,u.m,u.d,u.h);
+  }catch(e){return jdJour+Number(hour||0)/24;}
+}
+
+function apDailyCoreExactV86(row){
+  if(!row||!(row.signatures||[]).length)return false;
+  const rootsOK=new Set(['transit-pluton','transit-uranus','transit-saturne','transit-neptune','transit-jupiter','progression','arc-solaire','eclipse','noeuds']);
+  return (row.signatures||[]).some(s=>{
+    if(!s.anchor||!s.core)return false;
+    const root=prevTechniqueRootV80(s.famille);
+    if(!rootsOK.has(root))return false;
+    const m=String(s.texte||'').match(/(?:écart\s*)?([0-9]+(?:\.[0-9]+)?)°\)?\s*$/i);
+    const e=m?Number(m[1]):999;
+    const lim=(root==='eclipse'||root==='noeuds')?.35:.22;
+    return Number.isFinite(e)&&e<=lim;
+  });
+}
+
+function apDailySignalExactBonusV86(s){
+  if(!s)return 0;
+  const lim=s.source==='Lune'?.45:.24;
+  return Number(s.ecart)<=lim?.32:0;
+}
+
+function apDailyClustersV86(signals,row){
+  const u=(signals||[]).slice().sort((a,b)=>a.heure-b.heure||b.importance-a.importance);
+  const anchorTargets=new Set((row&&row.signatures||[]).filter(x=>x.anchor).map(x=>String(x.target||'')));
+  const clusters=[];
+  for(const s of u){
+    let g=clusters.find(x=>x.domain===s.domain&&x.target===s.target&&Math.abs(x.center-s.heure)<=2);
+    if(!g){g={domain:s.domain,target:s.target,items:[],center:s.heure};clusters.push(g);}
+    g.items.push(s);
+    g.center=g.items.reduce((a,b)=>a+Number(b.heure||0),0)/g.items.length;
+  }
+  return clusters.map(g=>{
+    const sources=[...new Set(g.items.map(x=>x.source))];
+    const nonMoon=sources.filter(x=>x!=='Lune');
+    const pos=g.items.filter(x=>x.pol==='positive').reduce((a,b)=>a+Number(b.importance||0),0);
+    const neg=g.items.filter(x=>x.pol==='difficile').reduce((a,b)=>a+Number(b.importance||0),0);
+    const mix=g.items.filter(x=>x.pol==='mixte').reduce((a,b)=>a+Number(b.importance||0),0);
+    const best=[...g.items].sort((a,b)=>(Number(b.importance||0)+apDailySignalExactBonusV86(b))-(Number(a.importance||0)+apDailySignalExactBonusV86(a)))[0];
+    const matchesBackground=!!row&&anchorTargets.has(String(g.target||''));
+    const diversity=Math.max(0,sources.length-1)*.42;
+    const exact=g.items.reduce((a,b)=>a+apDailySignalExactBonusV86(b),0);
+    const background=matchesBackground?(row.niveau==='exceptionnel'?2.0:row.niveau==='fort'?1.45:row.niveau==='marque'?.85:.35):0;
+    let rank=Math.max(pos,neg)+mix*.35+diversity+exact+background;
+    if(!nonMoon.length)rank=Math.min(rank,.95); // Lune seule = ambiance, jamais événement principal.
+    const pol=pos>=neg+.35?'positive':neg>=pos+.35?'difficile':'mixte';
+    return {...g,sources,nonMoon,pol,best,matchesBackground,rank,hints:[...new Set(g.items.map(x=>x.hint).filter(Boolean))]};
+  }).sort((a,b)=>b.rank-a.rank);
+}
+
+function apDailyEventProfileV86(r,dom,analyseGenerale){
+  const allRows=(r.exceptionnelsDomaines||[]).filter(x=>x.niveau!=='faible');
+  const signals=(r.microDomaine&&r.microDomaine.signals)||[];
+  const domains=new Set();
+  if(analyseGenerale){allRows.forEach(x=>domains.add(x.domain));signals.forEach(x=>domains.add(x.domain));}
+  else apDomainKeysForSelectionV76(dom).forEach(x=>domains.add(x));
+  const events=[];
+  for(const domain of domains){
+    const row=(analyseGenerale?allRows.filter(x=>x.domain===domain):((r.domainRow&&r.domainRow.domain===domain)?[r.domainRow]:allRows.filter(x=>x.domain===domain)))
+      .sort((a,b)=>Number(b.force||0)-Number(a.force||0))[0]||null;
+    const ds=signals.filter(x=>x.domain===domain);
+    const clusters=apDailyClustersV86(ds,row);
+    const best=clusters[0]||null;
+    const exactCore=apDailyCoreExactV86(row);
+    const strongBg=!!row&&(row.niveau==='fort'||row.niveau==='exceptionnel');
+    const markedBg=!!row&&row.niveau==='marque';
+    const convergentFast=!!best&&best.sources.length>=2&&best.nonMoon.length>=1;
+    const triggeredBg=!!best&&best.matchesBackground&&best.nonMoon.length>=1;
+    let level='calme';
+    if(strongBg&&(exactCore||triggeredBg))level='majeur';
+    else if((markedBg&&(exactCore||triggeredBg))||convergentFast)level='marquant';
+    else if(best&&best.nonMoon.length>=1&&best.rank>=.75)level='ponctuel';
+    else if(strongBg||markedBg)level='fond';
+    const baseRank=(level==='majeur'?7:level==='marquant'?5:level==='ponctuel'?2.5:level==='fond'?1.5:0)+(best?best.rank:0)+(row?Math.min(2,Number(row.force||0)*.2):0);
+    if(level!=='calme')events.push({domain,row,best,clusters,level,rank:baseRank,exactCore});
+  }
+  events.sort((a,b)=>b.rank-a.rank);
+  const principal=events[0]||null;
+  const windows=[];
+  for(const ev of events){
+    for(const c of ev.clusters||[]){
+      if(!c.best)continue;
+      const hour=Math.round(c.center);
+      if(windows.some(w=>w.domain===ev.domain&&Math.abs(w.hour-hour)<3))continue;
+      windows.push({domain:ev.domain,hour,pol:c.pol,rank:c.rank,hint:c.best.hint,sources:c.sources,target:c.target,level:ev.level,matchesBackground:c.matchesBackground});
+    }
+  }
+  windows.sort((a,b)=>b.rank-a.rank);
+  return {principal,events:events.slice(0,3),windows:windows.slice(0,3),hasImportant:!!principal&&(principal.level==='majeur'||principal.level==='marquant')};
+}
+
+
+// ============================================================
 // V85 — MICRO-CHRONOLOGIE SEMAINE / MOIS
 // La prévision quotidienne V84 reste inchangée. Pour 7 à 30 jours, on calcule
 // aussi les activations rapides des VRAIES ancres sectorielles afin d'éviter les
@@ -5666,10 +5776,11 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
     const rawPosCache=Array(24);
     for(let h=0;h<24;h++){
       try {
-        let posT = calcPos(jdJ+h/24);
+        const jdH=apJDForLocalHourV86(jdJ,h);
+        let posT = calcPos(jdH);
         rawPosCache[h]=posT;
-        posT = enrichirComplet(posT, jdNatal, anneeVie, jdJ+h/24, posN, AS, MC, dom);
-        const score = scorerComplet(posT, posN, AS, MC, dom, jdNatal, anneeVie, jdJ+h/24) + sFixe;
+        posT = enrichirComplet(posT, jdNatal, anneeVie, jdH, posN, AS, MC, dom);
+        const score = scorerComplet(posT, posN, AS, MC, dom, jdNatal, anneeVie, jdH) + sFixe;
         if(score>maxS){maxS=score;maxH=h;}
         if(score<minS){minS=score;minH=h;}
       } catch(e) {}
@@ -5681,7 +5792,8 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
     if(analyseGenerale){
       for(const h of [...new Set([maxH,minH])]){
         try{
-          let pt=calcPos(jdJ+h/24); pt=enrichirComplet(pt,jdNatal,anneeVie,jdJ+h/24,posN,AS,MC,dom);
+          const jdH=apJDForLocalHourV86(jdJ,h);
+          let pt=calcPos(jdH); pt=enrichirComplet(pt,jdNatal,anneeVie,jdH,posN,AS,MC,dom);
           declencheurs.push(...detecterDeclencheurs(pt,posN,AS,MC,jdNatal,anneeVie,jdJ));
         }catch(e){}
       }
@@ -5766,7 +5878,11 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
       else if(positifExceptionnel&&!critique)scoreDominant=Math.max(minS,maxS);
     }
 
-    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,positifExceptionnel,declencheurs,convergence,exceptionnelsDomaines,domainRow,microDomaine});
+    let dailyEventProfile=null;
+    if(nb===1){
+      try{dailyEventProfile=apDailyEventProfileV86({date,exceptionnelsDomaines,domainRow,microDomaine},dom,analyseGenerale);}catch(e){dailyEventProfile=null;}
+    }
+    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,positifExceptionnel,declencheurs,convergence,exceptionnelsDomaines,domainRow,microDomaine,dailyEventProfile});
     if(j%5===0){onProg(j/nb);await new Promise(r=>setTimeout(r,0));}
   }
   return res;
@@ -6254,6 +6370,23 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   }).join('\n'):'Aucun déclencheur horaire sectoriel suffisamment exact : ne fabrique pas une heure clé.';
 
 
+  // V86 — hiérarchie spécifique à UNE journée : on distingue un vrai événement
+  // quotidien soutenu par convergence, un cycle de fond simplement actif et le micro-climat.
+  const dailyProfile=nbJours===1&&resultats[0]?resultats[0].dailyEventProfile:null;
+  const dailyEventTxt=(dailyProfile&&dailyProfile.events&&dailyProfile.events.length)?dailyProfile.events.map((ev,i)=>{
+    const dlab=PREV_DOMAIN_LABELS_V51[ev.domain]||DOM_LABELS[domP]||ev.domain;
+    const niveau=ev.level==='majeur'?'ÉVÉNEMENT PRINCIPAL POSSIBLE':ev.level==='marquant'?'SÉQUENCE MARQUANTE':ev.level==='ponctuel'?'ACTIVATION PONCTUELLE':'CYCLE DE FOND ACTIF';
+    const timing=ev.best?`pic autour de ${String(Math.round(ev.best.center)).padStart(2,'0')}h ; déclencheurs indépendants : ${ev.best.sources.join(', ')} ; ${ev.best.matchesBackground?'rejoint directement une ancre du cycle de fond':'activation sectorielle directe'}`:(ev.exactCore?'pic exact d’une technique de fond aujourd’hui':'aucun déclencheur journalier assez exact');
+    const concret=ev.best&&ev.best.best?ev.best.best.hint:'aucune manifestation quotidienne précise à forcer';
+    return `${i+1}. ${niveau} — ${dlab} — ${timing} — manifestation la plus concrète soutenue : ${concret}`;
+  }).join('\n'):'Aucun événement quotidien assez convergent pour être qualifié de marquant. La journée peut néanmoins comporter des activations ponctuelles.';
+  const dailyWindowsTxt=(dailyProfile&&dailyProfile.windows&&dailyProfile.windows.length)?dailyProfile.windows.map(w=>{
+    const dlab=PREV_DOMAIN_LABELS_V51[w.domain]||DOM_LABELS[domP]||w.domain;
+    const sens=w.pol==='positive'?'OUVERTURE':w.pol==='difficile'?'VIGILANCE':'MIXTE';
+    return `${String(w.hour).padStart(2,'0')}h environ — ${sens} — ${dlab} — ${w.hint} — ${w.sources.length} déclencheur(s) distinct(s)${w.matchesBackground?' + cycle de fond actif':''}`;
+  }).join('\n'):'Aucun créneau suffisamment convergent pour être mis en avant.';
+
+
   // V85 — données adaptées à la granularité de la période.
   const microGroupesP=(nbJours>1&&nbJours<=31)?apPeriodMicroGroupsV85(resultats,nbJours):[];
   const microPeriodeTxt=microGroupesP.length?microGroupesP.map(g=>{
@@ -6333,11 +6466,14 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     ? `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
 ${contexteAge}
 Tendance de fond calculée : ${tendance}. Meilleur score horaire : ${(resultats[0]&&Number.isFinite(resultats[0].score)?resultats[0].score.toFixed(1):'0')} ; score de vigilance : ${(resultats[0]&&Number.isFinite(resultats[0].scoreMin)?resultats[0].scoreMin.toFixed(1):'0')}.
-Fenêtre horaire la plus favorable calculée : ${top3[0]?String(top3[0].heure).padStart(2,'0')+'h00':'aucune fenêtre favorable nette'}.
-Fenêtre de vigilance calculée : ${pires3[0]?String(pires3[0].heure).padStart(2,'0')+'h00':'aucune vigilance horaire nette'}.
+Fenêtres horaires réellement convergentes calculées :
+${dailyWindowsTxt}
 
 ${titreTourneV76} :
 ${exceptionnelsTxt||'Aucun tournant majeur suffisamment confirmé dans la portée demandée aujourd’hui.'}
+
+HIÉRARCHIE DES ÉVÉNEMENTS DE LA JOURNÉE :
+${dailyEventTxt}
 
 DÉCLENCHEURS CONCRETS DU JOUR — TIMING FIN, PAS DES « GRANDS ÉVÉNEMENTS » :
 ${microTxt}
@@ -6345,18 +6481,21 @@ ${microTxt}
 Convergences de fond :
 ${convergenceTxt||'Aucune convergence de fond forte : cela n’empêche pas des situations quotidiennes concrètes.'}
 
-OBJECTIF : dire à ${USER.prenom} ce qui est le plus susceptible de se manifester CONCRÈTEMENT aujourd’hui dans ${DOM_LABELS[domP]}. Une journée peut être ordinaire tout en ayant des heures utiles, des échanges, décisions, dépenses, démarches, tensions ou opportunités ponctuelles. Ne confonds jamais « pas de grand tournant » avec « rien à dire aujourd’hui ».
+OBJECTIF : identifier d’abord ce qui peut réellement constituer L’ÉVÉNEMENT OU LA SÉQUENCE LA PLUS IMPORTANTE de la journée dans ${DOM_LABELS[domP]}, puis seulement les activations secondaires. Une journée peut être ordinaire : dans ce cas dis clairement qu’aucun événement majeur ou marquant n’est suffisamment confirmé, puis donne seulement les faits ponctuels réellement soutenus. Ne transforme jamais un micro-déclencheur isolé en événement important.
 ${guideDomaine}
 
 Réponds en 4 blocs précis :
-1. CE QUI DOMINE AUJOURD’HUI — 3 à 5 phrases concrètes. Utilise des noms et des verbes précis : appel, message, rendez-vous, décision, dépense, document, discussion, tâche, déplacement, accord, désaccord, organisation, etc., uniquement quand les déclencheurs ci-dessus le permettent.
-2. HORAIRES UTILES — jusqu’à 3 créneaux. Donne une fenêtre d’environ 1 à 2 heures autour des heures calculées et précise À QUOI elle sert ou ce qu’il faut surveiller. Si aucun déclencheur exact n’existe, dis simplement qu’aucune heure ne se détache franchement.
-3. MANIFESTATIONS POSSIBLES — 2 à 4 scénarios différents et concrets, du plus soutenu au plus secondaire. Chaque scénario doit être relié à une donnée fournie ci-dessus ; aucune banalité générique.
-4. CONSEIL DU JOUR — 1 ou 2 actions directement utilisables.
+1. ÉVÉNEMENT PRINCIPAL / NIVEAU DE LA JOURNÉE — commence par dire s’il existe réellement un événement majeur, une séquence marquante, seulement une activation ponctuelle, ou aucun événement fort. Si un événement principal est confirmé, décris UNE manifestation centrale avant toute autre chose. Ne propose jamais 4 événements de même importance.
+2. MOMENT DE CONCRÉTISATION — jusqu’à 3 créneaux uniquement parmi les fenêtres convergentes calculées. Donne une fenêtre d’environ 1 à 2 heures et précise ce qui peut s’y jouer concrètement. Un horaire issu de la Lune seule ou d’un déclencheur isolé ne doit pas être présenté comme déterminant.
+3. CE QUI PEUT SE MANIFESTER — 1 à 3 manifestations différentes, hiérarchisées. La première doit correspondre à l’événement principal s’il existe ; les suivantes sont secondaires. Utilise des objets concrets : appel, message, rendez-vous, décision, dépense, document, discussion, tâche, déplacement, accord, désaccord, organisation, etc., seulement si les calculs les soutiennent.
+4. CONSEIL DU JOUR — 1 ou 2 actions directement utilisables, liées au niveau réel de la journée.
 
 ${reglePorteeV76}
-- Les déclencheurs rapides précisent la JOURNÉE et les horaires ; ils ne prouvent jamais à eux seuls un changement majeur de vie.
-- S’il existe un tournant majeur confirmé, il passe avant le micro-climat. Sinon, exploite réellement les déclencheurs quotidiens au lieu de conclure « rien de marquant ».
+- Ordre de priorité obligatoire : cycle de fond exact + déclencheur du jour > convergence de plusieurs déclencheurs rapides > activation rapide unique > ambiance lunaire.
+- La Lune seule décrit une ambiance ou un timing, jamais un événement important.
+- Les transits rapides précisent la JOURNÉE et les horaires ; ils ne prouvent jamais à eux seuls un changement majeur de vie.
+- Un cycle de fond fort sans déclencheur journalier exact doit être présenté comme « actif en arrière-plan », pas comme un événement certain aujourd’hui.
+- S’il existe un tournant majeur confirmé ET déclenché aujourd’hui, il passe avant le micro-climat.
 - Ne répète pas la même idée dans plusieurs blocs.
 
 INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, « énergies », « vibrations », « transformation » sans objet concret, phrases vagues comme « quelque chose se prépare », « restez ouverte aux possibilités », « écoutez votre intuition » sans action précise. Ne transforme jamais une possibilité en certitude.`
