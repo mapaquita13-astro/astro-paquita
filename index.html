@@ -2419,6 +2419,8 @@ RÈGLE CENTRALE ASTRO PAQUITA — COHÉRENCE ENTRE TOUS LES MODULES :
 - Les calculs fournis par le site sont la source de vérité de cette réponse. Tu ne modifies jamais leur polarité, leur domaine principal ni leur niveau de convergence pour rendre le texte plus spectaculaire.
 - Une même période et un même domaine doivent garder le même sens dans Prévisions, Grands événements, Timeline, Fenêtre idéale, Comparateur, Questions et Synastrie. Une différence de niveau est permise parce que les modules n'ont pas le même seuil, mais pas une inversion favorable/difficile sans donnée calculée qui l'explique.
 - Favorable = ouverture/opportunité ; difficile = contrainte/vigilance ; mixte = coexistence d'ouverture et d'ajustement. N'assombris pas le favorable, n'embellis pas le difficile.
+- Ne cherche ni à rassurer ni à inquiéter. Une période presque équilibrée doit rester MIXTE : ne la force jamais en favorable ou difficile pour rendre la réponse plus tranchée.
+- Quand des indices constructifs et exigeants coexistent, expose les deux sans donner automatiquement le dernier mot au positif ni au négatif.
 - Les techniques indépendantes se confirment, elles ne se comptent pas plusieurs fois lorsqu'elles décrivent le même phénomène. Les techniques lentes donnent le contexte ; les techniques rapides servent surtout au timing.
 - Aucun domaine de vie n'est prioritaire par défaut. Respecte l'âge, l'étape de vie et la situation réelle connue du profil.
 - N'invente jamais un événement pour remplir une période. Ne transforme jamais un classement astrologique en probabilité statistique.
@@ -4339,12 +4341,17 @@ function apConvergenceFromRowV76(row,dom,date){
 function prevPolariteV51(source,aspect){
   const harm=aspect===60||aspect===120;
   const dur=aspect===90||aspect===180;
+  // V90 — calibration de polarité : une conjonction n'est pas automatiquement
+  // « bonne » ou « mauvaise ». Mars/Pluton en conjonction sont donc classés MIXTES
+  // (activation/intensification) ; Saturne reste exigeant en conjonction, tandis que
+  // Jupiter/Vénus/Mercure gardent leur potentiel constructif. Les carrés/oppositions
+  // et sextiles/trigones restent strictement symétriques dans les seuils.
   if(source==='Jupiter'||source==='Venus') return (aspect===0||harm)?'positive':(dur?'difficile':'mixte');
   if(source==='Saturne') return harm?'positive':((aspect===0||dur)?'difficile':'mixte');
-  if(source==='Pluton') return harm?'positive':((aspect===0||dur)?'difficile':'mixte');
+  if(source==='Pluton') return harm?'positive':(dur?'difficile':'mixte');
   if(source==='Uranus') return harm?'positive':(dur?'difficile':'mixte');
   if(source==='Neptune') return harm?'positive':(dur?'difficile':'mixte');
-  if(source==='Mars') return harm?'positive':((aspect===0||dur)?'difficile':'mixte');
+  if(source==='Mars') return harm?'positive':(dur?'difficile':'mixte');
   if(source==='Mercure') return (aspect===0||harm)?'positive':(dur?'difficile':'mixte');
   return 'mixte';
 }
@@ -4379,12 +4386,33 @@ function prevScenarioV51(domain,pol,dateRef){
     projects:['projet retardé, refus ou changement de stratégie','rupture avec un groupe, un réseau ou un objectif devenu inadapté','priorité à revoir avant de pouvoir avancer'],
     spiritual:['période de doute ou de retrait qui demande de revoir les priorités','confusion intérieure ou perte de repères à clarifier avant une décision','besoin de recul plus fort avant de retrouver une direction cohérente']
   };
-  let arr=(pol==='positive'?pos:neg)[domain]||[];
+  const mix={
+    identity:['changement de cap avec une ouverture réelle mais aussi des choix à assumer','phase de transition personnelle : certaines portes s’ouvrent tandis qu’un ancien fonctionnement doit être ajusté','période importante pour redéfinir les priorités sans conclusion entièrement positive ou négative'],
+    work:['évolution professionnelle avec opportunité possible mais responsabilités ou conditions à négocier','changement de rôle, d’organisation ou de mission qui comporte à la fois potentiel et contraintes','période de transition professionnelle : avancée possible si le cadre est clarifié'],
+    couple:['relation en évolution avec rapprochement possible mais mise au point nécessaire','période importante pour le lien : ouverture et ajustements coexistent','changement de dynamique relationnelle sans indication univoque de rapprochement ou d’éloignement'],
+    family:['réorganisation familiale pouvant apporter une amélioration tout en demandant des ajustements','événement ou changement concernant un proche avec effets à la fois soutenants et exigeants','période familiale importante où soutien et responsabilités se superposent'],
+    home:['changement de foyer ou de logement offrant des possibilités mais demandant arbitrages ou organisation','projet de logement/patrimoine qui avance avec des contraintes pratiques à résoudre','réorganisation du cadre de vie ni entièrement favorable ni entièrement difficile'],
+    money:['mouvement financier avec possibilité d’amélioration mais arbitrages, dépenses ou conditions à gérer','réorganisation d’argent, contrat ou patrimoine comportant à la fois opportunités et contraintes','période financière active sans direction univoque : gains possibles et charges/ajustements à surveiller'],
+    children:['étape importante concernant un enfant ou un projet personnel avec satisfaction et responsabilités mêlées','projet créatif/personnel qui évolue mais demande encore des ajustements','période active autour d’un enfant ou projet sans tonalité uniquement favorable ou difficile'],
+    studies:['évolution d’études ou d’orientation avec ouverture possible mais effort ou réajustement nécessaire','période d’apprentissage active : progrès et contraintes se combinent','décision ou étape d’étude à préciser avant d’en connaître pleinement l’issue'],
+    travel:['mobilité ou voyage possible mais avec contraintes logistiques ou administratives à gérer','changement d’horizon qui ouvre une possibilité tout en demandant adaptation','période de déplacement active sans indication totalement favorable ou défavorable'],
+    daily:['réorganisation du quotidien pouvant améliorer certaines choses tout en demandant plus de discipline','changement de rythme avec bénéfices possibles et contraintes d’adaptation','période active pour le quotidien : allègement et responsabilités peuvent coexister'],
+    projects:['projet ou réseau en évolution avec soutien possible mais stratégie encore à ajuster','objectif qui avance tout en demandant sélection, patience ou changement de méthode','période de transition dans les projets sans issue entièrement positive ou négative'],
+    spiritual:['phase d’intériorité qui peut clarifier certaines priorités tout en faisant émerger des doutes','changement de regard mêlant intuition, questionnement et besoin de vérification','période de recul importante sans conclusion univoque, utile pour réévaluer la direction']
+  };
+  let arr=(pol==='positive'?pos:pol==='difficile'?neg:mix)[domain]||[];
   if(ev.code==='bebe'){
-    const special={identity:['étape importante d’adaptation ou de développement','nouveau rythme ou changement de cadre bien intégré'],family:['changement important chez les proches ou les personnes qui s’occupent de l’enfant','rapprochement ou réorganisation familiale'],home:['changement de logement ou de cadre de vie familial','nouvelle organisation du foyer'],daily:['changement marqué de rythme, routines ou organisation','période demandant davantage d’adaptation au quotidien'],travel:['déplacement ou changement de cadre familial important']};
+    const special={identity:['étape importante d’adaptation ou de développement','nouveau rythme ou changement de cadre à intégrer'],family:['changement important chez les proches ou les personnes qui s’occupent de l’enfant','réorganisation familiale avec plusieurs ajustements possibles'],home:['changement de logement ou de cadre de vie familial','nouvelle organisation du foyer'],daily:['changement marqué de rythme, routines ou organisation','période demandant davantage d’adaptation au quotidien'],travel:['déplacement ou changement de cadre familial important']};
     arr=special[domain]||arr;
-  } else if(ev.code==='enfant'&&domain==='studies') arr=pol==='positive'?['progrès scolaire ou apprentissage important','nouvelle activité ou étape scolaire favorable','réussite ou reconnaissance dans les apprentissages']:['difficulté scolaire ou changement d’organisation','orientation ou apprentissage à réajuster','période demandant davantage d’accompagnement'];
-  else if(ev.code==='senior'&&domain==='work') arr=pol==='positive'?['projet, activité ou engagement qui apporte de la reconnaissance','responsabilité ou transmission valorisante','nouvelle organisation d’activité plus satisfaisante']:['responsabilité ou engagement à alléger','changement de rythme ou fin d’une activité','réorganisation d’un projet ou d’une responsabilité'];
+  } else if(ev.code==='enfant'&&domain==='studies') {
+    arr=pol==='positive'?['progrès scolaire ou apprentissage important','nouvelle activité ou étape scolaire favorable','réussite ou reconnaissance dans les apprentissages']:
+        pol==='difficile'?['difficulté scolaire ou changement d’organisation','orientation ou apprentissage à réajuster','période demandant davantage d’accompagnement']:
+        ['évolution scolaire avec progrès possibles et organisation à ajuster','étape d’apprentissage active mais encore contrastée','orientation ou activité qui demande encore confirmation'];
+  } else if(ev.code==='senior'&&domain==='work') {
+    arr=pol==='positive'?['projet, activité ou engagement qui apporte de la reconnaissance','responsabilité ou transmission valorisante','nouvelle organisation d’activité plus satisfaisante']:
+        pol==='difficile'?['responsabilité ou engagement à alléger','changement de rythme ou fin d’une activité','réorganisation d’un projet ou d’une responsabilité']:
+        ['évolution d’activité avec intérêt réel mais rythme ou responsabilités à ajuster','nouvelle organisation mêlant transmission et nécessité de préserver l’équilibre','transition d’activité sans tonalité entièrement favorable ou difficile'];
+  }
   return arr.slice(0,3);
 }
 
@@ -4793,7 +4821,12 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
     const mixSup=Math.min(2.2,supportU.filter(x=>x.pol==='mixte').reduce((a,b)=>a+b.poids,0));
     const posEff=posMain+posSup+(mixMain+mixSup)*.32, negEff=negMain+negSup+(mixMain+mixSup)*.32;
     let pol='mixte',force=Math.max(posEff,negEff),niveau='faible';
-    if(posEff>=negEff+1.0)pol='positive'; else if(negEff>=posEff+1.0)pol='difficile';
+    // V90 — une convergence forte presque à égalité reste MIXTE. Le seuil de dominance
+    // augmente avec la quantité totale de preuves afin d'éviter de transformer un 8/7 en
+    // « positif » ou « difficile » alors que le signal est objectivement contrasté.
+    const directionalTotal=posEff+negEff;
+    const polarityMargin=Math.max(1.0,directionalTotal*.16);
+    if(posEff>=negEff+polarityMargin)pol='positive'; else if(negEff>=posEff+polarityMargin)pol='difficile';
 
     // Les niveaux forts exigent une vraie convergence du domaine, pas seulement des
     // facteurs généraux. Un anchor unique peut donner une période « marquée », mais
@@ -4804,7 +4837,7 @@ function analyserExceptionnelsTousDomainesV51(jdJour,posN,AS,MC,jdNatal,domSelec
     if(pol==='mixte'&&anchorFamilies.size>=2&&coreFamilies.size>=2&&(posEff+negEff)>=8.0)niveau='fort';
 
     const label=prevLabelDomaineAgeV51(domain,date);
-    out.push({domain,label,polarite:pol,niveau,force,poidsPos:posEff,poidsNeg:negEff,familles:[...fam],coreFamilies:[...coreFamilies],anchorFamilies:[...anchorFamilies],anchorCount:anchorSignals.length,domainProof:domainProof.type,signatures:u.slice(0,8),contextSupports:contextSupports.slice(0,7),scenarios:prevScenarioV51(domain,pol==='positive'?'positive':'difficile',date)});
+    out.push({domain,label,polarite:pol,niveau,force,poidsPos:posEff,poidsNeg:negEff,familles:[...fam],coreFamilies:[...coreFamilies],anchorFamilies:[...anchorFamilies],anchorCount:anchorSignals.length,domainProof:domainProof.type,signatures:u.slice(0,8),contextSupports:contextSupports.slice(0,7),scenarios:prevScenarioV51(domain,pol,date)});
   }
   return out.sort((a,b)=>b.force-a.force);
 }
@@ -4864,12 +4897,13 @@ function regrouperConvergences(resultats){
 // touchent une ancre réelle du domaine (angle, cuspide ou maître de maison).
 // ============================================================
 function apDailyPolarityV84(source,aspect){
-  if(source==='Soleil'||source==='Lune'){
-    if(aspect===60||aspect===120)return 'positive';
-    if(aspect===90||aspect===180)return 'difficile';
-    return 'mixte';
-  }
-  return prevPolariteV51(source,aspect);
+  // V90 — à l'échelle d'une journée, la conjonction signifie d'abord « activation ».
+  // Elle n'est donc pas comptée comme favorable par défaut pour Vénus/Mercure ni comme
+  // difficile par défaut pour Mars. Résultat : 2 aspects constructifs, 2 exigeants,
+  // 1 mixte, sans biais arithmétique positif ou négatif dans le micro-climat.
+  if(aspect===60||aspect===120)return 'positive';
+  if(aspect===90||aspect===180)return 'difficile';
+  return 'mixte';
 }
 
 function apDailyHintV84(domain,source,pol){
@@ -5367,7 +5401,8 @@ function scoreLabel(s){
   if(s>=7)return{label:'Excellent',bg:'rgba(42,122,74,0.85)',e:'★★★★★'};
   if(s>=4)return{label:'Très bon',bg:'rgba(58,154,90,0.6)',e:'★★★★☆'};
   if(s>=1)return{label:'Favorable',bg:'rgba(201,168,76,0.4)',e:'★★★☆☆'};
-  if(s>=-2)return{label:'Neutre',bg:'rgba(58,74,106,0.5)',e:'★★☆☆☆'};
+  // V90 — zone neutre symétrique autour de zéro : +1 ouvre le favorable, -1 la vigilance.
+  if(s>=-1)return{label:'Neutre',bg:'rgba(58,74,106,0.5)',e:'★★☆☆☆'};
   return{label:'Vigilance',bg:'rgba(122,48,48,0.7)',e:'★☆☆☆☆'};
 }
 
@@ -5531,7 +5566,8 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   pb.style.width='88%'; pl.textContent='Rédaction…';
 
   // Les meilleures / moins bonnes dates doivent être réellement distinctes.
-  // Une date neutre n'est jamais transformée en "vigilance" pour remplir la page.
+  // V90 : mêmes plafonds d'affichage dans les deux sens (3 / 3). Une date neutre
+  // n'est jamais transformée en favorable ou en vigilance pour remplir la page.
   const analyseGeneraleP=domP==='general'||domP==='tous';
   const espacement = nbJours<=7 ? 1 : nbJours<=31 ? 3 : nbJours<=100 ? 7 : 14;
   const top3=selectionnerMomentsDistincts(
@@ -5540,7 +5576,7 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   );
   const pires3=selectionnerMomentsDistincts(
     resultats.map(r=>({...r,score:Number.isFinite(r.scoreMin)?r.scoreMin:r.score,heure:Number.isFinite(r.heureMin)?r.heureMin:r.heure})).filter(r=>r.score<0),
-    'bas',2,espacement
+    'bas',3,espacement
   );
   const scoreMoyen = resultats.reduce((s,r)=>s+(Number.isFinite(r.scoreDominant)?r.scoreDominant:r.score),0)/Math.max(1,resultats.length);
   const preuveFondP = analyseGeneraleP ? resultats.some(r=>(r.exceptionnelsDomaines||[]).some(e=>e.niveau!=='faible')) : resultats.some(r=>r.domainRow);
@@ -7580,7 +7616,8 @@ function yCleCycleRelation(r){
   const cleTheme=yCleThemeModeV26(t.theme||'');
   const tr=t.trCle||t.tr||'Transit';
   const asp=(t.aspect===0 || t.aspect) ? t.aspect : 'x';
-  const sens=(t.delta||0)>=0?'pos':'neg';
+  const d=Number(t.delta||0);
+  const sens=d>.05?'pos':d<-.05?'neg':'mix';
   // Pas de nom de personne dans la clé : un même transit qui active le même axe chez
   // les deux thèmes appartient au même phénomène relationnel, pas à deux prévisions.
   return `${tr}|${t.clePoint||t.point||'point'}|${asp}|${cleTheme}|${sens}`;
@@ -7615,7 +7652,9 @@ function yConstruireCyclesRelation(liste){
       // Le pic est le jour où le signal relationnel global est le plus fort.
       const peak=paquet.slice().sort((a,b)=>Math.abs(b.score||0)-Math.abs(a.score||0))[0];
       const top=yTouchePrincipale(peak) || g.topBase;
-      const positif=(top && (top.delta||0)>=0);
+      const topDelta=Number(top&&top.delta||0);
+      const cyclePolarity=topDelta>.05?'positive':topDelta<-.05?'difficile':'mixte';
+      const positif=cyclePolarity==='positive';
       const force=Math.max(...paquet.map(r=>Math.abs(r.score||0)),0);
       if(force<1.2){ paquet=[]; return; }
 
@@ -7649,11 +7688,12 @@ function yConstruireCyclesRelation(liste){
       const debut=paquet[0].date, fin=paquet[paquet.length-1].date;
       cycles.push({
         ...peak,
-        score:positif?force:-force,
+        score:cyclePolarity==='positive'?force:cyclePolarity==='difficile'?-force:0,
         themes,
         touches:touches.length?touches:peak.touches,
         cycleKey:g.cle,
-        cyclePositive:positif,
+        cyclePolarity,
+        cyclePositive:cyclePolarity==='positive'?true:cyclePolarity==='difficile'?false:null,
         cycleStrength:force,
         cycleStart:debut,
         cycleEnd:fin,
@@ -7679,8 +7719,9 @@ function yConstruireCyclesRelation(liste){
   return cycles.sort((a,b)=>a.cycleStart-b.cycleStart);
 }
 function ySelectionnerCyclesRelation(cycles, positif=true, nb=4){
+  const wanted=positif?'positive':'difficile';
   const source=(cycles||[])
-    .filter(c=>!!c.cyclePositive===!!positif && (c.cycleStrength||0)>=1.2)
+    .filter(c=>c.cyclePolarity===wanted && (c.cycleStrength||0)>=1.2)
     .sort((a,b)=>(b.cycleStrength||0)-(a.cycleStrength||0));
   const out=[];
   const themeCount={}, transitCount={};
@@ -7739,14 +7780,15 @@ function yRegrouperMois(liste) {
   return [...map.values()].filter(m=>m.nb>0).map(m => ({date:m.date, score:m.total/m.nb, climat:yClimat(m.total/m.nb), climatPro:yClimatPro(m.total/m.nb)}));
 }
 function yParametresLongueur(jours, per) {
-  // V77 : moins de cartes, mais chacune correspond à un cycle réellement distinct.
-  if (per === 'date' || jours <= 31) return {pos:3, neg:2, ecart:4, mode:'court'};
-  if (jours <= 90) return {pos:4, neg:3, ecart:10, mode:'court'};
-  if (jours <= 180) return {pos:4, neg:3, ecart:15, mode:'moyen'};
-  if (jours <= 365) return {pos:5, neg:4, ecart:20, mode:'annee'};
-  if (jours <= 730) return {pos:6, neg:4, ecart:30, mode:'long'};
-  if (jours <= 1095) return {pos:6, neg:5, ecart:45, mode:'long'};
-  return {pos:7, neg:5, ecart:60, mode:'long'};
+  // V90 : aucun biais d'affichage. Le nombre MAXIMAL de fenêtres favorables et de
+  // vigilances est identique ; le moteur peut bien sûr en afficher moins s'il n'en trouve pas.
+  if (per === 'date' || jours <= 31) return {pos:2, neg:2, ecart:4, mode:'court'};
+  if (jours <= 90) return {pos:3, neg:3, ecart:10, mode:'court'};
+  if (jours <= 180) return {pos:3, neg:3, ecart:15, mode:'moyen'};
+  if (jours <= 365) return {pos:4, neg:4, ecart:20, mode:'annee'};
+  if (jours <= 730) return {pos:4, neg:4, ecart:30, mode:'long'};
+  if (jours <= 1095) return {pos:5, neg:5, ecart:45, mode:'long'};
+  return {pos:5, neg:5, ecart:60, mode:'long'};
 }
 
 function yCleThemeLegacyV25(theme) {
@@ -8348,6 +8390,20 @@ function yThemeTransitRelationV26(trCle, aspNature, delta, mode) {
   return neg ? pair[1] : pair[0];
 }
 
+function yRelationPolarityV90(source,aspect){
+  // En relation, la géométrie de l'aspect fixe la direction et la planète décrit le sujet.
+  // La conjonction est une activation/fusion : elle n'est ni favorable ni difficile par défaut.
+  if(aspect===60||aspect===120)return 'positive';
+  if(aspect===90||aspect===180)return 'difficile';
+  return 'mixte';
+}
+function yRelationNeutralThemeV90(source,mode){
+  const m=yModeRelationV26(mode);
+  const names={Soleil:'place / rôle',Lune:'sensibilité',Mercure:'communication',Venus:'attachement / accord',Mars:'initiative / réactivité',Jupiter:'ouverture / développement',Saturne:'cadre / responsabilités',Uranus:'changement / autonomie',Neptune:'écoute / flou possible',Pluton:'intensité / transformation'};
+  const ctx=m==='pro'?'professionnel':m==='famille'?'familial':m==='amitie'?'amical':m==='ex'?'du lien passé':m==='rencontre'?'de la rencontre':'relationnel';
+  return `activation ${ctx} autour de ${names[source]||String(source||'un axe du lien')}`;
+}
+
 function yScoreTransitRelation(posT, points, mode) {
   const m = yModeRelationV26(mode);
   const transits = [
@@ -8383,28 +8439,21 @@ function yScoreTransitRelation(posT, points, mode) {
       const orbRelV88={Soleil:.85,Lune:1.45,Mercure:.65,Venus:.75,Mars:.78,Jupiter:1.05,Saturne:.95,Uranus:.90,Neptune:.82,Pluton:.82}[tr.cle]||.8;
       const asp = yAspect(lonT, pt.lon, orbRelV88);
       if (!asp) continue;
-      let delta = 0;
       const ancre = !!pt.anchor;
-
-      const dur = asp.nature === 'tension' || asp.nature === 'face-a-face';
-      const fusion = asp.nature === 'fusion';
-      if (['Venus','Jupiter'].includes(tr.cle)) delta = (dur ? -0.70 : 1.55) * poidsTransit;
-      else if (tr.cle === 'Soleil') delta = (dur ? -0.45 : (fusion ? 0.45 : 0.78)) * poidsTransit;
-      else if (tr.cle === 'Mercure') delta = (dur ? -0.70 : 0.95) * poidsTransit;
-      else if (tr.cle === 'Mars') delta = (dur ? -1.30 : (fusion ? -0.28 : 0.85)) * poidsTransit;
-      else if (tr.cle === 'Saturne') delta = (dur ? -1.70 : (fusion ? -0.60 : 0.52)) * poidsTransit;
-      else if (tr.cle === 'Uranus') delta = (dur ? -1.40 : (fusion ? -0.38 : 0.52)) * poidsTransit;
-      else if (tr.cle === 'Neptune') delta = (dur ? -1.20 : (fusion ? -0.34 : 0.42)) * poidsTransit;
-      else if (tr.cle === 'Pluton') delta = (dur ? -1.55 : (fusion ? -0.58 : 0.48)) * poidsTransit;
-      else if (tr.cle === 'Lune') delta = (dur ? -0.52 : (fusion ? 0.18 : 0.52)) * poidsTransit;
-
+      const relPol=yRelationPolarityV90(tr.cle,asp.a);
+      const sign=relPol==='positive'?1:relPol==='difficile'?-1:0;
+      // V90 — amplitude symétrique : un trigone/sextile ne reçoit pas artificiellement
+      // plus de poids qu'un carré/opposition comparable. La planète et le contexte restent
+      // dans `poidsTransit`; l'aspect décide seulement du sens et de l'intensité géométrique.
+      const aspectFactor={0:.72,60:.82,90:.88,120:.88,180:.92}[asp.a]||.8;
       const precision = Math.max(0.20, orbRelV88 - asp.orb) / Math.max(.25,orbRelV88);
-      delta *= precision * (pt.poids || 1) * (ancre ? 1.12 : 1);
-      if(Math.abs(delta)<0.08) continue;
+      let delta=sign*aspectFactor*poidsTransit*precision*(pt.poids||1)*(ancre?1.12:1);
+      if(sign!==0&&Math.abs(delta)<0.08) continue;
+      if(sign===0)delta=0;
 
-      const theme = yThemeTransitRelationV26(tr.cle, asp.nature, delta, m);
+      const theme = relPol==='mixte'?yRelationNeutralThemeV90(tr.cle,m):yThemeTransitRelationV26(tr.cle, asp.nature, delta, m);
       score += delta;
-      touches.push({tr:tr.nom, trCle:tr.cle, qui:pt.qui, point:pt.label, clePoint:pt.cle, anchor:ancre, delta, theme, aspect:asp.a, aspectNature:asp.nature, orb:asp.orb});
+      touches.push({tr:tr.nom, trCle:tr.cle, qui:pt.qui, point:pt.label, clePoint:pt.cle, anchor:ancre, delta, pol:relPol, theme, aspect:asp.a, aspectNature:asp.nature, orb:asp.orb});
       if (theme) themes.push(theme);
     }
   }
@@ -8426,12 +8475,16 @@ function yScoreTransitRelation(posT, points, mode) {
 
   // Convergence indépendante : même axe thématique activé chez les deux personnes.
   const byTheme = {};
-  touches.forEach(t => { if (!byTheme[t.theme]) byTheme[t.theme] = new Set(); byTheme[t.theme].add(t.qui); });
-  Object.keys(byTheme).forEach(theme => {
-    const set = byTheme[theme];
-    const lower = String(theme || '').toLowerCase();
-    const sensible = /tension|distance|flou|blocage|rapport de force|malentendu|instabilit|cadre lourd|pression/.test(lower);
-    if (set.size >= 2) score += sensible ? -1.15 : 1.35;
+  touches.forEach(t=>{
+    if(!t.theme)return;
+    if(!byTheme[t.theme])byTheme[t.theme]={pos:new Set(),neg:new Set(),mix:new Set()};
+    const bucket=Number(t.delta||0)>.05?'pos':Number(t.delta||0)<-.05?'neg':'mix';
+    byTheme[t.theme][bucket].add(t.qui);
+  });
+  Object.values(byTheme).forEach(b=>{
+    // Même bonus absolu dans les deux sens : aucune préférence optimiste/pessimiste.
+    if(b.pos.size>=2)score+=1.25;
+    if(b.neg.size>=2)score-=1.25;
   });
 
   const themeScore = {};
@@ -8471,7 +8524,8 @@ function yComplementRelationV81(jd, part, points, mode, baseRelevant=false) {
           if(prog[src]===undefined)continue;
           for(const pt of otherAnchors){
             const asp=yAspect(prog[src],pt.lon,src==='Lune'?.70:.48); if(!asp)continue;
-            const sign=(asp.nature==='tension'||asp.nature==='face-a-face')?-1:1;
+            const pol=yRelationPolarityV90(src,asp.a),sign=pol==='positive'?1:pol==='difficile'?-1:0;
+            if(sign===0)continue;
             const base={Soleil:.55,Lune:.70,Venus:.80,Mercure:.60,Mars:.70,AS:.55,MC:.60}[src]||.5;
             addTouch('Progression',src,ch.name,pt,asp,sign*base*(pt.poids||1));
           }
@@ -8485,7 +8539,8 @@ function yComplementRelationV81(jd, part, points, mode, baseRelevant=false) {
           const dirige=(natal[src]+arc)%360;
           for(const pt of otherAnchors){
             const asp=yAspect(dirige,pt.lon,.36); if(!asp)continue;
-            const sign=(asp.nature==='tension'||asp.nature==='face-a-face')?-1:1;
+            const pol=yRelationPolarityV90(src,asp.a),sign=pol==='positive'?1:pol==='difficile'?-1:0;
+            if(sign===0)continue;
             const base={Soleil:.65,Lune:.70,Venus:.85,Mars:.75,Jupiter:.70,Saturne:.75,AS:.65,MC:.70}[src]||.6;
             addTouch('ArcSolaire',src,ch.name,pt,asp,sign*base*(pt.poids||1));
           }
@@ -8540,10 +8595,11 @@ function yComplementRelationV82(jd,part,points,mode,alreadyRelevant=false){
     {name:part.prenom2,jdNatal:part.jd2,pos:part.pos2,AS:part.AS2,MC:part.MC2,lat:part.lat2,lon:part.lon2}
   ];
   const add=(tech,src,ch,pt,asp,w)=>{
-    const planetes=new Set(['Jupiter','Saturne','Uranus','Neptune','Pluton','Venus','Mars','Mercure']);
-    let nature=planetes.has(src)?prevPolariteV51(src,asp):((asp===90||asp===180)?'difficile':'mixte');
-    const sign=nature==='positive'?1:nature==='difficile'?-1:0,delta=sign*w;
-    const aspNature=sign<0?'tension':sign>0?'harmonie':'activation';
+    const nature=yRelationPolarityV90(src,asp);
+    const sign=nature==='positive'?1:nature==='difficile'?-1:0;
+    if(sign===0)return; // support neutre : contexte, mais aucun biais de score ni de texte.
+    const delta=sign*w;
+    const aspNature=sign<0?'tension':'harmonie';
     const theme=yThemeTransitRelationV26(src,aspNature,delta,m);
     touches.push({tr:tech+' '+src,trCle:tech+'-'+src,sourceQui:ch.name,qui:pt?pt.qui:ch.name,point:pt?pt.label:'cycle',clePoint:pt?pt.cle:src,anchor:false,delta,theme,aspect:asp,aspectNature:aspNature,orb:0,technique:tech});score+=delta;
   };
