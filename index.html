@@ -2035,7 +2035,16 @@ a{color:var(--cab-plum2)}
       <div class="bloc">
         <div class="bloc-titre">🔮 Pose ta question</div>
         <div id="q-credit-box" class="question-credit-box">🔮 Questions disponibles : —</div>
-        <button id="q-pack-btn" class="btn-retour" style="display:none;margin-bottom:1rem" onclick="acheterPackQuestions()">Acheter un pack de 5 questions</button>
+        <button id="q-pack-btn" class="btn-retour" style="display:none;margin-bottom:.55rem" onclick="acheterPackQuestions()">Acheter un pack de 5 questions</button>
+        <button id="q-promo-btn" class="btn-retour" style="margin-bottom:.75rem" onclick="toggleCodePromoQuestion()">🎁 J’ai un code promo</button>
+        <div id="q-promo-zone" style="display:none;margin:-.15rem 0 1rem;padding:.8rem;border:1px solid rgba(180,120,255,.24);border-radius:12px;background:rgba(255,255,255,.035)">
+          <label class="champ-label" style="margin-bottom:.4rem">Code promo</label>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <input class="champ-input" id="q-champ-promo" placeholder="Ex : ANNIVLAURIE" autocomplete="off" autocapitalize="characters" style="flex:1;text-transform:uppercase;margin:0" onkeydown="if(event.key==='Enter'){event.preventDefault();validerCodePromoQuestion();}">
+            <button type="button" onclick="validerCodePromoQuestion()" style="flex:0 0 auto;padding:.72rem .9rem;border:0;border-radius:9px;background:var(--violet);color:#fff;font-weight:700;cursor:pointer">Valider</button>
+          </div>
+          <div id="q-promo-msg" style="font-size:.8rem;line-height:1.45;min-height:1.15em;margin-top:.45rem"></div>
+        </div>
         <p style="font-size:0.95rem;color:var(--texte-doux);line-height:1.7;margin-bottom:0.45rem">La première question est offerte. Ensuite, les questions s’achètent par packs de 5 et n’expirent pas.</p>
         <p style="font-size:0.82rem;color:var(--texte-doux);line-height:1.55;margin-bottom:1.2rem"><strong>Horizon analysé :</strong> les 10 prochaines années. Le moteur recherche d’abord les périodes réellement activées, puis ne retient que celles qui concernent le domaine de la question.</p>
         <label class="champ-label">Ta question</label>
@@ -2572,24 +2581,71 @@ async function supprimerCompte() {
   }
 }
 
-async function validerCodePromo() {
-  const code = document.getElementById('compte-champ-promo').value.trim();
-  const msgEl = document.getElementById('compte-promo-msg');
-  if (!code) return;
+async function appliquerCodePromo(code, msgEl) {
+  const valeurCode=String(code||'').trim().toUpperCase();
+  if (!valeurCode) return null;
+  if (!TOKEN) {
+    if (msgEl) { msgEl.textContent = 'Connecte-toi d’abord pour utiliser ton code.'; msgEl.style.color = '#e8c97a'; }
+    ouvrirCompte();
+    return null;
+  }
   try {
     const resp = await fetch(BACKEND_URL + '/api/promo/redeem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN },
-      body: JSON.stringify({ code })
+      body: JSON.stringify({ code: valeurCode })
     });
-    const data = await resp.json();
-    if (!resp.ok) { msgEl.textContent = data.erreur || 'Code invalide.'; msgEl.style.color = '#f87171'; return; }
-    msgEl.textContent = data.type === 'questions_gratuites'
-      ? `Code appliqué ✓ +${Number(data.valeur)||0} question${Number(data.valeur)===1?'':'s'} gratuite${Number(data.valeur)===1?'':'s'}`
-      : 'Code appliqué ✓';
-    msgEl.style.color = '#4ade80';
-    chargerStatutCompte();
-  } catch (e) { msgEl.textContent = 'Erreur réseau.'; }
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      if (msgEl) { msgEl.textContent = data.erreur || 'Code invalide, expiré ou déjà utilisé.'; msgEl.style.color = '#f87171'; }
+      return null;
+    }
+    if (msgEl) {
+      msgEl.textContent = data.type === 'questions_gratuites'
+        ? `Code appliqué ✓ +${Number(data.valeur)||0} question${Number(data.valeur)===1?'':'s'} gratuite${Number(data.valeur)===1?'':'s'}`
+        : 'Code appliqué ✓';
+      msgEl.style.color = '#4ade80';
+    }
+    await chargerStatutCompte();
+    return data;
+  } catch (e) {
+    if (msgEl) { msgEl.textContent = 'Erreur réseau. Réessaie dans un instant.'; msgEl.style.color = '#f87171'; }
+    return null;
+  }
+}
+
+async function validerCodePromo() {
+  const input=document.getElementById('compte-champ-promo');
+  const msgEl=document.getElementById('compte-promo-msg');
+  if(!input)return;
+  const data=await appliquerCodePromo(input.value,msgEl);
+  if(data)input.value='';
+}
+
+function toggleCodePromoQuestion() {
+  if (!TOKEN) { ouvrirCompte(); return; }
+  const zone=document.getElementById('q-promo-zone');
+  const input=document.getElementById('q-champ-promo');
+  if(!zone)return;
+  const ouvre=zone.style.display==='none'||!zone.style.display;
+  zone.style.display=ouvre?'block':'none';
+  if(ouvre)setTimeout(()=>input&&input.focus(),30);
+}
+
+async function validerCodePromoQuestion() {
+  const input=document.getElementById('q-champ-promo');
+  const msgEl=document.getElementById('q-promo-msg');
+  if(!input)return;
+  if(!input.value.trim()){
+    if(msgEl){msgEl.textContent='Saisis ton code promo.';msgEl.style.color='#e8c97a';}
+    return;
+  }
+  const data=await appliquerCodePromo(input.value,msgEl);
+  if(data){
+    input.value='';
+    // Le compteur de questions est rafraîchi par chargerStatutCompte().
+    // Le formulaire reste ouvert pour pouvoir poser immédiatement la question offerte.
+  }
 }
 
 async function passerPremium() {
@@ -4991,20 +5047,61 @@ function apDailyHintV84(domain,source,pol){
   return bucket[source]||'activation ponctuelle du domaine à observer concrètement dans la journée';
 }
 
+// ============================================================
+// V91 — PRÉVISION DU JOUR : PLANÈTES NATALES PERSONNELLES EN COUCHE SECONDAIRE
+// L'ancien moteur quotidien semblait souvent plus « parlant » parce qu'il touchait
+// davantage de points personnels. On réintroduit ici uniquement la partie utile :
+// un transit rapide vers Soleil/Lune/Mercure/Vénus/Mars natal peut décrire un fait
+// quotidien concret SI cette planète natale se trouve dans une maison réellement
+// liée au domaine demandé. Cela ne crée jamais un grand événement ni un domaine.
+// ============================================================
+function apDailyPersonalTargetsV91(posN,houses,keys){
+  const planetFactor={Soleil:.66,Lune:.60,Mercure:.58,Venus:.62,Mars:.62};
+  const out=[];
+  for(const p of Object.keys(planetFactor)){
+    const deg=Number(posN&&posN[p]);
+    if(!Number.isFinite(deg))continue;
+    const h=prevHouseNumberFromCuspsV88(deg,houses);
+    if(!h)continue;
+    let best=null;
+    for(const [domain,factor] of prevDomainsForTargetV51('H'+h)){
+      if(keys.includes(domain)&&(!best||factor>best.factor))best={domain,factor};
+    }
+    if(!best)continue;
+    out.push({target:'N'+p,deg,domain:best.domain,factor:Math.min(.72,best.factor*planetFactor[p]),personal:true,natalPlanet:p,natalHouse:h});
+  }
+  return out;
+}
+
+function apDailyDedupeTargetsV91(targets){
+  const out=[];
+  for(const t of targets||[]){
+    const old=out.find(x=>x.domain===t.domain&&Math.abs((((Number(x.deg)-Number(t.deg)+540)%360)-180))<.02);
+    if(!old)out.push(t);
+    else if(Number(t.factor||0)>Number(old.factor||0))Object.assign(old,t);
+  }
+  return out;
+}
+
 function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache){
   const keys=apDomainKeysForSelectionV76(dom);
   if(!keys.length)return {hasSignal:false,signals:[],bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
   const houses=prevHouseCuspsV80(AS,MC,USER?.jd,USER?.lat,USER?.lon), rulers=prevHouseRulerTargetsV80(posN,AS,MC,USER?.jd,USER?.lat,USER?.lon);
   const natal={...posN,AS,MC,IC:houses.H4,DS:houses.H7,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
   const possible=['MC','IC','DS','H2','H3','H5','H6','H8','H9','H11','H12',...Object.keys(rulers)];
-  const targets=[];
+  let targets=[];
   for(const target of possible){
     let best=null;
     for(const [domain,factor] of prevDomainsForTargetV51(target)){
       if(keys.includes(domain)&&(!best||factor>best.factor))best={domain,factor};
     }
-    if(best&&Number.isFinite(Number(natal[target])))targets.push({target,deg:Number(natal[target]),domain:best.domain,factor:best.factor});
+    if(best&&Number.isFinite(Number(natal[target])))targets.push({target,deg:Number(natal[target]),domain:best.domain,factor:best.factor,personal:false});
   }
+  // Couche quotidienne secondaire : planètes natales personnelles situées dans
+  // une maison du domaine. Elles enrichissent les manifestations concrètes mais
+  // restent moins pondérées que cuspides/angles/maîtres de maison.
+  targets.push(...apDailyPersonalTargetsV91(posN,houses,keys));
+  targets=apDailyDedupeTargetsV91(targets);
   if(!targets.length)return {hasSignal:false,signals:[],bestScore:0,worstScore:0,bestHour:12,worstHour:12,dominantScore:0};
 
   const sources=['Lune','Mercure','Venus','Mars','Soleil'];
@@ -5025,7 +5122,7 @@ function apDailyMicroDomainV84(jdJour,posN,AS,MC,dom,posCache){
         if(pol==='positive')posBy[h]+=strength;
         else if(pol==='difficile')negBy[h]+=strength;
         else mixBy[h]+=strength;
-        raw.push({source,target:tg.target,domain:tg.domain,aspect:a.aspect,ecart:a.ecart,pol,heure:h,importance:strength+(pol==='mixte'?.12:0),hint:apDailyHintV84(tg.domain,source,pol)});
+        raw.push({source,target:tg.target,domain:tg.domain,aspect:a.aspect,ecart:a.ecart,pol,heure:h,importance:strength+(pol==='mixte'?.12:0),hint:apDailyHintV84(tg.domain,source,pol),personal:!!tg.personal,natalPlanet:tg.natalPlanet||null,natalHouse:tg.natalHouse||null});
       }
     }
   }
@@ -5149,7 +5246,7 @@ function apDailyEventProfileV86(r,dom,analyseGenerale){
     const exactCore=apDailyCoreExactV86(row);
     const strongBg=!!row&&(row.niveau==='fort'||row.niveau==='exceptionnel');
     const markedBg=!!row&&row.niveau==='marque';
-    const convergentFast=!!best&&best.sources.length>=2&&best.nonMoon.length>=1;
+    const convergentFast=!!best&&best.sources.length>=2&&best.nonMoon.length>=1&&best.rank>=1.35;
     const triggeredBg=!!best&&best.matchesBackground&&best.nonMoon.length>=1;
     let level='calme';
     if(strongBg&&(exactCore||triggeredBg))level='majeur';
@@ -5757,6 +5854,8 @@ ${reglePorteeV76}
 - Les transits rapides précisent la JOURNÉE et les horaires ; ils ne prouvent jamais à eux seuls un changement majeur de vie.
 - Un cycle de fond fort sans déclencheur journalier exact doit être présenté comme « actif en arrière-plan », pas comme un événement certain aujourd’hui.
 - S’il existe un tournant majeur confirmé ET déclenché aujourd’hui, il passe avant le micro-climat.
+- Même lorsqu'il n'y a aucun grand tournant, exploite les activations ponctuelles réellement calculées pour décrire 1 à 3 manifestations concrètes de la journée. Ne remplace jamais leur absence par une phrase vague.
+- Les activations de planètes natales personnelles ne sont qu'une couche quotidienne secondaire : elles précisent échange, humeur, décision, initiative ou interaction si leur maison natale appartient réellement au domaine demandé ; elles ne prouvent jamais un grand événement à elles seules.
 - Ne répète pas la même idée dans plusieurs blocs.
 
 INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, « énergies », « vibrations », « transformation » sans objet concret, phrases vagues comme « quelque chose se prépare », « restez ouverte aux possibilités », « écoutez votre intuition » sans action précise. Ne transforme jamais une possibilité en certitude.`
