@@ -5271,6 +5271,64 @@ function apDailyEventProfileV86(r,dom,analyseGenerale){
   return {principal,events:events.slice(0,3),windows:windows.slice(0,3),hasImportant:!!principal&&(principal.level==='majeur'||principal.level==='marquant')};
 }
 
+// ============================================================
+// V92 — HOROSCOPE QUOTIDIEN : COUCHE DE VIE COURANTE
+// Le quotidien ne doit pas être traité comme une recherche de « grand événement ».
+// Cette couche conserve les petits faits pertinents : humeur, échanges, démarches,
+// décisions, rendez-vous, organisation, dépenses, déplacements, rythme et contacts.
+// Un signal lunaire isolé peut donc décrire une ambiance ou un moment, sans jamais
+// être promu en tournant de vie. Les grands cycles restent une couche séparée.
+// ============================================================
+function apDailyLunarFocusV92(jdJour,posN,AS,MC,dom,analyseGenerale,posCache){
+  try{
+    const houses=prevHouseCuspsV80(AS,MC,USER?.jd,USER?.lat,USER?.lon);
+    const keys=analyseGenerale?null:new Set(apDomainKeysForSelectionV76(dom));
+    const samples=[];
+    for(const hour of [6,12,18]){
+      const p=(posCache&&posCache[hour])?posCache[hour]:calcPos(apJDForLocalHourV86(jdJour,hour));
+      const moon=Number(p&&p.Lune); if(!Number.isFinite(moon))continue;
+      const h=prevHouseNumberFromCuspsV88(moon,houses); if(!h)continue;
+      const domains=(prevDomainsForTargetV51('H'+h)||[]).map(x=>x[0]);
+      if(!analyseGenerale&&!domains.some(d=>keys.has(d)))continue;
+      samples.push({hour,house:h,domains});
+    }
+    if(!samples.length)return null;
+    const labels={1:'initiative personnelle, présence et rythme propre',2:'argent, achats, ressources et sécurité matérielle',3:'messages, appels, démarches et petits déplacements',4:'foyer, famille et vie privée',5:'plaisirs, créativité, enfants ou projets personnels',6:'travail concret, tâches, organisation et rythme',7:'relations, échanges à deux et réactions des autres',8:'argent partagé, engagements, sujets sensibles ou à régler',9:'déplacements plus larges, études, démarches ou ouverture',10:'activité, visibilité, responsabilités et décisions',11:'amis, réseau, projets et contacts',12:'repos, retrait, récupération et choses à terminer'};
+    const first=samples[0], last=samples[samples.length-1];
+    const changes=first.house!==last.house;
+    return {samples,changes,text:changes
+      ? `La Lune déplace le centre d'attention de ${labels[first.house]||('maison '+first.house)} vers ${labels[last.house]||('maison '+last.house)} au fil de la journée.`
+      : `La Lune met surtout l'accent sur ${labels[first.house]||('la maison '+first.house)} aujourd'hui.`};
+  }catch(e){return null;}
+}
+
+function apDailyLifeProfileV92(r,dom,analyseGenerale,lunarFocus){
+  const micro=r&&r.microDomaine;
+  const signals=(micro&&micro.signals?micro.signals:[]).slice().sort((a,b)=>Number(b.importance||0)-Number(a.importance||0)||Number(a.ecart||9)-Number(b.ecart||9));
+  const moments=[];
+  const seenHints=new Set();
+  for(const s of signals){
+    const hint=String(s.hint||'').trim(); if(!hint)continue;
+    const hk=hint.toLowerCase().replace(/[^a-zà-ÿ0-9]+/g,' ').trim();
+    if(seenHints.has(hk))continue;
+    if(moments.some(m=>m.source===s.source&&Math.abs(Number(m.hour)-Number(s.heure))<3))continue;
+    seenHints.add(hk);
+    const imp=Number(s.importance||0);
+    let intensity=imp>=1.15?'accentué':imp>=.72?'notable':'léger';
+    if(s.source==='Lune'&&intensity==='accentué')intensity='notable';
+    moments.push({hour:Number(s.heure||12),source:s.source,domain:s.domain,pol:s.pol,hint,intensity,importance:imp,personal:!!s.personal});
+    if(moments.length>=5)break;
+  }
+  const pos=signals.filter(s=>s.pol==='positive').reduce((a,b)=>a+Number(b.importance||0),0);
+  const neg=signals.filter(s=>s.pol==='difficile').reduce((a,b)=>a+Number(b.importance||0),0);
+  const mix=signals.filter(s=>s.pol==='mixte').reduce((a,b)=>a+Number(b.importance||0),0);
+  let tone='équilibré / variable';
+  if(pos>neg+Math.max(.35,(pos+neg+mix)*.12))tone='plutôt fluide';
+  else if(neg>pos+Math.max(.35,(pos+neg+mix)*.12))tone='plus exigeant';
+  else if(mix>.6)tone='actif mais contrasté';
+  return {tone,moments,lunarFocus,hasEveryday:moments.length>0||!!lunarFocus};
+}
+
 
 // ============================================================
 // V85 — MICRO-CHRONOLOGIE SEMAINE / MOIS
@@ -5484,11 +5542,13 @@ async function scannerJours(jdD,nb,posN,AS,MC,dom,onProg){
       if(strongest&&strongest.polarite==='mixte'&&Math.abs(scoreDominant)<.1)scoreDominant=0;
     }
 
-    let dailyEventProfile=null;
+    let dailyEventProfile=null,dailyLunarFocus=null,dailyLifeProfile=null;
     if(nb===1){
       try{dailyEventProfile=apDailyEventProfileV86({date,exceptionnelsDomaines,domainRow,microDomaine},dom,analyseGenerale);}catch(e){dailyEventProfile=null;}
+      try{dailyLunarFocus=apDailyLunarFocusV92(jdJ,posN,AS,MC,dom,analyseGenerale,rawPosCache);}catch(e){dailyLunarFocus=null;}
+      try{dailyLifeProfile=apDailyLifeProfileV92({date,exceptionnelsDomaines,domainRow,microDomaine},dom,analyseGenerale,dailyLunarFocus);}catch(e){dailyLifeProfile=null;}
     }
-    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,positifExceptionnel,declencheurs,convergence,exceptionnelsDomaines,domainRow,microDomaine,dailyEventProfile});
+    res.push({date,score:maxS<-900?0:maxS,heure:maxH,scoreMin:minS>900?0:minS,heureMin:minH,scoreDominant,critique,positifExceptionnel,declencheurs,convergence,exceptionnelsDomaines,domainRow,microDomaine,dailyEventProfile,dailyLunarFocus,dailyLifeProfile});
     if(j%5===0){onProg(j/nb);await new Promise(r=>setTimeout(r,0));}
   }
   return res;
@@ -5742,7 +5802,18 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     const dlab=PREV_DOMAIN_LABELS_V51[w.domain]||DOM_LABELS[domP]||w.domain;
     const sens=w.pol==='positive'?'OUVERTURE':w.pol==='difficile'?'VIGILANCE':'MIXTE';
     return `${String(w.hour).padStart(2,'0')}h environ — ${sens} — ${dlab} — ${w.hint} — ${w.sources.length} déclencheur(s) distinct(s)${w.matchesBackground?' + cycle de fond actif':''}`;
-  }).join('\n'):'Aucun créneau suffisamment convergent pour être mis en avant.';
+  }).join('\n'):'Aucun créneau de convergence forte ; les petits moments du quotidien restent décrits séparément.';
+
+  // V92 — couche quotidienne ordinaire : elle est volontairement plus large que
+  // la seule recherche d'événements majeurs. Un signal lunaire isolé peut être cité
+  // comme humeur/timing, et une activation rapide unique comme petit fait concret.
+  const dailyLife=nbJours===1&&resultats[0]?resultats[0].dailyLifeProfile:null;
+  const dailyLifeTxt=(dailyLife&&dailyLife.moments&&dailyLife.moments.length)?dailyLife.moments.map((m,i)=>{
+    const sens=m.pol==='positive'?'FLUIDE':m.pol==='difficile'?'À SURVEILLER':'ACTIF / MIXTE';
+    const dlab=PREV_DOMAIN_LABELS_V51[m.domain]||DOM_LABELS[domP]||m.domain;
+    return `${i+1}. ${String(Math.round(m.hour)).padStart(2,'0')}h environ — ${m.intensity.toUpperCase()} — ${sens} — ${dlab} — ${m.hint}${m.source==='Lune'?' (signal court : ambiance/timing)':''}`;
+  }).join('\n'):'Peu de micro-signaux nets : décris une journée simple sans inventer de faits.';
+  const lunarFocusTxt=(dailyLife&&dailyLife.lunarFocus&&dailyLife.lunarFocus.text)?dailyLife.lunarFocus.text:'Aucun focus lunaire sectoriel suffisamment pertinent pour le domaine demandé.';
 
 
   // V85 — données adaptées à la granularité de la période.
@@ -5821,44 +5892,51 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
     : `PORTÉE STRICTE : cette prévision concerne UNIQUEMENT ${DOM_LABELS[domP]}. Un événement d'un autre domaine, même exceptionnel, doit être ignoré ici. Ne transforme jamais un signal professionnel en signal familial, amoureux ou autre ; ne transforme jamais un signal familial en signal professionnel, etc. Si aucun signal propre à ${DOM_LABELS[domP]} n'est suffisamment confirmé, dis clairement qu'aucun événement marquant ne ressort dans ce domaine.`;
 
   const prompt = nbJours===1
-    ? `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
+    ? `Horoscope quotidien personnalisé pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
 ${contexteAge}
-Tendance de fond calculée : ${tendance}. Meilleur score horaire : ${(resultats[0]&&Number.isFinite(resultats[0].score)?resultats[0].score.toFixed(1):'0')} ; score de vigilance : ${(resultats[0]&&Number.isFinite(resultats[0].scoreMin)?resultats[0].scoreMin.toFixed(1):'0')}.
-Fenêtres horaires réellement convergentes calculées :
+
+IMPORTANT : il s'agit d'abord d'un HOROSCOPE DU QUOTIDIEN. Ne traite pas la journée comme une recherche de tournant de vie. Décris en priorité les petits faits, rythmes, échanges, démarches, réactions, décisions et moments concrets réellement soutenus. Un événement majeur, s'il existe vraiment, doit être signalé clairement mais ne doit pas faire disparaître le reste de la journée.
+
+CLIMAT QUOTIDIEN CALCULÉ : ${(dailyLife&&dailyLife.tone)||'équilibré / variable'}.
+FOCUS LUNAIRE DU JOUR : ${lunarFocusTxt}
+
+MOMENTS ET SITUATIONS DU QUOTIDIEN — ils peuvent être modestes et restent pertinents :
+${dailyLifeTxt}
+
+FENÊTRES DE CONVERGENCE PLUS NETTES — seulement si elles existent :
 ${dailyWindowsTxt}
 
-${titreTourneV76} :
-${exceptionnelsTxt||'Aucun tournant majeur suffisamment confirmé dans la portée demandée aujourd’hui.'}
+${titreTourneV76} — COUCHE DE FOND, À NE PAS CONFONDRE AVEC LE QUOTIDIEN :
+${exceptionnelsTxt||'Aucun tournant majeur suffisamment confirmé aujourd’hui dans la portée demandée.'}
 
-HIÉRARCHIE DES ÉVÉNEMENTS DE LA JOURNÉE :
+ÉVÉNEMENT / SÉQUENCE PLUS IMPORTANTE — uniquement si le calcul le justifie :
 ${dailyEventTxt}
 
-DÉCLENCHEURS CONCRETS DU JOUR — TIMING FIN, PAS DES « GRANDS ÉVÉNEMENTS » :
+DÉTAILS TECHNIQUES INTERNES DES MICRO-DÉCLENCHEURS — à traduire sans jargon :
 ${microTxt}
 
 Convergences de fond :
-${convergenceTxt||'Aucune convergence de fond forte : cela n’empêche pas des situations quotidiennes concrètes.'}
+${convergenceTxt||'Aucune convergence de fond forte ; la journée peut malgré tout être riche en petits faits concrets.'}
 
-OBJECTIF : identifier d’abord ce qui peut réellement constituer L’ÉVÉNEMENT OU LA SÉQUENCE LA PLUS IMPORTANTE de la journée dans ${DOM_LABELS[domP]}, puis seulement les activations secondaires. Une journée peut être ordinaire : dans ce cas dis clairement qu’aucun événement majeur ou marquant n’est suffisamment confirmé, puis donne seulement les faits ponctuels réellement soutenus. Ne transforme jamais un micro-déclencheur isolé en événement important.
 ${guideDomaine}
 
-Réponds en 4 blocs précis :
-1. ÉVÉNEMENT PRINCIPAL / NIVEAU DE LA JOURNÉE — commence par dire s’il existe réellement un événement majeur, une séquence marquante, seulement une activation ponctuelle, ou aucun événement fort. Si un événement principal est confirmé, décris UNE manifestation centrale avant toute autre chose. Ne propose jamais 4 événements de même importance.
-2. MOMENT DE CONCRÉTISATION — jusqu’à 3 créneaux uniquement parmi les fenêtres convergentes calculées. Donne une fenêtre d’environ 1 à 2 heures et précise ce qui peut s’y jouer concrètement. Un horaire issu de la Lune seule ou d’un déclencheur isolé ne doit pas être présenté comme déterminant.
-3. CE QUI PEUT SE MANIFESTER — 1 à 3 manifestations différentes, hiérarchisées. La première doit correspondre à l’événement principal s’il existe ; les suivantes sont secondaires. Utilise des objets concrets : appel, message, rendez-vous, décision, dépense, document, discussion, tâche, déplacement, accord, désaccord, organisation, etc., seulement si les calculs les soutiennent.
-4. CONSEIL DU JOUR — 1 ou 2 actions directement utilisables, liées au niveau réel de la journée.
+Réponds en 4 blocs :
+1. MA JOURNÉE CONCRÈTEMENT — 4 à 7 phrases sur le rythme réel de la journée. Commence par le quotidien, pas par l'absence ou la présence d'un grand événement. Décris ce qui peut se jouer dans les échanges, tâches, réactions, décisions, démarches, dépenses, déplacements, rendez-vous ou organisation lorsque les données le soutiennent.
+2. LES MOMENTS QUI SE DÉTACHENT — 2 à 4 moments maximum, chronologiques. Une activation rapide unique ou la Lune seule peut être utilisée ici comme petit signal de timing/humeur, clairement présenté comme bref et non déterminant. Si aucun horaire exact n'est suffisamment soutenu, donne plutôt matin / milieu de journée / fin de journée sans inventer une heure.
+3. À NOTER SI QUELQUE CHOSE DE PLUS IMPORTANT SE JOUE — uniquement s'il existe un événement majeur ou une séquence marquante réellement confirmée. Dans ce cas, explique-la en quelques phrases et relie-la au quotidien. Sinon, une seule phrase suffit : ne construis pas toute la réponse autour du fait qu'il n'y a « rien de majeur ».
+4. CONSEIL PRATIQUE DU JOUR — 1 à 3 actions simples et directement utilisables.
 
 ${reglePorteeV76}
-- Ordre de priorité obligatoire : cycle de fond exact + déclencheur du jour > convergence de plusieurs déclencheurs rapides > activation rapide unique > ambiance lunaire.
-- La Lune seule décrit une ambiance ou un timing, jamais un événement important.
-- Les transits rapides précisent la JOURNÉE et les horaires ; ils ne prouvent jamais à eux seuls un changement majeur de vie.
-- Un cycle de fond fort sans déclencheur journalier exact doit être présenté comme « actif en arrière-plan », pas comme un événement certain aujourd’hui.
-- S’il existe un tournant majeur confirmé ET déclenché aujourd’hui, il passe avant le micro-climat.
-- Même lorsqu'il n'y a aucun grand tournant, exploite les activations ponctuelles réellement calculées pour décrire 1 à 3 manifestations concrètes de la journée. Ne remplace jamais leur absence par une phrase vague.
-- Les activations de planètes natales personnelles ne sont qu'une couche quotidienne secondaire : elles précisent échange, humeur, décision, initiative ou interaction si leur maison natale appartient réellement au domaine demandé ; elles ne prouvent jamais un grand événement à elles seules.
+- Hiérarchie pour les GRANDS événements uniquement : cycle de fond exact + déclencheur du jour > convergence de plusieurs déclencheurs rapides > activation rapide unique.
+- Pour le QUOTIDIEN, une activation rapide unique est parfaitement pertinente si elle décrit un petit fait ou un moment concret ; elle ne doit simplement pas être appelée « événement majeur ».
+- La Lune seule peut décrire humeur, disponibilité, rythme, petite interaction ou timing pendant quelques heures. Elle ne prouve jamais un changement majeur.
+- Les transits rapides servent précisément à rendre la journée parlante : messages, appels, rendez-vous, tâches, achats, décisions, retards, tensions légères, moments agréables, déplacements, démarches ou organisation, selon le domaine réellement activé.
+- Un cycle de fond fort sans déclencheur journalier exact reste « actif en arrière-plan » et ne doit pas effacer les micro-événements de la journée.
+- Les activations de planètes natales personnelles sont une couche quotidienne normale lorsqu'elles sont reliées au domaine demandé ; elles précisent échange, humeur, décision, initiative ou interaction, sans devenir des tournants de vie.
+- Ne cherche jamais à remplir artificiellement la journée. Mais ne réduis pas non plus une journée ordinaire à « rien à signaler » si des micro-signaux existent.
 - Ne répète pas la même idée dans plusieurs blocs.
 
-INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, « énergies », « vibrations », « transformation » sans objet concret, phrases vagues comme « quelque chose se prépare », « restez ouverte aux possibilités », « écoutez votre intuition » sans action précise. Ne transforme jamais une possibilité en certitude.`
+INTERDIT : jargon astrologique, noms de planètes, maisons, aspects, « énergies », « vibrations », « transformation » sans objet concret, formulations catastrophistes ou euphorisantes, phrases vagues comme « quelque chose se prépare », « restez ouverte aux possibilités », « écoutez votre intuition » sans action précise. Ne transforme jamais une possibilité en certitude.`
 
     : `Prévision pour ${USER.prenom}, ${periodeStr}. Domaine demandé : ${DOM_LABELS[domP]}.
 ${contexteAge}
