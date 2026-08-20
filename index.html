@@ -2046,7 +2046,7 @@ a{color:var(--cab-plum2)}
           <div id="q-promo-msg" style="font-size:.8rem;line-height:1.45;min-height:1.15em;margin-top:.45rem"></div>
         </div>
         <p style="font-size:0.95rem;color:var(--texte-doux);line-height:1.7;margin-bottom:0.45rem">La première question est offerte. Ensuite, les questions s’achètent par packs de 5 et n’expirent pas.</p>
-        <p style="font-size:0.82rem;color:var(--texte-doux);line-height:1.55;margin-bottom:1.2rem"><strong>Horizon analysé :</strong> les 10 prochaines années. Le moteur recherche d’abord les périodes réellement activées, puis ne retient que celles qui concernent le domaine de la question.</p>
+        <p style="font-size:0.82rem;color:var(--texte-doux);line-height:1.55;margin-bottom:1.2rem"><strong>Horizon analysé :</strong> jusqu’aux 10 prochaines années. Le moteur répond d’abord à la question et distingue les activations concrètes du proche terme, les tendances progressives, les périodes marquées et les grands tournants. Un domaine calme en événements majeurs n’est pas considéré comme « vide ».</p>
         <label class="champ-label">Ta question</label>
         <textarea class="champ-input" id="q-texte" rows="4" placeholder="Ex : Est-ce le bon moment pour changer de travail ? Mon couple va-t-il surmonter cette période difficile ?" style="resize:vertical;min-height:110px"></textarea>
         <div style="margin-top:1rem">
@@ -9371,14 +9371,101 @@ function selDomQ(val, el) {
 // V80 — « Ma question » analyse toute la décennie avec le moteur sectoriel central (cuspides + maîtres de maisons).
 // Sur mobile, on évite un calcul quotidien de 3 650+ jours : un balayage régulier
 // détecte les cycles lents, puis les meilleures zones sont raffinées autour des pics.
+function apQuestionTierV93(row){
+  if(!row)return 'aucun';
+  if(row.niveau==='exceptionnel'||row.niveau==='fort')return 'majeur';
+  if(row.niveau==='marque')return 'notable';
+  if(Number(row.anchorCount||0)>0&&Number(row.force||0)>=1.0)return 'tendance';
+  return 'faible';
+}
+
 function apQuestionRowsJourV78(jdJ, domaine, analyseGeneraleQ) {
   let rows=[];
   try { rows=analyserExceptionnelsTousDomainesV51(jdJ,USER.pos,USER.AS,USER.MC,USER.jd,'general')||[]; }
   catch(e) { rows=[]; }
+  // V93 — « Ma question » n'est PAS « Grands événements ».
+  // On garde toutes les activations sectorielles réelles à partir d'un seuil de
+  // tendance modérée. Les niveaux faible/notable/majeur restent séparés afin que
+  // l'IA ne transforme jamais une petite activation en grand tournant.
   return (analyseGeneraleQ
     ? rows.filter(x=>Number(x.anchorCount||0)>0)
     : rows.filter(x=>apDomainKeysForSelectionV76(domaine).includes(x.domain)&&Number(x.anchorCount||0)>0)
-  ).filter(x=>Number(x.force||0)>=2.0);
+  ).filter(x=>Number(x.force||0)>=1.0);
+}
+
+// V93 — couche « vie concrète » du proche terme pour Ma question.
+// Elle utilise les mêmes vraies ancres sectorielles que l'horoscope quotidien,
+// mais un seul calcul à midi local par jour : elle sert à repérer des occasions,
+// démarches, échanges, décisions ou tensions ordinaires sur 90 jours. Elle ne
+// peut jamais créer un événement majeur à elle seule.
+function apQuestionMicroJourV93(jdJour,domaine,analyseGeneraleQ){
+  const allSelections=['travail','finances','amour','famille','voyage','sante','spirituel'];
+  const keys=analyseGeneraleQ
+    ? [...new Set(allSelections.flatMap(apDomainKeysForSelectionV76))]
+    : apDomainKeysForSelectionV76(domaine);
+  if(!keys.length)return [];
+  const houses=prevHouseCuspsV80(USER.AS,USER.MC,USER.jd,USER.lat,USER.lon);
+  const rulers=prevHouseRulerTargetsV80(USER.pos,USER.AS,USER.MC,USER.jd,USER.lat,USER.lon);
+  const natal={...USER.pos,AS:USER.AS,MC:USER.MC,IC:houses.H4,DS:houses.H7,H2:houses.H2,H3:houses.H3,H5:houses.H5,H6:houses.H6,H8:houses.H8,H9:houses.H9,H11:houses.H11,H12:houses.H12,...rulers};
+  const possible=['MC','IC','DS','H2','H3','H5','H6','H8','H9','H11','H12',...Object.keys(rulers)];
+  let targets=[];
+  for(const target of possible){
+    let best=null;
+    for(const [domain,factor] of prevDomainsForTargetV51(target)){
+      if(keys.includes(domain)&&(!best||factor>best.factor))best={domain,factor};
+    }
+    if(best&&Number.isFinite(Number(natal[target])))targets.push({target,deg:Number(natal[target]),domain:best.domain,factor:best.factor,personal:false});
+  }
+  targets.push(...apDailyPersonalTargetsV91(USER.pos,houses,keys));
+  targets=apDailyDedupeTargetsV91(targets);
+  if(!targets.length)return [];
+  let t={};
+  try{t=calcPos(apJDForLocalHourV86(jdJour,12));}catch(e){return [];}
+  const sources=['Lune','Mercure','Venus','Mars','Soleil'];
+  const orb={Lune:1.35,Mercure:.70,Venus:.75,Mars:.72,Soleil:.78};
+  const base={Lune:.70,Mercure:1.00,Venus:1.10,Mars:1.15,Soleil:.90};
+  const aspW={0:1,60:.82,90:.95,120:.88,180:1};
+  const raw=[];
+  for(const source of sources){
+    if(t[source]===undefined)continue;
+    for(const tg of targets){
+      const a=ecartAspectExact(t[source],tg.deg,[0,60,90,120,180]);
+      if(!a||a.ecart>orb[source])continue;
+      const pol=apDailyPolarityV84(source,a.aspect);
+      const closeness=Math.max(.25,1-(a.ecart/orb[source])*.72);
+      const importance=base[source]*tg.factor*(aspW[a.aspect]||.8)*closeness;
+      raw.push({date:jdVersDate(jdJour),source,target:tg.target,domain:tg.domain,aspect:a.aspect,ecart:a.ecart,pol,importance,hint:apDailyHintV84(tg.domain,source,pol),personal:!!tg.personal});
+    }
+  }
+  const uniq=new Map();
+  for(const s of raw){
+    const k=[s.source,s.target,s.domain,s.aspect].join('|');
+    const old=uniq.get(k);if(!old||s.ecart<old.ecart)uniq.set(k,s);
+  }
+  return [...uniq.values()].filter(s=>s.importance>=.42).sort((a,b)=>b.importance-a.importance||a.ecart-b.ecart).slice(0,8);
+}
+
+async function apQuestionMicro90V93(jdD,domaine,analyseGeneraleQ,onProg){
+  const all=[];
+  for(let j=0;j<90;j++){
+    const sigs=apQuestionMicroJourV93(jdD+j,domaine,analyseGeneraleQ);
+    for(const s of sigs)all.push({...s,offset:j});
+    if(onProg&&j%10===0)onProg(j/90);
+    if(j%18===17)await new Promise(r=>setTimeout(r,0));
+  }
+  const ord=all.sort((a,b)=>a.offset-b.offset||b.importance-a.importance);
+  const groups=[];
+  for(const x of ord){
+    const key=[x.domain,x.source,x.target,x.aspect].join('|');
+    let g=groups.find(q=>q.key===key&&x.offset-q.finOffset<=5);
+    if(!g){g={key,debutOffset:x.offset,finOffset:x.offset,debut:x.date,fin:x.date,peak:x};groups.push(g);}
+    else{g.finOffset=x.offset;g.fin=x.date;if(x.importance>g.peak.importance)g.peak=x;}
+  }
+  return groups
+    .filter(g=>g.peak.source!=='Lune'||g.peak.importance>=.60)
+    .sort((a,b)=>b.peak.importance-a.peak.importance)
+    .slice(0,12)
+    .sort((a,b)=>a.debutOffset-b.debutOffset);
 }
 
 function apQuestionCycleKeyV78(row) {
@@ -9501,35 +9588,41 @@ async function apScannerQuestion10AnsV78(jdD, domaine, onProg) {
     }
   }
 
-  // Couverture annuelle explicite : une année sans signal reste une année sans signal.
-  // On ne fabrique rien pour la remplir, mais l'IA saura qu'elle a bien été scannée.
+  // V93 — couverture annuelle à plusieurs niveaux. Une année peut ne contenir
+  // aucun grand tournant tout en présentant une tendance ou une évolution notable.
+  // On conserve donc séparément : majeur, notable et tendance modérée.
   const yearSummaries=[];
   for(const y of years){
     const gs=groupes.filter(g=>g.peak.date.getFullYear()===y)
       .sort((a,b)=>Number(b.peak.row.force||0)-Number(a.peak.row.force||0));
     const distinct=[];
+    const caps={majeur:1,notable:1,tendance:1};
+    const used={majeur:0,notable:0,tendance:0};
     for(const g of gs){
+      const tier=apQuestionTierV93(g.peak.row);
+      if(!caps[tier]||used[tier]>=caps[tier])continue;
       if(distinct.some(d=>d.key===g.key))continue;
-      distinct.push(g);
-      if(distinct.length>=2)break;
+      distinct.push(g);used[tier]++;
+      if(distinct.length>=3)break;
     }
     yearSummaries.push({year:y,cycles:distinct});
   }
 
-  // Détails transmis à l'IA : maximum 2 cycles par année + les cycles très forts
-  // globaux, avec déduplication. Cela évite que 2026 prenne toute la place.
+  // Détails transmis à l'IA : couverture décennale équilibrée, sans laisser les
+  // seules périodes majeures monopoliser la réponse. Les cycles les plus forts
+  // restent prioritaires mais des tendances réelles peuvent aussi être citées.
   const retainedMap=new Map();
   for(const ys of yearSummaries){
     for(const g of ys.cycles)retainedMap.set(`${g.peak.offset}|${g.key}`,g);
   }
   for(const g of [...groupes].sort((a,b)=>Number(b.peak.row.force||0)-Number(a.peak.row.force||0))){
-    if(Number(g.peak.row.force||0)<5.2)continue;
+    if(apQuestionTierV93(g.peak.row)==='faible')continue;
     retainedMap.set(`${g.peak.offset}|${g.key}`,g);
-    if(retainedMap.size>=24)break;
+    if(retainedMap.size>=30)break;
   }
   const retenus=[...retainedMap.values()]
     .sort((a,b)=>a.peak.offset-b.peak.offset)
-    .slice(0,24);
+    .slice(0,30);
 
   let meilleur=null;
   for(const g of groupes){
@@ -9592,7 +9685,14 @@ async function poserQuestion() {
   const analyseGeneraleQ=domaine==='general'||domaine==='tous';
   pl.textContent = 'Recherche des périodes marquantes sur 10 ans…';
   const scanQ=await apScannerQuestion10AnsV78(jdD,domaine,p=>{
-    pb.style.width=(40+Math.round(p*28))+'%';
+    pb.style.width=(40+Math.round(p*24))+'%';
+  });
+  // V93 — proche terme concret : ce bloc évite que « Ma question » se comporte
+  // comme le module « Grands événements ». Il repère aussi les petites fenêtres
+  // utiles des 90 prochains jours, sans les présenter comme des certitudes.
+  pl.textContent='Analyse du proche terme concret…';
+  const microQ=await apQuestionMicro90V93(jdD,domaine,analyseGeneraleQ,p=>{
+    pb.style.width=(64+Math.round(p*6))+'%';
   });
   const meilleurJour=scanQ.meilleur?scanQ.meilleur.date:null;
   const signauxQuestionDistincts=scanQ.cycles.map(g=>({
@@ -9627,14 +9727,21 @@ async function poserQuestion() {
         const periode=(Math.abs((x.fin-x.debut)/86400000)>=10)
           ? `${dateFmtQ(x.debut)} → ${dateFmtQ(x.fin)}`
           : dateFmtQ(x.date);
-        return `${periode} — point culminant ${dateFmtQ(x.date)} — ${x.row.label} — ${x.row.polarite} — force ${Number(x.row.force||0).toFixed(1)} — preuves de domaine : ${(x.row.anchorFamilies||[]).join(', ')||'ancrage sectoriel'}`;
+        const tier=apQuestionTierV93(x.row);
+        return `${periode} — point culminant ${dateFmtQ(x.date)} — niveau ${tier} — ${x.row.label} — ${x.row.polarite} — force ${Number(x.row.force||0).toFixed(1)} — preuves de domaine : ${(x.row.anchorFamilies||[]).join(', ')||'ancrage sectoriel réel'}`;
       }).join('\n')
-    : (analyseGeneraleQ?'Aucun domaine nettement activé sur les 10 prochaines années selon les seuils exigeants du moteur.':`Aucun signal propre à ${domLabel||domaine} n'est suffisamment confirmé sur les 10 prochaines années.`);
+    : (analyseGeneraleQ?'Aucune activation sectorielle suffisamment nette n’a été retenue dans le balayage décennal.':`Aucune activation sectorielle nette propre à ${domLabel||domaine} n'a été retenue dans le balayage décennal.`);
 
   const couvertureAnnuelleTxt=(scanQ.yearSummaries||[]).map(y=>{
-    if(!y.cycles||!y.cycles.length)return `${y.year} — aucun signal suffisamment confirmé dans ${analyseGeneraleQ?'les domaines analysés':(domLabel||domaine)}`;
-    return `${y.year} — `+y.cycles.map(g=>`${g.peak.row.label} (${g.peak.row.polarite}, force ${Number(g.peak.row.force||0).toFixed(1)}, pic ${dateFmtQ(g.peak.date)})`).join(' ; ');
+    if(!y.cycles||!y.cycles.length)return `${y.year} — pas de période sectorielle nette retenue ; cela n'implique pas une année sans évolution ordinaire`;
+    return `${y.year} — `+y.cycles.map(g=>`${g.peak.row.label} [${apQuestionTierV93(g.peak.row)}] (${g.peak.row.polarite}, force ${Number(g.peak.row.force||0).toFixed(1)}, pic ${dateFmtQ(g.peak.date)})`).join(' ; ');
   }).join('\n');
+
+  const microQuestionTxt=(microQ&&microQ.length)?microQ.map(g=>{
+    const duree=Math.round((g.fin-g.debut)/86400000);
+    const periode=duree>=2?`${dateFmtQ(g.debut)} → ${dateFmtQ(g.fin)}`:dateFmtQ(g.peak.date);
+    return `${periode} — ${g.peak.hint||'activation concrète du quotidien'} — domaine ${apDomainLabelV51(g.peak.domain)||g.peak.domain} — intensité ${Number(g.peak.importance||0).toFixed(2)} — niveau : activation ponctuelle, PAS grand événement`;
+  }).join('\n'):'Aucune micro-activation suffisamment nette sur les 90 prochains jours ; ne pas en déduire qu’il ne se passera rien.';
 
   const contexteQuestion=contexteAnalyseUniversel(today, !(domaine==='general'||domaine==='tous'));
   const prompt = `${USER.prenom} pose cette question astrologique : "${question}"
@@ -9642,7 +9749,7 @@ ${domLabel ? `Domaine concerné : ${domLabel}` : ''}
 
 ${contexteQuestion}
 
-HORIZON DE LA QUESTION : du ${dateFmtQ(scanQ.debut)} au ${dateFmtQ(scanQ.fin)} — soit les 10 prochaines années. Si la question mentionne explicitement une échéance plus courte, réponds d'abord à cette échéance, mais utilise le balayage de 10 ans pour situer la suite et les périodes réellement significatives.
+HORIZON MAXIMAL DE LA QUESTION : du ${dateFmtQ(scanQ.debut)} au ${dateFmtQ(scanQ.fin)} — soit les 10 prochaines années. ATTENTION : ce module n'est pas « Grands événements ». Les 10 ans servent de profondeur maximale, pas de filtre qui obligerait à ne parler que des tournants majeurs. Si la question mentionne une échéance plus courte, réponds d'abord et précisément à cette échéance ; sinon, donne d'abord le proche terme puis élargis progressivement.
 
 Données natales de ${USER.prenom} :
 Ascendant : ${fmt(USER.AS)} · MC : ${fmt(USER.MC)}
@@ -9652,15 +9759,18 @@ Jupiter natal : ${fmt(USER.pos.Jupiter)} · Saturne natal : ${fmt(USER.pos.Satur
 COUVERTURE DU BALAYAGE SUR LES 10 ANNÉES (${scanQ.sampledDays||0} dates calculées, avec raffinement autour des zones actives) :
 ${couvertureAnnuelleTxt}
 
-SIGNAUX DE DOMAINE RÉELLEMENT CONFIRMÉS SUR 10 ANS :
+PROCHE TERME CONCRET — 90 JOURS : petites activations sectorielles exactes qui peuvent correspondre à des démarches, échanges, décisions, dépenses, rendez-vous, ajustements ou tensions ordinaires ; elles ne sont PAS des grands événements :
+${microQuestionTxt}
+
+CYCLES ET TENDANCES DU DOMAINE SUR 10 ANS — les niveaux sont explicitement séparés : tendance / notable / majeur :
 ${signauxQuestionTxt}
 
-Meilleure fenêtre favorable réellement confirmée sur les 10 prochaines années : ${meilleurStr}
+Meilleure fenêtre favorable parmi les cycles réellement confirmés : ${meilleurStr}
 
 Réponds à la question de ${USER.prenom} en 3 parties :
-1. LA RÉPONSE — directe et honnête sur l'horizon des 10 prochaines années. Oui, non, ou nuancé selon ce que les calculs soutiennent réellement.
-2. LES PÉRIODES QUI COMPTENT — situe chronologiquement les fenêtres réellement confirmées. Ne répète pas le même cycle sous plusieurs formulations et ne remplis pas artificiellement les années calmes.
-3. LE CONSEIL PRATIQUE — que faire concrètement ? Quand agir ? Si la meilleure période est lointaine, distingue clairement le proche terme de la fenêtre plus lointaine.
+1. LA RÉPONSE — réponds d'abord à la question elle-même, pas à la question « y a-t-il un grand événement ? ». Appuie-toi sur le proche terme concret, les tendances progressives, les périodes notables ET les grands cycles. Une absence de grand tournant ne permet jamais de conclure « il ne se passera rien ».
+2. COMMENT CELA PEUT ÉVOLUER — construis une chronologie proportionnée : proche terme concret, évolution progressive, puis périodes réellement marquées si elles existent. Distingue explicitement activation ponctuelle, tendance, période notable et grand tournant. Ne répète pas un même cycle.
+3. LES PÉRIODES / ACTIONS UTILES — indique les fenêtres les plus utiles pour agir, observer, négocier, décider ou patienter selon la question. N'utilise une date précise que lorsqu'elle est présente dans les données ; sinon parle de période.
 
 RÈGLES ABSOLUES :
 - Parle directement à ${USER.prenom} en "tu"
@@ -9670,8 +9780,10 @@ RÈGLES ABSOLUES :
 - Si la question est générale, examine les domaines réellement confirmés sans donner priorité à la famille, au couple ou au travail.
 - Si la question est spécialisée, n'utilise QUE les signaux propres au domaine demandé. Un signal d'un autre domaine ne doit jamais être adapté ou renommé pour répondre à la question.
 - La section COUVERTURE DU BALAYAGE prouve quelles années ont été examinées. Ne dis jamais que les calculs ne couvrent que quelques semaines si cette couverture liste bien les 10 années.
-- Une année notée « aucun signal suffisamment confirmé » signifie seulement qu'aucun événement majeur du domaine ne franchit le seuil cette année ; cela ne signifie pas « absolument rien ne se passe » dans la vie réelle.
-- Sur 10 ans, ne transforme jamais un simple contexte annuel en événement. Cite une période précise seulement lorsqu'elle figure dans les SIGNAUX DE DOMAINE RÉELLEMENT CONFIRMÉS ci-dessus.
+- « Ma question » n'est pas le module « Grands événements ». Tu DOIS exploiter les activations ordinaires et les tendances modérées lorsqu'elles répondent à la question. Un grand événement n'est qu'un niveau parmi quatre.
+- Une année sans cycle notable/majeur signifie seulement qu'aucun grand tournant n'est retenu. Elle peut quand même comporter une évolution progressive ou des événements ordinaires ; ne prononce jamais « rien pendant X années » sur cette seule base.
+- Ne transforme jamais une micro-activation ou une tendance légère en événement certain. Utilise des formulations proportionnées : « fenêtre utile », « tendance », « période plus active », « possibilité », selon le niveau.
+- Sur 10 ans, une date précise de cycle doit venir des CYCLES ET TENDANCES ci-dessus. Pour les 90 premiers jours, tu peux utiliser les dates du PROCHETERME CONCRET comme fenêtres pratiques, jamais comme certitudes événementielles.
 - Une date de point culminant est un repère astrologique, pas la garantie qu'un événement se produira exactement ce jour-là. Pour les cycles longs, parle de période et utilise le point culminant comme repère.
 - Si la question suppose une situation incompatible avec l'âge réel du profil, dis clairement que ce scénario n'est pas applicable et reformule vers ce qui peut réellement concerner cette personne.
 - Ne fabrique jamais une grossesse, un décès, une maladie, un licenciement, une séparation ou un gain financier certain.
@@ -9680,9 +9792,9 @@ RÈGLES ABSOLUES :
   try {
     const data = await appelerClaude({
       feature: 'question',
-      featureContext: { domain: domaine, label: domLabel || 'Général', horizon: '10 ans', engine: 'V79-question-10y-annual-coverage' },
-      model: 'claude-sonnet-4-6', max_tokens: 1600,
-      system: 'Tu es un astrologue expérimenté. L’horizon analysé est réellement de 10 ans et la couverture année par année est fournie. Règle absolue : le domaine demandé ne crée jamais un événement. Pour une question spécialisée, tu n’utilises que les signaux astrologiques déjà classés dans ce domaine et tu ignores les autres, même s’ils sont forts. Tu ne transformes jamais un événement professionnel en événement familial, amoureux, financier ou inversement. Tu regroupes les répétitions d’un même cycle et tu acceptes les périodes sans événement significatif. Pour une question générale, tu compares tous les domaines objectivement. Tu respectes strictement l’âge et l’étape de vie. Tu n’inventes aucun événement et tu ne rassures jamais faussement. Ton direct, chaleureux, sans détour.',
+      featureContext: { domain: domaine, label: domLabel || 'Général', horizon: 'jusqu’à 10 ans', engine: 'V93-question-multilevel-90d-10y' },
+      model: 'claude-sonnet-4-6', max_tokens: 2200,
+      system: 'Tu es un astrologue expérimenté. Le module Ma question analyse jusqu’à 10 ans mais ce n’est PAS un détecteur de grands événements. Tu réponds à la question avec quatre niveaux distincts : activations concrètes du proche terme, tendances progressives, périodes notables, grands tournants. L’absence de grand événement ne signifie jamais absence d’évolution. Règle absolue : le domaine demandé ne crée jamais un événement. Pour une question spécialisée, tu n’utilises que les signaux déjà classés dans ce domaine et tu ignores les autres. Tu ne transformes jamais un événement professionnel en événement familial, amoureux, financier ou inversement. Tu adaptes la force de tes formulations au niveau des preuves : micro-activation = possibilité pratique, tendance = évolution graduelle, notable = période importante, majeur = grand cycle. Tu regroupes les répétitions d’un même cycle. Pour une question générale, tu compares tous les domaines objectivement. Tu respectes strictement l’âge et l’étape de vie. Tu n’inventes aucun événement, tu ne rassures pas faussement et tu ne dramatises pas. Ton direct, chaleureux, sans détour.',
       messages: [{role: 'user', content: prompt}]
     });
     document.getElementById('q-rapport').innerHTML = formatRapport(texteClaude(data) || 'Erreur');
