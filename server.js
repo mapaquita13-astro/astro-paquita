@@ -116,17 +116,8 @@ function auth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    let user = db.getUserById(payload.id);
+    const user = db.getUserById(payload.id);
     if (!user) return res.status(401).json({ erreur: 'Compte introuvable.' });
-
-    // Auto-réparation Administrateur : la page admin et le site principal
-    // partagent la même ADMIN_KEY dans ce navigateur. Si cette clé valide est
-    // envoyée avec une session connectée, le rôle est synchronisé en base avant
-    // d'appliquer les quotas (notamment « Ma question »).
-    const adminKeyRecue = req.headers['x-admin-key'];
-    if (adminKeyRecue && adminKeyRecue === ADMIN_KEY && user.role !== 'admin') {
-      user = db.setUserRole(user.id, 'admin') || user;
-    }
 
     req.user = user;
     db.touchActivity(user.id);
@@ -226,6 +217,20 @@ app.patch('/api/me/preferences', auth, (req,res)=>{
   const user=db.updatePreferences(req.user.id, req.body||{});
   if(!user)return res.status(404).json({erreur:'Compte introuvable.'});
   res.json({succes:true,...reponseCompte(user)});
+});
+
+// V94 — profils astro synchronisés depuis le navigateur connecté.
+// Le frontend continue à fonctionner en localStorage, mais l'administration peut
+// désormais connaître le nombre de profils et le profil utilisé par une consultation.
+app.post('/api/me/profiles/sync', auth, (req,res)=>{
+  const profiles=Array.isArray(req.body&&req.body.profiles)?req.body.profiles:[];
+  const activeKey=String(req.body&&req.body.active_key||'').slice(0,180);
+  const rows=db.syncUserProfiles(req.user.id,profiles,activeKey);
+  res.json({succes:true,count:rows.length,profiles:rows});
+});
+app.get('/api/me/profiles', auth, (req,res)=>{
+  res.set('Cache-Control','no-store');
+  res.json({profiles:db.getUserProfiles(req.user.id)});
 });
 
 // Journal personnel : jamais exposé à l'administration.
@@ -647,7 +652,7 @@ app.get('/api/admin/bootstrap-status', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({
     ok: true,
-    backend_version: 'v68-international-suite',
+    backend_version: 'v94-profils-historique',
     bootstrap_available: adminCount === 0,
     admin_count: adminCount,
   });
@@ -745,6 +750,11 @@ app.patch('/api/admin/promo/:id/desactiver', adminAuth, (req, res) => {
 
 app.get('/api/admin/analytics', adminAuth, (req,res)=>{res.set('Cache-Control','no-store');res.json(db.getAnalytics());});
 
+app.get('/api/admin/profiles', adminAuth, (req,res)=>{
+  res.set('Cache-Control','no-store');
+  res.json(db.getAllProfiles(false));
+});
+
 app.get('/api/admin/users', adminAuth, (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json(db.getAllUsers());
@@ -757,6 +767,7 @@ app.get('/api/admin/users/:id/activity', adminAuth, (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({
     user: { id: user.id, prenom: user.prenom || null, email: user.email || null },
+    profiles: db.getUserProfiles(user.id),
     activities: db.getUserActivity(user.id, limit),
   });
 });

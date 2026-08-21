@@ -2393,6 +2393,7 @@ async function chargerStatutCompte() {
     rafraichirVerrousFenetre();
     rafraichirLockSynastrie();
     await enregistrerVisiteUneFoisParSession();
+    await apSyncProfilesV94();
   } catch (e) {
     majBoutonCompte();
   }
@@ -2531,6 +2532,7 @@ async function soumettreConnexion(estInscription) {
     rafraichirVerrousFenetre();
     rafraichirLockSynastrie();
     await enregistrerVisiteUneFoisParSession();
+    await apSyncProfilesV94();
   } catch (e) { erreurEl.textContent = 'Connexion au serveur impossible.'; }
 }
 
@@ -10138,6 +10140,7 @@ function v37ChangerProfil(cle) {
   v37RemplirChampsProfil(p);
   if (!v37CalculerUserDepuisDonnees(p)) return;
   localStorage.setItem(V37_ACTIVE_PROFILE_KEY, cle);
+  if(typeof apScheduleProfileSyncV94==='function')apScheduleProfileSyncV94();
   const sel=document.getElementById('profils-select'); if(sel) sel.value=cle;
   const top=document.getElementById('v37-profile-select'); if(top) top.value=cle;
 }
@@ -10239,9 +10242,51 @@ window.addEventListener('DOMContentLoaded',()=>{
   },50);
 });
 
+// V94 — contexte du profil actif + synchronisation serveur pour l'administration.
+// Les profils restent utilisables localement comme avant. La synchronisation permet
+// seulement de compter les profils, d'en afficher le détail côté Admin et d'associer
+// chaque consultation/question au bon profil.
+function apProfileContextV94(includeSecondary=false){
+  try{
+    const profils=typeof getProfils==='function'?getProfils():{};
+    let key=localStorage.getItem(V37_ACTIVE_PROFILE_KEY)||'';
+    if(!key||!profils[key]){
+      const keys=Object.keys(profils);
+      key=keys.find(k=>USER&&profils[k]&&String(profils[k].prenom||'')===String(USER.prenom||'')&&String(profils[k].date||'')===String(USER.dateRaw||''))||'';
+    }
+    const p=key&&profils[key]?profils[key]:null;
+    const ctx={};
+    if(p){ctx.profile_key=String(key).slice(0,180);ctx.profile_name=String(p.prenom||key).slice(0,100);}
+    if(includeSecondary){
+      const sel=document.getElementById('y-profils-select');
+      const k2=sel&&sel.value&&profils[sel.value]?sel.value:'';
+      if(k2&&k2!==key){ctx.secondary_profile_key=String(k2).slice(0,180);ctx.secondary_profile_name=String(profils[k2].prenom||k2).slice(0,100);}
+    }
+    return ctx;
+  }catch(e){return {};}
+}
+
+let _apProfileSyncTimerV94=null;
+async function apSyncProfilesV94(){
+  if(typeof TOKEN==='undefined'||!TOKEN||typeof getProfils!=='function')return false;
+  try{
+    const profils=getProfils();
+    const rows=Object.entries(profils).slice(0,60).map(([key,p])=>({
+      key,prenom:p&&p.prenom||'',date:p&&p.date||'',heure:p&&p.heure||'',ville:p&&p.ville||'',
+      lat:p&&p.lat,lon:p&&p.lon,tz:p&&p.tz||'',genre:p&&p.genre||''
+    }));
+    const r=await fetch(BACKEND_URL+'/api/me/profiles/sync',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify({profiles:rows,active_key:localStorage.getItem(V37_ACTIVE_PROFILE_KEY)||''})});
+    return r.ok;
+  }catch(e){return false;}
+}
+function apScheduleProfileSyncV94(){
+  clearTimeout(_apProfileSyncTimerV94);
+  _apProfileSyncTimerV94=setTimeout(()=>{apSyncProfilesV94();},350);
+}
+
 // Synchroniser automatiquement le nouveau sélecteur après sauvegarde/suppression
 const _v37SetProfilsOriginal = setProfils;
-setProfils = function(obj){_v37SetProfilsOriginal(obj);setTimeout(()=>v37RafraichirSelectProfil(),0);};
+setProfils = function(obj){_v37SetProfilsOriginal(obj);setTimeout(()=>v37RafraichirSelectProfil(),0);apScheduleProfileSyncV94();};
 
 
 chargerStatutCompte().then(() => gererRetourPackQuestions()).catch(() => {});
@@ -10558,7 +10603,7 @@ const AP_ORIGINAL_TEXT=new WeakMap();
 function apStaticTranslate(root=document){const lang=AP_LANG;const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);for(const n of nodes){const p=n.parentElement;if(!p||['SCRIPT','STYLE','TEXTAREA'].includes(p.tagName)||p.closest('.rapport-texte,.ev-card-desc,.ap-no-auto-translate'))continue;if(!AP_ORIGINAL_TEXT.has(n))AP_ORIGINAL_TEXT.set(n,n.nodeValue);const raw=AP_ORIGINAL_TEXT.get(n);const t=raw.trim();if(!t)continue;const x=lang==='fr'?t:(AP_STATIC[t]&&AP_STATIC[t][lang]);if(x)n.nodeValue=raw.replace(t,x);}root.querySelectorAll?.('[placeholder]').forEach(el=>{if(!el.dataset.apOrigPlaceholder)el.dataset.apOrigPlaceholder=el.getAttribute('placeholder')||'';const v=el.dataset.apOrigPlaceholder;const x=lang==='fr'?v:(AP_STATIC[v]&&AP_STATIC[v][lang]);if(x!=null)el.setAttribute('placeholder',x);});}
 function apSetLang(lang, sync=true){if(!AP_LANG_META[lang])return;AP_LANG=lang;window.AP_LANG=lang;localStorage.setItem('astro-lang',lang);document.documentElement.lang=lang;document.documentElement.dir=AP_LANG_META[lang].dir;document.body?.classList.toggle('ap-rtl',lang==='ar');document.querySelectorAll('.ap-lang-select').forEach(s=>s.value=lang);apRenderNewUITexts();apStaticTranslate(document);try{apRefreshDashboardDetailLabels();}catch(e){}if(sync)apSyncPreferences();}
 window.apSetLang=apSetLang;
-async function apTrack(feature,context={}){if(typeof TOKEN==='undefined'||!TOKEN)return;try{await fetch(BACKEND_URL+'/api/activity/track',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify({feature,context:{...context,lang:AP_LANG,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',surface:'web'}})});}catch(e){}}
+async function apTrack(feature,context={}){if(typeof TOKEN==='undefined'||!TOKEN)return;try{const pctx=apProfileContextV94(feature==='synastry');await fetch(BACKEND_URL+'/api/activity/track',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify({feature,context:{...context,...pctx,lang:AP_LANG,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',surface:'web'}})});}catch(e){}}
 window.apTrack=apTrack;
 async function apSyncPreferences(){if(typeof TOKEN==='undefined'||!TOKEN)return;try{const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||null;const r=await fetch(BACKEND_URL+'/api/me/preferences',{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify({lang:AP_LANG,timezone:tz,notifications_enabled:localStorage.getItem('ap-notifications')==='1'})});if(r.ok&&typeof USER_CONNECTE!=='undefined'&&USER_CONNECTE){const d=await r.json();USER_CONNECTE.lang=d.lang||AP_LANG;USER_CONNECTE.timezone=d.timezone||tz;USER_CONNECTE.notifications_enabled=!!d.notifications_enabled;}}catch(e){}}
 
@@ -10572,7 +10617,7 @@ function apLifeContextPrompt(){const c=apGetLifeContext();const vals=[];if(c.rel
 function apOutputInstruction(){const m=AP_LANG_META[AP_LANG];return `\nOUTPUT LANGUAGE: Write the entire final answer in ${m.ai}. Do not mix languages. Keep ASTRO PAQUITA as the brand name. ${AP_LANG==='ar'?'Use natural Modern Standard Arabic and a right-to-left friendly structure.':''}`;}
 if(typeof window.appelerClaude==='function'){
   const _apClaude=window.appelerClaude;
-  window.appelerClaude=async function(opts){const o={...(opts||{})};o.system=String(o.system||'')+apOutputInstruction()+apLifeContextPrompt();o.messages=(o.messages||[]).map((m,i)=>i===o.messages.length-1?{...m,content:String(m.content||'')+apOutputInstruction()+apLifeContextPrompt()}:m);o.featureContext={...(o.featureContext||{}),lang:AP_LANG,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',surface:'web'};return _apClaude(o);};
+  window.appelerClaude=async function(opts){const o={...(opts||{})};o.system=String(o.system||'')+apOutputInstruction()+apLifeContextPrompt();o.messages=(o.messages||[]).map((m,i)=>i===o.messages.length-1?{...m,content:String(m.content||'')+apOutputInstruction()+apLifeContextPrompt()}:m);const pctx=apProfileContextV94(o.feature==='synastry');o.featureContext={...(o.featureContext||{}),...pctx,lang:AP_LANG,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',surface:'web'};return _apClaude(o);};
 }
 
 // ensure signup sends locale

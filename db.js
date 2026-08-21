@@ -13,6 +13,7 @@ const SCHEMA_VIDE = {
   activityLogs: [],
   journalEntries: [],
   savedWindows: [],
+  profiles: [],
   settings: {
     maintenance: {
       enabled: false,
@@ -28,6 +29,7 @@ const SCHEMA_VIDE = {
     activityLogs: 0,
     journalEntries: 0,
     savedWindows: 0,
+    profiles: 0,
   },
 };
 
@@ -41,7 +43,7 @@ function normaliserData(data) {
     return { data: cloneSchemaVide(), modifie: true };
   }
 
-  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs', 'journalEntries', 'savedWindows']) {
+  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs', 'journalEntries', 'savedWindows', 'profiles']) {
     if (!Array.isArray(data[cle])) {
       data[cle] = [];
       modifie = true;
@@ -79,7 +81,7 @@ function normaliserData(data) {
     modifie = true;
   }
 
-  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs', 'journalEntries', 'savedWindows']) {
+  for (const cle of ['users', 'promoCodes', 'promoUtilisations', 'questionPurchases', 'activityLogs', 'journalEntries', 'savedWindows', 'profiles']) {
     if (!Number.isFinite(Number(data.compteurs[cle]))) {
       const maxId = data[cle].reduce((m, x) => Math.max(m, Number(x && x.id) || 0), 0);
       data.compteurs[cle] = maxId;
@@ -237,13 +239,17 @@ function deleteUser(id) {
   data.activityLogs = (data.activityLogs || []).filter((a) => !memeId(a.user_id, id));
   data.journalEntries = (data.journalEntries || []).filter((a) => !memeId(a.user_id, id));
   data.savedWindows = (data.savedWindows || []).filter((a) => !memeId(a.user_id, id));
+  data.profiles = (data.profiles || []).filter((a) => !memeId(a.user_id, id));
   sauvegarder(data);
   return true;
 }
 
 function getAllUsers() {
   const data = charger();
-  return data.users.map(({ password_hash, ...reste }) => reste);
+  return data.users.map(({ password_hash, ...reste }) => ({
+    ...reste,
+    profile_count: (data.profiles || []).filter((p) => memeId(p.user_id, reste.id) && !p.deleted_at).length,
+  }));
 }
 
 function recordLogin(id) {
@@ -298,7 +304,7 @@ function nettoyerTexteActivite(v, max = 90) {
 function contexteActiviteSecurise(feature, contexte) {
   const c = contexte && typeof contexte === 'object' && !Array.isArray(contexte) ? contexte : {};
   // Liste blanche stricte : on ne stocke jamais le texte d'une question, un prompt ou une réponse IA.
-  const autorisees = ['period', 'date', 'days', 'domain', 'intent', 'relation', 'horizon', 'label', 'lang', 'timezone', 'surface'];
+  const autorisees = ['period', 'date', 'days', 'domain', 'intent', 'relation', 'horizon', 'label', 'lang', 'timezone', 'surface', 'profile_key', 'profile_name', 'secondary_profile_key', 'secondary_profile_name'];
   const out = {};
   for (const cle of autorisees) {
     if (!(cle in c)) continue;
@@ -306,7 +312,8 @@ function contexteActiviteSecurise(feature, contexte) {
       const n = Number(c[cle]);
       if (Number.isFinite(n)) out[cle] = Math.max(0, Math.min(3650, Math.round(n)));
     } else {
-      const val = nettoyerTexteActivite(c[cle]);
+      const max = cle === 'profile_key' || cle === 'secondary_profile_key' ? 180 : (cle === 'profile_name' || cle === 'secondary_profile_name' ? 100 : 90);
+      const val = nettoyerTexteActivite(c[cle], max);
       if (val) out[cle] = val;
     }
   }
@@ -354,6 +361,112 @@ function getUserActivity(userId, limit = 100) {
     .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
     .slice(0, n)
     .map((a) => ({ ...a }));
+}
+
+
+// ============================================================
+// PROFILS ASTRO — synchronisation minimale serveur pour l'administration
+// Les profils étaient historiquement stockés uniquement dans localStorage.
+// À partir de V94, le navigateur connecté envoie une copie structurée afin que
+// l'admin puisse connaître le nombre de profils, leur détail et le profil utilisé
+// pour une consultation. Les anciens profils apparaissent lors de la prochaine
+// ouverture du site par l'utilisateur.
+// ============================================================
+function nettoyerProfilEntree(raw) {
+  const p = raw && typeof raw === 'object' ? raw : {};
+  const texte = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
+  const key = texte(p.key || p.profile_key, 180);
+  const prenom = texte(p.prenom || p.name, 100);
+  const date = texte(p.date, 20);
+  const heure = texte(p.heure, 12);
+  const ville = texte(p.ville, 160);
+  const tz = texte(p.tz || p.timezone, 80);
+  const genre = texte(p.genre, 8);
+  const latN = Number(p.lat), lonN = Number(p.lon);
+  if (!key || !prenom) return null;
+  return {
+    profile_key: key,
+    prenom,
+    date,
+    heure,
+    ville,
+    lat: Number.isFinite(latN) ? Math.max(-90, Math.min(90, latN)) : null,
+    lon: Number.isFinite(lonN) ? Math.max(-180, Math.min(180, lonN)) : null,
+    tz,
+    genre,
+  };
+}
+
+function syncUserProfiles(userId, profils, activeKey) {
+  const data = charger();
+  const user = data.users.find((u) => memeId(u.id, userId));
+  if (!user) return [];
+  const now = new Date().toISOString();
+  const incoming = Array.isArray(profils) ? profils.slice(0, 60).map(nettoyerProfilEntree).filter(Boolean) : [];
+  const incomingKeys = new Set(incoming.map((x) => x.profile_key));
+  const actif = String(activeKey || '').slice(0, 180);
+
+  for (const x of incoming) {
+    let row = (data.profiles || []).find((p) => memeId(p.user_id, userId) && p.profile_key === x.profile_key);
+    if (!row) {
+      row = {
+        id: nouvelId(data, 'profiles'),
+        user_id: user.id,
+        created_at: now,
+      };
+      data.profiles.push(row);
+    }
+    Object.assign(row, x, {
+      active: x.profile_key === actif,
+      updated_at: now,
+      last_seen_at: now,
+      deleted_at: null,
+    });
+  }
+
+  for (const row of (data.profiles || []).filter((p) => memeId(p.user_id, userId) && !p.deleted_at)) {
+    if (!incomingKeys.has(row.profile_key)) {
+      row.active = false;
+      row.deleted_at = now;
+      row.updated_at = now;
+    } else if (row.profile_key !== actif) {
+      row.active = false;
+    }
+  }
+
+  user.last_activity_at = now;
+  sauvegarder(data);
+  return getUserProfiles(userId);
+}
+
+function getUserProfiles(userId, includeDeleted = false) {
+  const data = charger();
+  return (data.profiles || [])
+    .filter((p) => memeId(p.user_id, userId) && (includeDeleted || !p.deleted_at))
+    .sort((a, b) => String(a.prenom || '').localeCompare(String(b.prenom || ''), 'fr'))
+    .map((p) => ({ ...p }));
+}
+
+function getAllProfiles(includeDeleted = false) {
+  const data = charger();
+  const acts = data.activityLogs || [];
+  return (data.profiles || [])
+    .filter((p) => includeDeleted || !p.deleted_at)
+    .map((p) => {
+      const owner = data.users.find((u) => memeId(u.id, p.user_id));
+      const pa = acts.filter((a) => memeId(a.user_id, p.user_id) && a.context && String(a.context.profile_key || '') === String(p.profile_key || ''));
+      const q = pa.filter((a) => a.feature === 'question');
+      const last = pa.slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')))[0];
+      return {
+        ...p,
+        owner_prenom: owner ? owner.prenom || null : null,
+        owner_email: owner ? owner.email || null : null,
+        consultations: pa.length,
+        questions: q.length,
+        last_consultation_at: last ? last.created_at : null,
+      };
+    })
+    .sort((a, b) => String(b.last_consultation_at || b.updated_at || '').localeCompare(String(a.last_consultation_at || a.updated_at || '')));
 }
 
 function consumeQuestionCredit(id) {
@@ -579,7 +692,10 @@ function getAnalytics(){
   const active=(ms)=>users.filter(u=>u.last_activity_at && now-new Date(u.last_activity_at).getTime()<=ms).length;
   const premium=users.filter(u=>u.role==='admin'||(u.premium&&(!u.premium_expires_at||new Date(u.premium_expires_at)>=new Date()))).length;
   const days={}; for(const a of acts){const d=String(a.created_at||'').slice(0,10);if(d)days[d]=(days[d]||0)+1;}
-  return {users:users.length,premium,free:Math.max(0,users.length-premium),active7:active(d7),active30:active(d30),consultations:users.reduce((sum,u)=>sum+(Number(u.consultation_count)||0),0),languages:lang,features:Object.entries(features).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([feature,count])=>({feature,count})),days:Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-30).map(([date,count])=>({date,count}))};
+  const profiles=(data.profiles||[]).filter(p=>!p.deleted_at);
+  const profileKeysWithActivity=new Set(acts.filter(a=>a.context&&a.context.profile_key).map(a=>String(a.user_id)+'|'+String(a.context.profile_key)));
+  const profileQuestions=acts.filter(a=>a.feature==='question'&&a.context&&a.context.profile_key).length;
+  return {users:users.length,premium,free:Math.max(0,users.length-premium),active7:active(d7),active30:active(d30),consultations:users.reduce((sum,u)=>sum+(Number(u.consultation_count)||0),0),profiles:profiles.length,users_with_profiles:new Set(profiles.map(p=>String(p.user_id))).size,profiles_with_activity:profileKeysWithActivity.size,profile_questions:profileQuestions,languages:lang,features:Object.entries(features).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([feature,count])=>({feature,count})),days:Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-30).map(([date,count])=>({date,count}))};
 }
 
 module.exports = {
@@ -596,6 +712,9 @@ module.exports = {
   touchActivity,
   recordActivity,
   getUserActivity,
+  syncUserProfiles,
+  getUserProfiles,
+  getAllProfiles,
   updatePreferences,
   getJournal,
   addJournal,
