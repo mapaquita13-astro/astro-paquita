@@ -1639,7 +1639,7 @@ a{color:var(--cab-plum2)}
 </style>
 
 <style id="astro-paquita-v98-css">
-/* V98 — suppression de Ma question + attente cosmique + accès profil simplifié */
+/* V99 — Ma question réellement supprimée + profil fiable + attente cosmique garantie */
 #mod-question,
 button[onclick*="irVersModule('question')"],
 button[onclick*="switchMod('question'"],
@@ -1717,6 +1717,13 @@ button[onclick*="switchMod('question'"],
 .v98-loader-sub{color:#d1b8df;font-size:.9rem}
 .v98-loader-quote{margin:1rem auto 0;max-width:520px;border:1px solid rgba(224,182,105,.24);border-radius:15px;background:rgba(255,255,255,.035);padding:.75rem 1rem;color:#e9deea;font-size:.78rem}
 body.v98-busy{overflow:hidden!important}
+
+/* V99 — nettoyage définitif et profil stable */
+#mod-question,#compte-questions{display:none!important}
+button[onclick*="acheterPackQuestions"],button[onclick*="irVersModule('question')"],button[onclick*="switchMod('question'"]{display:none!important}
+#v37-profile-select{opacity:1!important;visibility:visible!important}
+body.v99-progress-busy{overflow:hidden!important}
+
 </style>
 </head>
 <body>
@@ -1728,7 +1735,7 @@ body.v98-busy{overflow:hidden!important}
     <option value="">Choisir un profil</option>
   </select>
   <button type="button" class="v37-space-btn" onclick="v37OuvrirMonEspace()">Mon espace</button>
-  <button type="button" class="v98-profile-btn" onclick="v98OpenProfile()" aria-label="Voir ou modifier le profil">Profil</button>
+  <button type="button" id="v99-profile-btn" class="v98-profile-btn" onclick="v99OpenProfileFromNav()" aria-label="Voir ou modifier le profil">Profil</button>
   <button type="button" id="v37-logout-btn" class="v37-space-btn" onclick="deconnexionCompte()" style="display:none">Déconnexion</button>
   <button type="button" class="v37-new-btn" onclick="v37NouveauProfil()" aria-label="Nouveau profil">＋</button>
 </div>
@@ -1802,8 +1809,7 @@ body.v98-busy{overflow:hidden!important}
   <button onclick="irVersModule('evenements');toggleCabinetMenu(false)">✦ Grands événements</button>
   <button onclick="irVersModule('fenetre');toggleCabinetMenu(false)">◎ Meilleur moment</button>
   <button onclick="irVersModule('synastrie');toggleCabinetMenu(false)">♡ Vos relations</button>
-  <button onclick="irVersModule('question');toggleCabinetMenu(false)">? Ma question</button>
-  <button onclick="ouvrirCompte();toggleCabinetMenu(false)">♛ Mon compte</button>
+<button onclick="ouvrirCompte();toggleCabinetMenu(false)">♛ Mon compte</button>
 </aside>
 
 
@@ -1826,8 +1832,7 @@ body.v98-busy{overflow:hidden!important}
       <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:0.6rem;color:#e8d8ff;">Mon compte</h3>
       <p id="compte-email" style="color:#c0b4e0;font-size:0.9rem;"></p>
       <p id="compte-statut" style="font-weight:700;margin:0.5rem 0 0.6rem;"></p>
-      <div id="compte-questions" class="question-credit-box">🔮 Questions disponibles : —</div>
-      <button id="btn-administration" onclick="location.href='admin.html'" style="display:none;width:100%;padding:.72rem;border:1px solid #c9a84c;border-radius:9px;background:#35102f;color:#f4dfaa;font-weight:800;cursor:pointer;margin:.6rem 0 1rem;">👑 Ouvrir l’administration</button>
+<button id="btn-administration" onclick="location.href='admin.html'" style="display:none;width:100%;padding:.72rem;border:1px solid #c9a84c;border-radius:9px;background:#35102f;color:#f4dfaa;font-weight:800;cursor:pointer;margin:.6rem 0 1rem;">👑 Ouvrir l’administration</button>
 
 
       <div class="cabinet-premium-panel">
@@ -1843,13 +1848,10 @@ body.v98-busy{overflow:hidden!important}
         <div class="cabinet-plan-row"><span>◌ <b>Grands événements 24 mois</b><small>Anticipez les temps forts à venir</small></span><i>—</i><i class="yes">✓</i></div>
         <div class="cabinet-plan-row"><span>♡ <b>Mes relations</b><small>Compatibilités et dynamiques</small></span><i>—</i><i class="yes">✓</i></div>
         <div class="cabinet-plan-row"><span>◎ <b>Meilleur moment</b><small>Choisissez le bon moment pour agir</small></span><i>—</i><i class="yes">✓</i></div>
-        <div class="cabinet-plan-row"><span>? <b>1 question offerte</b><small>Une réponse personnalisée</small></span><i>✓</i><i class="yes">✓</i></div>
-      </div>
+</div>
 
       <button id="btn-passer-premium" onclick="passerPremium()" style="width:100%;padding:0.7rem;border:none;border-radius:8px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#0f0c29;font-weight:700;cursor:pointer;margin-bottom:0.6rem;">♛ Passer Premium</button>
-      <button onclick="acheterPackQuestions()" style="width:100%;padding:0.7rem;border:1px solid rgba(201,168,76,0.55);border-radius:8px;background:rgba(201,168,76,0.12);color:#e8c97a;font-weight:700;cursor:pointer;margin-bottom:1rem;">✦ Acheter 5 questions</button>
-
-      <label style="display:block;font-size:0.82rem;color:#c0b4e0;margin-bottom:0.3rem;">Code promo</label>
+<label style="display:block;font-size:0.82rem;color:#c0b4e0;margin-bottom:0.3rem;">Code promo</label>
       <div style="display:flex;gap:0.4rem;margin-bottom:0.3rem;">
         <input id="compte-champ-promo" placeholder="CODE" style="flex:1;padding:0.5rem;border-radius:8px;border:1px solid rgba(180,120,255,0.35);background:rgba(255,255,255,0.07);color:#fff;text-transform:uppercase;">
         <button onclick="validerCodePromo()" style="padding:0.5rem 0.9rem;border:none;border-radius:8px;background:rgba(255,255,255,0.12);color:#fff;cursor:pointer;">Valider</button>
@@ -1912,8 +1914,7 @@ body.v98-busy{overflow:hidden!important}
   <div class="cabinet-home-shortcuts" aria-label="Accès rapides">
     <button onclick="irVersModule('evenements')">Grands événements</button>
     <button onclick="irVersModule('fenetre')">Meilleur moment</button>
-    <button onclick="irVersModule('question')">Ma question</button>
-  </div>
+</div>
 </section>
 
 <!-- SECTION SAISIE -->
@@ -2004,11 +2005,7 @@ body.v98-busy{overflow:hidden!important}
         <span class="mod-onglet-icone">⚡</span>
         <span class="mod-onglet-label">Événements</span>
       </button>
-      <button class="mod-onglet" onclick="switchMod('question',this)">
-        <span class="mod-onglet-icone">🔮</span>
-        <span class="mod-onglet-label">Ma question</span>
-      </button>
-      <button class="mod-onglet" onclick="switchMod('synastrie',this)">
+<button class="mod-onglet" onclick="switchMod('synastrie',this)">
         <span class="mod-onglet-icone">♥</span>
         <span class="mod-onglet-label">Synastrie</span>
       </button>
@@ -2151,65 +2148,6 @@ body.v98-busy{overflow:hidden!important}
       </div>
       <button class="btn-retour" onclick="exporterPDF('f-res','Fenêtre idéale')">⬇ Télécharger en PDF</button>
       <button class="btn-retour" onclick="resetFenetre()">← Nouvelle recherche</button>
-    </div>
-  </div>
-
-  <!-- MODULE MA QUESTION -->
-  <div class="mod-panneau" id="mod-question">
-    <div id="q-form">
-      <div class="bloc">
-        <div class="bloc-titre">🔮 Pose ta question</div>
-        <div id="q-credit-box" class="question-credit-box">🔮 Questions disponibles : —</div>
-        <button id="q-pack-btn" class="btn-retour" style="display:none;margin-bottom:.55rem" onclick="acheterPackQuestions()">Acheter un pack de 5 questions</button>
-        <button id="q-promo-btn" class="btn-retour" style="margin-bottom:.75rem" onclick="toggleCodePromoQuestion()">🎁 J’ai un code promo</button>
-        <div id="q-promo-zone" style="display:none;margin:-.15rem 0 1rem;padding:.8rem;border:1px solid rgba(180,120,255,.24);border-radius:12px;background:rgba(255,255,255,.035)">
-          <label class="champ-label" style="margin-bottom:.4rem">Code promo</label>
-          <div style="display:flex;gap:.5rem;align-items:center">
-            <input class="champ-input" id="q-champ-promo" placeholder="Ex : ANNIVLAURIE" autocomplete="off" autocapitalize="characters" style="flex:1;text-transform:uppercase;margin:0" onkeydown="if(event.key==='Enter'){event.preventDefault();validerCodePromoQuestion();}">
-            <button type="button" onclick="validerCodePromoQuestion()" style="flex:0 0 auto;padding:.72rem .9rem;border:0;border-radius:9px;background:var(--violet);color:#fff;font-weight:700;cursor:pointer">Valider</button>
-          </div>
-          <div id="q-promo-msg" style="font-size:.8rem;line-height:1.45;min-height:1.15em;margin-top:.45rem"></div>
-        </div>
-        <p style="font-size:0.95rem;color:var(--texte-doux);line-height:1.7;margin-bottom:0.45rem">La première question est offerte. Ensuite, les questions s’achètent par packs de 5 et n’expirent pas.</p>
-        <p style="font-size:0.82rem;color:var(--texte-doux);line-height:1.55;margin-bottom:1.2rem"><strong>Horizon analysé :</strong> jusqu’aux 10 prochaines années. Le moteur répond d’abord à la question et distingue les activations concrètes du proche terme, les tendances progressives, les périodes marquées et les grands tournants. Un domaine calme en événements majeurs n’est pas considéré comme « vide ».</p>
-        <label class="champ-label">Ta question</label>
-        <textarea class="champ-input" id="q-texte" rows="4" placeholder="Ex : Est-ce le bon moment pour changer de travail ? Mon couple va-t-il surmonter cette période difficile ?" style="resize:vertical;min-height:110px"></textarea>
-        <div style="margin-top:1rem">
-          <label class="champ-label">Domaine concerné (optionnel)</label>
-          <div class="domaines" id="q-domaines" style="margin-top:0.5rem">
-            <div class="dom-btn" onclick="selDomQ('amour',this)"><span class="dom-icone">💑</span><span class="dom-label">Amour</span></div>
-            <div class="dom-btn" onclick="selDomQ('travail',this)"><span class="dom-icone">💼</span><span class="dom-label">Travail</span></div>
-            <div class="dom-btn" onclick="selDomQ('argent',this)"><span class="dom-icone">💰</span><span class="dom-label">Argent</span></div>
-            <div class="dom-btn" onclick="selDomQ('sante',this)"><span class="dom-icone">🌿</span><span class="dom-label">Bien-être / récupération</span></div>
-            <div class="dom-btn" onclick="selDomQ('famille',this)"><span class="dom-icone">👨‍👩‍👧</span><span class="dom-label">Famille</span></div>
-            <div class="dom-btn" onclick="selDomQ('general',this)"><span class="dom-icone">✦</span><span class="dom-label">Général</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="progress-wrap" id="q-pw">
-        <div class="progress-label" id="q-pl">Analyse en cours…</div>
-        <div class="progress-bg"><div class="progress-bar" id="q-pb"></div></div>
-      </div>
-      <button class="btn-principal" id="q-btn" onclick="poserQuestion()">🔮 Obtenir ma réponse</button>
-      <div class="erreur" id="q-err"></div>
-    </div>
-    <div id="q-historique-bloc" style="display:none;margin-top:1.5rem">
-      <div class="rapport-bloc-titre" style="margin-bottom:0.6rem">📜 Historique de tes questions</div>
-      <div id="q-historique"></div>
-    </div>
-    <div class="resultats" id="q-res">
-      <div class="res-header">
-        <div class="res-icone">🔮</div>
-        <div class="res-titre" id="q-res-titre"></div>
-        <div class="res-sous" id="q-res-sous"></div>
-      </div>
-      <div class="rapport-bloc">
-        <div class="rapport-bloc-titre">Réponse astrologique</div>
-        <div class="rapport-texte" id="q-rapport"></div>
-      </div>
-      <button class="btn-principal" style="margin-top:1rem" onclick="nouvelleQuestion()">🔮 Nouvelle question</button>
-      <button class="btn-retour" onclick="exporterPDF('q-res','Ma question')">⬇ Télécharger en PDF</button>
-      <button class="btn-retour" onclick="resetRes('q')">← Retour</button>
     </div>
   </div>
 
@@ -2847,13 +2785,7 @@ function majMobileAccueil() {
   const prenom = (USER && USER.prenom) || (USER_CONNECTE && USER_CONNECTE.prenom) || '';
   titre.textContent = prenom ? `Bonjour ${prenom} ✦` : 'Votre espace astrologique';
   badge.textContent = PREMIUM ? 'PREMIUM' : 'GRATUIT';
-  const estAdmin = compteAdminActif();
-  const credits = USER_CONNECTE ? Number(USER_CONNECTE.question_credits || 0) : null;
-  txt.textContent = credits === null
-    ? 'Votre portrait, votre journée et votre tableau de bord au même endroit.'
-    : estAdmin
-      ? 'Votre portrait, vos prévisions et vos grandes périodes au même endroit · questions illimitées.'
-      : `Votre portrait, vos prévisions et vos grandes périodes au même endroit · ${credits} question${credits===1?'':'s'} disponible${credits===1?'':'s'}.`;
+  txt.textContent = 'Votre portrait, vos prévisions et vos grandes périodes au même endroit.';
 }
 
 function majMobileNav(id='home') {
@@ -5735,7 +5667,7 @@ async function genererNatal() {
   const fmt=d=>{d=((d%360)+360)%360;const s=Math.floor(d/30),r=d%30,deg=Math.floor(r),min=Math.floor((r-deg)*60);return`${deg}°${String(min).padStart(2,'0')} ${SIGNES[s]}`;};
   const natalList=Object.entries(USER.pos).map(([n,d])=>`${n} : ${fmt(d)}`).join('\n');
 
-  pb.style.width='60%'; pl.textContent='Rédaction du portrait…';
+  pb.style.width='60%'; pl.textContent='Paquita consulte les astres…';
 
   const prompt=`Voici les données natales de ${USER.prenom} :
 Ascendant : ${fmt(USER.AS)} | MC : ${fmt(USER.MC)}
@@ -5850,7 +5782,7 @@ async function lancerPrevDepuis(dateDebut, nbJours, per) {
   pl.textContent='Calcul heure par heure…';
   const resultats=await scannerJours(jdD,nbJours,USER.pos,USER.AS,USER.MC,domP,pct=>{pb.style.width=Math.round(pct*80)+'%';pl.textContent=`Analyse… ${Math.round(pct*80)}%`;});
 
-  pb.style.width='88%'; pl.textContent='Rédaction…';
+  pb.style.width='88%'; pl.textContent='Paquita consulte les astres…';
 
   // Les meilleures / moins bonnes dates doivent être réellement distinctes.
   // V90 : mêmes plafonds d'affichage dans les deux sens (3 / 3). Une date neutre
@@ -7714,7 +7646,7 @@ async function analyserSynastrie() {
   const fmt=d=>{d=((d%360)+360)%360;const s=Math.floor(d/30),r=d%30,deg=Math.floor(r),min=Math.floor((r-deg)*60);return`${deg}°${String(min).padStart(2,'0')} ${SIGNES[s]}`;};
   const listeA = Object.entries(USER.pos).map(([n,d])=>`${n} : ${fmt(d)}`).join('\n');
   const listeB = Object.entries(part.pos2).map(([n,d])=>`${n} : ${fmt(d)}`).join('\n');
-  pb.style.width='60%'; pl.textContent='Rédaction de la '+cfg.compatTitle.toLowerCase()+'…';
+  pb.style.width='60%'; pl.textContent='Paquita consulte les astres…';
 
   const contexteParMode = {
     couple: `Il s'agit d'une relation amoureuse ou de couple existante. Tu peux parler de lien affectif, dynamique de couple, rapprochement, tensions et stabilité.`,
@@ -9262,7 +9194,7 @@ async function analyserPrevisionsSynastrie() {
   const mois = yRegrouperMois(liste);
   const grandesPeriodes = yRegrouperGrandesPeriodes(liste, jours, cyclesRelation);
 
-  pb.style.width='88%'; pl.textContent = 'Rédaction des prévisions '+cfg.short+'…';
+  pb.style.width='88%'; pl.textContent = 'Paquita consulte les astres…';
   const rapport = yRapportLocal(part, mode, debut, fin, moyenne, picsPos, picsNeg, mois, jours, grandesPeriodes, cyclesRelation);
   const climat = yClimatModeV26(moyenne, mode);
   const cycleBadge = jours > 730 ? 'Cycles longs regroupés · convergences par semestre' : (jours > 365 ? 'Cycles regroupés · convergences par trimestre' : 'Cycles astrologiques distincts · sans répétitions');
@@ -10253,24 +10185,32 @@ function v37RafraichirSelectProfil(selectedKey) {
   if (!sel || typeof getProfils !== 'function') return;
   const profils = getProfils();
   const keys = Object.keys(profils).sort((a,b)=>a.localeCompare(b,'fr'));
-  const wanted = selectedKey || localStorage.getItem(V37_ACTIVE_PROFILE_KEY) || '';
+  const previous = sel.value || '';
+  const active = localStorage.getItem(V37_ACTIVE_PROFILE_KEY) || '';
+  const wanted = (selectedKey && profils[selectedKey]) ? selectedKey : (previous && profils[previous]) ? previous : (active && profils[active]) ? active : '';
   sel.innerHTML = '<option value="">Choisir un profil</option>';
   keys.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=profils[k].prenom || k;sel.appendChild(o);});
   if (wanted && profils[wanted]) sel.value = wanted;
-  else if (keys.length===1) sel.value = keys[0];
+  else if (keys.length===1) { sel.value = keys[0]; localStorage.setItem(V37_ACTIVE_PROFILE_KEY, keys[0]); }
 }
 
 function v37ChangerProfil(cle) {
-  if (!cle) return;
+  if (!cle) return false;
   const profils = getProfils();
   const p = profils[cle];
-  if (!p) return;
-  v37RemplirChampsProfil(p);
-  if (!v37CalculerUserDepuisDonnees(p)) return;
+  if (!p) return false;
+  // V99 : mémoriser immédiatement le choix. Même un ancien profil incomplet reste visible dans le sélecteur.
   localStorage.setItem(V37_ACTIVE_PROFILE_KEY, cle);
-  if(typeof apScheduleProfileSyncV94==='function')apScheduleProfileSyncV94();
   const sel=document.getElementById('profils-select'); if(sel) sel.value=cle;
   const top=document.getElementById('v37-profile-select'); if(top) top.value=cle;
+  v37RemplirChampsProfil(p);
+  const ok=v37CalculerUserDepuisDonnees(p);
+  if(typeof apScheduleProfileSyncV94==='function')apScheduleProfileSyncV94();
+  try{ if(typeof v98RefreshProfileCard==='function') v98RefreshProfileCard(); }catch(e){}
+  // Réaffirmer le nom après les rafraîchissements asynchrones de l'interface.
+  setTimeout(()=>{const t=document.getElementById('v37-profile-select');if(t&&getProfils()[cle])t.value=cle;},0);
+  setTimeout(()=>{const t=document.getElementById('v37-profile-select');if(t&&getProfils()[cle])t.value=cle;},150);
+  return ok;
 }
 
 function v37LireProfilDepuisChamps() {
@@ -10422,7 +10362,7 @@ chargerStatutCompte().then(() => gererRetourPackQuestions()).catch(() => {});
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('sw.js?v=astro-paquita-v68-international-suite-20260814', { updateViaCache: 'none' });
+      const reg = await navigator.serviceWorker.register('sw.js?v=astro-paquita-v99-ui-fix-20260825', { updateViaCache: 'none' });
       await reg.update();
     } catch (err) {
       console.warn('Service worker non enregistré :', err);
@@ -10473,7 +10413,7 @@ window.addEventListener('DOMContentLoaded', () => {
   <button class="mobile-nav-item actif" data-mobile-nav="home" onclick="mobileNaviguer('home')"><span>⌂</span><small>Accueil</small></button>
   <button class="mobile-nav-item" data-mobile-nav="evenements" onclick="mobileNaviguer('evenements')"><span>▣</span><small>Calendrier</small></button>
   <button class="mobile-nav-item" data-mobile-nav="fenetre" onclick="mobileNaviguer('fenetre')"><span>☆</span><small>Conseils</small></button>
-  <button class="mobile-nav-item" data-mobile-nav="compte" onclick="mobileNaviguer('compte')"><span>♙</span><small>Profil</small></button>
+  <button class="mobile-nav-item" data-mobile-nav="compte" onclick="v99OpenProfileFromNav()"><span>♙</span><small>Profil</small></button>
 </nav>
 
 <div id="v30-app" aria-label="Astro Paquita mobile">
@@ -10553,7 +10493,6 @@ window.addEventListener('DOMContentLoaded', () => {
         <tr><td>Grands événements 24 mois</td><td class="no">—</td><td class="yes">✓</td></tr>
         <tr><td>Mes relations</td><td class="no">—</td><td class="yes">✓</td></tr>
         <tr><td>Meilleur moment</td><td class="no">—</td><td class="yes">✓</td></tr>
-        <tr><td>Questions astrologiques</td><td>1 offerte</td><td>Packs séparés</td></tr>
       </tbody></table>
     </div>
   </section>
@@ -11160,6 +11099,87 @@ function v98Install(){
   setTimeout(v98HideQuestionUI,300);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v98Install,{once:true});else setTimeout(v98Install,0);
+})();
+</script>
+
+<script id="astro-paquita-v99-js">
+(function(){
+'use strict';
+
+function v99EscText(x){return String(x==null?'':x).replace(/[<>&]/g,'');}
+function v99Profiles(){try{return typeof getProfils==='function'?(getProfils()||{}):{};}catch(e){return {};}}
+function v99ResolveProfileKey(){
+  const all=v99Profiles(),sel=document.getElementById('v37-profile-select');
+  const selected=sel&&sel.value&&all[sel.value]?sel.value:'';
+  const active=localStorage.getItem('astro_paquita_profil_actif_v38')||'';
+  if(selected)return selected;
+  if(active&&all[active])return active;
+  if(window.USER){const k=Object.keys(all).find(x=>String(all[x]?.prenom||'')===String(USER.prenom||'')&&String(all[x]?.date||'')===String(USER.dateRaw||''));if(k)return k;}
+  return Object.keys(all)[0]||'';
+}
+
+window.v99OpenProfileFromNav=function(){
+  try{if(typeof majMobileNav==='function')majMobileNav('compte');}catch(e){}
+  const all=v99Profiles(),k=v99ResolveProfileKey();
+  if(!k||!all[k]){ if(typeof scrollVersSaisie==='function')scrollVersSaisie(); return; }
+  localStorage.setItem('astro_paquita_profil_actif_v38',k);
+  const sel=document.getElementById('v37-profile-select');if(sel)sel.value=k;
+  try{if(typeof v37ChangerProfil==='function')v37ChangerProfil(k);}catch(e){}
+  // Le bouton Profil doit ouvrir le profil, jamais la modale de compte.
+  if(typeof window.v98OpenProfile==='function'){window.v98OpenProfile();return;}
+};
+
+function v99CleanQuestionUI(){
+  document.querySelectorAll("button[onclick*='acheterPackQuestions'],button[onclick*=\"irVersModule('question')\"],button[onclick*=\"switchMod('question'\"]").forEach(e=>e.remove());
+  const q=document.getElementById('mod-question');if(q)q.remove();
+  const cq=document.getElementById('compte-questions');if(cq)cq.remove();
+  document.querySelectorAll('.cabinet-plan-row').forEach(r=>{if(/question offerte|questions astrologiques|pack/i.test(r.textContent||''))r.remove();});
+  document.querySelectorAll('#v30-profil tr').forEach(r=>{if(/questions astrologiques|question offerte|packs? séparés/i.test(r.textContent||''))r.remove();});
+};
+
+function v99RemoveContextFromJournal(){
+  // Le contexte personnel vit désormais dans Profil, pas dans Journal.
+  const ids=['ap-life-relationship','ap-life-activity','ap-life-children','ap-life-housing'];
+  for(const id of ids){const e=document.getElementById(id);if(e){const panel=e.closest('.ap-panel');if(panel)panel.remove();break;}}
+}
+
+// Le visuel cosmique doit apparaître dès qu'un ancien progress-wrap est visible,
+// même si une fonction n'a pas pu être enveloppée par le wrapper V98.
+let V99_PROGRESS_VISIBLE=false;
+function v99AnyProgressVisible(){
+  return [...document.querySelectorAll('.progress-wrap')].some(e=>{const s=getComputedStyle(e);return s.display!=='none'&&s.visibility!=='hidden'&&e.offsetParent!==null;});
+}
+function v99SyncCosmicLoader(){
+  const loader=document.getElementById('ap-cosmic-loader'),visible=v99AnyProgressVisible();if(!loader)return;
+  V99_PROGRESS_VISIBLE=visible;
+  if(visible){loader.classList.add('show');loader.setAttribute('aria-hidden','false');document.body.classList.add('v99-progress-busy');}
+  else{document.body.classList.remove('v99-progress-busy');if(!document.body.classList.contains('v98-busy')){loader.classList.remove('show');loader.setAttribute('aria-hidden','true');}}
+}
+function v99InstallProgressObserver(){
+  const obs=new MutationObserver(()=>requestAnimationFrame(v99SyncCosmicLoader));
+  document.querySelectorAll('.progress-wrap').forEach(e=>obs.observe(e,{attributes:true,attributeFilter:['style','class'],subtree:true,childList:true,characterData:true}));
+  // Certains modules changent directement la largeur/texte avant l'affichage du bloc.
+  setInterval(v99SyncCosmicLoader,250);
+}
+
+function v99StableProfileSelection(){
+  const sel=document.getElementById('v37-profile-select');if(!sel)return;
+  const sync=()=>{const all=v99Profiles(),k=sel.value&&all[sel.value]?sel.value:v99ResolveProfileKey();if(k&&all[k]){localStorage.setItem('astro_paquita_profil_actif_v38',k);sel.value=k;setTimeout(()=>{if(all[k])sel.value=k;},80);}};
+  sel.addEventListener('change',sync);
+  sel.addEventListener('input',sync);
+}
+
+function v99Install(){
+  v99CleanQuestionUI();
+  v99RemoveContextFromJournal();
+  v99StableProfileSelection();
+  v99InstallProgressObserver();
+  const btn=document.getElementById('v99-profile-btn');if(btn)btn.addEventListener('click',e=>{e.preventDefault();v99OpenProfileFromNav();});
+  // Des composants mobiles sont ajoutés après DOMContentLoaded : refaire le nettoyage une fois.
+  setTimeout(()=>{v99CleanQuestionUI();v99RemoveContextFromJournal();try{if(typeof v98EnsureProfileCard==='function')v98EnsureProfileCard();if(typeof v98RefreshProfileCard==='function')v98RefreshProfileCard();}catch(e){}},500);
+  setTimeout(v99CleanQuestionUI,1600);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v99Install,{once:true});else setTimeout(v99Install,0);
 })();
 </script>
 
