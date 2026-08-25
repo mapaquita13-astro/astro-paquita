@@ -1735,7 +1735,7 @@ body.v99-progress-busy{overflow:hidden!important}
     <option value="">Choisir un profil</option>
   </select>
   <button type="button" class="v37-space-btn" onclick="v37OuvrirMonEspace()">Mon espace</button>
-  <button type="button" id="v99-profile-btn" class="v98-profile-btn" onclick="v99OpenProfileFromNav()" aria-label="Voir ou modifier le profil">Profil</button>
+  <button type="button" id="v100-profile-btn" class="v98-profile-btn v100-profile-btn" onclick="return v100OpenProfile(event)" aria-label="Voir ou modifier le profil">Profil</button>
   <button type="button" id="v37-logout-btn" class="v37-space-btn" onclick="deconnexionCompte()" style="display:none">Déconnexion</button>
   <button type="button" class="v37-new-btn" onclick="v37NouveauProfil()" aria-label="Nouveau profil">＋</button>
 </div>
@@ -10413,7 +10413,7 @@ window.addEventListener('DOMContentLoaded', () => {
   <button class="mobile-nav-item actif" data-mobile-nav="home" onclick="mobileNaviguer('home')"><span>⌂</span><small>Accueil</small></button>
   <button class="mobile-nav-item" data-mobile-nav="evenements" onclick="mobileNaviguer('evenements')"><span>▣</span><small>Calendrier</small></button>
   <button class="mobile-nav-item" data-mobile-nav="fenetre" onclick="mobileNaviguer('fenetre')"><span>☆</span><small>Conseils</small></button>
-  <button class="mobile-nav-item" data-mobile-nav="compte" onclick="v99OpenProfileFromNav()"><span>♙</span><small>Profil</small></button>
+  <button class="mobile-nav-item" data-mobile-nav="compte" onclick="return v100OpenProfile(event)"><span>♙</span><small>Profil</small></button>
 </nav>
 
 <div id="v30-app" aria-label="Astro Paquita mobile">
@@ -11073,7 +11073,7 @@ function v98LifeText(c){
 }
 function v98EnsureProfileCard(){
   const screen=document.getElementById('v30-profil'),content=screen&&screen.querySelector('.v30-content');if(!content||document.getElementById('v98-v30-profile-card'))return;
-  const top=content.querySelector('.v30-profile-top');const d=document.createElement('div');d.id='v98-v30-profile-card';d.innerHTML=`<div class="v98-v30-head"><strong>Mon profil astrologique</strong><button class="v30-outline-btn" onclick="v98OpenProfile()">Voir / modifier</button></div><div id="v98-v30-details" class="v98-v30-details">Choisissez un profil pour afficher ses informations.</div>`;if(top)top.insertAdjacentElement('afterend',d);else content.prepend(d);
+  const top=content.querySelector('.v30-profile-top');const d=document.createElement('div');d.id='v98-v30-profile-card';d.innerHTML=`<div class="v98-v30-head"><strong>Mon profil astrologique</strong><button class="v30-outline-btn" onclick="return v100OpenProfile(event)">Voir / modifier</button></div><div id="v98-v30-details" class="v98-v30-details">Choisissez un profil pour afficher ses informations.</div>`;if(top)top.insertAdjacentElement('afterend',d);else content.prepend(d);
 }
 window.v98RefreshProfileCard=function(){
   v98EnsureProfileCard();const d=document.getElementById('v98-v30-details');if(!d)return;const all=typeof getProfils==='function'?getProfils():{},k=v98ActiveKey(),p=k?all[k]:null;if(!p){d.textContent='Choisissez un profil pour afficher ses informations.';return;}const c=apGetLifeContext()||{};d.innerHTML=`<b>${String(p.prenom||k).replace(/[<>&]/g,'')}</b> · ${String(p.date||'').replace(/[<>&]/g,'')} ${p.heure?'à '+String(p.heure).replace(/[<>&]/g,''):''}<br>${String(p.ville||'').replace(/[<>&]/g,'')}<br>${v98LifeText(c)}`;
@@ -11180,6 +11180,64 @@ function v99Install(){
   setTimeout(v99CleanQuestionUI,1600);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v99Install,{once:true});else setTimeout(v99Install,0);
+})();
+</script>
+
+<style id="astro-paquita-v100-profile-hotfix-css">
+/* V100 — bouton Profil indépendant et prioritaire sur mobile */
+#v100-profile-btn{position:relative!important;z-index:3!important;pointer-events:auto!important;touch-action:manipulation!important;-webkit-tap-highlight-color:transparent}
+#v98-profile-modal.v100-open{display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+@media(max-width:700px){#v100-profile-btn{flex:0 0 40px!important}}
+</style>
+<script id="astro-paquita-v100-profile-hotfix-js">
+(function(){
+'use strict';
+function profiles(){try{return typeof getProfils==='function'?(getProfils()||{}):JSON.parse(localStorage.getItem('astra_profils')||'{}');}catch(e){return {};}}
+function activeKey(all){
+  const sel=document.getElementById('v37-profile-select');
+  if(sel&&sel.value&&all[sel.value])return sel.value;
+  const k=localStorage.getItem('astro_paquita_profil_actif_v38')||'';
+  if(k&&all[k])return k;
+  try{if(window.USER){const found=Object.keys(all).find(x=>String(all[x]?.prenom||'')===String(USER.prenom||'')&&(String(all[x]?.date||'')===String(USER.dateRaw||'')||String(all[x]?.date||'')===String(USER.dateISO||'')));if(found)return found;}}catch(e){}
+  return Object.keys(all)[0]||'';
+}
+function text(id,v){const e=document.getElementById(id);if(e)e.textContent=v||'—';}
+function val(id,v){const e=document.getElementById(id);if(e)e.value=v||'';}
+function lifeContext(p){if(p&&p.life_context)return p.life_context;try{if(typeof apGetLifeContext==='function')return apGetLifeContext()||{};}catch(e){}return {};}
+function forceOpenModal(){
+  const m=document.getElementById('v98-profile-modal');if(!m)return false;
+  m.style.display='flex';m.style.visibility='visible';m.style.opacity='1';m.style.pointerEvents='auto';
+  m.classList.add('open','v100-open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';return true;
+}
+window.v100CloseProfile=function(){
+  const m=document.getElementById('v98-profile-modal');if(!m)return false;
+  m.classList.remove('open','v100-open');m.setAttribute('aria-hidden','true');m.style.display='none';m.style.visibility='';m.style.opacity='';m.style.pointerEvents='';document.body.style.overflow='';return false;
+};
+window.v100OpenProfile=function(ev){
+  try{if(ev){ev.preventDefault();ev.stopPropagation();if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();}}catch(e){}
+  const all=profiles(),k=activeKey(all),p=k?all[k]:null;
+  if(!p){
+    text('v98-p-name','Aucun profil sélectionné');text('v98-p-birth','—');text('v98-p-place','—');text('v98-p-gender','—');
+    val('v98-life-relationship','');val('v98-life-activity','');val('v98-life-children','');val('v98-life-housing','');
+    const msg=document.getElementById('v98-profile-msg');if(msg)msg.textContent='Choisissez un nom en haut, ou utilisez le bouton + pour créer votre profil.';
+    forceOpenModal();return false;
+  }
+  localStorage.setItem('astro_paquita_profil_actif_v38',k);
+  const sel=document.getElementById('v37-profile-select');if(sel){sel.value=k;setTimeout(()=>{if(all[k])sel.value=k;},100);}
+  try{if(typeof v37ChangerProfil==='function')v37ChangerProfil(k);}catch(e){}
+  const gender=p.genre==='F'?'Femme':p.genre==='H'?'Homme':p.genre==='N'?'Autre':'Non renseigné';
+  text('v98-p-name',p.prenom||k);text('v98-p-birth',[p.date||'—',p.heure||''].filter(Boolean).join(' · '));text('v98-p-place',p.ville||'—');text('v98-p-gender',gender);
+  const c=lifeContext(p);val('v98-life-relationship',c.relationship);val('v98-life-activity',c.activity);val('v98-life-children',c.children);val('v98-life-housing',c.housing);
+  const msg=document.getElementById('v98-profile-msg');if(msg)msg.textContent='';
+  forceOpenModal();return false;
+};
+function install(){
+  const close=document.querySelector('#v98-profile-modal .v98-profile-close');if(close)close.setAttribute('onclick','return v100CloseProfile()');
+  const modal=document.getElementById('v98-profile-modal');if(modal)modal.addEventListener('click',function(e){if(e.target===modal)v100CloseProfile();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')v100CloseProfile();});
+  document.addEventListener('click',function(e){const b=e.target&&e.target.closest?e.target.closest('#v100-profile-btn'):null;if(b)v100OpenProfile(e);},true);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
 </script>
 
