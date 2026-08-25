@@ -11241,5 +11241,65 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<style id="astro-paquita-v101-profile-label-css">
+/* V101 — afficher le début du prénom dans le bouton rond Profil en haut */
+@media(max-width:700px){
+  #v100-profile-btn{
+    width:46px!important;min-width:46px!important;height:46px!important;padding:0 4px!important;
+    border-radius:50%!important;font-size:.62rem!important;line-height:1.05!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    text-align:center!important;white-space:normal!important;overflow:hidden!important;
+    word-break:break-word!important;color:#4b1744!important;background:#fff9f1!important;
+    border:1px solid #e1c48a!important;font-weight:800!important;
+  }
+  #v100-profile-btn:before{content:none!important;display:none!important}
+}
+</style>
+<script id="astro-paquita-v101-profile-label-js">
+(function(){
+'use strict';
+function v101Profiles(){try{return typeof getProfils==='function'?(getProfils()||{}):{};}catch(e){return {};}}
+function v101ActiveKey(){
+  const all=v101Profiles();
+  const sel=document.getElementById('v37-profile-select');
+  if(sel&&sel.value&&all[sel.value])return sel.value;
+  const k=localStorage.getItem('astro_paquita_profil_actif_v38')||'';
+  if(k&&all[k])return k;
+  return Object.keys(all)[0]||'';
+}
+function v101ShortName(name){
+  const first=String(name||'').trim().split(/\s+/)[0]||'';
+  if(!first) return 'Profil';
+  return first.slice(0,4);
+}
+window.v101RefreshTopProfileButton=function(){
+  const btn=document.getElementById('v100-profile-btn'); if(!btn) return;
+  const all=v101Profiles(),k=v101ActiveKey(),p=k&&all[k]?all[k]:null;
+  const full=(p&&(p.prenom||k))?String(p.prenom||k).trim().split(/\s+/)[0]:'';
+  if(window.matchMedia('(max-width:700px)').matches){
+    btn.textContent=v101ShortName(full);
+    btn.title=full?('Profil : '+full):'Voir ou modifier le profil';
+    btn.setAttribute('aria-label',full?('Profil de '+full):'Voir ou modifier le profil');
+  }else{
+    btn.textContent=full?('Profil · '+full):'Profil';
+    btn.title=full?('Profil : '+full):'Voir ou modifier le profil';
+    btn.setAttribute('aria-label',full?('Profil de '+full):'Voir ou modifier le profil');
+  }
+};
+function install(){
+  v101RefreshTopProfileButton();
+  const sel=document.getElementById('v37-profile-select');
+  if(sel){sel.addEventListener('change',()=>setTimeout(v101RefreshTopProfileButton,30));sel.addEventListener('input',()=>setTimeout(v101RefreshTopProfileButton,30));}
+  window.addEventListener('resize',v101RefreshTopProfileButton);
+  setTimeout(v101RefreshTopProfileButton,250);
+  setTimeout(v101RefreshTopProfileButton,1200);
+  const mo=new MutationObserver(()=>setTimeout(v101RefreshTopProfileButton,20));
+  const dock=document.getElementById('v37-profile-dock'); if(dock) mo.observe(dock,{childList:true,subtree:true,characterData:true});
+}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();
+</script>
+
 </body>
 </html>
