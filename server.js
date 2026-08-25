@@ -12,6 +12,8 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY || '');
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const ADMIN_KEY = process.env.ADMIN_KEY || 'change-moi-aussi';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4.6';
 
 function aujourdHuiParis() {
   return new Intl.DateTimeFormat('en-CA', {
@@ -419,7 +421,9 @@ app.get('/api/stripe/questions-pack/confirm', auth, async (req, res) => {
 });
 
 // ============================================================
-// ROUTE : PROXY SÉCURISÉ VERS ANTHROPIC
+// ROUTE : PROXY SÉCURISÉ VERS OPENROUTER / CLAUDE
+// OpenRouter est prioritaire lorsque OPENROUTER_API_KEY est défini.
+// L'appel Anthropic direct reste uniquement comme compatibilité si la clé OpenRouter est absente.
 // ============================================================
 const limiteurClaude = rateLimit({
   windowMs: 60 * 1000,
@@ -596,26 +600,124 @@ app.post('/api/claude', auth, limiteurClaude, async (req, res) => {
   }
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: model || 'claude-sonnet-4-6',
-        max_tokens: max_tokens || 1500,
-        system: system || undefined,
-        messages,
-      }),
-    });
+    let data;
 
-    const data = await resp.json();
-    if (!resp.ok) {
-      if (creditQuestionReserve) db.refundQuestionCredit(req.user.id);
-      console.error('Erreur Anthropic :', data);
-      return res.status(resp.status).json({ erreur: data.error?.message || 'Erreur API.' });
+    if (OPENROUTER_API_KEY) {
+      // Les pages du site envoient encore le nom Anthropic historique
+      // `claude-sonnet-4-6`. OpenRouter attend le slug ci-dessous.
+      const modeleOpenRouter = (() => {
+        const demande = String(model || '').trim();
+        if (!demande || demande === 'claude-sonnet-4-6') return OPENROUTER_MODEL;
+        if (demande.startsWith('anthropic/') || demande.startsWith('~anthropic/')) return demande;
+        if (demande === 'claude-opus-4-6') return 'anthropic/claude-opus-4.6';
+        if (demande === 'claude-haiku-4-5') return 'anthropic/claude-haiku-4.5';
+        // Pour éviter une panne parce qu'une ancienne page envoie un nom
+        // qu'OpenRouter ne connaît pas, on conserve le modèle configuré.
+        return OPENROUTER_MODEL;
+      })();
+
+      const messagesOpenRouter = [];
+      if (system) messagesOpenRouter.push({ role: 'system', content: String(system) });
+      for (const m of messages) {
+        if (!m || !m.role) continue;
+        messagesOpenRouter.push({ role: m.role, content: m.content });
+      }
+
+      const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          // Facultatifs chez OpenRouter, mais utiles pour identifier proprement l'application.
+          'HTTP-Referer': process.env.PUBLIC_SITE_URL || 'https://astro-paquita.onrender.com',
+          'X-Title': 'Astro Paquita',
+        },
+        body: JSON.stringify({
+          model: modeleOpenRouter,
+          max_tokens: max_tokens || 1500,
+          messages: messagesOpenRouter,
+        }),
+      });
+
+      const raw = await resp.json();
+      if (!resp.ok) {
+        if (creditQuestionReserve) db.refundQuestionCredit(req.user.id);
+        console.error('Erreur OpenRouter :', raw);
+        return res.status(resp.status).json({
+          erreur: raw?.error?.message || raw?.message || 'Erreur OpenRouter.',
+          code: 'OPENROUTER_ERROR',
+        });
+      }
+
+      // Le frontend Astro Paquita attend le format Anthropic (`content[0].text`).
+      // On convertit donc la réponse OpenRouter/OpenAI sans toucher à index.html.
+      const contenuBrut = raw?.choices?.[0]?.message?.content;
+      let texte = '';
+      if (typeof contenuBrut === 'string') {
+        texte = contenuBrut;
+      } else if (Array.isArray(contenuBrut)) {
+        texte = contenuBrut
+          .map((part) => {
+            if (typeof part === 'string') return part;
+            if (part && typeof part.text === 'string') return part.text;
+            return '';
+          })
+          .join('');
+      }
+
+      if (!texte) {
+        if (creditQuestionReserve) db.refundQuestionCredit(req.user.id);
+        console.error('Réponse OpenRouter sans texte exploitable :', raw);
+        return res.status(502).json({
+          erreur: "L'IA a répondu sans texte exploitable. Réessaie.",
+          code: 'OPENROUTER_EMPTY_RESPONSE',
+        });
+      }
+
+      const finishReason = raw?.choices?.[0]?.finish_reason || null;
+      data = {
+        id: raw.id || null,
+        type: 'message',
+        role: 'assistant',
+        model: raw.model || modeleOpenRouter,
+        content: [{ type: 'text', text: texte }],
+        stop_reason: finishReason === 'length' ? 'max_tokens' : (finishReason ? 'end_turn' : null),
+        usage: {
+          input_tokens: Number(raw?.usage?.prompt_tokens || 0),
+          output_tokens: Number(raw?.usage?.completion_tokens || 0),
+        },
+      };
+    } else {
+      // Compatibilité de secours si OPENROUTER_API_KEY n'a pas encore été ajoutée à Render.
+      if (!ANTHROPIC_API_KEY) {
+        if (creditQuestionReserve) db.refundQuestionCredit(req.user.id);
+        return res.status(503).json({
+          erreur: 'Aucune clé IA n’est configurée sur le serveur.',
+          code: 'AI_KEY_MISSING',
+        });
+      }
+
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: model || 'claude-sonnet-4-6',
+          max_tokens: max_tokens || 1500,
+          system: system || undefined,
+          messages,
+        }),
+      });
+
+      data = await resp.json();
+      if (!resp.ok) {
+        if (creditQuestionReserve) db.refundQuestionCredit(req.user.id);
+        console.error('Erreur Anthropic :', data);
+        return res.status(resp.status).json({ erreur: data.error?.message || 'Erreur API.' });
+      }
     }
 
     // Journal de consultation : module + contexte technique minimal uniquement.
