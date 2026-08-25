@@ -1637,6 +1637,87 @@ a{color:var(--cab-plum2)}
   .sugg-box .sugg-item strong{color:#6f376d!important}
 }
 </style>
+
+<style id="astro-paquita-v98-css">
+/* V98 — suppression de Ma question + attente cosmique + accès profil simplifié */
+#mod-question,
+button[onclick*="irVersModule('question')"],
+button[onclick*="switchMod('question'"],
+#compte-questions,
+#q-credit-box,
+#q-pack-btn { display:none!important; }
+
+.v98-profile-btn{
+  min-height:40px;border:1px solid rgba(239,201,126,.48);border-radius:999px;
+  background:rgba(255,255,255,.06);color:#fff7ea;padding:.45rem .78rem;
+  font:700 .78rem Lato,sans-serif;cursor:pointer;white-space:nowrap;
+}
+.v98-profile-btn:hover{background:rgba(239,201,126,.12)}
+@media(max-width:700px){
+  .v98-profile-btn{width:40px;min-width:40px;padding:0;font-size:0;border-radius:50%}
+  .v98-profile-btn:before{content:'♙';font-size:1.05rem}
+}
+
+/* Fenêtre profil */
+#v98-profile-modal{position:fixed;inset:0;z-index:17000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(23,7,22,.74);backdrop-filter:blur(8px)}
+#v98-profile-modal.open{display:flex}
+.v98-profile-sheet{width:min(560px,100%);max-height:92dvh;overflow:auto;border-radius:22px;background:#fffaf3;border:1px solid #d8bc8d;box-shadow:0 24px 80px rgba(25,6,23,.38);padding:20px;color:#2e1c2d;position:relative}
+.v98-profile-close{position:absolute;right:14px;top:12px;width:38px;height:38px;border:0;background:#f4eadf;border-radius:50%;color:#4b1744;font-size:1.15rem;cursor:pointer}
+.v98-profile-kicker{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#a37333;font-weight:900}
+.v98-profile-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:2rem;color:#35102f;line-height:1;margin:.25rem 0 .4rem}
+.v98-profile-sub{font-size:.82rem;color:#78636f;line-height:1.45;margin-bottom:1rem}
+.v98-profile-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;margin-bottom:1rem}
+.v98-profile-stat{background:#fffdf9;border:1px solid #e1ceb1;border-radius:12px;padding:.7rem .75rem}
+.v98-profile-stat small{display:block;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:#9a7548;font-weight:800;margin-bottom:.2rem}
+.v98-profile-stat strong{font-size:.88rem;color:#3b2439;font-weight:800}
+.v98-profile-section{border-top:1px solid #e7d7c1;padding-top:1rem;margin-top:1rem}
+.v98-profile-section h3{font-family:'Cormorant Garamond',Georgia,serif;color:#35102f;font-size:1.35rem;margin:0 0 .25rem}
+.v98-profile-section p{font-size:.78rem;color:#806a76;line-height:1.4;margin:.1rem 0 .7rem}
+.v98-life-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+.v98-life-field label{display:block;font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:#806777;font-weight:800;margin-bottom:.25rem}
+.v98-life-field select{width:100%;min-height:44px;border:1px solid #dbc5a6;border-radius:10px;background:#fffdf9;color:#351f35;padding:.55rem .65rem;font-size:16px}
+.v98-actions{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem}
+.v98-action{flex:1;min-width:180px;min-height:46px;border-radius:999px;border:1px solid #d8bd91;background:#fff8ed;color:#4b1744;font-weight:800;cursor:pointer}
+.v98-action.primary{background:linear-gradient(135deg,#4c1744,#30102d);border-color:#4c1744;color:#f4d999}
+.v98-profile-msg{min-height:1.2em;margin-top:.55rem;font-size:.78rem;color:#537454;font-weight:700}
+@media(max-width:600px){.v98-profile-summary,.v98-life-grid{grid-template-columns:1fr}.v98-profile-sheet{border-radius:20px;padding:18px}.v98-profile-title{font-size:1.7rem}}
+
+/* Carte profil dans l'écran mobile Profil */
+#v98-v30-profile-card{margin-top:14px;background:#fffaf3;border:1px solid #dfcbb0;border-radius:12px;padding:13px;box-shadow:0 2px 8px rgba(64,36,49,.05)}
+.v98-v30-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.v98-v30-head strong{font-family:'Cormorant Garamond',Georgia,serif;color:#39223f;font-size:17px}
+.v98-v30-details{font-size:10px;color:#7a6a73;line-height:1.55;margin-top:5px}
+
+/* Écran d'attente cosmique */
+#ap-cosmic-loader{position:fixed;inset:0;z-index:30000;display:none;align-items:center;justify-content:center;overflow:hidden;background:
+ radial-gradient(circle at 50% 42%,rgba(94,37,117,.35),transparent 30%),
+ radial-gradient(circle at 15% 20%,rgba(190,129,63,.12),transparent 22%),
+ linear-gradient(180deg,#140a24 0%,#1c0b30 48%,#11071f 100%);color:#fff;padding:24px}
+#ap-cosmic-loader.show{display:flex}
+#ap-cosmic-loader:before,#ap-cosmic-loader:after{content:'';position:absolute;inset:0;pointer-events:none;background-image:
+ radial-gradient(circle,#fff 0 1px,transparent 1.4px),
+ radial-gradient(circle,#d8a85f 0 1px,transparent 1.5px);background-size:53px 53px,91px 91px;background-position:4px 8px,20px 31px;opacity:.26;animation:v98Stars 7s linear infinite}
+#ap-cosmic-loader:after{transform:scale(1.2);opacity:.12;animation-duration:11s}
+@keyframes v98Stars{to{background-position:57px 61px,111px 122px}}
+.v98-loader-inner{position:relative;z-index:2;width:min(680px,100%);text-align:center}
+.v98-loader-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(2.1rem,7vw,3.35rem);line-height:1;color:#fffaf0;margin:0}
+.v98-loader-gold{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(1.25rem,4.6vw,2rem);color:#e7b65e;margin:.35rem 0 1.3rem}
+.v98-system{position:relative;width:min(72vw,420px);aspect-ratio:1;margin:0 auto 1rem}
+.v98-orbit{position:absolute;left:50%;top:50%;border:1px solid rgba(229,181,93,.48);border-radius:50%;transform:translate(-50%,-50%);animation:v98Orbit linear infinite}
+.v98-orbit.o1{width:34%;height:34%;animation-duration:2.7s}.v98-orbit.o2{width:52%;height:52%;animation-duration:4.2s}.v98-orbit.o3{width:70%;height:70%;animation-duration:6.4s}.v98-orbit.o4{width:88%;height:88%;animation-duration:9s}
+.v98-orbit i{position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:linear-gradient(145deg,#f5d18c,#8a4d9f);box-shadow:0 0 13px rgba(236,186,104,.55)}
+.v98-orbit.o2 i{width:15px;height:15px;top:-7px;background:linear-gradient(145deg,#9fb0ff,#66548d)}
+.v98-orbit.o3 i{width:18px;height:18px;top:-9px;background:linear-gradient(145deg,#c99a73,#6d3254)}
+.v98-orbit.o4 i{width:20px;height:20px;top:-10px;background:linear-gradient(145deg,#d8ba92,#8c627d)}
+.v98-sun{position:absolute;left:50%;top:50%;width:64px;height:64px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 35% 30%,#fff6c7 0 12%,#ffd56d 28%,#e99a2d 65%,#b9602b 100%);box-shadow:0 0 18px #ffd978,0 0 44px rgba(236,165,58,.78),0 0 90px rgba(154,82,119,.42);animation:v98Pulse 1.8s ease-in-out infinite}
+@keyframes v98Orbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes v98Pulse{50%{transform:translate(-50%,-50%) scale(1.09);box-shadow:0 0 24px #ffe69b,0 0 62px rgba(236,165,58,.85),0 0 105px rgba(154,82,119,.48)}}
+.v98-loader-status{font-size:1rem;font-weight:700;margin-top:.5rem}.v98-loader-dots{display:flex;justify-content:center;gap:8px;margin:.7rem 0}.v98-loader-dots i{width:7px;height:7px;border-radius:50%;background:#e6b663;animation:v98Dot 1.2s ease-in-out infinite}.v98-loader-dots i:nth-child(2){animation-delay:.18s}.v98-loader-dots i:nth-child(3){animation-delay:.36s}.v98-loader-dots i:nth-child(4){animation-delay:.54s}.v98-loader-dots i:nth-child(5){animation-delay:.72s}
+@keyframes v98Dot{50%{transform:scale(1.8);opacity:.45}}
+.v98-loader-sub{color:#d1b8df;font-size:.9rem}
+.v98-loader-quote{margin:1rem auto 0;max-width:520px;border:1px solid rgba(224,182,105,.24);border-radius:15px;background:rgba(255,255,255,.035);padding:.75rem 1rem;color:#e9deea;font-size:.78rem}
+body.v98-busy{overflow:hidden!important}
+</style>
 </head>
 <body>
 
@@ -1647,10 +1728,54 @@ a{color:var(--cab-plum2)}
     <option value="">Choisir un profil</option>
   </select>
   <button type="button" class="v37-space-btn" onclick="v37OuvrirMonEspace()">Mon espace</button>
+  <button type="button" class="v98-profile-btn" onclick="v98OpenProfile()" aria-label="Voir ou modifier le profil">Profil</button>
   <button type="button" id="v37-logout-btn" class="v37-space-btn" onclick="deconnexionCompte()" style="display:none">Déconnexion</button>
   <button type="button" class="v37-new-btn" onclick="v37NouveauProfil()" aria-label="Nouveau profil">＋</button>
 </div>
 
+<!-- V98 — profil astrologique accessible sans recréer le profil -->
+<div id="v98-profile-modal" aria-hidden="true">
+  <div class="v98-profile-sheet" role="dialog" aria-modal="true" aria-labelledby="v98-profile-title">
+    <button type="button" class="v98-profile-close" onclick="v98CloseProfile()" aria-label="Fermer">×</button>
+    <div class="v98-profile-kicker">Mon espace personnel</div>
+    <h2 class="v98-profile-title" id="v98-profile-title">Mon profil astrologique</h2>
+    <p class="v98-profile-sub">Retrouvez ici vos données de naissance et votre situation actuelle. Vous n'avez plus besoin de recréer votre profil pour les modifier.</p>
+    <div class="v98-profile-summary">
+      <div class="v98-profile-stat"><small>Profil</small><strong id="v98-p-name">—</strong></div>
+      <div class="v98-profile-stat"><small>Naissance</small><strong id="v98-p-birth">—</strong></div>
+      <div class="v98-profile-stat"><small>Lieu</small><strong id="v98-p-place">—</strong></div>
+      <div class="v98-profile-stat"><small>Genre</small><strong id="v98-p-gender">—</strong></div>
+    </div>
+    <div class="v98-profile-section">
+      <h3>Ma situation actuelle</h3>
+      <p>Ces informations ne changent jamais les calculs astrologiques. Elles servent uniquement à éviter des interprétations incompatibles avec votre vie réelle.</p>
+      <div class="v98-life-grid">
+        <div class="v98-life-field"><label>Situation relationnelle</label><select id="v98-life-relationship"><option value="">Non renseigné</option><option value="single">Célibataire</option><option value="couple">En couple</option><option value="complicated">Situation compliquée</option></select></div>
+        <div class="v98-life-field"><label>Activité</label><select id="v98-life-activity"><option value="">Non renseigné</option><option value="student">Études / formation</option><option value="employee">Salarié(e)</option><option value="self_employed">Indépendant(e)</option><option value="unemployed">Sans emploi</option><option value="retired">Retraité(e)</option><option value="other">Autre</option></select></div>
+        <div class="v98-life-field"><label>Enfants</label><select id="v98-life-children"><option value="">Non renseigné</option><option value="none">Aucun</option><option value="yes">Oui</option></select></div>
+        <div class="v98-life-field"><label>Logement</label><select id="v98-life-housing"><option value="">Non renseigné</option><option value="owner">Propriétaire</option><option value="tenant">Locataire</option><option value="hosted">Hébergé(e)</option><option value="other">Autre</option></select></div>
+      </div>
+      <div class="v98-actions">
+        <button type="button" class="v98-action primary" onclick="v98SaveProfileContext()">Enregistrer ma situation</button>
+        <button type="button" class="v98-action" onclick="v98EditBirthProfile()">Modifier mes données de naissance</button>
+      </div>
+      <div id="v98-profile-msg" class="v98-profile-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- V98 — écran d'attente inspiré du visuel validé -->
+<div id="ap-cosmic-loader" aria-hidden="true" aria-live="polite">
+  <div class="v98-loader-inner">
+    <h2 class="v98-loader-title">Patience Paquita…</h2>
+    <div class="v98-loader-gold">consulte les astres pour vous</div>
+    <div class="v98-system" aria-hidden="true"><div class="v98-sun"></div><div class="v98-orbit o1"><i></i></div><div class="v98-orbit o2"><i></i></div><div class="v98-orbit o3"><i></i></div><div class="v98-orbit o4"><i></i></div></div>
+    <div class="v98-loader-status">Calculs en cours…</div>
+    <div class="v98-loader-dots"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="v98-loader-sub">Votre guidance arrive dans un instant</div>
+    <div class="v98-loader-quote">✦ Chaque cycle céleste raconte une histoire unique… Les astres s’alignent pour vous éclairer.</div>
+  </div>
+</div>
 
 <!-- HEADER -->
 <header class="header">
@@ -10918,5 +11043,125 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
+
+<script id="astro-paquita-v98-js">
+(function(){
+'use strict';
+
+// 1) Ma question n'est plus proposée au public : aucun appel IA ne peut être lancé depuis ce module.
+function v98HideQuestionUI(){
+  document.querySelectorAll("button[onclick*='question']").forEach(b=>{
+    const oc=String(b.getAttribute('onclick')||'');
+    if(oc.includes("irVersModule('question')")||oc.includes("switchMod('question'")) b.style.display='none';
+  });
+  const mod=document.getElementById('mod-question'); if(mod)mod.style.display='none';
+  document.querySelectorAll('.cabinet-plan-row').forEach(r=>{if(/question offerte/i.test(r.textContent||''))r.style.display='none';});
+  document.querySelectorAll('#v30-profil tr').forEach(r=>{if(/questions astrologiques/i.test(r.textContent||''))r.style.display='none';});
+  document.querySelectorAll("button[onclick*='acheterPackQuestions']").forEach(b=>b.style.display='none');
+}
+
+// 2) Situation personnelle désormais attachée au profil actif (avec compatibilité de l'ancien Journal).
+function v98ActiveKey(){
+  try{const p=typeof getProfils==='function'?getProfils():{};let k=localStorage.getItem('astro_paquita_profil_actif_v38')||'';if(k&&p[k])return k;const s=document.getElementById('v37-profile-select');if(s&&s.value&&p[s.value])return s.value;return Object.keys(p).length===1?Object.keys(p)[0]:'';}catch(e){return '';}
+}
+const v98OldGetContext=typeof apGetLifeContext==='function'?apGetLifeContext:null;
+const v98OldSetContext=typeof apSetLifeContext==='function'?apSetLifeContext:null;
+window.apGetLifeContext = apGetLifeContext = function(){
+  try{const all=typeof getProfils==='function'?getProfils():{},k=v98ActiveKey();if(k&&all[k]&&all[k].life_context)return all[k].life_context;}catch(e){}
+  return v98OldGetContext?v98OldGetContext():{};
+};
+window.apSetLifeContext = apSetLifeContext = function(ctx){
+  if(v98OldSetContext)try{v98OldSetContext(ctx);}catch(e){}
+  try{const all=typeof getProfils==='function'?getProfils():{},k=v98ActiveKey();if(k&&all[k]){all[k]={...all[k],life_context:{...(ctx||{}),updatedAt:new Date().toISOString()}};setProfils(all);}}catch(e){}
+};
+
+window.v98OpenProfile=function(){
+  const all=typeof getProfils==='function'?getProfils():{},k=v98ActiveKey(),p=k?all[k]:null;
+  if(!p){ if(typeof scrollVersSaisie==='function')scrollVersSaisie(); return; }
+  const gender=p.genre==='F'?'Femme':p.genre==='H'?'Homme':p.genre==='N'?'Autre':'Non renseigné';
+  document.getElementById('v98-p-name').textContent=p.prenom||k;
+  document.getElementById('v98-p-birth').textContent=[p.date||'—',p.heure||''].filter(Boolean).join(' · ');
+  document.getElementById('v98-p-place').textContent=p.ville||'—';
+  document.getElementById('v98-p-gender').textContent=gender;
+  const c=apGetLifeContext()||{};
+  [['relationship','v98-life-relationship'],['activity','v98-life-activity'],['children','v98-life-children'],['housing','v98-life-housing']].forEach(([x,id])=>{const e=document.getElementById(id);if(e)e.value=c[x]||'';});
+  const msg=document.getElementById('v98-profile-msg');if(msg)msg.textContent='';
+  const m=document.getElementById('v98-profile-modal');m.classList.add('open');m.setAttribute('aria-hidden','false');
+};
+window.v98CloseProfile=function(){const m=document.getElementById('v98-profile-modal');if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');}};
+window.v98SaveProfileContext=function(){
+  const k=v98ActiveKey();if(!k){return;}
+  const ctx={relationship:document.getElementById('v98-life-relationship').value,activity:document.getElementById('v98-life-activity').value,children:document.getElementById('v98-life-children').value,housing:document.getElementById('v98-life-housing').value};
+  apSetLifeContext(ctx);
+  const msg=document.getElementById('v98-profile-msg');if(msg)msg.textContent='✓ Situation enregistrée dans ce profil.';
+  v98RefreshProfileCard();
+};
+let V98_EDITING_KEY='';
+window.v98EditBirthProfile=function(){
+  const all=typeof getProfils==='function'?getProfils():{},k=v98ActiveKey(),p=k?all[k]:null;if(!p)return;
+  V98_EDITING_KEY=k;
+  if(typeof v37RemplirChampsProfil==='function')v37RemplirChampsProfil(p);
+  else if(typeof chargerProfil==='function'){const s=document.getElementById('profils-select');if(s){s.value=k;chargerProfil();}}
+  v98CloseProfile();
+  const sec=document.getElementById('section-saisie');if(sec){sec.classList.add('visible');sec.scrollIntoView({behavior:'smooth',block:'start'});}
+  const msg=document.getElementById('profils-msg');if(msg){msg.textContent='Vous modifiez le profil « '+(p.prenom||k)+' ». Enregistrez pour mettre à jour ce profil.';msg.classList.add('vis');}
+};
+
+// Une modification d'un profil remplace l'ancien au lieu de donner l'impression d'en recréer un.
+if(typeof window.sauvegarderProfil==='function'&&!window.__v98SaveWrapped){
+  window.__v98SaveWrapped=true;
+  const oldSave=window.sauvegarderProfil;
+  window.sauvegarderProfil=sauvegarderProfil=function(){
+    const oldKey=V98_EDITING_KEY, oldAll=typeof getProfils==='function'?getProfils():{}, oldP=oldKey?oldAll[oldKey]:null, oldCtx=oldP&&oldP.life_context?oldP.life_context:(typeof apGetLifeContext==='function'?apGetLifeContext():{});
+    const r=oldSave.apply(this,arguments);
+    if(oldKey){
+      const prenom=document.getElementById('s-prenom').value.trim(),date=document.getElementById('s-date').value.trim(),newKey=prenom+' ('+date+')';
+      const all=getProfils();if(!all[newKey])return r;all[newKey].life_context=oldCtx||{};if(oldKey!==newKey)delete all[oldKey];setProfils(all);localStorage.setItem('astro_paquita_profil_actif_v38',newKey);if(typeof v37ChangerProfil==='function')v37ChangerProfil(newKey);V98_EDITING_KEY='';
+      const m=document.getElementById('profils-msg');if(m){m.textContent='Profil mis à jour.';m.classList.add('vis');}
+    }
+    v98RefreshProfileCard();return r;
+  };
+}
+
+// Le Journal redevient un vrai journal : la situation personnelle n'y est plus cachée.
+if(typeof window.apJournalHtml==='function'||typeof apJournalHtml==='function'){
+  window.apJournalHtml = apJournalHtml = function(){return `<div class="ap-panel"><h2 data-ap="journal_title"></h2><p class="ap-muted" data-ap="journal_sub"></p><div class="ap-form-row"><div class="ap-field"><label data-ap="date"></label><input id="ap-jdate" type="date"></div><div class="ap-field"><label data-ap="category"></label><select id="ap-jcat"><option value="general">${apT('general')}</option><option value="work">${apT('work')}</option><option value="money">${apT('money')}</option><option value="love">${apT('love')}</option><option value="family">${apT('family')}</option><option value="home">${apT('home')}</option><option value="studies">${apT('studies')}</option></select></div></div><div class="ap-field" style="margin-top:.65rem"><label data-ap="note"></label><textarea id="ap-jtext"></textarea></div><button class="ap-btn gold" onclick="apAddJournal()" data-ap="journal_add"></button><div id="ap-journal-list" class="ap-journal-list"></div></div><div class="ap-panel"><h2 data-ap="saved_windows"></h2><div id="ap-window-list" class="ap-window-list"></div></div><div class="ap-panel"><h3 data-ap="notification_title"></h3><p class="ap-muted" data-ap="notification_explain"></p><button class="ap-btn" onclick="apEnableNotifications()" data-ap="notification_enable"></button></div>`;};
+}
+
+function v98LifeText(c){
+  const r={single:'Célibataire',couple:'En couple',complicated:'Situation compliquée'},a={student:'Études / formation',employee:'Salarié(e)',self_employed:'Indépendant(e)',unemployed:'Sans emploi',retired:'Retraité(e)',other:'Autre'},ch={none:'Sans enfant',yes:'Avec enfant(s)'},h={owner:'Propriétaire',tenant:'Locataire',hosted:'Hébergé(e)',other:'Autre logement'};
+  return [r[c.relationship],a[c.activity],ch[c.children],h[c.housing]].filter(Boolean).join(' · ')||'Situation actuelle non renseignée';
+}
+function v98EnsureProfileCard(){
+  const screen=document.getElementById('v30-profil'),content=screen&&screen.querySelector('.v30-content');if(!content||document.getElementById('v98-v30-profile-card'))return;
+  const top=content.querySelector('.v30-profile-top');const d=document.createElement('div');d.id='v98-v30-profile-card';d.innerHTML=`<div class="v98-v30-head"><strong>Mon profil astrologique</strong><button class="v30-outline-btn" onclick="v98OpenProfile()">Voir / modifier</button></div><div id="v98-v30-details" class="v98-v30-details">Choisissez un profil pour afficher ses informations.</div>`;if(top)top.insertAdjacentElement('afterend',d);else content.prepend(d);
+}
+window.v98RefreshProfileCard=function(){
+  v98EnsureProfileCard();const d=document.getElementById('v98-v30-details');if(!d)return;const all=typeof getProfils==='function'?getProfils():{},k=v98ActiveKey(),p=k?all[k]:null;if(!p){d.textContent='Choisissez un profil pour afficher ses informations.';return;}const c=apGetLifeContext()||{};d.innerHTML=`<b>${String(p.prenom||k).replace(/[<>&]/g,'')}</b> · ${String(p.date||'').replace(/[<>&]/g,'')} ${p.heure?'à '+String(p.heure).replace(/[<>&]/g,''):''}<br>${String(p.ville||'').replace(/[<>&]/g,'')}<br>${v98LifeText(c)}`;
+};
+
+// 3) Attente cosmique. Compteur pour supporter les appels imbriqués sans clignotement.
+let V98_BUSY_COUNT=0,V98_BUSY_TIMER=null;
+function v98BusyShow(){V98_BUSY_COUNT++;clearTimeout(V98_BUSY_TIMER);V98_BUSY_TIMER=setTimeout(()=>{const e=document.getElementById('ap-cosmic-loader');if(e){e.classList.add('show');e.setAttribute('aria-hidden','false');document.body.classList.add('v98-busy');}},120);}
+function v98BusyHide(){V98_BUSY_COUNT=Math.max(0,V98_BUSY_COUNT-1);if(V98_BUSY_COUNT)return;clearTimeout(V98_BUSY_TIMER);const e=document.getElementById('ap-cosmic-loader');if(e){e.classList.remove('show');e.setAttribute('aria-hidden','true');document.body.classList.remove('v98-busy');}}
+window.apCosmicBusyStart=v98BusyShow;window.apCosmicBusyStop=v98BusyHide;
+function v98WrapBusy(name){
+  const fn=window[name];if(typeof fn!=='function'||fn.__v98busy)return;
+  const wrapped=async function(){v98BusyShow();try{await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));return await fn.apply(this,arguments);}finally{v98BusyHide();}};wrapped.__v98busy=true;window[name]=wrapped;
+}
+function v98InstallBusy(){['genererNatal','lancerPrev','lancerFenetre','genererEvenements','analyserSynastrie','analyserPrevisionsSynastrie','apRunDashboard','apRunTimeline','apFindAvoid'].forEach(v98WrapBusy);if(typeof window.appelerClaude==='function'&&!window.appelerClaude.__v98busy){const old=window.appelerClaude;const wrapped=async function(){v98BusyShow();try{return await old.apply(this,arguments);}finally{v98BusyHide();}};wrapped.__v98busy=true;window.appelerClaude=wrapped;}}
+
+function v98Install(){
+  v98HideQuestionUI();v98EnsureProfileCard();v98RefreshProfileCard();v98InstallBusy();
+  const modal=document.getElementById('v98-profile-modal');if(modal)modal.addEventListener('click',e=>{if(e.target===modal)v98CloseProfile();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')v98CloseProfile();});
+  // Réactualiser la carte dès que le profil actif change.
+  const sel=document.getElementById('v37-profile-select');if(sel)sel.addEventListener('change',()=>setTimeout(v98RefreshProfileCard,100));
+  setTimeout(v98HideQuestionUI,300);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v98Install,{once:true});else setTimeout(v98Install,0);
+})();
+</script>
+
 </body>
 </html>
