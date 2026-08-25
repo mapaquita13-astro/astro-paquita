@@ -2261,7 +2261,7 @@ function texteClaude(data) {
 function messageErreurApiIOS(e) {
   var msg = e && e.message ? e.message : String(e || 'Erreur inconnue');
   if (/failed to fetch|load failed|networkerror|abort/i.test(msg)) {
-    return "Connexion IA bloquée par le navigateur. Sur iPhone, cela arrive souvent avec les appels directs à l'API : il faudra utiliser le proxy/backend si le problème persiste.";
+    return "Connexion au backend Astro Paquita impossible. Recharge la page puis réessaie. Si le problème persiste, vérifie que la règle Render /api/* → astro-paquita-backend est bien active.";
   }
   return msg;
 }
@@ -2269,7 +2269,10 @@ function messageErreurApiIOS(e) {
 // ============================================================
 // COMPTE / BACKEND SÉCURISÉ
 // ============================================================
-const BACKEND_URL = 'https://astro-paquita-backend.onrender.com';
+// V97 — toutes les requêtes API passent par le même domaine que le site.
+// Render réécrit /api/* vers le Web Service astro-paquita-backend.
+// Cela évite les appels cross-origin qui peuvent être bloqués sur certains mobiles/navigateurs.
+const BACKEND_URL = '';
 
 // ============================================================
 // MODE MAINTENANCE GLOBAL — piloté depuis admin.html
