@@ -1,0 +1,186 @@
+/* ASTRO PAQUITA V100 — refonte officielle crème / prune / doré */
+:root{
+  --ap100-cream:#f5eee2;
+  --ap100-cream-2:#fbf7f0;
+  --ap100-paper:#fffdf8;
+  --ap100-plum:#43163e;
+  --ap100-plum-2:#5c2354;
+  --ap100-plum-3:#7a3c6d;
+  --ap100-gold:#c59a4f;
+  --ap100-gold-2:#e5c984;
+  --ap100-ink:#2f2330;
+  --ap100-muted:#786977;
+  --ap100-line:#dfcfb7;
+  --ap100-shadow:0 18px 45px rgba(74,35,63,.10);
+  --ap100-soft-shadow:0 9px 26px rgba(74,35,63,.08);
+  --ap100-radius:24px;
+  --ap100-sidebar:270px;
+}
+html{background:var(--ap100-cream)}
+body{
+  background:
+    radial-gradient(circle at 75% 5%,rgba(197,154,79,.09),transparent 31%),
+    radial-gradient(circle at 8% 82%,rgba(92,35,84,.06),transparent 28%),
+    var(--ap100-cream)!important;
+  color:var(--ap100-ink)!important;
+  font-family:'Lato',sans-serif!important;
+  min-height:100vh;
+}
+body:before{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
+  background-image:
+    radial-gradient(circle at 11px 15px,rgba(95,47,84,.07) 0 1px,transparent 1.4px),
+    radial-gradient(circle at 71px 57px,rgba(197,154,79,.08) 0 1px,transparent 1.4px);
+  background-size:88px 88px,126px 126px;
+}
+::selection{background:#ead8ae;color:var(--ap100-plum)}
+
+/* Anciennes enveloppes remplacées par la V100 */
+.header,.cabinet-menu-drawer,.cabinet-menu-overlay,.cabinet-home-hero,.cabinet-home-services,#section-apercu,#v30-app,#v30-nav,#ap-v30-tools{display:none!important}
+#mod-question,#mod-timeline,#mod-journal{display:none!important}
+button[onclick*="irVersModule('question')"],button[onclick*="switchMod('question')"],button[onclick*="v30GoModule('timeline')"],button[onclick*="v30GoModule('journal')"]{display:none!important}
+
+/* Shell */
+#ap100-shell{min-height:100vh;display:block}
+.ap100-sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:var(--ap100-sidebar);z-index:1200;
+  padding:28px 20px 22px;color:#fff;
+  background:
+    radial-gradient(circle at 32px 38px,rgba(255,255,255,.55) 0 1px,transparent 1.7px),
+    radial-gradient(circle at 195px 106px,rgba(229,201,132,.48) 0 1.2px,transparent 2px),
+    radial-gradient(circle at 84px 262px,rgba(255,255,255,.32) 0 1px,transparent 1.7px),
+    radial-gradient(circle at 211px 455px,rgba(229,201,132,.28) 0 1.2px,transparent 2px),
+    linear-gradient(180deg,#33102f 0%,#45173f 49%,#371031 100%);
+  background-size:auto,auto,auto,auto,auto;
+  box-shadow:18px 0 55px rgba(48,18,43,.13);
+  display:flex;flex-direction:column;overflow:auto
+}
+.ap100-sidebar:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,transparent 0 55%,rgba(255,255,255,.025) 55% 56%,transparent 56%)}
+.ap100-brand{position:relative;z-index:1;text-align:center;margin:3px 0 25px}
+.ap100-brand-mark{width:62px;height:62px;margin:0 auto 8px;position:relative;border:1px solid rgba(229,201,132,.55);border-radius:50%;display:grid;place-items:center;color:var(--ap100-gold-2);font-family:'Cormorant Garamond',serif;font-size:28px;box-shadow:0 0 0 5px rgba(255,255,255,.025),inset 0 0 25px rgba(229,201,132,.08)}
+.ap100-brand-mark:before,.ap100-brand-mark:after{content:'✦';position:absolute;font-size:9px;color:#f5dfaa}.ap100-brand-mark:before{top:-7px;right:5px}.ap100-brand-mark:after{bottom:-6px;left:3px}
+.ap100-brand strong{display:block;font-family:'Cormorant Garamond',serif;font-size:25px;letter-spacing:.12em;font-weight:600;color:#fff8ed}
+.ap100-brand small{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;color:#d9c0d4;margin-top:1px;font-size:12px}
+.ap100-profile-switch{position:relative;z-index:1;margin:0 1px 22px}
+.ap100-profile-switch label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#d8c1d3;margin:0 0 6px 6px;display:block}
+.ap100-profile-select-wrap{position:relative}
+.ap100-profile-select{width:100%;appearance:none;border:1px solid rgba(229,201,132,.48);border-radius:999px;background:rgba(255,255,255,.08);color:#fff8ed;padding:10px 39px 10px 14px;font-family:'Cormorant Garamond',serif;font-size:15px;outline:none}
+.ap100-profile-select option{color:#2f2330;background:#fffdf8}.ap100-profile-select-wrap:after{content:'⌄';position:absolute;right:15px;top:7px;color:var(--ap100-gold-2);pointer-events:none}
+.ap100-add-profile{position:absolute;right:-4px;bottom:-7px;width:27px;height:27px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:var(--ap100-gold);color:#33102f;display:grid;place-items:center;font-size:20px;padding:0;box-shadow:0 5px 14px rgba(0,0,0,.18)}
+.ap100-nav{position:relative;z-index:1;display:grid;gap:7px}
+.ap100-nav button{border:0;background:transparent;color:#e4d4e0;border-radius:13px;min-height:44px;padding:10px 12px;text-align:left;display:flex;align-items:center;gap:12px;font-weight:400;font-size:14px;transition:.2s}
+.ap100-nav button span{width:24px;text-align:center;color:#d6b86f;font-family:'Cormorant Garamond',serif;font-size:20px}
+.ap100-nav button:hover,.ap100-nav button.active{background:rgba(255,255,255,.11);color:#fff;transform:translateX(2px)}
+.ap100-side-foot{position:relative;z-index:1;margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);display:grid;gap:9px}
+.ap100-premium{border:1px solid rgba(229,201,132,.36);border-radius:14px;background:rgba(255,255,255,.06);padding:12px;color:#f7ead0;font-size:11px;line-height:1.45}
+.ap100-premium strong{display:block;color:#fff;font-family:'Cormorant Garamond',serif;font-size:15px;margin-bottom:2px}
+.ap100-side-actions{display:flex;gap:7px}.ap100-side-actions button{flex:1;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#e6d8e4;border-radius:10px;padding:7px;font-size:11px}
+
+.ap100-main{margin-left:var(--ap100-sidebar);min-height:100vh;padding:0 0 40px;position:relative}
+.ap100-topbar{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;border-bottom:1px solid rgba(171,139,91,.25);background:rgba(251,247,240,.82);backdrop-filter:blur(12px);position:sticky;top:0;z-index:850}
+.ap100-topbar-title{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:19px;font-weight:600;letter-spacing:.02em}.ap100-topbar-title small{font-family:'Lato',sans-serif;color:var(--ap100-muted);font-size:11px;font-weight:400;margin-left:8px}
+.ap100-top-actions{display:flex;gap:10px;align-items:center}.ap100-lang{border:1px solid var(--ap100-line);background:#fffaf2;color:var(--ap100-plum);border-radius:999px;padding:7px 10px;font-size:11px}.ap100-account{width:38px;height:38px;border:1px solid var(--ap100-line);border-radius:50%;background:#fffaf2;color:var(--ap100-plum);padding:0;font-size:17px}
+.ap100-mobile-menu{display:none}
+.ap100-page{display:none;max-width:1220px;margin:0 auto;padding:34px 38px}.ap100-page.active{display:block}
+
+/* Titres */
+.ap100-kicker{text-transform:uppercase;letter-spacing:.22em;font-size:10px;font-weight:700;color:#a27a3d;margin-bottom:8px}
+.ap100-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,5vw,62px);line-height:.94;color:var(--ap100-plum);font-weight:500;margin:0}
+.ap100-title em{color:var(--ap100-gold);font-weight:400}.ap100-sub{max-width:660px;color:var(--ap100-muted);font-size:14px;line-height:1.65;margin-top:13px}
+.ap100-ornament{height:18px;margin:16px 0 22px;display:flex;align-items:center;gap:8px;color:#b58949}.ap100-ornament:before,.ap100-ornament:after{content:'';height:1px;width:72px;background:linear-gradient(90deg,transparent,#c9a766)}.ap100-ornament:after{background:linear-gradient(90deg,#c9a766,transparent)}
+
+/* Accueil */
+.ap100-hero-grid{display:grid;grid-template-columns:1.22fr .78fr;gap:26px;align-items:stretch;margin-top:9px}
+.ap100-celestial-card{min-height:365px;border-radius:30px;position:relative;overflow:hidden;padding:38px;color:#fff;box-shadow:var(--ap100-shadow);background:
+  radial-gradient(circle at 20% 22%,rgba(255,255,255,.75) 0 1px,transparent 2px),
+  radial-gradient(circle at 73% 17%,rgba(229,201,132,.65) 0 1.2px,transparent 2px),
+  radial-gradient(circle at 58% 66%,rgba(255,255,255,.38) 0 1px,transparent 2px),
+  linear-gradient(90deg,rgba(58,15,52,.99) 0%,rgba(66,17,59,.97) 38%,rgba(66,17,59,.72) 58%,rgba(46,12,43,.18) 100%),
+  url('assets/v100/hero-woman-moon.jpg') right center/58% 100% no-repeat,
+  linear-gradient(135deg,#45123d,#6a285c 58%,#3e1239)}
+.ap100-celestial-card:before{content:'';position:absolute;width:430px;height:430px;border:1px solid rgba(229,201,132,.32);border-radius:50%;right:-110px;top:-87px;box-shadow:0 0 0 34px rgba(255,255,255,.018),0 0 0 68px rgba(255,255,255,.012)}
+.ap100-celestial-card:after{content:'✦';position:absolute;right:28px;top:24px;color:rgba(246,218,159,.85);font-family:'Cormorant Garamond',serif;font-size:22px;text-shadow:0 0 14px rgba(255,238,195,.55)}
+.ap100-hero-copy{position:relative;z-index:2;max-width:62%}.ap100-hero-copy .ap100-kicker{color:#e5c984}.ap100-hero-copy h2{font-family:'Cormorant Garamond',serif;font-size:50px;line-height:.98;font-weight:500;margin:0;color:#fff9ef}.ap100-hero-copy h2 em{display:block;color:#e8c979;font-weight:400}.ap100-hero-copy p{color:#eadbe6;font-size:13px;line-height:1.6;margin:14px 0 25px}.ap100-hero-btn{border:1px solid rgba(229,201,132,.75);background:#f6e4bc;color:#4b173f;border-radius:999px;padding:11px 20px;font-weight:700;box-shadow:0 8px 18px rgba(0,0,0,.16)}
+.ap100-moon-card{border:1px solid var(--ap100-line);border-radius:30px;background:rgba(255,253,248,.82);padding:25px;box-shadow:var(--ap100-soft-shadow);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
+.ap100-moon-card:before{content:'☾';position:absolute;right:-4px;bottom:-33px;font-family:'Cormorant Garamond',serif;font-size:190px;color:rgba(86,31,76,.075);transform:rotate(-12deg)}
+.ap100-moon-card h3{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:26px;margin:0 0 6px}.ap100-moon-card p{font-size:12px;color:var(--ap100-muted);line-height:1.55;position:relative}.ap100-highlight-date{font-family:'Cormorant Garamond',serif;font-size:30px;color:#9a6e2e;margin:16px 0 3px}.ap100-highlight-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #dac29b;border-radius:999px;padding:5px 9px;font-size:10px;color:#805a25;background:#fff8e8;width:max-content}.ap100-text-link{border:0;background:transparent;color:var(--ap100-plum);padding:0;font-weight:700;font-size:12px;text-align:left;position:relative}.ap100-text-link:after{content:'→';margin-left:7px;color:var(--ap100-gold)}
+.ap100-section-head{display:flex;justify-content:space-between;align-items:end;margin:34px 0 14px}.ap100-section-head h3{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:27px;margin:0}.ap100-section-head span{font-size:11px;color:var(--ap100-muted)}
+.ap100-feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}
+.ap100-feature-card{border:1px solid var(--ap100-line);background:var(--ap100-paper);border-radius:22px;min-height:185px;padding:21px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(80,43,67,.06);transition:.22s;cursor:pointer}.ap100-feature-card:hover{transform:translateY(-4px);box-shadow:var(--ap100-shadow);border-color:#d1b783}.ap100-feature-card:after{content:'›';position:absolute;right:17px;bottom:15px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--ap100-line);color:var(--ap100-plum);font-size:22px}.ap100-feature-art{font-family:'Cormorant Garamond',serif;font-size:48px;color:#6a2d5e;height:56px;display:flex;align-items:center;gap:10px}.ap100-feature-art small{font-size:15px;color:#c99b50}.ap100-feature-card h4{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:22px;margin:4px 0 5px}.ap100-feature-card p{font-size:11px;line-height:1.5;color:var(--ap100-muted);max-width:82%}
+
+/* Mon avenir */
+.ap100-future-hero{display:grid;grid-template-columns:1fr 330px;gap:30px;align-items:center;margin:6px 0 26px}.ap100-zodiac-illustration{width:290px;height:290px;margin:auto;position:relative;border-radius:50%;border:1px solid #d0ad67;box-shadow:0 0 0 21px rgba(197,154,79,.045),0 0 0 42px rgba(91,35,82,.025);display:grid;place-items:center;color:var(--ap100-plum);font-family:'Cormorant Garamond',serif}.ap100-zodiac-illustration:before{content:'♈  ♉  ♊  ♋  ♌  ♍\A♓             ♎\A♒             ♏\A♑  ♐';white-space:pre;position:absolute;inset:21px;text-align:center;line-height:46px;font-size:18px;color:#a7742f;opacity:.92}.ap100-zodiac-illustration:after{content:'✦';width:112px;height:112px;border-radius:50%;display:grid;place-items:center;border:1px solid #c9a45e;background:radial-gradient(circle,#fff8e9,#f2e4ca);font-size:35px;color:#5d2354;box-shadow:inset 0 0 30px rgba(197,154,79,.16)}
+.ap100-future-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.ap100-future-card{position:relative;border:1px solid var(--ap100-line);background:var(--ap100-paper);border-radius:23px;padding:24px;min-height:260px;overflow:hidden;box-shadow:var(--ap100-soft-shadow);cursor:pointer;transition:.22s}.ap100-future-card:hover{transform:translateY(-4px);box-shadow:var(--ap100-shadow)}.ap100-future-card .icon{width:70px;height:70px;border-radius:50%;border:1px solid #d3b777;display:grid;place-items:center;font-family:'Cormorant Garamond',serif;font-size:34px;color:#6a2b60;background:#fcf4e6;box-shadow:0 0 0 7px #faf4e9}.ap100-future-card h3{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:26px;margin:19px 0 7px}.ap100-future-card p{font-size:12px;line-height:1.6;color:var(--ap100-muted);max-width:86%}.ap100-future-card .meta{position:absolute;left:24px;bottom:20px;color:#9a7339;font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700}.ap100-future-card:after{content:'›';position:absolute;right:20px;bottom:16px;width:34px;height:34px;border:1px solid #d9c8ae;border-radius:50%;display:grid;place-items:center;color:var(--ap100-plum);font-size:22px}
+.ap100-saved{margin-top:20px;border:1px dashed #cfb889;border-radius:18px;padding:15px 17px;color:var(--ap100-muted);font-size:12px;background:rgba(255,253,248,.6);display:flex;align-items:center;justify-content:space-between;gap:12px}.ap100-saved button{border:0;background:transparent;color:var(--ap100-plum);font-weight:700}
+
+/* Profil */
+.ap100-profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.ap100-panel{background:var(--ap100-paper);border:1px solid var(--ap100-line);border-radius:22px;padding:22px;box-shadow:var(--ap100-soft-shadow)}.ap100-panel h3{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:24px;margin:0 0 13px}.ap100-profile-name{font-family:'Cormorant Garamond',serif;font-size:35px;color:var(--ap100-plum);margin:2px 0}.ap100-profile-badge{display:inline-block;border:1px solid #dec58e;background:#fff7df;color:#8b6529;border-radius:999px;padding:5px 9px;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.ap100-profile-info{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}.ap100-info-cell{border-top:1px solid #e7d9c5;padding-top:8px}.ap100-info-cell span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.11em;color:#a48f9f}.ap100-info-cell strong{display:block;margin-top:3px;color:var(--ap100-ink);font-size:13px}.ap100-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ap100-field label{display:block;color:#826d7d;font-size:10px;margin:0 0 4px}.ap100-field select,.ap100-field input{width:100%;border:1px solid var(--ap100-line);border-radius:11px;background:#fffaf2;color:var(--ap100-ink);padding:10px;outline:none}.ap100-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.ap100-btn{border:1px solid #5e2456;background:var(--ap100-plum);color:white;border-radius:999px;padding:10px 16px;font-weight:700;font-size:11px}.ap100-btn.secondary{background:#fffaf2;color:var(--ap100-plum);border-color:var(--ap100-line)}
+
+/* Restylage des écrans historiques conservés comme moteurs */
+#section-modules,#section-saisie{margin-left:var(--ap100-sidebar)!important;padding:30px 38px 55px!important;max-width:none!important;background:transparent!important;color:var(--ap100-ink)!important;min-height:calc(100vh - 72px)!important}
+#section-modules.visible,#section-saisie.visible{display:block!important}
+#section-modules>.modules-inner,#section-saisie>.saisie-inner{max-width:1120px;margin:0 auto}
+#section-modules .mod-panneau,#section-saisie .saisie-card{background:transparent!important;border:0!important;box-shadow:none!important;color:var(--ap100-ink)!important}
+#section-modules .mod-panneau.actif{display:block!important}
+.mod-tabs,.mod-onglets{background:transparent!important;border:0!important;box-shadow:none!important}
+.mod-onglet{background:#fffaf3!important;border:1px solid var(--ap100-line)!important;color:var(--ap100-plum)!important;border-radius:999px!important;box-shadow:none!important}.mod-onglet.actif{background:var(--ap100-plum)!important;color:#fff!important;border-color:var(--ap100-plum)!important}
+.module-titre,.form-titre,.saisie-titre,.rapport-titre,.rapport-bloc-titre{font-family:'Cormorant Garamond',serif!important;color:var(--ap100-plum)!important}.module-titre{font-size:42px!important}.module-sous-titre,.form-sous,.rapport-sous,.form-label,.champ-label{color:var(--ap100-muted)!important}
+.form-card,.resultat-card,.rapport-card,.carte-bloc,.fenetre-card,.ev-card,.syn-card,.planetes-card,.roue-card,.bloc-resultat,.y-card,.ap-panel{background:var(--ap100-paper)!important;border:1px solid var(--ap100-line)!important;box-shadow:var(--ap100-soft-shadow)!important;border-radius:20px!important;color:var(--ap100-ink)!important}
+input,select,textarea{color:var(--ap100-ink)}
+#section-modules input,#section-modules select,#section-modules textarea,#section-saisie input,#section-saisie select,#section-saisie textarea{background:#fffaf3!important;border:1px solid var(--ap100-line)!important;color:var(--ap100-ink)!important;border-radius:11px!important}
+#section-modules input::placeholder,#section-saisie input::placeholder{color:#a397a1!important}
+.btn-principal,.btn-action,.btn-retour,.per-btn,.dom-btn{border-radius:999px!important;box-shadow:none!important}.btn-principal,.btn-action{background:var(--ap100-plum)!important;color:#fff!important;border:1px solid var(--ap100-plum)!important}.btn-retour{background:#fffaf2!important;color:var(--ap100-plum)!important;border:1px solid var(--ap100-line)!important}.per-btn,.dom-btn{background:#fffaf3!important;color:var(--ap100-plum)!important;border:1px solid var(--ap100-line)!important}.per-btn.actif,.dom-btn.actif{background:var(--ap100-plum)!important;color:#fff!important;border-color:var(--ap100-plum)!important}
+.progress-wrap{background:#efe2d1!important}.progress-bar{background:linear-gradient(90deg,var(--ap100-plum),var(--ap100-gold))!important}
+.s-titre{font-family:'Cormorant Garamond',serif!important;color:var(--ap100-plum)!important;font-size:25px!important;display:block!important;margin:25px 0 9px!important;border-bottom:1px solid #e2d1b7;padding-bottom:7px}.rapport-texte p{color:#493d48!important;font-size:14px!important;line-height:1.78!important;margin:0 0 12px!important}.rapport-texte strong{color:var(--ap100-plum)!important}
+.planete-ligne{border-color:#eadbc5!important}.planete-nom,.planete-pos{color:var(--ap100-ink)!important}.planete-sym,.planete-signe-sym{color:var(--ap100-plum)!important}
+#n-roue svg{filter:sepia(.18) saturate(.75) hue-rotate(276deg) brightness(1.28)}
+
+/* Portrait natal façon dossier éditorial */
+#mod-natal .rapport-card{padding:0!important;overflow:hidden!important}
+#n-res{max-width:1120px;margin:0 auto}
+#n-res .rapport-entete{background:linear-gradient(135deg,#3d1237,#5a2150)!important;color:white!important;padding:28px 32px!important;position:relative;overflow:hidden}
+#n-res .rapport-entete:after{content:'☉  ☽  ✦  ♄';position:absolute;right:26px;top:21px;color:rgba(229,201,132,.45);font-family:'Cormorant Garamond',serif;font-size:25px;word-spacing:14px}
+#n-res-titre{color:#fff8ee!important;font-size:35px!important}.rapport-sous#n-res-sous{color:#dbc7d7!important}
+#n-res .rapport-corps{background:var(--ap100-paper)!important;padding:28px 32px!important}
+#n-rapport{columns:1!important;max-width:850px;margin:0 auto}
+#n-rapport .s-titre{font-size:27px!important}
+#n-roue{background:radial-gradient(circle,#fffaf0 0 46%,#f1e2c8 47% 48%,#fffaf0 49%)!important;border-radius:50%!important}
+#n-planetes-grille,#n-planetes-axes{background:transparent!important}
+.ap100-natal-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.ap100-natal-summary>div{border:1px solid var(--ap100-line);border-radius:15px;background:#fff9ef;padding:12px;text-align:center}.ap100-natal-summary span{display:block;font-size:9px;color:#9a8795;text-transform:uppercase;letter-spacing:.11em}.ap100-natal-summary strong{display:block;font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:18px;margin-top:4px}
+.ap100-natal-actions{display:flex;justify-content:center;gap:9px;margin:18px 0 0;flex-wrap:wrap}.ap100-natal-actions button{border-radius:999px;padding:9px 14px;border:1px solid var(--ap100-line);background:#fffaf3;color:var(--ap100-plum);font-size:11px;font-weight:700}
+
+/* Modale compte réhabillée */
+#modal-compte{background:rgba(46,20,42,.68)!important;backdrop-filter:blur(9px)!important}#modal-compte>div{background:#fffaf2!important;border:1px solid #dac6a7!important;color:var(--ap100-ink)!important;box-shadow:0 25px 80px rgba(44,19,39,.28)!important;border-radius:24px!important}#modal-compte h3{color:var(--ap100-plum)!important;font-family:'Cormorant Garamond',serif!important;font-size:27px!important}#modal-compte input{background:white!important;border-color:var(--ap100-line)!important;color:var(--ap100-ink)!important}#modal-compte p,#modal-compte label{color:var(--ap100-muted)!important}.cabinet-premium-panel{background:#fffdf8!important;border-color:var(--ap100-line)!important;color:var(--ap100-ink)!important}.cabinet-premium-title,.cabinet-plan-row b{color:var(--ap100-plum)!important}
+
+/* Maintenance */
+#astro-maintenance-screen{background:radial-gradient(circle at 50% 30%,#6b2b5e,#35102f 63%)!important;color:#fff9ef!important}#astro-maintenance-screen>div{border:1px solid rgba(229,201,132,.46)!important;background:rgba(255,255,255,.06)!important;box-shadow:0 25px 80px rgba(0,0,0,.25)!important}
+
+/* Mobile */
+.ap100-mobile-nav{display:none}
+@media(max-width:900px){
+  :root{--ap100-sidebar:0px}
+  .ap100-sidebar{display:none}.ap100-main{margin-left:0;padding-bottom:86px}.ap100-topbar{height:61px;padding:0 14px;position:sticky}.ap100-topbar-title{font-size:16px}.ap100-topbar-title small{display:none}.ap100-mobile-menu{display:grid;width:36px;height:36px;border-radius:50%;place-items:center;border:1px solid var(--ap100-line);background:#fffaf2;color:var(--ap100-plum);padding:0}.ap100-page{padding:22px 16px 34px}.ap100-title{font-size:40px}.ap100-hero-grid,.ap100-future-hero,.ap100-profile-grid{grid-template-columns:1fr}.ap100-hero-grid{gap:14px}.ap100-celestial-card{min-height:330px;padding:27px}.ap100-hero-copy{max-width:72%}.ap100-hero-copy h2{font-size:42px}.ap100-celestial-card:before{width:360px;height:360px;right:-166px}.ap100-celestial-card:after{right:-90px;top:76px}.ap100-moon-card{min-height:220px}.ap100-feature-grid,.ap100-future-grid{grid-template-columns:1fr}.ap100-feature-card{min-height:145px}.ap100-feature-art{height:42px;font-size:38px}.ap100-zodiac-illustration{width:235px;height:235px}.ap100-future-hero{gap:10px}.ap100-profile-grid{gap:13px}.ap100-form-grid{grid-template-columns:1fr}.ap100-top-actions .ap100-lang{max-width:72px}.ap100-account{width:34px;height:34px}
+  #section-modules,#section-saisie{margin-left:0!important;padding:20px 14px 100px!important;min-height:100vh!important}.module-titre{font-size:34px!important}.rapport-texte p{font-size:13.5px!important;line-height:1.72!important}.s-titre{font-size:23px!important}
+  .ap100-mobile-nav{position:fixed;left:10px;right:10px;bottom:max(9px,env(safe-area-inset-bottom));height:67px;border:1px solid rgba(108,67,96,.16);border-radius:22px;background:rgba(255,252,246,.96);backdrop-filter:blur(18px);z-index:1500;display:grid;grid-template-columns:repeat(5,1fr);box-shadow:0 12px 38px rgba(72,35,60,.18);overflow:hidden}.ap100-mobile-nav button{border:0;background:transparent;color:#8b7a87;padding:8px 3px 6px;font-size:9px;display:grid;place-items:center;align-content:center;gap:2px}.ap100-mobile-nav button span{font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1}.ap100-mobile-nav button.active{color:var(--ap100-plum);background:#f5eadb}.ap100-mobile-nav button.active span{color:#b2833b}
+  #n-res .rapport-entete{padding:24px 20px!important}#n-res .rapport-corps{padding:21px 17px!important}.ap100-natal-summary{grid-template-columns:1fr 1fr}.ap100-natal-summary>div:last-child{grid-column:1/-1}
+}
+@media(max-width:420px){.ap100-celestial-card{min-height:300px}.ap100-hero-copy{max-width:78%}.ap100-hero-copy h2{font-size:37px}.ap100-page{padding-left:12px;padding-right:12px}.ap100-topbar{padding:0 10px}.ap100-feature-card,.ap100-future-card{border-radius:18px}.ap100-profile-info{grid-template-columns:1fr}.ap100-natal-summary{grid-template-columns:1fr}.ap100-natal-summary>div:last-child{grid-column:auto}}
+.ap100-report-h2{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:31px;line-height:1.08;font-weight:600;margin:34px 0 13px;padding-bottom:9px;border-bottom:1px solid #dcc6a5}.ap100-report-h3{font-family:'Cormorant Garamond',serif;color:#8b6634;font-size:22px;line-height:1.18;font-weight:600;margin:20px 0 9px}.ap100-report-list{padding-left:22px;margin:8px 0 18px;color:#493d48;line-height:1.7}.ap100-report-list li{margin-bottom:7px}.ap100-report-h2:first-child{margin-top:4px}
+@media(max-width:900px){.ap100-report-h2{font-size:26px}.ap100-report-h3{font-size:20px}}
+
+#v37-profile-dock{display:none!important}
+.ap100-main>#section-modules,.ap100-main>#section-saisie{margin-left:0!important;width:100%!important}
+
+.ap100-mobile-profilebar{display:none}
+@media(max-width:900px){.ap100-mobile-profilebar{display:block;padding:8px 14px 0;background:rgba(251,247,240,.88)}.ap100-mobile-profile-select-wrap{position:relative;max-width:250px}.ap100-mobile-profile-select{width:100%;appearance:none;border:1px solid var(--ap100-line);background:#fffaf2;color:var(--ap100-plum);border-radius:999px;padding:8px 42px 8px 13px;font-family:'Cormorant Garamond',serif;font-size:14px}.ap100-mobile-add{position:absolute;right:3px;top:3px;width:29px;height:29px;border-radius:50%;border:0;background:var(--ap100-gold);color:#42133b;padding:0;font-size:20px;line-height:1}}
+#ap-dashboard,.ap-lang-fixed,.ap-version-chip,.ap-extra-tabs,.ap-premium-showcase,.footer{display:none!important}
+
+/* V100.1 — scènes directement issues des visuels de refonte validés */
+.ap100-feature-image{height:92px;margin:-21px -21px 14px;border-bottom:1px solid var(--ap100-line);background-position:center;background-size:cover;position:relative}
+.ap100-feature-image:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(49,14,45,.03),rgba(49,14,45,.16))}
+.ap100-feature-card[data-scene="natal"] .ap100-feature-image{background-image:url('assets/v100/card-natal.jpg')}
+.ap100-feature-card[data-scene="future"] .ap100-feature-image{background-image:url('assets/v100/card-future.jpg')}
+.ap100-feature-card[data-scene="relations"] .ap100-feature-image{background-image:url('assets/v100/card-relations.jpg')}
+.ap100-future-hero{position:relative;border-radius:28px;padding:30px 34px;overflow:hidden;background:linear-gradient(90deg,rgba(255,252,246,.98) 0 57%,rgba(255,252,246,.72) 72%,rgba(255,252,246,.16)),url('assets/v100/future-road.jpg') right center/45% 100% no-repeat;border:1px solid var(--ap100-line);box-shadow:var(--ap100-soft-shadow)}
+.ap100-future-hero .ap100-zodiac-illustration{width:230px;height:230px;background:rgba(255,250,240,.72);backdrop-filter:blur(2px)}
+@media(max-width:720px){.ap100-celestial-card{background:linear-gradient(180deg,rgba(52,14,48,.50),rgba(52,14,48,.95)),url('assets/v100/hero-woman-moon.jpg') center/cover no-repeat}.ap100-hero-copy{max-width:100%}.ap100-future-hero{padding:22px;background:linear-gradient(180deg,rgba(255,252,246,.92),rgba(255,252,246,.98)),url('assets/v100/future-road.jpg') center/cover no-repeat}.ap100-future-hero .ap100-zodiac-illustration{display:none}.ap100-feature-image{height:104px}}
