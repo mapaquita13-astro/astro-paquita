@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Astro Paquita — Votre Destinée</title>
-<meta name="astro-build" content="v100-refonte-officielle">
+<meta name="astro-build" content="v100.1-refonte-officielle">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/astronomy-engine@2.1.19/astronomy.browser.min.js';"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -11490,6 +11490,12 @@ function install(){
 })();
 </script>
 
+<style id="astro-paquita-v1001-mobile-profile-css">
+.ap100-mobile-profile-button{width:100%;height:44px;border:1px solid var(--ap100-line);background:#fffaf2;color:var(--ap100-plum);border-radius:999px;padding:0 48px 0 16px;font-family:'Cormorant Garamond',serif;font-size:17px;text-align:left;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(62,27,55,.06);outline:none}.ap100-mobile-profile-chevron{font-size:18px;color:var(--ap100-gold);margin-right:2px}.ap100-mobile-add{top:5px!important;right:5px!important;width:34px!important;height:34px!important}
+.ap100-profile-menu-overlay{position:fixed;inset:0;z-index:999998;background:rgba(37,18,34,.48);backdrop-filter:blur(5px);display:none;align-items:flex-end}.ap100-profile-menu-overlay.open{display:flex}.ap100-profile-menu-sheet{width:100%;max-height:72vh;overflow:auto;background:#fffaf2;border-radius:28px 28px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -18px 50px rgba(41,19,36,.2)}
+.ap100-profile-menu-head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 14px;border-bottom:1px solid var(--ap100-line)}.ap100-profile-menu-head small{display:block;color:var(--ap100-gold);text-transform:uppercase;letter-spacing:.13em;font-size:10px}.ap100-profile-menu-head strong{font-family:'Cormorant Garamond',serif;color:var(--ap100-plum);font-size:24px}.ap100-profile-menu-head button{border:0;background:#f4eadb;color:var(--ap100-plum);width:36px;height:36px;border-radius:50%;font-size:24px}
+.ap100-profile-menu-list{display:grid;gap:8px;padding:14px 0}.ap100-profile-menu-item{width:100%;border:1px solid var(--ap100-line);background:#fffdf9;border-radius:16px;padding:10px 12px;display:grid;grid-template-columns:42px 1fr 24px;align-items:center;gap:10px;text-align:left;color:var(--ap100-ink)}.ap100-profile-menu-item.active{border-color:#b8904f;background:#fbf1df}.ap100-profile-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#4a173f,#7b4c70);color:#f2d58d}.ap100-profile-menu-item strong{display:block;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ap100-plum)}.ap100-profile-menu-item small{display:block;color:var(--ap100-muted);font-size:11px;margin-top:2px}.ap100-profile-menu-item i{font-style:normal;color:var(--ap100-gold);font-size:18px}.ap100-profile-menu-add{width:100%;border:1px dashed #c4a36c;background:#fff7ea;color:var(--ap100-plum);border-radius:16px;padding:13px;font-weight:700}.ap100-profile-menu-empty{padding:18px;text-align:center;color:var(--ap100-muted)}
+</style>
 <script id="ap100-inline-script">
 /* ASTRO PAQUITA V100 — refonte officielle */
 (function(){
@@ -11531,7 +11537,8 @@ function shellHtml(){return `
  </aside>
  <main class="ap100-main">
   <header class="ap100-topbar"><div style="display:flex;align-items:center;gap:10px"><button class="ap100-mobile-menu" onclick="v100Navigate('home')">✦</button><div class="ap100-topbar-title">Astro Paquita <small>Une lecture personnelle, précise et cohérente</small></div></div><div class="ap100-top-actions"><select id="ap100-lang" class="ap100-lang" onchange="v100SetLang(this.value)"><option value="fr">FR</option><option value="en">EN</option><option value="es">ES</option><option value="ar">AR</option></select><button class="ap100-account" onclick="ouvrirCompte()">♙</button></div></header>
-  <div class="ap100-mobile-profilebar"><div class="ap100-mobile-profile-select-wrap"><select id="ap100-mobile-profile-select" class="ap100-mobile-profile-select"></select><button class="ap100-mobile-add" onclick="v100AddProfile()">+</button></div></div>
+  <div class="ap100-mobile-profilebar"><div class="ap100-mobile-profile-select-wrap"><button id="ap100-mobile-profile-button" class="ap100-mobile-profile-button" type="button" onclick="v100OpenProfileMenu()"><span id="ap100-mobile-profile-name">Profil</span><span class="ap100-mobile-profile-chevron">⌄</span></button><button class="ap100-mobile-add" onclick="v100AddProfile()" aria-label="Ajouter un profil">+</button></div></div>
+  <div id="ap100-profile-menu-overlay" class="ap100-profile-menu-overlay" onclick="v100CloseProfileMenu()"><div class="ap100-profile-menu-sheet" onclick="event.stopPropagation()"><div class="ap100-profile-menu-head"><div><small>Profil de naissance</small><strong>Choisir un profil</strong></div><button type="button" onclick="v100CloseProfileMenu()">×</button></div><div id="ap100-profile-menu-list" class="ap100-profile-menu-list"></div><button class="ap100-profile-menu-add" type="button" onclick="v100CloseProfileMenu();v100AddProfile()">＋ Ajouter un profil</button></div></div>
   <section id="ap100-page-home" class="ap100-page active"></section>
   <section id="ap100-page-future" class="ap100-page"></section>
   <section id="ap100-page-profile" class="ap100-page"></section>
@@ -11545,14 +11552,35 @@ function shellHtml(){return `
  </nav>
 </div>`}
 
+function ensureActiveUser(){
+ try{
+  if(window.USER)return true;
+  const k=activeProfileKey(),all=typeof getProfils==='function'?getProfils():{},p=k&&all[k]?all[k]:null;
+  if(!p)return false;
+  localStorage.setItem('astro_paquita_profil_actif_v38',k);
+  if(typeof v37CalculerUserDepuisDonnees==='function'&&v37CalculerUserDepuisDonnees(p))return true;
+  if(typeof v37ChangerProfil==='function'&&v37ChangerProfil(k))return true;
+ }catch(e){}
+ return !!window.USER;
+}
 function refreshProfiles(){
  const sel=$('#ap100-profile-select');if(!sel)return;let all={};try{all=getProfils()}catch(e){}
  const keys=Object.keys(all).sort((a,b)=>String(all[a]?.prenom||a).localeCompare(String(all[b]?.prenom||b),'fr'));
- const active=activeProfileKey();sel.innerHTML=keys.length?keys.map(k=>`<option value="${esc(k)}">${esc(all[k]?.prenom||k)}</option>`).join(''):`<option value="">Créer un profil</option>`;
+ const active=activeProfileKey();
+ sel.innerHTML=keys.length?keys.map(k=>`<option value="${esc(k)}">${esc(all[k]?.prenom||k)}</option>`).join(''):`<option value="">Créer un profil</option>`;
  if(active&&all[active])sel.value=active;
- sel.onchange=()=>{if(sel.value&&typeof v37ChangerProfil==='function'){v37ChangerProfil(sel.value);setTimeout(()=>{renderAll();},80)}};
- const msel=$('#ap100-mobile-profile-select');if(msel){msel.innerHTML=sel.innerHTML;if(active&&all[active])msel.value=active;msel.onchange=()=>{if(msel.value&&typeof v37ChangerProfil==='function'){v37ChangerProfil(msel.value);setTimeout(renderAll,80)}};}
+ sel.onchange=()=>{if(sel.value){localStorage.setItem('astro_paquita_profil_actif_v38',sel.value);if(typeof v37ChangerProfil==='function')v37ChangerProfil(sel.value);setTimeout(()=>{ensureActiveUser();renderAll();},100)}};
+ const mobileName=$('#ap100-mobile-profile-name');
+ if(mobileName)mobileName.textContent=(active&&all[active])?(all[active]?.prenom||active):(keys.length?(all[keys[0]]?.prenom||keys[0]):'Créer un profil');
+ const list=$('#ap100-profile-menu-list');
+ if(list){
+   list.innerHTML=keys.length?keys.map(k=>`<button type="button" class="ap100-profile-menu-item ${k===active?'active':''}" data-profile-key="${esc(k)}"><span class="ap100-profile-avatar">✦</span><span><strong>${esc(all[k]?.prenom||k)}</strong><small>${esc(all[k]?.date||'')}${all[k]?.ville?' · '+esc(all[k].ville):''}</small></span><i>${k===active?'✓':''}</i></button>`).join(''):`<div class="ap100-profile-menu-empty">Aucun profil enregistré.</div>`;
+   $$('.ap100-profile-menu-item',list).forEach((b,i)=>b.onclick=()=>v100SelectProfile(keys[i]));
+ }
 }
+window.v100OpenProfileMenu=function(){refreshProfiles();const o=$('#ap100-profile-menu-overlay');if(o)o.classList.add('open')};
+window.v100CloseProfileMenu=function(){const o=$('#ap100-profile-menu-overlay');if(o)o.classList.remove('open')};
+window.v100SelectProfile=function(k){try{localStorage.setItem('astro_paquita_profil_actif_v38',k);if(typeof v37ChangerProfil==='function')v37ChangerProfil(k);ensureActiveUser();}catch(e){}v100CloseProfileMenu();setTimeout(()=>{renderAll();if(V100.page==='profile')showPage('profile');else showPage('home')},100)};
 
 function homeHighlight(){
  if(!window.USER)return null;
@@ -11565,14 +11593,14 @@ function homeHighlight(){
 }
 function formatDate(d){try{return new Date(d).toLocaleDateString(lang()==='fr'?'fr-FR':lang()==='es'?'es-ES':lang()==='ar'?'ar':'en-GB',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}}
 function renderHome(){
- const host=$('#ap100-page-home');if(!host)return;const name=esc(userName());const h=homeHighlight();
+ const host=$('#ap100-page-home');if(!host)return;const p=activeProfile();const hasProfile=!!p;ensureActiveUser();const hasCalculated=!!window.USER;const name=esc(userName());const h=homeHighlight();
  let nextTitle='Une période à explorer',nextDate='';
  if(h){nextTitle=typeof apEventTitle==='function'?apEventTitle(h):(h.label||'Période importante');nextDate=formatDate(h.date)}
  host.innerHTML=`
  <div class="ap100-kicker">Astro Paquita</div><h1 class="ap100-title">${t('hello')}<br><em>${name}</em></h1><div class="ap100-ornament">✦</div>
  <div class="ap100-hero-grid">
-  <article class="ap100-celestial-card"><div class="ap100-hero-copy"><div class="ap100-kicker">Votre signature céleste</div><h2>${window.USER?'Un portrait qui relie tous les fils de votre thème':'Créez votre profil'}<em>${window.USER?'sans raccourci.':'pour commencer.'}</em></h2><p>${window.USER?'Un dossier natal complet, structuré et nuancé : dominantes, planètes, maisons, aspects et synthèse croisée.':'Date, heure et lieu de naissance suffisent pour calculer votre carte du ciel.'}</p><button class="ap100-hero-btn" onclick="${window.USER?"v100Navigate('natal')":"v100AddProfile()"}">${window.USER?t('discover'):'Créer mon profil'} →</button></div></article>
-  <article class="ap100-moon-card"><div><div class="ap100-kicker">${t('next')}</div><h3>${esc(nextTitle)}</h3><div class="ap100-highlight-date">${esc(nextDate||'À calculer')}</div><span class="ap100-highlight-pill">✦ Lecture basée sur vos calculs</span></div><p>${window.USER?'Ce repère vient du même moteur que vos prévisions et vos grands événements, pour éviter les contradictions.':'Chargez un profil pour afficher vos prochains repères.'}</p><button class="ap100-text-link" onclick="v100Navigate('future')">${t('open')}</button></article>
+  <article class="ap100-celestial-card"><div class="ap100-hero-copy"><div class="ap100-kicker">Votre signature céleste</div><h2>${hasProfile?'Un portrait qui relie tous les fils de votre thème':'Créez votre profil'}<em>${hasProfile?'sans raccourci.':'pour commencer.'}</em></h2><p>${hasProfile?(hasCalculated?'Un dossier natal complet, structuré et nuancé : dominantes, planètes, maisons, aspects et synthèse croisée.':'Votre profil est bien enregistré. Vérifiez simplement les données de naissance si un calcul manque.'):'Date, heure et lieu de naissance suffisent pour calculer votre carte du ciel.'}</p><button class="ap100-hero-btn" onclick="${hasCalculated?"v100Navigate('natal')":hasProfile?"v100EditBirth()":"v100AddProfile()"}">${hasCalculated?t('discover'):hasProfile?'Vérifier mon profil':'Créer mon profil'} →</button></div></article>
+  <article class="ap100-moon-card"><div><div class="ap100-kicker">${t('next')}</div><h3>${esc(nextTitle)}</h3><div class="ap100-highlight-date">${esc(nextDate||'À calculer')}</div><span class="ap100-highlight-pill">✦ Lecture basée sur vos calculs</span></div><p>${hasCalculated?'Ce repère vient du même moteur que vos prévisions et vos grands événements, pour éviter les contradictions.':hasProfile?'Votre profil est enregistré ; complétez-le seulement si une donnée de naissance manque.':'Chargez un profil pour afficher vos prochains repères.'}</p><button class="ap100-text-link" onclick="v100Navigate('future')">${t('open')}</button></article>
  </div>
  <div class="ap100-section-head"><h3>${t('explore')}</h3><span>✦ Une seule logique astrologique, plusieurs angles de lecture</span></div>
  <div class="ap100-feature-grid">
@@ -11724,11 +11752,11 @@ function removeLegacy(){['mod-question','mod-timeline','mod-journal','ap-v30-too
 function init(){
  if($('#ap100-shell'))return;document.body.insertAdjacentHTML('afterbegin',shellHtml());
  const main=$('.ap100-main');const saisie=$('#section-saisie'),modules=$('#section-modules');if(main){if(saisie)main.appendChild(saisie);if(modules)main.appendChild(modules);}
- installClaudeWrapper();installHooks();removeLegacy();enhanceFutureTools();renderAll();showPage('home');
+ installClaudeWrapper();installHooks();removeLegacy();enhanceFutureTools();ensureActiveUser();renderAll();showPage('home');
  const langEl=$('#ap100-lang');if(langEl)langEl.value=lang();
  // Revalider après les installations historiques asynchrones.
- setTimeout(()=>{removeLegacy();installClaudeWrapper();installHooks();enhanceFutureTools();renderAll()},450);
- setTimeout(()=>{removeLegacy();renderAll()},1600);
+ setTimeout(()=>{removeLegacy();installClaudeWrapper();installHooks();enhanceFutureTools();ensureActiveUser();renderAll()},450);
+ setTimeout(()=>{removeLegacy();ensureActiveUser();renderAll()},1600);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
