@@ -18,7 +18,7 @@
 
 <section id="panel-maintenance" class="admin-panel"><div class="panel-card"><h2>Maintenance du site</h2><div class="actions"><span id="maintenance-state" class="maintenance-state">État inconnu</span><button class="danger" onclick="changerMaintenance(true)">🔴 Mettre en maintenance</button><button class="safe" onclick="changerMaintenance(false)">🟢 Rouvrir le site</button><button class="secondary" onclick="voirSiteMaintenance()">👁 Voir le site</button></div><label>Message affiché aux visiteurs</label><input id="maintenance-message" value="Astro Paquita se refait une beauté. Le site sera de retour très bientôt."><p class="muted">Ton profil Administrateur peut continuer à utiliser le site pendant la maintenance.</p></div></section>
 
-<section id="panel-access" class="admin-panel"><div id="bootstrap-admin" class="panel-card hidden"><h2>👑 Activer mon profil Administrateur</h2><p>Ton compte actuel deviendra le premier Administrateur.</p><button class="gold" onclick="activerMonAdmin()">Activer mon compte</button></div><div class="two-cols"><div class="panel-card"><h2>Récupération Admin</h2><p class="muted">À utiliser uniquement en secours.</p><label>Email de mon compte</label><input id="recovery-email" type="email" placeholder="ton@email.fr"><div class="actions"><button class="gold" onclick="promouvoirParEmail()">👑 Rendre cet email Administrateur</button></div><div id="recovery-result" class="auth-info" style="margin-top:10px">Aucune action effectuée.</div></div><div class="panel-card" id="key-config"><h2>Connexion au backend</h2><label>URL du backend</label><input id="cfg-url" value="https://astro-paquita-backend.onrender.com"><label>Clé admin de secours</label><input id="cfg-key" type="password" placeholder="ADMIN_KEY"><div class="actions"><button onclick="sauvegarderConfig()">Enregistrer et charger</button></div><p class="muted">La clé n'est utile que pour le premier accès ou une récupération.</p></div></div></section>
+<section id="panel-access" class="admin-panel"><div id="bootstrap-admin" class="panel-card hidden"><h2>👑 Activer mon profil Administrateur</h2><p>Ton compte actuel deviendra le premier Administrateur.</p><button class="gold" onclick="activerMonAdmin()">Activer mon compte</button></div><div class="two-cols"><div class="panel-card"><h2>Récupération Admin</h2><p class="muted">À utiliser uniquement en secours.</p><label>Email de mon compte</label><input id="recovery-email" type="email" placeholder="ton@email.fr"><div class="actions"><button class="gold" onclick="promouvoirParEmail()">👑 Rendre cet email Administrateur</button></div><div id="recovery-result" class="auth-info" style="margin-top:10px">Aucune action effectuée.</div><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>Réinitialiser un mot de passe</h3><p class="muted">Secours propriétaire : ne modifie ni les profils, ni le Premium, ni l’historique.</p><label>Email du compte</label><input id="reset-admin-email" type="email" placeholder="ton@email.fr"><label>Nouveau mot de passe</label><input id="reset-admin-password" type="password" placeholder="8 caractères minimum"><div class="actions"><button class="gold" onclick="resetPasswordByEmail()">🔑 Définir ce nouveau mot de passe</button></div><div id="reset-admin-result" class="auth-info" style="margin-top:10px">Aucune réinitialisation effectuée.</div></div><div class="panel-card" id="key-config"><h2>Connexion au backend</h2><label>URL du backend</label><input id="cfg-url" value="https://astro-paquita-backend.onrender.com"><label>Clé admin de secours</label><input id="cfg-key" type="password" placeholder="ADMIN_KEY"><div class="actions"><button onclick="sauvegarderConfig()">Enregistrer et charger</button></div><p class="muted">La clé n'est utile que pour le premier accès ou une récupération.</p></div></div></section>
 
 </main></div><div id="activity-modal" class="activity-modal" onclick="if(event.target===this)fermerHistorique()"><div class="activity-card"><div class="activity-head"><div><h2>📚 Historique des consultations</h2><div id="activity-user" class="muted"></div></div><button class="secondary" onclick="fermerHistorique()">Fermer</button></div><div id="activity-content"><div class="empty">Chargement…</div></div></div></div>
 <script>
@@ -188,6 +188,22 @@ async function synchroniserCompteAdminAvecCle(){
     return r.ok;
   }catch(e){return false}
 }
+async function resetPasswordByEmail(){
+  const email=(document.getElementById('reset-admin-email').value||'').trim().toLowerCase();
+  const motDePasse=document.getElementById('reset-admin-password').value||'';
+  const key=(document.getElementById('cfg-key').value||adminKey()||'').trim();
+  const out=document.getElementById('reset-admin-result');
+  if(!key){out.textContent='Saisis d’abord la ADMIN_KEY de Render dans « Clé admin de secours ».';return;}
+  if(!email||motDePasse.length<8){out.textContent='Email requis et mot de passe de 8 caractères minimum.';return;}
+  try{
+    const r=await fetch(apiUrl()+'/api/admin/reset-password-by-email',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({email,motDePasse})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.erreur||'Erreur');
+    out.textContent='✅ Mot de passe modifié pour '+email+'. Tu peux te reconnecter au site.';
+    document.getElementById('reset-admin-password').value='';
+  }catch(e){out.textContent='⚠ '+e.message;}
+}
+
 async function chargerAdministration(){await synchroniserCompteAdminAvecCle();await verifierProfilAdmin();await Promise.all([chargerMaintenance(),listerUtilisateurs(),listerProfils(),listerCodes(),chargerAnalytics()])}
 window.addEventListener('load',()=>{document.getElementById('cfg-url').value=apiUrl();document.getElementById('cfg-key').value=adminKey();verifierBackendV68();chargerAdministration()});
 async function chargerMaintenance(){const e=document.getElementById('maintenance-state');try{const r=await fetch(apiUrl()+'/api/admin/maintenance?ts='+Date.now(),{headers:headersAdmin(),cache:'no-store'});const m=await r.json();if(!r.ok)throw new Error(m.erreur||'Erreur');e.textContent=m.enabled?'🔴 SITE EN MAINTENANCE':'🟢 SITE OUVERT';e.className='maintenance-state '+(m.enabled?'no':'ok');if(m.message)document.getElementById('maintenance-message').value=m.message}catch(err){e.textContent='⚠ Accès admin requis'}}

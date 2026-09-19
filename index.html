@@ -2014,6 +2014,7 @@ input,select,textarea{color:var(--ap100-ink)}
       <input id="compte-champ-mdp" type="password" placeholder="Mot de passe (6 caractères min.)" style="width:100%;box-sizing:border-box;padding:0.6rem;margin-bottom:0.8rem;border-radius:8px;border:1px solid rgba(180,120,255,0.35);background:rgba(255,255,255,0.07);color:#fff;">
       <div id="compte-erreur" style="color:#f87171;font-size:0.85rem;margin-bottom:0.6rem;min-height:1.2em;"></div>
       <button onclick="soumettreConnexion(false)" style="width:100%;padding:0.7rem;border:none;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:700;cursor:pointer;margin-bottom:0.5rem;">Se connecter</button>
+      <button type="button" onclick="ouvrirMotDePasseOublie()" style="width:100%;background:none;border:none;color:#8a5a82;font-weight:700;cursor:pointer;margin:-.05rem 0 .65rem;text-decoration:underline;text-underline-offset:3px;">Mot de passe oublié ?</button>
       <button onclick="soumettreConnexion(true)" style="width:100%;padding:0.7rem;border:none;border-radius:8px;background:rgba(255,255,255,0.1);color:#f0ecff;font-weight:700;cursor:pointer;">Créer un compte (gratuit)</button>
     </div>
 
@@ -2130,6 +2131,7 @@ input,select,textarea{color:var(--ap100-ink)}
   <!-- Formulaire -->
   <div class="bloc">
     <div class="bloc-titre">Informations personnelles</div>
+    <div style="font-size:.82rem;line-height:1.45;color:#7b6875;margin:-.2rem 0 .85rem">Vos informations de naissance ne sont jamais préremplies pour les visiteurs. Saisissez uniquement les données du profil que vous souhaitez créer.</div>
     <label class="champ-label">Prénom</label>
     <input class="champ-input" id="s-prenom" type="text" placeholder="Votre prénom" autocomplete="off"/>
     <label class="champ-label">Genre</label>
@@ -2140,9 +2142,9 @@ input,select,textarea{color:var(--ap100-ink)}
     </div>
     <input type="hidden" id="s-genre" value=""/>
     <label class="champ-label">Date de naissance (JJ/MM/AAAA)</label>
-    <input class="champ-input" id="s-date" type="text" placeholder="18/12/1971" maxlength="10" autocomplete="off"/>
+    <input class="champ-input" id="s-date" type="text" placeholder="JJ/MM/AAAA" maxlength="10" autocomplete="off"/>
     <label class="champ-label">Heure de naissance (HH:MM)</label>
-    <input class="champ-input" id="s-heure" type="text" placeholder="03:30" maxlength="5" autocomplete="off"/>
+    <input class="champ-input" id="s-heure" type="text" placeholder="HH:MM" maxlength="5" autocomplete="off"/>
   </div>
 
   <div class="bloc">
@@ -2612,6 +2614,45 @@ function majAccesPremiumUI() {
   majCreditsQuestionsUI();
 }
 
+function apComptePriveActif() {
+  return !!(window.USER_CONNECTE && window.USER_CONNECTE.email && localStorage.getItem('astro-token'));
+}
+
+function apEffacerDonneesPriveesAffichees() {
+  try {
+    USER = null;
+    const ids=['s-prenom','s-date','s-heure','s-ville','s-lat','s-lon'];
+    ids.forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
+    const coords=document.getElementById('s-coords'); if(coords){coords.textContent='';coords.style.display='none';}
+    const ps=document.getElementById('profils-select'); if(ps)ps.innerHTML='<option value="">— Sélectionner un profil —</option>';
+    const pb=document.getElementById('profils-bloc'); if(pb)pb.style.display='none';
+    const ys=document.getElementById('y-profils-select'); if(ys)ys.innerHTML='<option value="">— Sélectionner un profil —</option>';
+    const yb=document.getElementById('y-profils-bloc'); if(yb)yb.style.display='none';
+    const top=document.getElementById('v37-profile-select'); if(top)top.innerHTML='<option value="">— Profil —</option>';
+  } catch(e) {}
+}
+
+function apChargerProfilActifPrive() {
+  if (!apComptePriveActif()) { apEffacerDonneesPriveesAffichees(); return false; }
+  try {
+    if (typeof v37RafraichirSelectProfil==='function') v37RafraichirSelectProfil();
+    if (typeof rafraichirSelectProfils==='function') rafraichirSelectProfils();
+    if (typeof rafraichirSelectProfilsSynastrie==='function') rafraichirSelectProfilsSynastrie();
+    const profils=typeof getProfils==='function'?getProfils():{};
+    const active=localStorage.getItem('astro_paquita_profil_actif_v38')||'';
+    const cle=(active&&profils[active])?active:(Object.keys(profils).length===1?Object.keys(profils)[0]:'');
+    const sel=document.getElementById('v37-profile-select');
+    if(cle && typeof v37ChangerProfil==='function') { if(sel)sel.value=cle; v37ChangerProfil(cle); }
+    return !!cle;
+  } catch(e) { return false; }
+}
+
+function apRafraichirViePriveeV102() {
+  if (!apComptePriveActif()) apEffacerDonneesPriveesAffichees();
+  else apChargerProfilActifPrive();
+  try { if (typeof window.v100PrivacyRefresh==='function') window.v100PrivacyRefresh(); } catch(e) {}
+}
+
 async function chargerStatutCompte() {
   if (!TOKEN) {
     USER_CONNECTE = null;
@@ -2619,6 +2660,7 @@ async function chargerStatutCompte() {
     PREMIUM = false;
     majBoutonCompte();
     majAccesPremiumUI();
+    apRafraichirViePriveeV102();
     return;
   }
   try {
@@ -2636,6 +2678,7 @@ async function chargerStatutCompte() {
       PREMIUM = false;
       majBoutonCompte();
       majAccesPremiumUI();
+      apRafraichirViePriveeV102();
       return;
     }
     const data = await resp.json();
@@ -2648,6 +2691,7 @@ async function chargerStatutCompte() {
     rafraichirVerrousFenetre();
     rafraichirLockSynastrie();
     await enregistrerVisiteUneFoisParSession();
+    apRafraichirViePriveeV102();
     await apSyncProfilesV94();
   } catch (e) {
     majBoutonCompte();
@@ -2787,6 +2831,7 @@ async function soumettreConnexion(estInscription) {
     rafraichirVerrousFenetre();
     rafraichirLockSynastrie();
     await enregistrerVisiteUneFoisParSession();
+    apRafraichirViePriveeV102();
     await apSyncProfilesV94();
   } catch (e) { erreurEl.textContent = 'Connexion au serveur impossible.'; }
 }
@@ -2801,6 +2846,7 @@ function deconnexionCompte() {
   majAccesPremiumUI();
   rafraichirVerrousFenetre();
   rafraichirLockSynastrie();
+  apRafraichirViePriveeV102();
 }
 
 function verifierAccesModulePremium(id) {
@@ -3636,7 +3682,7 @@ function validerSaisie() {
 
   const dateISO = parseDate(dateRaw);
   if (!prenom) { affErr('s-erreur', 'Veuillez saisir votre prénom.'); return; }
-  if (!dateISO) { affErr('s-erreur', 'Format de date invalide. Ex : 18/12/1971'); return; }
+  if (!dateISO) { affErr('s-erreur', 'Format de date invalide. Ex : 31/12/1990'); return; }
   if (!heure) { affErr('s-erreur', 'Veuillez indiquer votre heure de naissance.'); return; }
   if (isNaN(lat) || isNaN(lon)) { affErr('s-erreur', 'Veuillez choisir votre ville de naissance dans la liste.'); return; }
 
@@ -10160,6 +10206,11 @@ function rafraichirSelectProfilsSynastrie() {
   const sel = document.getElementById('y-profils-select');
   const bloc = document.getElementById('y-profils-bloc');
   if (!sel || !bloc) return;
+  if (!window.USER_CONNECTE || !window.USER_CONNECTE.email) {
+    sel.innerHTML = '<option value="">— Sélectionner un profil —</option>';
+    bloc.style.display = 'none';
+    return;
+  }
   const profils = getProfils();
   const noms = Object.keys(profils).sort();
   sel.innerHTML = '<option value="">— Sélectionner un profil —</option>';
@@ -10209,6 +10260,11 @@ function chargerProfilSynastrie() {
 
 function rafraichirSelectProfils() {
   const sel = document.getElementById('profils-select');
+  if (!window.USER_CONNECTE || !window.USER_CONNECTE.email) {
+    if (sel) sel.innerHTML = '<option value="">— Sélectionner un profil —</option>';
+    const bloc=document.getElementById('profils-bloc'); if(bloc)bloc.style.display='none';
+    return;
+  }
   const profils = getProfils();
   const noms = Object.keys(profils).sort();
   sel.innerHTML = '<option value="">— Sélectionner un profil —</option>';
@@ -10490,12 +10546,8 @@ function v37NouveauProfil() {
 
 window.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>{
-    v37RafraichirSelectProfil();
-    const sel=document.getElementById('v37-profile-select');
-    const active=localStorage.getItem(V37_ACTIVE_PROFILE_KEY);
-    const profils=typeof getProfils==='function'?getProfils():{};
-    const cle=(active&&profils[active])?active:(Object.keys(profils).length===1?Object.keys(profils)[0]:'');
-    if(cle){sel.value=cle;v37ChangerProfil(cle);}
+    if (window.USER_CONNECTE && window.USER_CONNECTE.email) apChargerProfilActifPrive();
+    else apEffacerDonneesPriveesAffichees();
   },50);
 });
 
@@ -11513,11 +11565,13 @@ function lang(){try{return (window.AP_LANG&&I18N[window.AP_LANG])?window.AP_LANG
 function t(k){return (I18N[lang()]||I18N.fr)[k]||I18N.fr[k]||k}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+function accountReady(){return !!(window.USER_CONNECTE&&window.USER_CONNECTE.email&&localStorage.getItem('astro-token'))}
 function activeProfileKey(){
+ if(!accountReady())return '';
  try{const all=typeof getProfils==='function'?getProfils():{};const k=localStorage.getItem('astro_paquita_profil_actif_v38')||'';if(k&&all[k])return k;const keys=Object.keys(all);return keys.length===1?keys[0]:'';}catch(e){return ''}
 }
-function activeProfile(){try{const all=getProfils();return all[activeProfileKey()]||null}catch(e){return null}}
-function userName(){return window.USER?.prenom||activeProfile()?.prenom||window.USER_CONNECTE?.prenom||'Paquita'}
+function activeProfile(){if(!accountReady())return null;try{const all=getProfils();return all[activeProfileKey()]||null}catch(e){return null}}
+function userName(){if(!accountReady())return '';return window.USER?.prenom||activeProfile()?.prenom||window.USER_CONNECTE?.prenom||''}
 function zodiacSign(deg){const n=['Bélier','Taureau','Gémeaux','Cancer','Lion','Vierge','Balance','Scorpion','Sagittaire','Capricorne','Verseau','Poissons'];return n[Math.floor((((Number(deg)||0)%360)+360)%360/30)]}
 function signSymbol(name){return ({Bélier:'♈',Taureau:'♉',Gémeaux:'♊',Cancer:'♋',Lion:'♌',Vierge:'♍',Balance:'♎',Scorpion:'♏',Sagittaire:'♐',Capricorne:'♑',Verseau:'♒',Poissons:'♓'})[name]||'✦'}
 
@@ -11553,6 +11607,7 @@ function shellHtml(){return `
 </div>`}
 
 function ensureActiveUser(){
+ if(!accountReady())return false;
  try{
   if(window.USER)return true;
   const k=activeProfileKey(),all=typeof getProfils==='function'?getProfils():{},p=k&&all[k]?all[k]:null;
@@ -11564,7 +11619,14 @@ function ensureActiveUser(){
  return !!window.USER;
 }
 function refreshProfiles(){
- const sel=$('#ap100-profile-select');if(!sel)return;let all={};try{all=getProfils()}catch(e){}
+ const sel=$('#ap100-profile-select');if(!sel)return;
+ if(!accountReady()){
+   sel.innerHTML='<option value="">Créer mon profil</option>';
+   const mobileName=$('#ap100-mobile-profile-name');if(mobileName)mobileName.textContent='Créer mon profil';
+   const list=$('#ap100-profile-menu-list');if(list)list.innerHTML='<div class="ap100-profile-menu-empty">Connectez-vous pour retrouver vos profils enregistrés.</div>';
+   return;
+ }
+ let all={};try{all=getProfils()}catch(e){}
  const keys=Object.keys(all).sort((a,b)=>String(all[a]?.prenom||a).localeCompare(String(all[b]?.prenom||b),'fr'));
  const active=activeProfileKey();
  sel.innerHTML=keys.length?keys.map(k=>`<option value="${esc(k)}">${esc(all[k]?.prenom||k)}</option>`).join(''):`<option value="">Créer un profil</option>`;
@@ -11578,12 +11640,12 @@ function refreshProfiles(){
    $$('.ap100-profile-menu-item',list).forEach((b,i)=>b.onclick=()=>v100SelectProfile(keys[i]));
  }
 }
-window.v100OpenProfileMenu=function(){refreshProfiles();const o=$('#ap100-profile-menu-overlay');if(o)o.classList.add('open')};
+window.v100OpenProfileMenu=function(){if(!accountReady()){if(typeof ouvrirCompte==='function')ouvrirCompte();return;}refreshProfiles();const o=$('#ap100-profile-menu-overlay');if(o)o.classList.add('open')};
 window.v100CloseProfileMenu=function(){const o=$('#ap100-profile-menu-overlay');if(o)o.classList.remove('open')};
 window.v100SelectProfile=function(k){try{localStorage.setItem('astro_paquita_profil_actif_v38',k);if(typeof v37ChangerProfil==='function')v37ChangerProfil(k);ensureActiveUser();}catch(e){}v100CloseProfileMenu();setTimeout(()=>{renderAll();if(V100.page==='profile')showPage('profile');else showPage('home')},100)};
 
 function homeHighlight(){
- if(!window.USER)return null;
+ if(!accountReady()||!window.USER)return null;
  try{
   const start=new Date(),c=[];
   for(let d=0;d<=180;d+=7){const dt=new Date(start);dt.setDate(dt.getDate()+d);const a=typeof apV51Signals==='function'?apV51Signals(dt,'marque'):[];for(const x of a||[])if(x&&x.niveau!=='faible')c.push(x)}
@@ -11597,7 +11659,7 @@ function renderHome(){
  let nextTitle='Une période à explorer',nextDate='';
  if(h){nextTitle=typeof apEventTitle==='function'?apEventTitle(h):(h.label||'Période importante');nextDate=formatDate(h.date)}
  host.innerHTML=`
- <div class="ap100-kicker">Astro Paquita</div><h1 class="ap100-title">${t('hello')}<br><em>${name}</em></h1><div class="ap100-ornament">✦</div>
+ <div class="ap100-kicker">Astro Paquita</div><h1 class="ap100-title">${t('hello')}${name?`<br><em>${name}</em>`:''}</h1><div class="ap100-ornament">✦</div>
  <div class="ap100-hero-grid">
   <article class="ap100-celestial-card"><div class="ap100-hero-copy"><div class="ap100-kicker">Votre signature céleste</div><h2>${hasProfile?'Un portrait qui relie tous les fils de votre thème':'Créez votre profil'}<em>${hasProfile?'sans raccourci.':'pour commencer.'}</em></h2><p>${hasProfile?(hasCalculated?'Un dossier natal complet, structuré et nuancé : dominantes, planètes, maisons, aspects et synthèse croisée.':'Votre profil est bien enregistré. Vérifiez simplement les données de naissance si un calcul manque.'):'Date, heure et lieu de naissance suffisent pour calculer votre carte du ciel.'}</p><button class="ap100-hero-btn" onclick="${hasCalculated?"v100Navigate('natal')":hasProfile?"v100EditBirth()":"v100AddProfile()"}">${hasCalculated?t('discover'):hasProfile?'Vérifier mon profil':'Créer mon profil'} →</button></div></article>
   <article class="ap100-moon-card"><div><div class="ap100-kicker">${t('next')}</div><h3>${esc(nextTitle)}</h3><div class="ap100-highlight-date">${esc(nextDate||'À calculer')}</div><span class="ap100-highlight-pill">✦ Lecture basée sur vos calculs</span></div><p>${hasCalculated?'Ce repère vient du même moteur que vos prévisions et vos grands événements, pour éviter les contradictions.':hasProfile?'Votre profil est enregistré ; complétez-le seulement si une donnée de naissance manque.':'Chargez un profil pour afficher vos prochains repères.'}</p><button class="ap100-text-link" onclick="v100Navigate('future')">${t('open')}</button></article>
@@ -11618,7 +11680,12 @@ function renderFuture(){const host=$('#ap100-page-future');if(!host)return;host.
  </div>
  <div class="ap100-saved"><span>☆ <b>${t('saved')}</b> — retrouvez ici les fenêtres que vous avez choisi de garder.</span><button onclick="v100OpenSavedDates()">${t('open')} →</button></div>`}
 function renderProfile(){
- const host=$('#ap100-page-profile');if(!host)return;const p=activeProfile();const ctx=typeof apGetLifeContext==='function'?apGetLifeContext():{};const u=window.USER_CONNECTE||{};
+ const host=$('#ap100-page-profile');if(!host)return;
+ if(!accountReady()){
+   host.innerHTML=`<div class="ap100-kicker">Astro Paquita</div><h1 class="ap100-title">${t('profileTitle')}</h1><div class="ap100-ornament">✦</div><div class="ap100-panel" style="max-width:680px"><h3>Vos données restent privées</h3><p class="ap100-sub">Connectez-vous pour retrouver vos profils enregistrés. Aucune donnée de naissance sauvegardée sur cet appareil n’est affichée tant que le compte n’est pas authentifié.</p><div class="ap100-actions"><button class="ap100-btn" onclick="ouvrirCompte()">Se connecter</button><button class="ap100-btn secondary" onclick="v100AddProfile()">Créer un nouveau profil</button></div></div>`;
+   return;
+ }
+ const p=activeProfile();const ctx=typeof apGetLifeContext==='function'?apGetLifeContext():{};const u=window.USER_CONNECTE||{};
  host.innerHTML=`<div class="ap100-kicker">Astro Paquita</div><h1 class="ap100-title">${t('profileTitle')}</h1><div class="ap100-ornament">✦</div>
  <div class="ap100-profile-grid">
   <div class="ap100-panel"><span class="ap100-profile-badge">${u.role==='admin'?'Administrateur':u.premium?'Premium':'Profil astrologique'}</span><div class="ap100-profile-name">${esc(p?.prenom||userName())}</div><div class="ap100-profile-info">
@@ -11634,6 +11701,7 @@ function renderProfile(){
 }
 function lifeField(key,label,opts,val){return `<div class="ap100-field"><label>${esc(label)}</label><select id="ap100-life-${key}">${opts.map(([v,l])=>`<option value="${esc(v)}" ${String(val||'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select></div>`}
 function renderAll(){refreshProfiles();renderHome();renderFuture();renderProfile();translateShell();const l=$('#ap100-lang');if(l)l.value=lang();}
+window.v100PrivacyRefresh=function(){renderAll();};
 function translateShell(){$$('[data-v100-t]').forEach(el=>{el.textContent=t(el.dataset.v100T)});document.documentElement.dir=lang()==='ar'?'rtl':'ltr'}
 function setActiveNav(key){$$('[data-v100]').forEach(b=>b.classList.toggle('active',b.dataset.v100===key))}
 function hideCustomPages(){$$('.ap100-page').forEach(x=>x.classList.remove('active'))}
@@ -11762,5 +11830,91 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
+
+<!-- V100.2 — Mot de passe oublié -->
+<div id="ap-reset-modal" style="display:none;position:fixed;inset:0;z-index:999999;background:rgba(46,20,42,.72);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
+  <div style="width:min(430px,96vw);background:#fffaf2;border:1px solid #dac6a7;border-radius:24px;box-shadow:0 25px 80px rgba(44,19,39,.28);padding:24px;position:relative;color:#2d1930;font-family:Lato,Arial,sans-serif;">
+    <button type="button" onclick="fermerMotDePasseOublie()" style="position:absolute;right:14px;top:12px;border:0;background:transparent;color:#7a6674;font-size:24px;cursor:pointer">×</button>
+    <div id="ap-reset-request-view">
+      <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#a8792e;font-weight:800">Astro Paquita</div>
+      <h2 style="font-family:'Cormorant Garamond',Georgia,serif;color:#43143d;font-size:30px;margin:6px 0 8px">Mot de passe oublié</h2>
+      <p style="color:#796b76;line-height:1.55;margin:0 0 16px">Saisis l’adresse e-mail de ton compte. Tu recevras un lien sécurisé valable 30 minutes.</p>
+      <label style="display:block;font-size:12px;color:#796b76;margin-bottom:5px">Adresse e-mail</label>
+      <input id="ap-reset-email" type="email" autocomplete="email" placeholder="vous@exemple.fr" style="width:100%;padding:12px;border:1px solid #dac6a7;border-radius:12px;background:white;color:#2d1930;box-sizing:border-box">
+      <div id="ap-reset-request-msg" style="min-height:22px;font-size:13px;margin:10px 0;color:#7a6674"></div>
+      <button type="button" onclick="demanderLienMotDePasse()" style="width:100%;padding:12px 16px;border:0;border-radius:999px;background:#53164a;color:white;font-weight:800;cursor:pointer">Envoyer le lien de réinitialisation</button>
+      <button type="button" onclick="fermerMotDePasseOublie();ouvrirCompte()" style="width:100%;padding:10px;border:0;background:transparent;color:#6d3a65;font-weight:700;cursor:pointer;margin-top:5px">← Retour à la connexion</button>
+    </div>
+    <div id="ap-reset-new-view" style="display:none">
+      <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#a8792e;font-weight:800">Astro Paquita</div>
+      <h2 style="font-family:'Cormorant Garamond',Georgia,serif;color:#43143d;font-size:30px;margin:6px 0 8px">Nouveau mot de passe</h2>
+      <p style="color:#796b76;line-height:1.55;margin:0 0 16px">Choisis un nouveau mot de passe d’au moins 8 caractères.</p>
+      <input id="ap-reset-new-password" type="password" autocomplete="new-password" placeholder="Nouveau mot de passe" style="width:100%;padding:12px;border:1px solid #dac6a7;border-radius:12px;background:white;color:#2d1930;box-sizing:border-box;margin-bottom:9px">
+      <input id="ap-reset-new-password2" type="password" autocomplete="new-password" placeholder="Confirmer le mot de passe" style="width:100%;padding:12px;border:1px solid #dac6a7;border-radius:12px;background:white;color:#2d1930;box-sizing:border-box">
+      <div id="ap-reset-new-msg" style="min-height:22px;font-size:13px;margin:10px 0;color:#7a6674"></div>
+      <button type="button" onclick="validerNouveauMotDePasse()" style="width:100%;padding:12px 16px;border:0;border-radius:999px;background:#53164a;color:white;font-weight:800;cursor:pointer">Enregistrer mon nouveau mot de passe</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  let AP_RESET_TOKEN='';
+  let AP_RESET_EMAIL='';
+  window.ouvrirMotDePasseOublie=function(){
+    try{fermerCompte()}catch(e){}
+    const m=document.getElementById('ap-reset-modal'); if(!m)return;
+    document.getElementById('ap-reset-request-view').style.display='block';
+    document.getElementById('ap-reset-new-view').style.display='none';
+    const email=document.getElementById('compte-champ-email')?.value||'';
+    document.getElementById('ap-reset-email').value=email;
+    document.getElementById('ap-reset-request-msg').textContent='';
+    m.style.display='flex';
+  };
+  window.fermerMotDePasseOublie=function(){const m=document.getElementById('ap-reset-modal');if(m)m.style.display='none';};
+  window.demanderLienMotDePasse=async function(){
+    const email=(document.getElementById('ap-reset-email').value||'').trim().toLowerCase();
+    const msg=document.getElementById('ap-reset-request-msg');
+    if(!email){msg.style.color='#a13e45';msg.textContent='Saisis ton adresse e-mail.';return;}
+    msg.style.color='#7a6674';msg.textContent='Envoi en cours…';
+    try{
+      const r=await fetch(BACKEND_URL+'/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.erreur||'Erreur');
+      if(d.email_configured===false){msg.style.color='#a8792e';msg.textContent='La réinitialisation est prête, mais l’envoi d’e-mail n’est pas encore configuré. L’administratrice peut réinitialiser le mot de passe depuis son espace Admin.';}else{msg.style.color='#2d7a50';msg.textContent='Si ce compte existe, le lien vient d’être envoyé. Vérifie aussi les courriers indésirables.';}
+    }catch(e){msg.style.color='#a13e45';msg.textContent='Impossible d’envoyer le lien pour le moment.';}
+  };
+  window.validerNouveauMotDePasse=async function(){
+    const p1=document.getElementById('ap-reset-new-password').value||'';
+    const p2=document.getElementById('ap-reset-new-password2').value||'';
+    const msg=document.getElementById('ap-reset-new-msg');
+    if(p1.length<8){msg.style.color='#a13e45';msg.textContent='8 caractères minimum.';return;}
+    if(p1!==p2){msg.style.color='#a13e45';msg.textContent='Les deux mots de passe ne correspondent pas.';return;}
+    msg.style.color='#7a6674';msg.textContent='Mise à jour en cours…';
+    try{
+      const r=await fetch(BACKEND_URL+'/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:AP_RESET_EMAIL,token:AP_RESET_TOKEN,motDePasse:p1})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.erreur||'Erreur');
+      if(d.token && typeof definirToken==='function')definirToken(d.token);
+      if(d.token){window.USER_CONNECTE=d;try{USER_CONNECTE=d;PREMIUM=!!d.premium||d.role==='admin';majBoutonCompte();majAccesPremiumUI();}catch(e){}}
+      msg.style.color='#2d7a50';msg.textContent='Mot de passe modifié. Tu es reconnectée.';
+      history.replaceState({},document.title,location.pathname+location.hash);
+      setTimeout(()=>{fermerMotDePasseOublie();location.reload();},900);
+    }catch(e){msg.style.color='#a13e45';msg.textContent=e.message||'Lien invalide ou expiré.';}
+  };
+  function initResetLink(){
+    const qs=new URLSearchParams(location.search);
+    const token=qs.get('reset_token'),email=qs.get('reset_email');
+    if(!token||!email)return;
+    AP_RESET_TOKEN=token;AP_RESET_EMAIL=email;
+    try{fermerCompte()}catch(e){}
+    const m=document.getElementById('ap-reset-modal'); if(!m)return;
+    document.getElementById('ap-reset-request-view').style.display='none';
+    document.getElementById('ap-reset-new-view').style.display='block';
+    m.style.display='flex';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initResetLink,{once:true});else initResetLink();
+})();
+</script>
+
 </body>
 </html>
