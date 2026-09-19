@@ -12230,7 +12230,8 @@ function enhancePrev(){
  const form=mod.querySelector('#p-form'); if(form&&!form.querySelector('.ap122-side')){
   const side=document.createElement('aside');side.className='ap122-side';side.innerHTML=`<h3>✦ Votre lecture</h3><div class="ap122-side-item"><span class="dot g"></span><b>Périodes favorables</b><br>Les passages les plus porteurs ressortent clairement.</div><div class="ap122-side-item"><span class="dot o"></span><b>Périodes neutres</b><br>Les phases ordinaires restent sobres, sans remplissage artificiel.</div><div class="ap122-side-item"><span class="dot p"></span><b>Périodes délicates</b><br>Les points de vigilance sont datés et nuancés.</div><div class="ap122-side-item"><b>Calendrier précis</b><br>Choisissez « Date précise » pour analyser une journée particulière.</div>`;form.appendChild(side)
  }
- const per=mod.querySelectorAll('#p-periodes .per-btn'); const labels=['☀ Par jour','▣ Par semaine','▦ Par mois','▥ Par trimestre','⌁ Par année','◉ Date précise'];per.forEach((e,i)=>{if(labels[i])e.textContent=labels[i]});
+ const per=mod.querySelectorAll('#p-periodes .per-btn'); const labels=['☀ Par jour','▣ Par semaine','▦ Par mois','▥ Par trimestre','⌁ Par année','◉ Date précise'];per.forEach((e,i)=>{if(labels[i] && e.textContent!==labels[i]) e.textContent=labels[i]});
+ mod.dataset.ap122Enhanced='1';
 }
 const oldRenderFuture=window.renderFuture;
 function replaceFuture(){
@@ -12241,8 +12242,7 @@ function replaceFuture(){
 }
 function boot(){setTimeout(()=>{replaceFuture();enhancePrev()},80);setTimeout(()=>{replaceFuture();enhancePrev()},700)}
 document.addEventListener('click',e=>{const b=e.target.closest('[onclick]');if(b&&String(b.getAttribute('onclick')||'').includes("ap121Open('prev')"))setTimeout(enhancePrev,80)});
-const mo=new MutationObserver(()=>{if(document.querySelector('#ap121-future.active'))replaceFuture();if(document.body.classList.contains('ap121-module-open'))enhancePrev()});
-document.addEventListener('DOMContentLoaded',()=>{boot();mo.observe(document.body,{subtree:true,childList:true,classList:true,attributes:true,attributeFilter:['class']})});
+document.addEventListener('DOMContentLoaded',()=>{boot()});
 setTimeout(boot,1200);
 })();
 </script>
