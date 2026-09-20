@@ -31,6 +31,7 @@ function setError(id,msg){const e=document.getElementById(id);if(!e)return;e.tex
 function loader(id,on,text){const e=document.getElementById(id);if(!e)return;e.classList.toggle('show',!!on);const s=e.querySelector('span');if(s&&text)s.textContent=text;}
 function setHtml(id,html){const e=document.getElementById(id);if(e)e.innerHTML=html||'';}
 function reportHtml(text){if(typeof formatRapport==='function')try{return formatRapport(text);}catch(e){}return String(text||'').split(/\n{2,}/).map(x=>`<p>${esc(x)}</p>`).join('');}
+return; // V128 : conserver uniquement l’interface V121 validée
 function aiText(data){if(typeof texteClaude==='function')try{return texteClaude(data)||'';}catch(e){}return data?.content?.[0]?.text||data?.text||'';}
 function profileLabel(p){return p?`${p.prenom||''}${p.ville?' · '+p.ville:''}`:'';}
 function initial(p){return String(p?.prenom||'?').trim().charAt(0).toUpperCase();}
