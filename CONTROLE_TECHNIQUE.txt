@@ -1,0 +1,43 @@
+ASTRO PAQUITA — CONTRÔLE TECHNIQUE DU LOT FINAL
+
+Base verrouillée
+- V121 stable confirmée par la balise astro-build v121-refonte-fidele-stable.
+- Commit GitHub de référence : 21d70a2b523c64425a8fd7b1f1cb8e9dd8255082.
+- Aucun write/commit/push GitHub effectué.
+
+Préservation du moteur
+- Le moteur V121 reste dans index.html.
+- Les modifications directes de index.html sont limitées à : version du build, chargement de la nouvelle couche visuelle/Truth, racine de la nouvelle interface, et suppression de l'ancien fallback de clé admin côté navigateur.
+
+Contrôles réalisés
+- Syntaxe assets/refonte-final.js : OK.
+- Syntaxe assets/truth-engine.js : OK.
+- Syntaxe de tous les scripts JavaScript inline du index.html : OK.
+- Références des fichiers de déploiement : contrôlées.
+- Aucune clé astro-admin-key / x-admin-key n'est envoyée par le index V121 final.
+- Validation latitude/longitude/fuseau IANA sans fallback silencieux dans le nouveau parcours profil.
+- Heure inconnue traitée explicitement : portrait natal calculable sans ASC/MC/maisons ; aucune prévision horaire n'est fabriquée si le moteur ne peut pas la calculer de façon fiable.
+
+Interface finale
+- Accueil
+- Portrait natal + chemin karmique
+- Mon avenir
+- Prévisions détaillées
+- Le bon moment
+- Relations & Synastrie
+- Portrait enfant
+- Calendrier personnel
+- Profil / Paramètres
+
+Modules retirés de la nouvelle navigation
+- Ma question / crédits
+- Notifications
+- Timeline autonome
+- Grands événements autonome
+- Avenir raconté autonome
+- Comparateur de dates
+- Fenêtres à éviter autonome
+- Journal / consultations visible utilisateur
+
+Note de périmètre
+Le dépôt traité ici est le frontend Astro Paquita. Les exigences nécessitant une évolution serveur (source canonique complète des profils, soft-delete serveur, règles d'administration serveur, etc.) doivent être garanties par le backend correspondant ; elles ne sont pas simulées côté navigateur dans ce lot.
