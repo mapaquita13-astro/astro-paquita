@@ -1,6 +1,6 @@
-/* Astro Paquita — V129.1
+/* Astro Paquita — V130 AUDIT
    Couche d'interface uniquement. Le moteur astrologique V121 n'est pas modifié.
-   La langue est volontairement laissée entièrement à la V121 native. */
+   La langue reste entièrement gérée par la V121 native. */
 (function(){
 'use strict';
 
@@ -22,16 +22,15 @@ function mlabel(d){return new Intl.DateTimeFormat(locale(),{month:'short'}).form
 function flabel(d){return new Intl.DateTimeFormat(locale(),{month:'long',year:'numeric'}).format(d)}
 
 function style(){
- if(document.getElementById('ap-v1291-style'))return;
- const s=document.createElement('style');s.id='ap-v1291-style';s.textContent=`
+ if(document.getElementById('ap-v130-style'))return;
+ const s=document.createElement('style');s.id='ap-v130-style';s.textContent=`
  .ap-v129-year-tabs,.ap-v129-domain-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
  .ap-v129-year-btn,.ap-v129-domain-btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#f3ebf3;border-radius:999px;padding:9px 15px;font-weight:700;cursor:pointer}
  .ap-v129-year-btn.active,.ap-v129-domain-btn.active{background:#6f2f63;color:#fff;border-color:#d8bc81;box-shadow:0 6px 18px rgba(0,0,0,.18)}
  .ap-v129-graph-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}.ap-v129-svg{display:block;width:100%;min-width:720px;height:auto}
  .ap-v129-empty{margin:22px 0 8px;padding:26px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.055);border-radius:18px;text-align:center;color:#f3eaf3}.ap-v129-empty strong{display:block;font:600 27px/1.1 'Cormorant Garamond',Georgia,serif;margin-bottom:8px}.ap-v129-empty span{color:#d4c8d5;font-size:13px;line-height:1.5}
  .ap-v129-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.ap-v129-summary article{border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.07);border-radius:14px;padding:12px;color:#f4eaf3}.ap-v129-summary b{display:block;color:#d8bc81;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}.ap-v129-summary strong{font:600 21px/1.1 'Cormorant Garamond',Georgia,serif}
- .ap121-feature .pic{background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;background-color:#211329!important}
- .ap121-banner{background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;background-color:#211329!important}
+ .ap121-feature .pic,.ap121-banner{background-size:cover!important;background-repeat:no-repeat!important;background-position:center!important;background-color:#211329!important}
  @media(max-width:760px){.ap-v129-year-tabs,.ap-v129-domain-tabs{flex-wrap:nowrap;overflow-x:auto}.ap-v129-year-btn,.ap-v129-domain-btn{flex:0 0 auto}.ap-v129-summary{grid-template-columns:1fr}.ap-v129-svg{min-width:760px}}
  `;document.head.appendChild(s);
 }
@@ -73,15 +72,15 @@ function summary(rows,dom){
 function renderGraph(){
  const card=document.querySelector('#ap121-future .ap121-graph-card');if(!card)return;style();
  const dom=DOMAINS.find(x=>x.key===graphDomain)||DOMAINS[0],rows=yearData(graphYear,dom.key),y0=new Date().getFullYear(),marked=rows.filter(r=>r.v!==null);
- const key=graphYear+'-'+dom.key+'-'+rows.map(r=>r.v===null?'x':r.v.toFixed(2)+':'+r.count).join(',');if(card.dataset.v1291===key)return;card.dataset.v1291=key;
+ const key=graphYear+'-'+dom.key+'-'+rows.map(r=>r.v===null?'x':r.v.toFixed(2)+':'+r.count).join(',');if(card.dataset.v130===key)return;card.dataset.v130=key;
  const visual=marked.length?`<div class="ap-v129-graph-wrap">${graph(rows,dom)}</div>`:`<div class="ap-v129-empty"><strong>Aucune période dominante détectée</strong><span>Le moteur V121 ne fait ressortir aucun signal suffisamment marqué pour ${esc(dom.label)} sur ${graphYear}. Aucun faux tracé stable n’est affiché.</span></div>`;
  card.innerHTML=`<div class="ap121-graph-head"><div><span class="ap121-kicker">Grandes tendances annuelles</span><h2>Vos grandes tendances mois par mois</h2><p>Seuls les mois où la V121 détecte un signal réellement marqué sont tracés. Les mois calmes restent vides.</p></div><button class="ap121-pill" onclick="ap121Open('prev')">Détails</button></div><div class="ap-v129-year-tabs">${[y0,y0+1,y0+2].map(y=>`<button class="ap-v129-year-btn ${y===graphYear?'active':''}" data-y="${y}">${y}</button>`).join('')}</div><div class="ap-v129-domain-tabs">${DOMAINS.map(d=>`<button class="ap-v129-domain-btn ${d.key===dom.key?'active':''}" data-d="${d.key}">${d.label}</button>`).join('')}</div>${visual}${summary(rows,dom)}`;
- card.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{graphYear=Number(b.dataset.y)||y0;card.dataset.v1291='';renderGraph()});
- card.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{graphDomain=b.dataset.d;card.dataset.v1291='';renderGraph()});
+ card.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{graphYear=Number(b.dataset.y)||y0;card.dataset.v130='';renderGraph()});
+ card.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{graphDomain=b.dataset.d;card.dataset.v130='';renderGraph()});
 }
 
 function fixStory(){document.querySelectorAll('#ap121-future .ap121-feature').forEach(c=>{if(/avenir racont/i.test(c.textContent||'')||String(c.getAttribute('onclick')||'').includes('story'))c.style.setProperty('display','none','important')});const s=document.getElementById('ap121-story');if(s)s.style.setProperty('display','none','important')}
-function fixImages(){style();document.querySelectorAll('.ap121-feature .pic').forEach(x=>{x.style.backgroundSize='contain';x.style.backgroundRepeat='no-repeat';x.style.backgroundPosition='center'})}
+function fixImages(){style();document.querySelectorAll('.ap121-feature .pic,.ap121-banner').forEach(x=>{x.style.backgroundSize='cover';x.style.backgroundRepeat='no-repeat';x.style.backgroundPosition='center'})}
 function run(){renderGraph();fixStory();fixImages()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
 let timer;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(run,40)}).observe(document.documentElement,{childList:true,subtree:true});setInterval(run,1200);
