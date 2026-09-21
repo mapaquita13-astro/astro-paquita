@@ -43,10 +43,16 @@ function hideEmbeddedCopy(){
     b.querySelectorAll('.ap121-banner-copy,.decorative-copy,.image-copy').forEach(x=>{if(x!==title)x.style.setProperty('display','none','important')});
   });
 }
+function standaloneLabel(el){
+  if(!el)return '';
+  if(el.matches('a,button,[role="button"]'))return text(el);
+  const h=el.querySelector('h1,h2,h3,h4,.ap121-title,.ap121-card-title,.title');
+  return h?text(h):'';
+}
 function isProtected24Months(t){return /24\s*(mois|months|meses)|24\s*شهر/.test(t)}
 function isStandaloneDuplicate(t){
   if(!t||isProtected24Months(t))return false;
-  return /timeline\s*(10\s*ans|de\s*vie)?|life\s*timeline|línea\s*de\s*vida|linea\s*de\s*vida|المخطط\s*الزمني|grands?\s*év[ée]nements?|major\s*events?|grandes?\s*eventos?|الأحداث\s*الكبرى|^historique$|^mon\s+historique$|^history$|^my\s+history$|^historial$|^mi\s+historial$|^notifications?$|^notificaciones$|^الإشعارات$/.test(t)
+  return /^(timeline(?:\s+de\s+vie)?(?:\s+10\s+ans)?|timeline\s+10\s+ans|life\s+timeline|10[- ]year\s+timeline|línea\s+de\s+vida|linea\s+de\s+vida|المخطط\s+الزمني|grands?\s+év[ée]nements?|major\s+events?|grandes?\s+eventos?|الأحداث\s+الكبرى|historique|mon\s+historique|history|my\s+history|historial|mi\s+historial|notifications?|notificaciones|الإشعارات)$/.test(t)
 }
 function hideStandalonePublicEntries(){
   const selectors=[
@@ -56,8 +62,8 @@ function hideStandalonePublicEntries(){
   ].join(',');
   document.querySelectorAll(selectors).forEach(el=>{
     if(el.closest('#section-modules')||el.closest('#ap121-future'))return;
-    const t=text(el);
-    if(isStandaloneDuplicate(t))el.style.setProperty('display','none','important');
+    const label=standaloneLabel(el);
+    if(isStandaloneDuplicate(label))el.style.setProperty('display','none','important');
   });
 }
 function run(){cleanCards();cleanBanners();hideEmbeddedCopy();hideStandalonePublicEntries()}
