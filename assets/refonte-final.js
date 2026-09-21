@@ -64,8 +64,28 @@ function patchV121Graph(){
   svg.dataset.v128Mapped='1';
 }
 
+function keepSelectedDomainsVisible(){
+  document.querySelectorAll('.dom-btn.actif,.dom-btn.active').forEach(btn=>{
+    btn.style.setProperty('background','linear-gradient(135deg,#5b2853,#744064)','important');
+    btn.style.setProperty('color','#fff','important');
+    btn.style.setProperty('border-color','#5b2853','important');
+    btn.style.setProperty('box-shadow','0 7px 18px rgba(76,31,66,.18)','important');
+    btn.querySelectorAll('.dom-label,*').forEach(x=>x.style.setProperty('color','#fff','important'));
+  });
+}
+
+function removeStoryModule(){
+  document.querySelectorAll('#ap121-future .ap121-feature[onclick*="story"],.ap121-feature[onclick*="v121Go(\'story\')"]').forEach(card=>card.style.setProperty('display','none','important'));
+  const grid=document.querySelector('#ap121-future .ap121-card-grid');
+  if(grid&&grid.querySelectorAll('.ap121-feature:not([style*="display: none"])').length<=2){
+    grid.style.setProperty('grid-template-columns','repeat(2,minmax(0,1fr))','important');
+  }
+}
+
 function applyUiFixes(){
   patchV121Graph();
+  keepSelectedDomainsVisible();
+  removeStoryModule();
 }
 
 let queued=false;
@@ -79,5 +99,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else queueFix();
 
 const observer=new MutationObserver(queueFix);
-observer.observe(document.documentElement,{childList:true,subtree:true});
+observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
