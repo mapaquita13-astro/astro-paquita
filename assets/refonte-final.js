@@ -32,7 +32,7 @@ function ensureStyles(){
   @media(max-width:760px){.ap-v128-domain-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.ap-v128-domain-btn{flex:0 0 auto}.ap-v128-summary{grid-template-columns:1fr}.ap-v128-graph-svg{min-width:760px}}
   `;document.head.appendChild(s);
 }
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));}
 function monthLabel(d){return new Intl.DateTimeFormat('fr-FR',{month:'short'}).format(d).replace('.','');}
 function fullMonth(d){return new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric'}).format(d);}
 
@@ -103,6 +103,9 @@ function removeObsoletePublicModules(){
     /^avenir racont[ée]$/i,
     /^comparer les dates$/i,
     /^comparateur de dates$/i,
+    /^timeline 10 ans$/i,
+    /^timeline de vie$/i,
+    /^grands événements$/i,
     /^notifications?$/i,
     /^historique utilisateur$/i,
     /^mon historique$/i
