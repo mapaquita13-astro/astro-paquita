@@ -1,0 +1,49 @@
+/* Astro Paquita — V128.6 nettoyage visuel et cohérence d'interface.
+   Aucune logique astrologique n'est modifiée. */
+(function(){
+'use strict';
+function ensureStyle(){
+  if(document.getElementById('ap-v128-cleanup-style'))return;
+  const s=document.createElement('style');s.id='ap-v128-cleanup-style';s.textContent=`
+  .ap-v128-clean-art{position:relative!important;overflow:hidden!important;isolation:isolate}
+  .ap-v128-clean-art:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(90deg,rgba(31,13,31,.96) 0%,rgba(37,16,35,.82) 24%,rgba(38,17,36,.48) 43%,rgba(30,13,30,.12) 64%,transparent 82%)}
+  .ap-v128-clean-art>img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:72% center!important;transform:scale(1.08);display:block!important}
+  .ap-v128-card-art-clean{position:relative!important;overflow:hidden!important;background:#2d132c!important}
+  .ap-v128-card-art-clean:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(90deg,rgba(39,17,37,.96) 0%,rgba(48,21,44,.82) 24%,rgba(43,19,40,.42) 46%,rgba(33,14,32,.08) 70%,transparent 88%)}
+  .ap-v128-card-art-clean img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:74% center!important;transform:scale(1.10);display:block!important}
+  .ap-v128-card-art-clean [class*="copy"],.ap-v128-card-art-clean [class*="text"]{position:relative;z-index:3}
+  html[dir="rtl"] .ap-v128-clean-art:after,html[dir="rtl"] .ap-v128-card-art-clean:after{background:linear-gradient(270deg,rgba(31,13,31,.96) 0%,rgba(37,16,35,.82) 24%,rgba(38,17,36,.48) 43%,rgba(30,13,30,.12) 64%,transparent 82%)}
+  @media(max-width:760px){.ap-v128-clean-art>img,.ap-v128-card-art-clean img{object-position:68% center!important;transform:scale(1.05)}}
+  `;document.head.appendChild(s);
+}
+function text(el){return String(el&&el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase()}
+function relevantCard(el){const t=text(el);return /portrait natal|mon avenir|relations|synastr|le bon moment|prévisions|previsions|forecast|future|natal portrait|relationships|mi futuro|relaciones/.test(t)}
+function cleanCards(){
+  ensureStyle();
+  document.querySelectorAll('.ap121-feature,.ap100-feature-card,.service-card,.feature-card,[class*="feature-card"],[class*="service-card"]').forEach(card=>{
+    if(!relevantCard(card))return;
+    const img=card.querySelector('img');
+    if(img){const holder=img.parentElement||card;holder.classList.add('ap-v128-card-art-clean');}
+    const bgEls=[card,...card.querySelectorAll('[style*="background-image"]')];
+    bgEls.forEach(el=>{if(el.style&&el.style.backgroundImage&&el.style.backgroundImage!=='none')el.classList.add('ap-v128-clean-art')});
+  });
+}
+function cleanBanners(){
+  document.querySelectorAll('.ap121-hero,.ap121-banner,.ap100-page-hero,#ap121-module-banner,[class*="hero"],[class*="banner"]').forEach(el=>{
+    const st=getComputedStyle(el),bg=st.backgroundImage||'';
+    if(bg&&bg!=='none'&&/url\(/.test(bg))el.classList.add('ap-v128-clean-art');
+  });
+}
+function hideEmbeddedCopy(){
+  // Certains anciens bandeaux embarquent une seconde copie HTML décorative : on la masque uniquement
+  // lorsqu'un titre principal est déjà présent dans le même bloc.
+  document.querySelectorAll('.ap121-banner,.ap121-hero').forEach(b=>{
+    const title=b.querySelector('h1,h2,.ap121-title,.ap121-hero-title');
+    if(!title)return;
+    b.querySelectorAll('.ap121-banner-copy,.decorative-copy,.image-copy').forEach(x=>{if(x!==title)x.style.setProperty('display','none','important')});
+  });
+}
+function run(){cleanCards();cleanBanners();hideEmbeddedCopy()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+new MutationObserver(()=>{clearTimeout(window.__apV128CleanupT);window.__apV128CleanupT=setTimeout(run,80)}).observe(document.documentElement,{childList:true,subtree:true});
+})();
