@@ -1,4 +1,4 @@
-/* Astro Paquita — compatibilité V130
+/* Astro Paquita — compatibilité V132
    Chargeur de secours uniquement. Il ne doit jamais réactiver les anciennes
    couches V127/V128. La couche active reste assets/refonte-final.js. */
 (function(){
@@ -15,9 +15,9 @@ function ensureActiveLayer(){
   neutraliseAncienneInterface();
   if(document.querySelector('script[src*="assets/refonte-final.js"]'))return;
   const s=document.createElement('script');
-  s.src='assets/refonte-final.js?v=130';
+  s.src='assets/refonte-final.js?v=132';
   s.defer=true;
-  s.setAttribute('data-ap-v130-loader','1');
+  s.setAttribute('data-ap-v132-loader','1');
   document.head.appendChild(s);
 }
 window.addEventListener('pageshow',neutraliseAncienneInterface);
