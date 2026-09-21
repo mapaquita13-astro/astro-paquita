@@ -1,5 +1,5 @@
-/* Astro Paquita V129.1 — anti-cache interface */
-const VERSION='astro-paquita-v129-1-20260921';
+/* Astro Paquita V132 — anti-cache interface, sans notifications */
+const VERSION='astro-paquita-v132-20260921';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const n of await caches.keys())await caches.delete(n);await self.clients.claim();})()));
 self.addEventListener('fetch',event=>{
@@ -8,4 +8,3 @@ self.addEventListener('fetch',event=>{
   if(fresh){event.respondWith(fetch(r,{cache:'no-store'}).catch(()=>caches.match(r)));return;}
   event.respondWith(fetch(r).catch(()=>caches.match(r)));
 });
-self.addEventListener('message',event=>{if(event.data&&event.data.type==='SHOW_NOTIFICATION'){self.registration.showNotification(event.data.title||'Astro Paquita',{body:event.data.body||'',icon:event.data.icon||undefined});}});
