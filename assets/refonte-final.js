@@ -1,4 +1,4 @@
-/* Astro Paquita — V131 AUDIT
+/* Astro Paquita — V132 AUDIT
    Couche d'interface uniquement. Le moteur astrologique V121 n'est pas modifié. */
 (function(){
 'use strict';
@@ -170,7 +170,12 @@ function openQuestion(){
 }
 window.apV130OpenQuestion=openQuestion;
 
-function ageFromProfile(p){if(!p||!p.date)return null;const d=new Date(String(p.date).slice(0,10)+'T12:00:00');if(Number.isNaN(d.getTime()))return null;const n=new Date();let a=n.getFullYear()-d.getFullYear();const md=n.getMonth()-d.getMonth();if(md<0||(md===0&&n.getDate()<d.getDate()))a--;return a}
+function ageFromProfile(p){
+ if(!p||!p.date)return null;const raw=String(p.date).trim();let iso='';
+ try{if(typeof window.parseDate==='function')iso=String(window.parseDate(raw)||'')}catch(e){}
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)){const fr=raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(fr)iso=fr[3]+'-'+fr[2].padStart(2,'0')+'-'+fr[1].padStart(2,'0');else if(/^\d{4}-\d{2}-\d{2}/.test(raw))iso=raw.slice(0,10);else return null}
+ const d=new Date(iso+'T12:00:00');if(Number.isNaN(d.getTime()))return null;const n=new Date();let a=n.getFullYear()-d.getFullYear();const md=n.getMonth()-d.getMonth();if(md<0||(md===0&&n.getDate()<d.getDate()))a--;return a
+}
 function childProfiles(){try{const all=typeof getProfils==='function'?getProfils():{};return Object.entries(all||{}).filter(([,p])=>{const a=ageFromProfile(p);return a!==null&&a<18})}catch(e){return []}}
 function activateProfile(key){const sel=document.getElementById('ap100-profile-select');if(sel){sel.value=key;sel.dispatchEvent(new Event('change',{bubbles:true}));return true}try{if(typeof window.v37ChangerProfil==='function')return !!window.v37ChangerProfil(key)}catch(e){}return false}
 function openChildNatal(key){
