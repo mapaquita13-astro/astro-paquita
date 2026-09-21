@@ -1,4 +1,4 @@
-/* Astro Paquita — V128.6 nettoyage visuel et cohérence d'interface.
+/* Astro Paquita — V132 nettoyage visuel et cohérence d'interface.
    Aucune logique astrologique n'est modifiée. */
 (function(){
 'use strict';
@@ -43,7 +43,24 @@ function hideEmbeddedCopy(){
     b.querySelectorAll('.ap121-banner-copy,.decorative-copy,.image-copy').forEach(x=>{if(x!==title)x.style.setProperty('display','none','important')});
   });
 }
-function run(){cleanCards();cleanBanners();hideEmbeddedCopy()}
+function isProtected24Months(t){return /24\s*(mois|months|meses)|24\s*شهر/.test(t)}
+function isStandaloneDuplicate(t){
+  if(!t||isProtected24Months(t))return false;
+  return /timeline\s*(10\s*ans|de\s*vie)?|life\s*timeline|línea\s*de\s*vida|linea\s*de\s*vida|المخطط\s*الزمني|grands?\s*év[ée]nements?|major\s*events?|grandes?\s*eventos?|الأحداث\s*الكبرى|^historique$|^mon\s+historique$|^history$|^my\s+history$|^historial$|^mi\s+historial$|^notifications?$|^notificaciones$|^الإشعارات$/.test(t)
+}
+function hideStandalonePublicEntries(){
+  const selectors=[
+    '#ap121-home .ap121-feature','#ap121-home button','#ap121-home a',
+    'nav a','nav button','.ap121-nav a','.ap121-nav button','.ap121-sidebar a','.ap121-sidebar button',
+    '[onclick*="timeline"]','[onclick*="Timeline"]'
+  ].join(',');
+  document.querySelectorAll(selectors).forEach(el=>{
+    if(el.closest('#section-modules')||el.closest('#ap121-future'))return;
+    const t=text(el);
+    if(isStandaloneDuplicate(t))el.style.setProperty('display','none','important');
+  });
+}
+function run(){cleanCards();cleanBanners();hideEmbeddedCopy();hideStandalonePublicEntries()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
 new MutationObserver(()=>{clearTimeout(window.__apV128CleanupT);window.__apV128CleanupT=setTimeout(run,80)}).observe(document.documentElement,{childList:true,subtree:true});
 })();
