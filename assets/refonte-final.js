@@ -13,13 +13,15 @@ const GRAPH_DOMAINS=[
   {key:'travel',label:'Voyage',color:'#4ab7ca'}
 ];
 let selectedGraphDomain='couple';
+let selectedGraphYear=new Date().getFullYear();
 
 function ensureStyles(){
   if(document.getElementById('ap-v128-runtime-style'))return;
   const s=document.createElement('style');s.id='ap-v128-runtime-style';s.textContent=`
-  .ap-v128-domain-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 12px}
-  .ap-v128-domain-btn{border:1px solid rgba(228,211,228,.22);background:rgba(255,255,255,.07);color:#efe5ef;border-radius:999px;padding:9px 15px;font-weight:700;cursor:pointer}
-  .ap-v128-domain-btn.active{background:linear-gradient(135deg,#6f2c63,#8e4b7d);border-color:#d5b77e;color:#fff;box-shadow:0 7px 18px rgba(0,0,0,.18)}
+  .ap-v128-year-tabs,.ap-v128-domain-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .ap-v128-year-tabs{margin:14px 0 4px}.ap-v128-domain-tabs{margin:10px 0 12px}
+  .ap-v128-year-btn,.ap-v128-domain-btn{border:1px solid rgba(228,211,228,.22);background:rgba(255,255,255,.07);color:#efe5ef;border-radius:999px;padding:9px 15px;font-weight:700;cursor:pointer}
+  .ap-v128-year-btn.active,.ap-v128-domain-btn.active{background:linear-gradient(135deg,#6f2c63,#8e4b7d);border-color:#d5b77e;color:#fff;box-shadow:0 7px 18px rgba(0,0,0,.18)}
   .ap-v128-graph-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
   .ap-v128-graph-svg{display:block;width:100%;min-width:690px;height:auto}
   .ap-v128-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
@@ -32,7 +34,7 @@ function ensureStyles(){
   .ap-v128-suspended{position:fixed;inset:0;z-index:999999;background:radial-gradient(circle at 70% 15%,rgba(188,150,88,.12),transparent 28%),#f5eee4;display:flex;align-items:center;justify-content:center;padding:24px}
   .ap-v128-suspended-card{width:min(560px,94vw);background:#fffaf2;border:1px solid rgba(93,54,77,.15);border-radius:28px;box-shadow:0 24px 70px rgba(69,30,59,.16);padding:34px;text-align:center;color:#332535}
   .ap-v128-suspended-card .mark{font-size:34px;color:#bc9658;margin-bottom:10px}.ap-v128-suspended-card h1{font:600 38px/1 'Cormorant Garamond',Georgia,serif;color:#42183d;margin:0 0 13px}.ap-v128-suspended-card p{line-height:1.65;color:#6f606b;margin:0}
-  @media(max-width:760px){.ap-v128-domain-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.ap-v128-domain-btn{flex:0 0 auto}.ap-v128-summary{grid-template-columns:1fr}.ap-v128-graph-svg{min-width:760px}.ap-v128-suspended-card{padding:28px 22px}.ap-v128-suspended-card h1{font-size:32px}}
+  @media(max-width:760px){.ap-v128-year-tabs,.ap-v128-domain-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.ap-v128-year-btn,.ap-v128-domain-btn{flex:0 0 auto}.ap-v128-summary{grid-template-columns:1fr}.ap-v128-graph-svg{min-width:760px}.ap-v128-suspended-card{padding:28px 22px}.ap-v128-suspended-card h1{font-size:32px}}
   `;document.head.appendChild(s);
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -53,10 +55,10 @@ async function checkSuspendedAccount(){
   }catch(e){}
 }
 
-function v121MonthlyUiData(){
-  const now=new Date(),months=[];
+function v121MonthlyUiData(year){
+  const months=[];
   for(let i=0;i<12;i++){
-    const d=new Date(now.getFullYear(),now.getMonth()+i,15);
+    const d=new Date(year,i,15);
     let sig=[];
     try{sig=typeof window.apV51Signals==='function'?(window.apV51Signals(d,'marque')||[]):[]}catch(e){sig=[]}
     const vals={};
@@ -81,7 +83,7 @@ function graphSvg(months,domain){
   const W=860,H=350,left=112,right=22,top=28,bottom=50,plotW=W-left-right,plotH=H-top-bottom;
   const x=i=>left+(plotW*i/11),y=v=>top+((1-v)/2)*plotH;
   const levels=[['Très favorable',1],['Favorable',.5],['Stable',0],['Plus délicat',-.5],['Délicat',-1]];
-  let s=`<svg class="ap-v128-graph-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Tendance ${esc(domain.label)} sur les 12 prochains mois">`;
+  let s=`<svg class="ap-v128-graph-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Tendance ${esc(domain.label)} sur l’année ${selectedGraphYear}">`;
   levels.forEach(([lab,val])=>{const yy=y(val);s+=`<line x1="${left}" y1="${yy}" x2="${W-right}" y2="${yy}" stroke="rgba(255,255,255,.12)"/><text x="${left-12}" y="${yy+4}" text-anchor="end" fill="#d9ced9" font-size="11">${lab}</text>`});
   months.forEach((m,i)=>{const xx=x(i);s+=`<line x1="${xx}" y1="${top}" x2="${xx}" y2="${H-bottom}" stroke="rgba(255,255,255,.055)"/><text x="${xx}" y="${H-18}" text-anchor="middle" fill="#ded3df" font-size="11">${monthLabel(m.d)}</text>`});
   const pts=months.map((m,i)=>[x(i),y(m.vals[domain.key])]);
@@ -95,18 +97,19 @@ function graphSvg(months,domain){
 function graphSummary(months,domain){
   const rows=months.map(m=>({v:m.vals[domain.key],d:m.d}));
   const best=rows.reduce((a,b)=>b.v>a.v?b:a,rows[0]),low=rows.reduce((a,b)=>b.v<a.v?b:a,rows[0]);
-  if(rows.every(x=>Math.abs(x.v)<.08))return `<div class="ap-v128-summary"><article><b>Période dominante</b><span>Stable</span><small>Aucun signal V121 suffisamment marqué ne domine actuellement sur ces 12 mois.</small></article></div>`;
-  return `<div class="ap-v128-summary"><article><b>Meilleure période</b><span>${esc(fullMonth(best.d))}</span><small>${best.v>0?'Signal plus porteur pour ce domaine.':'Période la plus stable parmi les mois analysés.'}</small></article><article><b>Période plus délicate</b><span>${esc(fullMonth(low.d))}</span><small>${low.v<0?'Davantage de prudence et de recul conseillés.':'Aucun signal franchement délicat ne ressort.'}</small></article><article><b>Lecture</b><span>${esc(domain.label)}</span><small>Courbe construite uniquement à partir des signaux V121 déjà calculés.</small></article></div>`;
+  if(rows.every(x=>Math.abs(x.v)<.08))return `<div class="ap-v128-summary"><article><b>Période dominante</b><span>Stable</span><small>Aucun signal V121 suffisamment marqué ne domine sur ${selectedGraphYear} pour ce domaine.</small></article></div>`;
+  return `<div class="ap-v128-summary"><article><b>Meilleure période</b><span>${esc(fullMonth(best.d))}</span><small>${best.v>0?'Signal plus porteur pour ce domaine.':'Période la plus stable parmi les mois analysés.'}</small></article><article><b>Période plus délicate</b><span>${esc(fullMonth(low.d))}</span><small>${low.v<0?'Davantage de prudence et de recul conseillés.':'Aucun signal franchement délicat ne ressort.'}</small></article><article><b>Lecture</b><span>${esc(domain.label)} · ${selectedGraphYear}</span><small>Courbe construite uniquement à partir des signaux V121 déjà calculés.</small></article></div>`;
 }
 
 function renderValidatedGraph(){
   const card=document.querySelector('#ap121-future .ap121-graph-card');
   if(!card||typeof window.apV51Signals!=='function')return;
   ensureStyles();
-  const months=v121MonthlyUiData(),domain=GRAPH_DOMAINS.find(d=>d.key===selectedGraphDomain)||GRAPH_DOMAINS[0];
-  if(card.dataset.v128Graph===domain.key)return;
-  card.dataset.v128Graph=domain.key;
-  card.innerHTML=`<div class="ap121-graph-head"><div><span class="ap121-kicker">Horizon des 12 mois</span><h2>Vos grandes tendances mois par mois</h2><p>Choisissez un domaine. La courbe reprend les signaux réellement calculés par la V121 ; les périodes calmes restent proches de Stable.</p></div><button class="ap121-pill" onclick="ap121Open('prev')">Détails</button></div><div class="ap-v128-domain-tabs">${GRAPH_DOMAINS.map(d=>`<button type="button" class="ap-v128-domain-btn ${d.key===domain.key?'active':''}" data-v128-domain="${d.key}">${d.label}</button>`).join('')}</div><div class="ap-v128-graph-wrap">${graphSvg(months,domain)}</div>${graphSummary(months,domain)}`;
+  const months=v121MonthlyUiData(selectedGraphYear),domain=GRAPH_DOMAINS.find(d=>d.key===selectedGraphDomain)||GRAPH_DOMAINS[0];
+  const renderKey=selectedGraphYear+'-'+domain.key;if(card.dataset.v128Graph===renderKey)return;card.dataset.v128Graph=renderKey;
+  const y0=new Date().getFullYear(),years=[y0,y0+1,y0+2];
+  card.innerHTML=`<div class="ap121-graph-head"><div><span class="ap121-kicker">Grandes tendances annuelles</span><h2>Vos grandes tendances mois par mois</h2><p>Choisissez une année puis un domaine. La courbe va de janvier à décembre et reprend uniquement les signaux réellement calculés par la V121.</p></div><button class="ap121-pill" onclick="ap121Open('prev')">Détails</button></div><div class="ap-v128-year-tabs">${years.map(y=>`<button type="button" class="ap-v128-year-btn ${y===selectedGraphYear?'active':''}" data-v128-year="${y}">${y}</button>`).join('')}</div><div class="ap-v128-domain-tabs">${GRAPH_DOMAINS.map(d=>`<button type="button" class="ap-v128-domain-btn ${d.key===domain.key?'active':''}" data-v128-domain="${d.key}">${d.label}</button>`).join('')}</div><div class="ap-v128-graph-wrap">${graphSvg(months,domain)}</div>${graphSummary(months,domain)}`;
+  card.querySelectorAll('[data-v128-year]').forEach(btn=>btn.addEventListener('click',()=>{selectedGraphYear=Number(btn.dataset.v128Year)||y0;card.dataset.v128Graph='';renderValidatedGraph();}));
   card.querySelectorAll('[data-v128-domain]').forEach(btn=>btn.addEventListener('click',()=>{selectedGraphDomain=btn.dataset.v128Domain;card.dataset.v128Graph='';renderValidatedGraph();}));
 }
 
@@ -115,32 +118,10 @@ function removeStoryModule(){document.querySelectorAll('#ap121-future .ap121-fea
 function clarifyTimingContent(){document.querySelectorAll('h1,h2,h3,.bloc-titre').forEach(el=>{const t=el.textContent.trim().toLowerCase();if(t==='comparer plusieurs périodes'){el.textContent='Comparer jusqu’à 4 dates';const box=el.parentElement,p=box&&box.querySelector('p');if(p)p.textContent='Choisissez un domaine ou un objectif, saisissez de 2 à 4 dates, puis comparez ce que le moteur V121 fait ressortir pour chacune.';}});document.querySelectorAll('button').forEach(b=>{if(b.textContent.trim()==='Chercher les périodes les moins favorables')b.textContent='Repérer les périodes plus délicates';});document.querySelectorAll('label,.bloc-titre').forEach(el=>{if(el.textContent.trim().toUpperCase()==='INTENTION')el.textContent='DOMAINE / OBJECTIF'});}
 function cleanVisualOverlays(){const relHero=document.querySelector('#ap121-relations .ap121-hero');if(relHero&&!relHero.dataset.v128Clean){const bg=relHero.style.backgroundImage;if(bg&&bg.includes('url(')){relHero.style.backgroundImage=`linear-gradient(90deg,rgba(28,12,29,.98) 0%,rgba(37,15,35,.86) 36%,rgba(27,12,29,.34) 70%,rgba(18,8,20,.08) 100%),${bg}`;relHero.style.backgroundPosition='center right';}relHero.dataset.v128Clean='1';}const relBanner=document.querySelector('#ap121-relations .ap121-banner');if(relBanner){const copy=relBanner.querySelector('.ap121-banner-copy');if(copy)copy.style.display='none';relBanner.style.minHeight='190px';relBanner.style.backgroundPosition='center';}document.querySelectorAll('#ap121-module-banner').forEach(b=>b.classList.add('ap-v128-clean-banner'));}
 function removeObsoletePublicModules(){
-  const obsolete=[
-    /^votre avenir racont[ée]$/i,
-    /^avenir racont[ée]$/i,
-    /^comparer les dates$/i,
-    /^comparateur de dates$/i,
-    /^timeline 10 ans$/i,
-    /^timeline de vie$/i,
-    /^grands événements$/i,
-    /^notifications?$/i,
-    /^historique utilisateur$/i,
-    /^mon historique$/i
-  ];
-  document.querySelectorAll('button,a,.service-card,.ap100-feature-card,.ap121-feature,.mod-onglet,[role="button"]').forEach(el=>{
-    const txt=String(el.textContent||'').replace(/\s+/g,' ').trim();
-    if(!txt||!obsolete.some(rx=>rx.test(txt)))return;
-    const card=el.closest('.service-card,.ap100-feature-card,.ap121-feature,.mod-onglet')||el;
-    card.style.setProperty('display','none','important');
-  });
+  const obsolete=[/^votre avenir racont[ée]$/i,/^avenir racont[ée]$/i,/^comparer les dates$/i,/^comparateur de dates$/i,/^timeline 10 ans$/i,/^timeline de vie$/i,/^grands événements$/i,/^notifications?$/i,/^historique utilisateur$/i,/^mon historique$/i];
+  document.querySelectorAll('button,a,.service-card,.ap100-feature-card,.ap121-feature,.mod-onglet,[role="button"]').forEach(el=>{const txt=String(el.textContent||'').replace(/\s+/g,' ').trim();if(!txt||!obsolete.some(rx=>rx.test(txt)))return;const card=el.closest('.service-card,.ap100-feature-card,.ap121-feature,.mod-onglet')||el;card.style.setProperty('display','none','important');});
 }
-function alignPublicWording(){
-  document.querySelectorAll('h1,h2,h3,.module-titre,.bloc-titre').forEach(el=>{
-    const txt=String(el.textContent||'').replace(/\s+/g,' ').trim();
-    if(/^grands événements$/i.test(txt))el.textContent='Les 24 mois qui comptent';
-    if(/^fenêtre idéale$/i.test(txt))el.textContent='Le bon moment';
-  });
-}
+function alignPublicWording(){document.querySelectorAll('h1,h2,h3,.module-titre,.bloc-titre').forEach(el=>{const txt=String(el.textContent||'').replace(/\s+/g,' ').trim();if(/^grands événements$/i.test(txt))el.textContent='Les 24 mois qui comptent';if(/^fenêtre idéale$/i.test(txt))el.textContent='Le bon moment';});}
 function applyUiFixes(){ensureStyles();renderValidatedGraph();keepSelectedDomainsVisible();removeStoryModule();removeObsoletePublicModules();alignPublicWording();clarifyTimingContent();cleanVisualOverlays();}
 let queued=false;function queueFix(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;applyUiFixes();});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{queueFix();checkSuspendedAccount()},{once:true});else{queueFix();checkSuspendedAccount()}
