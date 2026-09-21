@@ -17,8 +17,9 @@ function neutraliseV127(){
 function addScript(src,attr){if(document.querySelector('script['+attr+']'))return;const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(attr,'1');document.head.appendChild(s)}
 function load(){
   neutraliseV127();
-  addScript('assets/refonte-final.js?v=128.5','data-ap-v128-loader');
-  addScript('assets/v128-hotfix.js?v=128.5','data-ap-v128-hotfix');
+  addScript('assets/refonte-final.js?v=128.6','data-ap-v128-loader');
+  addScript('assets/v128-hotfix.js?v=128.6','data-ap-v128-hotfix');
+  addScript('assets/v128-visual-cleanup.js?v=128.6','data-ap-v128-cleanup');
 }
 window.addEventListener('pageshow',neutraliseV127);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();
