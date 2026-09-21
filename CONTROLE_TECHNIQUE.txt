@@ -1,43 +1,69 @@
-ASTRO PAQUITA — CONTRÔLE TECHNIQUE DU LOT FINAL
+ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE DE LA REFONTE V128
 
-Base verrouillée
-- V121 stable confirmée par la balise astro-build v121-refonte-fidele-stable.
-- Commit GitHub de référence : 21d70a2b523c64425a8fd7b1f1cb8e9dd8255082.
-- Aucun write/commit/push GitHub effectué.
+BASE VERROUILLÉE
+- V121 stable de référence : commit 21d70a2b523c64425a8fd7b1f1cb8e9dd8255082.
+- La logique astrologique V121 reste la source canonique des maisons, transits, prévisions, synastrie et scores.
+- La refonte V128 est une couche d’interface et de présentation autour de la V121.
+- Branche de sauvegarde avant refonte : backup-main-2026-09-21-pre-refonte.
 
-Préservation du moteur
-- Le moteur V121 reste dans index.html.
-- Les modifications directes de index.html sont limitées à : version du build, chargement de la nouvelle couche visuelle/Truth, racine de la nouvelle interface, et suppression de l'ancien fallback de clé admin côté navigateur.
+RÈGLE ABSOLUE
+- Ne jamais remplacer ou recalculer les maisons, transits, aspects, prévisions ou synastrie par une logique visuelle parallèle.
+- Toute courbe, carte, synthèse ou texte de tendance doit être alimenté par les données réellement calculées par la V121.
+- Les correctifs d’interface peuvent mapper les noms de domaines internes V121 vers des libellés utilisateurs, mais ne doivent pas inventer de valeurs.
 
-Contrôles réalisés
-- Syntaxe assets/refonte-final.js : OK.
-- Syntaxe assets/truth-engine.js : OK.
-- Syntaxe de tous les scripts JavaScript inline du index.html : OK.
-- Références des fichiers de déploiement : contrôlées.
-- Aucune clé astro-admin-key / x-admin-key n'est envoyée par le index V121 final.
-- Validation latitude/longitude/fuseau IANA sans fallback silencieux dans le nouveau parcours profil.
-- Heure inconnue traitée explicitement : portrait natal calculable sans ASC/MC/maisons ; aucune prévision horaire n'est fabriquée si le moteur ne peut pas la calculer de façon fiable.
+DIRECTION VISUELLE VALIDÉE
+- Univers crème / prune / violet nuit / doré.
+- Navigation latérale desktop et expérience mobile dédiée.
+- Grandes cartes éditoriales, lisibles, sans superposition de texte sur les images.
+- Portrait natal : vraie roue V121 et vraies maisons, jamais redessinées avec de fausses positions.
+- Prévisions : vraie courbe Jan–Déc avec échelle Très favorable / Favorable / Stable / Plus délicat / Délicat.
+- Domaines : Amour / Travail / Argent / Bien-être / Famille / Voyage.
+- Le domaine sélectionné doit rester visuellement actif.
 
-Interface finale
-- Accueil
-- Portrait natal + chemin karmique
-- Mon avenir
-- Prévisions détaillées
-- Le bon moment
-- Relations & Synastrie
-- Portrait enfant
-- Calendrier personnel
-- Profil / Paramètres
+MODULES À CONSERVER
+- Accueil.
+- Portrait natal.
+- Prévisions détaillées.
+- Grandes tendances mois par mois.
+- Mon avenir avec chronologie / périodes significatives.
+- Le bon moment (comparaison de fenêtres ou dates clairement expliquée lorsqu’elle est présente dans un parcours utile).
+- Les 24 mois qui comptent / événements majeurs.
+- Ma question : 1 question gratuite puis packs de questions.
+- Relations & Synastrie.
+- Portrait enfant.
+- Profil / paramètres.
+- Administration.
 
-Modules retirés de la nouvelle navigation
-- Ma question / crédits
-- Notifications
-- Timeline autonome
-- Grands événements autonome
-- Avenir raconté autonome
-- Comparateur de dates
-- Fenêtres à éviter autonome
-- Journal / consultations visible utilisateur
+MODULES / ENTRÉES AUTONOMES À RETIRER DE L’INTERFACE PUBLIQUE
+- Votre avenir raconté / Avenir raconté.
+- Comparateur de dates autonome.
+- Notifications.
+- Historique utilisateur visible dans le site public.
+- Timeline 10 ans autonome : la chronologie doit être intégrée proprement dans Mon avenir, pas devenir un module doublon.
+- Grands événements autonome si le même contenu existe déjà dans Mon avenir.
 
-Note de périmètre
-Le dépôt traité ici est le frontend Astro Paquita. Les exigences nécessitant une évolution serveur (source canonique complète des profils, soft-delete serveur, règles d'administration serveur, etc.) doivent être garanties par le backend correspondant ; elles ne sont pas simulées côté navigateur dans ce lot.
+ADMINISTRATION — CAHIER ACTUEL
+- Vue d’ensemble claire sans grand tableau horizontal.
+- Utilisateurs en fiches avec recherche et filtres.
+- Historique des consultations par utilisateur, sans stocker le texte des questions ni les réponses IA.
+- Profils astro créés et activité associée.
+- Statistiques : comptes, Premium, actifs 7/30 jours, consultations, langues et modules les plus utilisés.
+- Blocage ciblé d’un utilisateur avec message d’indisponibilité, et possibilité de réactivation.
+- Codes promo : questions gratuites, jours Premium, réduction %, usage unique possible.
+- Maintenance générale avec message visiteurs.
+- Accès / récupération Administrateur.
+
+BACKEND V128
+- Le backend principal historique reste dans server.js / db.js.
+- La couche server-v128.js ajoute les fonctions administratives manquantes sans modifier le moteur astrologique.
+- Le package.json démarre server-v128.js, qui laisse ensuite server.js exécuter les routes historiques.
+
+CONTENU
+- Ne pas se contenter du visuel : contrôler les intitulés, les modules réellement utiles, les résultats affichés et la cohérence entre pages.
+- Éviter les doublons de fonctionnalités.
+- Éviter le jargon inutile et les textes génériques qui ne proviennent pas des données calculées.
+- Les périodes calmes doivent rester calmes : ne pas fabriquer artificiellement un événement ou une intensité.
+
+LANGUES
+- FR / EN / ES / AR conservés comme objectif de l’application.
+- Astro Paquita reste le nom de marque dans toutes les langues.
