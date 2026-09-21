@@ -29,12 +29,29 @@ function ensureStyles(){
   .ap-v128-summary small{display:block;line-height:1.45;color:#d9cfd9}
   .ap-v128-clean-banner{position:relative!important;overflow:hidden!important;isolation:isolate}
   .ap-v128-clean-banner:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(34,13,32,.95),rgba(46,18,42,.72) 42%,rgba(32,13,31,.18) 78%);z-index:-1;pointer-events:none}
-  @media(max-width:760px){.ap-v128-domain-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.ap-v128-domain-btn{flex:0 0 auto}.ap-v128-summary{grid-template-columns:1fr}.ap-v128-graph-svg{min-width:760px}}
+  .ap-v128-suspended{position:fixed;inset:0;z-index:999999;background:radial-gradient(circle at 70% 15%,rgba(188,150,88,.12),transparent 28%),#f5eee4;display:flex;align-items:center;justify-content:center;padding:24px}
+  .ap-v128-suspended-card{width:min(560px,94vw);background:#fffaf2;border:1px solid rgba(93,54,77,.15);border-radius:28px;box-shadow:0 24px 70px rgba(69,30,59,.16);padding:34px;text-align:center;color:#332535}
+  .ap-v128-suspended-card .mark{font-size:34px;color:#bc9658;margin-bottom:10px}.ap-v128-suspended-card h1{font:600 38px/1 'Cormorant Garamond',Georgia,serif;color:#42183d;margin:0 0 13px}.ap-v128-suspended-card p{line-height:1.65;color:#6f606b;margin:0}
+  @media(max-width:760px){.ap-v128-domain-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.ap-v128-domain-btn{flex:0 0 auto}.ap-v128-summary{grid-template-columns:1fr}.ap-v128-graph-svg{min-width:760px}.ap-v128-suspended-card{padding:28px 22px}.ap-v128-suspended-card h1{font-size:32px}}
   `;document.head.appendChild(s);
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function monthLabel(d){return new Intl.DateTimeFormat('fr-FR',{month:'short'}).format(d).replace('.','');}
 function fullMonth(d){return new Intl.DateTimeFormat('fr-FR',{month:'long',year:'numeric'}).format(d);}
+
+async function checkSuspendedAccount(){
+  const token=localStorage.getItem('astro-token')||'';if(!token)return;
+  try{
+    const r=await fetch('https://astro-paquita-backend.onrender.com/api/me?ts='+Date.now(),{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+    if(r.status!==403)return;
+    const d=await r.json().catch(()=>({}));
+    if(!d||d.code!=='ACCOUNT_SUSPENDED')return;
+    ensureStyles();
+    let layer=document.getElementById('ap-v128-suspended');
+    if(!layer){layer=document.createElement('div');layer.id='ap-v128-suspended';layer.className='ap-v128-suspended';document.body.appendChild(layer)}
+    layer.innerHTML=`<div class="ap-v128-suspended-card"><div class="mark">✦</div><h1>Astro Paquita</h1><p>${esc(d.erreur||'Ce compte est temporairement indisponible.')}</p></div>`;
+  }catch(e){}
+}
 
 function v121MonthlyUiData(){
   const now=new Date(),months=[];
@@ -126,6 +143,6 @@ function alignPublicWording(){
 }
 function applyUiFixes(){ensureStyles();renderValidatedGraph();keepSelectedDomainsVisible();removeStoryModule();removeObsoletePublicModules();alignPublicWording();clarifyTimingContent();cleanVisualOverlays();}
 let queued=false;function queueFix(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;applyUiFixes();});}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',queueFix,{once:true});else queueFix();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{queueFix();checkSuspendedAccount()},{once:true});else{queueFix();checkSuspendedAccount()}
 const observer=new MutationObserver(queueFix);observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
