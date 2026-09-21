@@ -97,7 +97,31 @@ function keepSelectedDomainsVisible(){document.querySelectorAll('.dom-btn.actif,
 function removeStoryModule(){document.querySelectorAll('#ap121-future .ap121-feature[onclick*="story"],.ap121-feature[onclick*="v121Go(\'story\')"]').forEach(card=>card.style.setProperty('display','none','important'));const grid=document.querySelector('#ap121-future .ap121-card-grid');if(grid)grid.style.setProperty('grid-template-columns','repeat(2,minmax(0,1fr))','important');const story=document.getElementById('ap121-story');if(story)story.style.setProperty('display','none','important');}
 function clarifyTimingContent(){document.querySelectorAll('h1,h2,h3,.bloc-titre').forEach(el=>{const t=el.textContent.trim().toLowerCase();if(t==='comparer plusieurs périodes'){el.textContent='Comparer jusqu’à 4 dates';const box=el.parentElement,p=box&&box.querySelector('p');if(p)p.textContent='Choisissez un domaine ou un objectif, saisissez de 2 à 4 dates, puis comparez ce que le moteur V121 fait ressortir pour chacune.';}});document.querySelectorAll('button').forEach(b=>{if(b.textContent.trim()==='Chercher les périodes les moins favorables')b.textContent='Repérer les périodes plus délicates';});document.querySelectorAll('label,.bloc-titre').forEach(el=>{if(el.textContent.trim().toUpperCase()==='INTENTION')el.textContent='DOMAINE / OBJECTIF'});}
 function cleanVisualOverlays(){const relHero=document.querySelector('#ap121-relations .ap121-hero');if(relHero&&!relHero.dataset.v128Clean){const bg=relHero.style.backgroundImage;if(bg&&bg.includes('url(')){relHero.style.backgroundImage=`linear-gradient(90deg,rgba(28,12,29,.98) 0%,rgba(37,15,35,.86) 36%,rgba(27,12,29,.34) 70%,rgba(18,8,20,.08) 100%),${bg}`;relHero.style.backgroundPosition='center right';}relHero.dataset.v128Clean='1';}const relBanner=document.querySelector('#ap121-relations .ap121-banner');if(relBanner){const copy=relBanner.querySelector('.ap121-banner-copy');if(copy)copy.style.display='none';relBanner.style.minHeight='190px';relBanner.style.backgroundPosition='center';}document.querySelectorAll('#ap121-module-banner').forEach(b=>b.classList.add('ap-v128-clean-banner'));}
-function applyUiFixes(){ensureStyles();renderValidatedGraph();keepSelectedDomainsVisible();removeStoryModule();clarifyTimingContent();cleanVisualOverlays();}
+function removeObsoletePublicModules(){
+  const obsolete=[
+    /^votre avenir racont[ée]$/i,
+    /^avenir racont[ée]$/i,
+    /^comparer les dates$/i,
+    /^comparateur de dates$/i,
+    /^notifications?$/i,
+    /^historique utilisateur$/i,
+    /^mon historique$/i
+  ];
+  document.querySelectorAll('button,a,.service-card,.ap100-feature-card,.ap121-feature,.mod-onglet,[role="button"]').forEach(el=>{
+    const txt=String(el.textContent||'').replace(/\s+/g,' ').trim();
+    if(!txt||!obsolete.some(rx=>rx.test(txt)))return;
+    const card=el.closest('.service-card,.ap100-feature-card,.ap121-feature,.mod-onglet')||el;
+    card.style.setProperty('display','none','important');
+  });
+}
+function alignPublicWording(){
+  document.querySelectorAll('h1,h2,h3,.module-titre,.bloc-titre').forEach(el=>{
+    const txt=String(el.textContent||'').replace(/\s+/g,' ').trim();
+    if(/^grands événements$/i.test(txt))el.textContent='Les 24 mois qui comptent';
+    if(/^fenêtre idéale$/i.test(txt))el.textContent='Le bon moment';
+  });
+}
+function applyUiFixes(){ensureStyles();renderValidatedGraph();keepSelectedDomainsVisible();removeStoryModule();removeObsoletePublicModules();alignPublicWording();clarifyTimingContent();cleanVisualOverlays();}
 let queued=false;function queueFix(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;applyUiFixes();});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',queueFix,{once:true});else queueFix();
 const observer=new MutationObserver(queueFix);observer.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
