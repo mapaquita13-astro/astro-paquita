@@ -1,69 +1,99 @@
-ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE DE LA REFONTE V128
+ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE ACTUELLE — 22/09/2026 — V147
 
-BASE VERROUILLÉE
+BASE ASTROLOGIQUE VERROUILLÉE
 - V121 stable de référence : commit 21d70a2b523c64425a8fd7b1f1cb8e9dd8255082.
-- La logique astrologique V121 reste la source canonique des maisons, transits, prévisions, synastrie et scores.
-- La refonte V128 est une couche d’interface et de présentation autour de la V121.
-- Branche de sauvegarde avant refonte : backup-main-2026-09-21-pre-refonte.
+- La logique astrologique V121 reste la source canonique des maisons, positions, aspects, transits, prévisions, synastrie et scores.
+- Ne jamais remplacer ou recalculer ces données par une logique visuelle parallèle.
+- Toute courbe, carte, synthèse ou texte de tendance doit partir des données réellement calculées par la base V121.
+- Contrôle du 22/09/2026 : comparaison V121 -> main effectuée ; aucun fichier historique du moteur de calcul n’apparaît modifié. Les évolutions sont concentrées dans l’interface, l’administration, les images, les chargeurs et les couches de compatibilité.
 
-RÈGLE ABSOLUE
-- Ne jamais remplacer ou recalculer les maisons, transits, aspects, prévisions ou synastrie par une logique visuelle parallèle.
-- Toute courbe, carte, synthèse ou texte de tendance doit être alimenté par les données réellement calculées par la V121.
-- Les correctifs d’interface peuvent mapper les noms de domaines internes V121 vers des libellés utilisateurs, mais ne doivent pas inventer de valeurs.
+SAUVEGARDES GIT
+- Sauvegarde pré-refonte : backup-main-2026-09-21-pre-refonte.
+- Sauvegarde après audit/corrections V147 : backup-v147-2026-09-22, pointée sur c1ae9464929b49c0994ec121999908992c644c4e.
+
+ARCHITECTURE FRONTEND ACTUELLE
+- index.html : base historique conservée ; les changements autour de la refonte sont des raccords/chargeurs d’interface.
+- refonte-final.js à la racine : chargeur de compatibilité, neutralise l’ancienne interface de refonte puis charge assets/refonte-final.js.
+- assets/refonte-final.js : couche d’interface active ; utilise les fonctions de calcul déjà présentes pour les tendances, sans remplacer le moteur astrologique.
+- assets/v139-question-guard.js : verrouille la suppression publique de « Ma question ».
+- assets/v141-child-portrait.js : Portrait enfant adapté à l’âge, sécurisé et multilingue ; réutilise les données du thème natal existant.
+- assets/v143-ui-sync.js : synchronisation FR/EN/ES/AR et sélection visuelle des périodes/domaines.
+- assets/v128-visual-cleanup.js : nettoyage des anciens doublons et entrées publiques obsolètes.
+- assets/truth-engine.js : couche de compatibilité/chargement ; ne contient pas de moteur astrologique parallèle.
+- sw.js : anti-cache de l’interface ; version courante V147 au moment de ce document.
 
 DIRECTION VISUELLE VALIDÉE
 - Univers crème / prune / violet nuit / doré.
 - Navigation latérale desktop et expérience mobile dédiée.
-- Grandes cartes éditoriales, lisibles, sans superposition de texte sur les images.
-- Portrait natal : vraie roue V121 et vraies maisons, jamais redessinées avec de fausses positions.
+- Grandes cartes éditoriales lisibles, sans texte illisible superposé aux images.
+- Portrait natal : vraie roue et vraies maisons issues de la base V121, jamais redessinées avec de fausses positions.
 - Prévisions : vraie courbe Jan–Déc avec échelle Très favorable / Favorable / Stable / Plus délicat / Délicat.
 - Domaines : Amour / Travail / Argent / Bien-être / Famille / Voyage.
-- Le domaine sélectionné doit rester visuellement actif.
+- Le domaine, l’année ou la période sélectionnés doivent rester visuellement actifs.
 
-MODULES À CONSERVER
+MODULES PUBLICS À CONSERVER
 - Accueil.
 - Portrait natal.
 - Prévisions détaillées.
 - Grandes tendances mois par mois.
-- Mon avenir avec chronologie / périodes significatives.
-- Le bon moment (comparaison de fenêtres ou dates clairement expliquée lorsqu’elle est présente dans un parcours utile).
-- Les 24 mois qui comptent / événements majeurs.
-- Ma question : 1 question gratuite puis packs de questions.
+- Mon avenir avec chronologie / périodes significatives intégrées.
+- Le bon moment.
+- Les 24 mois qui comptent.
 - Relations & Synastrie.
 - Portrait enfant.
 - Profil / paramètres.
-- Administration.
 
-MODULES / ENTRÉES AUTONOMES À RETIRER DE L’INTERFACE PUBLIQUE
+MODULES / ENTRÉES AUTONOMES RETIRÉS DE L’INTERFACE PUBLIQUE
+- Ma question : actuellement masquée volontairement côté public par les couches V139+ ; le backend historique associé est conservé en compatibilité mais ne doit pas recréer l’entrée publique.
 - Votre avenir raconté / Avenir raconté.
-- Comparateur de dates autonome.
+- Comparateur de dates autonome ; la comparaison utile reste rattachée à « Le bon moment » lorsqu’elle est nécessaire.
 - Notifications.
 - Historique utilisateur visible dans le site public.
-- Timeline 10 ans autonome : la chronologie doit être intégrée proprement dans Mon avenir, pas devenir un module doublon.
-- Grands événements autonome si le même contenu existe déjà dans Mon avenir.
+- Timeline 10 ans autonome ; la chronologie doit rester intégrée à Mon avenir.
+- Grands événements autonome lorsqu’il duplique Mon avenir / Les 24 mois qui comptent.
+
+PORTRAIT ENFANT — RÈGLES ACTUELLES
+- Le mode enfant ne doit s’activer que pour un profil réellement mineur.
+- 0 profil mineur : renvoi vers la gestion des profils, sans laisser le mode enfant actif.
+- 1 profil mineur : ouverture directe possible.
+- Plusieurs profils mineurs : activation seulement après le choix effectif du profil enfant.
+- Le mode enfant doit rester actif pendant les appels internes d’ouverture du Portrait natal puis être quitté dès qu’un autre module est ouvert.
+- L’interface et le texte généré suivent FR / EN / ES / AR.
+- Le calcul natal n’est pas remplacé : seule l’interprétation éditoriale est adaptée à l’âge.
+
+NETTOYAGE PUBLIC V147
+- Verrouillage des anciennes variantes FR/EN/ES/AR de Timeline autonome, Avenir raconté, Historique, Notifications, Grands événements autonomes et comparateur de dates autonome.
+- « Les 24 mois qui comptent » est explicitement protégé du nettoyage.
+- Les références techniques V121 ne doivent jamais être montrées comme texte client.
 
 ADMINISTRATION — CAHIER ACTUEL
 - Vue d’ensemble claire sans grand tableau horizontal.
 - Utilisateurs en fiches avec recherche et filtres.
-- Historique des consultations par utilisateur, sans stocker le texte des questions ni les réponses IA.
+- Historique des consultations par utilisateur sans stocker le texte des questions ni les réponses IA.
 - Profils astro créés et activité associée.
-- Statistiques : comptes, Premium, actifs 7/30 jours, consultations, langues et modules les plus utilisés.
-- Blocage ciblé d’un utilisateur avec message d’indisponibilité, et possibilité de réactivation.
-- Codes promo : questions gratuites, jours Premium, réduction %, usage unique possible.
-- Maintenance générale avec message visiteurs.
+- Statistiques : comptes, Premium, actifs 7/30 jours, consultations, langues et modules utilisés.
+- Blocage ciblé d’un utilisateur avec message d’indisponibilité et possibilité de réactivation.
+- Codes promo : questions gratuites, jours Premium, réduction %, limite d’utilisation/expiration.
+- Maintenance générale avec message visiteurs et comptes autorisés.
 - Accès / récupération Administrateur.
 
-BACKEND V128
-- Le backend principal historique reste dans server.js / db.js.
-- La couche server-v128.js ajoute les fonctions administratives manquantes sans modifier le moteur astrologique.
-- Le package.json démarre server-v128.js, qui laisse ensuite server.js exécuter les routes historiques.
+BACKEND ACTUEL
+- Dépôt : mapaquita13-astro/astro-paquita-backend.
+- package.json démarre server-v134.js.
+- Chaîne réelle de démarrage : server-v134.js -> server-v128.js -> server.js.
+- server-v134.js : couche Stripe sécurisée pour réductions Premium et confirmation des achats de packs questions.
+- server-v128.js : couche Admin/compatibilité, suspension ciblée, crédits questions et routes complémentaires.
+- server.js : backend historique, comptes, profils, activité, OpenRouter, routes Admin principales, maintenance, promotions et Stripe historique.
+- Ne pas modifier cette chaîne uniquement pour harmoniser les numéros de version : intervenir seulement pour corriger un défaut concret.
 
-CONTENU
+CONTENU / COHÉRENCE
 - Ne pas se contenter du visuel : contrôler les intitulés, les modules réellement utiles, les résultats affichés et la cohérence entre pages.
 - Éviter les doublons de fonctionnalités.
-- Éviter le jargon inutile et les textes génériques qui ne proviennent pas des données calculées.
+- Éviter le jargon technique dans l’interface client.
 - Les périodes calmes doivent rester calmes : ne pas fabriquer artificiellement un événement ou une intensité.
+- Aucun correctif visuel ne doit modifier les maisons ou autres données calculées.
 
 LANGUES
-- FR / EN / ES / AR conservés comme objectif de l’application.
+- FR / EN / ES / AR sont conservés comme objectif de l’application.
 - Astro Paquita reste le nom de marque dans toutes les langues.
+- Tout nouveau texte public important doit être prévu dans les quatre langues ou rester compatible avec la couche de traduction active.
