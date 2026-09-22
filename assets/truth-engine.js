@@ -4,6 +4,14 @@
 'use strict';
 window.__AP_TRUTH_ENGINE_DISABLED__=true;
 
+function installPublicGuardStyle(){
+  if(document.getElementById('ap-v139-public-guard-style'))return;
+  const s=document.createElement('style');
+  s.id='ap-v139-public-guard-style';
+  s.textContent='#mod-question,#ap-v130-question-card,[data-feature="question"],[data-module="question"],[onclick*="question" i]{display:none!important}';
+  (document.head||document.documentElement).appendChild(s);
+}
+
 function bridgePremiumPromo(){
   const applyBase=window.appliquerCodePromo;
   if(typeof applyBase==='function'&&!applyBase.__apV135PromoBridge){
@@ -106,6 +114,7 @@ function loadOnce(src,marker){
   const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(marker,'1');document.head.appendChild(s);
 }
 
+installPublicGuardStyle();
 loadOnce('assets/v139-question-guard.js?v=139','data-ap-v139-question-guard');
 loadOnce('assets/v128-visual-cleanup.js?v=137','data-ap-v137-visual-cleanup');
 loadOnce('assets/client-cleanup-v137.js?v=138','data-ap-v138-client-cleanup');
