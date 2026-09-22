@@ -124,17 +124,12 @@ function bindSelection(){
  document.addEventListener('click',e=>{const b=e.target.closest('.per-btn,.f-btn,.dom-btn,.genre-btn,.mod-onglet');if(!b)return;setTimeout(()=>{const group=b.closest('.per-btns,.f-intentions,.dom-btns,.genre-btns,.mod-onglets,.mod-tabs')||b.parentElement;if(group)group.querySelectorAll('.ap-v137-selected').forEach(x=>x.classList.remove('ap-v137-selected'));b.classList.add('ap-v137-selected');b.setAttribute('aria-selected','true')},0)},false)
 }
 
-function patchIdealTiming(){
- const form=document.getElementById('f-form');if(form){const p=form.querySelector('.bloc p');if(p&&/10\s+prochaines?\s+ann[ée]es|10\s+ans/i.test(p.textContent||''))p.textContent='Choisissez votre intention. Astro Paquita recherche les meilleures périodes dans les 24 prochains mois.'}
- const fn=window.lancerFenetre;if(typeof fn==='function'&&!fn.__apV137){try{let src=fn.toString();src=src.replace('const nbJours = 365 * 10;','const nbJours = 365 * 2;').replace("horizon:'10 ans'","horizon:'24 mois'").replace(/Scan 10 ans/g,'Scan 24 mois').replace(/scan 10 ans/g,'scan 24 mois');const patched=(0,eval)('('+src+')');patched.__apV137=true;window.lancerFenetre=patched}catch(e){console.warn('Horizon Bon moment non modifié',e)}}
-}
-
 function hookLanguage(){
  if(window.__apV137LangHook)return;window.__apV137LangHook=true;
  const wrap=name=>{const base=window[name];if(typeof base!=='function'||base.__apV137)return;const fn=function(){const r=base.apply(this,arguments);setTimeout(run,35);setTimeout(run,180);return r};fn.__apV137=true;window[name]=fn};wrap('v100SetLang');wrap('apSetLang')
 }
 
-function run(){addStyle();hideQuestion();cleanCopy();fixCardImages();splitVisualBlocks();translateHome();keepSelected();patchIdealTiming();hookLanguage()}
+function run(){addStyle();hideQuestion();cleanCopy();fixCardImages();splitVisualBlocks();translateHome();keepSelected();hookLanguage()}
 bindSelection();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
 let timer;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(run,90)}).observe(document.documentElement,{childList:true,subtree:true});
