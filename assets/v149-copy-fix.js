@@ -1,0 +1,37 @@
+/* Astro Paquita — V149 finition des textes publics.
+   Affichage uniquement : aucun calcul astrologique n'est modifié. */
+(function(){
+'use strict';
+
+const RULES=[
+  [/La\s+(?:V\s*121\s+)?ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
+  [/La\s+ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
+  [/(?:V\s*121\s+)?does not return enough material for this area in(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:No artificial curve is generated\.)?/gi,'No sufficiently clear trend is available for this area over this period.'],
+  [/^\s*does not return enough material for this area in(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:No artificial curve is generated\.)?/gi,'No sufficiently clear trend is available for this area over this period.'],
+  [/(?:V\s*121\s+)?no devuelve suficiente información para esta área en(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:No se fabrica ninguna curva artificial\.)?/gi,'No hay una tendencia suficientemente clara disponible para esta área en este período.'],
+  [/^\s*no devuelve suficiente información para esta área en(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:No se fabrica ninguna curva artificial\.)?/gi,'No hay una tendencia suficientemente clara disponible para esta área en este período.'],
+  [/لا تعيد\s+(?:V\s*121\s+)?مادة كافية لهذا المجال خلال(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:لا يتم إنشاء منحنى اصطناعي\.)?/gi,'لا يتوفر اتجاه واضح بما يكفي لهذا المجال خلال هذه الفترة.'],
+  [/La courbe utilise les activations(?:\s+V\s*121)? réelles de chaque mois, y compris les tendances faibles, sans les transformer en événements\.?/gi,'La courbe présente les tendances astrologiques de chaque mois, y compris les plus discrètes.'],
+  [/The curve uses the real(?:\s+V\s*121)? activations for each month, including weaker trends, without turning them into events\.?/gi,'The curve presents the astrological trends for each month, including subtler ones.'],
+  [/La curva utiliza las activaciones(?:\s+V\s*121)? reales de cada mes, incluidas las tendencias débiles, sin convertirlas en eventos\.?/gi,'La curva presenta las tendencias astrológicas de cada mes, incluidas las más sutiles.'],
+  [/يستخدم المنحنى تفعيلات(?:\s+V\s*121)? الحقيقية لكل شهر، بما في ذلك الاتجاهات الضعيفة، دون تحويلها إلى أحداث\.?/gi,'يعرض المنحنى الاتجاهات الفلكية لكل شهر، بما في ذلك الاتجاهات الأكثر دقة.'],
+  [/\bV\s*121\b/gi,'']
+];
+
+function clean(root){
+  root=root||document.body;if(!root)return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];let n;
+  while((n=walker.nextNode()))nodes.push(n);
+  nodes.forEach(node=>{
+    const p=node.parentElement;if(!p||p.closest('script,style,noscript,textarea,pre,code'))return;
+    const old=node.nodeValue||'';let v=old;
+    for(const [re,to] of RULES)v=v.replace(re,to);
+    v=v.replace(/[ \t]{2,}/g,' ').replace(/\s+([,.;:!?])/g,'$1');
+    if(v!==old)node.nodeValue=v;
+  });
+}
+
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>clean(),{once:true});else clean();
+let timer;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(()=>clean(),70)}).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+setTimeout(()=>clean(),250);setTimeout(()=>clean(),1000);
+})();
