@@ -73,7 +73,7 @@ function refreshUi(){
     btn.textContent='Générer le portrait enfant';
     let note=document.getElementById('ap-v141-child-note');
     if(!note){note=document.createElement('div');note.id='ap-v141-child-note';btn.parentNode&&btn.parentNode.insertBefore(note,btn)}
-    if(note)note.innerHTML=`<strong>Lecture enfant${a!=null?' · '+a+' ans':''}</strong><br>Les calculs astrologiques sont ceux du thème V121 ; seule leur interprétation est adaptée à l’âge de ${escapeHtml(name)}.`;
+    if(note)note.innerHTML=`<strong>Lecture enfant${a!=null?' · '+a+' ans':''}</strong><br>Une interprétation du thème adaptée à l’âge de ${escapeHtml(name)}, sans modifier ses données astrologiques de naissance.`;
   }
   const title=document.getElementById('n-res-titre');if(title&&title.textContent)title.textContent=`Portrait enfant de ${name}`;
   const actions=document.getElementById('ap100-natal-actions');
