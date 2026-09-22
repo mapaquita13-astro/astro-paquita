@@ -1,114 +1,142 @@
-/* Astro Paquita — V137 nettoyage client global.
-   Affichage uniquement : aucun calcul natal, maison, transit, prévision ou synastrie n'est remplacé ici. */
+/* Astro Paquita — V137 présentation client.
+   Couche d'affichage uniquement : aucun calcul astrologique n'est remplacé. */
 (function(){
 'use strict';
 
 const LANGS=['fr','en','es','ar'];
-const HOME={
- fr:{tagline:'Éclairez votre chemin',home:'Accueil',natal:'Portrait natal',future:'Mon avenir',relations:'Relations',profile:'Profil',
-  heroKicker:"Plus qu'une astrologie, un voyage vers vous-même",heroTitle:"Votre ciel,<br><em>aujourd'hui</em>",heroText:'Des clés pour mieux vous comprendre et avancer avec confiance.',heroCta:'Découvrir mon ciel du jour →',
-  today:'Aujourd’hui',climate:'Votre climat du moment',personal:'Lecture personnalisée',todayText:'Retrouvez votre prévision calculée pour votre profil et les périodes qui méritent votre attention.',todayCta:'Lire la prévision complète →',
-  next:'Prochain temps fort',details:'Voir les détails →',explore:'Explorez votre univers',align:'Une vie plus alignée',
-  natalDesc:'Découvrez vos forces, vos contradictions et ce qui vous rend unique.',futureDesc:'Visualisez vos tendances, les périodes qui comptent et le bon moment pour agir.',relationsDesc:"Comprenez vos liens, votre manière d'aimer et la dynamique entre deux thèmes.",
-  banner:'Des étoiles pour avancer, un espace pour être vous.',bannerSub:'Mieux se connaître, pour mieux rayonner.'},
- en:{tagline:'Light your path',home:'Home',natal:'Natal portrait',future:'My future',relations:'Relationships',profile:'Profile',
-  heroKicker:'More than astrology, a journey toward yourself',heroTitle:'Your sky,<br><em>today</em>',heroText:'Clear insights to understand yourself better and move forward with confidence.',heroCta:'Discover my sky today →',
-  today:'Today',climate:'Your current climate',personal:'Personal reading',todayText:'See the forecast calculated for your profile and the periods that deserve your attention.',todayCta:'Read the full forecast →',
-  next:'Next key period',details:'View details →',explore:'Explore your universe',align:'A more aligned life',natalDesc:'Discover your strengths, contradictions and what makes you unique.',futureDesc:'See your trends, key periods and the best moments to act.',relationsDesc:'Understand your bonds, your way of loving and the dynamics between two charts.',banner:'Stars to move forward, space to be yourself.',bannerSub:'Know yourself better, shine more freely.'},
- es:{tagline:'Ilumina tu camino',home:'Inicio',natal:'Retrato natal',future:'Mi futuro',relations:'Relaciones',profile:'Perfil',
-  heroKicker:'Más que astrología, un viaje hacia ti',heroTitle:'Tu cielo,<br><em>hoy</em>',heroText:'Claves claras para comprenderte mejor y avanzar con confianza.',heroCta:'Descubrir mi cielo de hoy →',
-  today:'Hoy',climate:'Tu clima actual',personal:'Lectura personalizada',todayText:'Consulta la previsión calculada para tu perfil y los períodos que merecen tu atención.',todayCta:'Leer la previsión completa →',
-  next:'Próximo período clave',details:'Ver detalles →',explore:'Explora tu universo',align:'Una vida más alineada',natalDesc:'Descubre tus fortalezas, contradicciones y lo que te hace único.',futureDesc:'Visualiza tus tendencias, los períodos importantes y el mejor momento para actuar.',relationsDesc:'Comprende tus vínculos, tu forma de amar y la dinámica entre dos cartas.',banner:'Estrellas para avanzar, un espacio para ser tú.',bannerSub:'Conocerte mejor para brillar más.'},
- ar:{tagline:'أنر طريقك',home:'الرئيسية',natal:'الخريطة الشخصية',future:'مستقبلي',relations:'العلاقات',profile:'الملف',
-  heroKicker:'أكثر من علم التنجيم، رحلة نحو ذاتك',heroTitle:'سماؤك،<br><em>اليوم</em>',heroText:'إشارات واضحة لفهم نفسك والتقدم بثقة.',heroCta:'اكتشف سمائي اليوم ←',today:'اليوم',climate:'مناخك الحالي',personal:'قراءة شخصية',todayText:'اطّلع على التوقع المحسوب لملفك والفترات التي تستحق انتباهك.',todayCta:'اقرأ التوقع الكامل ←',next:'الفترة المهمة القادمة',details:'عرض التفاصيل ←',explore:'اكتشف عالمك',align:'حياة أكثر انسجامًا',natalDesc:'اكتشف نقاط قوتك وتناقضاتك وما يجعلك مميزًا.',futureDesc:'شاهد اتجاهاتك والفترات المهمة وأفضل الأوقات للتحرك.',relationsDesc:'افهم روابطك وطريقتك في الحب وديناميكية خريطتين.',banner:'نجوم تساعدك على التقدم ومساحة لتكون نفسك.',bannerSub:'اعرف نفسك أكثر لتتألق أكثر.'}
+function lang(){const l=String(window.AP_LANG||localStorage.getItem('astro-lang')||'fr').toLowerCase().slice(0,2);return LANGS.includes(l)?l:'fr'}
+function norm(v){return String(v||'').replace(/\s+/g,' ').trim()}
+
+const HOME_TRANSLATIONS={
+ en:{
+  'Éclairez votre chemin':'Light your path','Plus qu\'une astrologie, un voyage vers vous-même':'More than astrology, a journey toward yourself',
+  "Votre ciel, aujourd'hui":'Your sky, today','Des clés lumineuses pour mieux vous comprendre et avancer en confiance':'Clear insights to understand yourself better and move forward with confidence',
+  'Découvrir mon ciel du jour →':'Discover my sky today →',"Aujourd'hui":'Today','Votre climat du moment':'Your current climate','Lecture personnalisée':'Personal reading',
+  "Retrouvez la prévision réellement calculée pour votre profil, avec les domaines qui ressortent aujourd'hui et les périodes qui méritent votre attention.":'See the forecast calculated for your profile, with the areas highlighted today and the periods that deserve your attention.',
+  'Lire la prévision complète →':'Read the full forecast →','Prochain temps fort':'Next key period','Voir les détails →':'View details →','Explorez votre univers':'Explore your universe','Une vie plus alignée':'A more aligned life',
+  'Portrait natal':'Natal portrait','Découvrez vos forces, vos contradictions et ce qui vous rend profondément unique.':'Discover your strengths, contradictions and what makes you unique.',
+  'Mon avenir':'My future','Visualisez vos tendances, les périodes qui comptent et le bon moment pour agir.':'See your trends, key periods and the best moments to act.',
+  'Relations':'Relationships',"Comprenez vos liens, votre manière d'aimer et la dynamique entre deux thèmes.":'Understand your bonds, your way of loving and the dynamics between two charts.',
+  'Des étoiles pour avancer, un espace pour être vous.':'Stars to move forward, space to be yourself.','Mieux se connaître, pour mieux rayonner.':'Know yourself better, shine more freely.',
+  'Accueil':'Home','Profil':'Profile'
+ },
+ es:{
+  'Éclairez votre chemin':'Ilumina tu camino','Plus qu\'une astrologie, un voyage vers vous-même':'Más que astrología, un viaje hacia ti',
+  "Votre ciel, aujourd'hui":'Tu cielo, hoy','Des clés lumineuses pour mieux vous comprendre et avancer en confiance':'Claves claras para comprenderte mejor y avanzar con confianza',
+  'Découvrir mon ciel du jour →':'Descubrir mi cielo de hoy →',"Aujourd'hui":'Hoy','Votre climat du moment':'Tu clima actual','Lecture personnalisée':'Lectura personalizada',
+  "Retrouvez la prévision réellement calculée pour votre profil, avec les domaines qui ressortent aujourd'hui et les périodes qui méritent votre attention.":'Consulta la previsión calculada para tu perfil, las áreas que destacan hoy y los períodos que merecen tu atención.',
+  'Lire la prévision complète →':'Leer la previsión completa →','Prochain temps fort':'Próximo período clave','Voir les détails →':'Ver detalles →','Explorez votre univers':'Explora tu universo','Une vie plus alignée':'Una vida más alineada',
+  'Portrait natal':'Retrato natal','Découvrez vos forces, vos contradictions et ce qui vous rend profondément unique.':'Descubre tus fortalezas, contradicciones y lo que te hace único.',
+  'Mon avenir':'Mi futuro','Visualisez vos tendances, les périodes qui comptent et le bon moment pour agir.':'Visualiza tus tendencias, los períodos importantes y el mejor momento para actuar.',
+  'Relations':'Relaciones',"Comprenez vos liens, votre manière d'aimer et la dynamique entre deux thèmes.":'Comprende tus vínculos, tu forma de amar y la dinámica entre dos cartas.',
+  'Des étoiles pour avancer, un espace pour être vous.':'Estrellas para avanzar, un espacio para ser tú.','Mieux se connaître, pour mieux rayonner.':'Conocerte mejor para brillar más.',
+  'Accueil':'Inicio','Profil':'Perfil'
+ },
+ ar:{
+  'Éclairez votre chemin':'أنر طريقك','Plus qu\'une astrologie, un voyage vers vous-même':'أكثر من علم التنجيم، رحلة نحو ذاتك',
+  "Votre ciel, aujourd'hui":'سماؤك، اليوم','Des clés lumineuses pour mieux vous comprendre et avancer en confiance':'إشارات واضحة لفهم نفسك والتقدم بثقة',
+  'Découvrir mon ciel du jour →':'اكتشف سمائي اليوم ←',"Aujourd'hui":'اليوم','Votre climat du moment':'مناخك الحالي','Lecture personnalisée':'قراءة شخصية',
+  "Retrouvez la prévision réellement calculée pour votre profil, avec les domaines qui ressortent aujourd'hui et les périodes qui méritent votre attention.":'اطّلع على التوقع المحسوب لملفك والمجالات البارزة اليوم والفترات التي تستحق انتباهك.',
+  'Lire la prévision complète →':'اقرأ التوقع الكامل ←','Prochain temps fort':'الفترة المهمة القادمة','Voir les détails →':'عرض التفاصيل ←','Explorez votre univers':'اكتشف عالمك','Une vie plus alignée':'حياة أكثر انسجامًا',
+  'Portrait natal':'الخريطة الشخصية','Découvrez vos forces, vos contradictions et ce qui vous rend profondément unique.':'اكتشف نقاط قوتك وتناقضاتك وما يجعلك مميزًا.',
+  'Mon avenir':'مستقبلي','Visualisez vos tendances, les périodes qui comptent et le bon moment pour agir.':'شاهد اتجاهاتك والفترات المهمة وأفضل الأوقات للتحرك.',
+  'Relations':'العلاقات',"Comprenez vos liens, votre manière d'aimer et la dynamique entre deux thèmes.":'افهم روابطك وطريقتك في الحب وديناميكية خريطتين.',
+  'Des étoiles pour avancer, un espace pour être vous.':'نجوم تساعدك على التقدم ومساحة لتكون نفسك.','Mieux se connaître, pour mieux rayonner.':'اعرف نفسك أكثر لتتألق أكثر.',
+  'Accueil':'الرئيسية','Profil':'الملف'
+ }
 };
 
-function lang(){const l=String(window.AP_LANG||localStorage.getItem('astro-lang')||'fr').toLowerCase().slice(0,2);return LANGS.includes(l)?l:'fr'}
-function tx(k){return (HOME[lang()]||HOME.fr)[k]||HOME.fr[k]||k}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function activeName(){try{return (window.USER&&window.USER.prenom)||window.USER_CONNECTE?.prenom||''}catch(e){return ''}}
-function formatDate(d){try{return new Intl.DateTimeFormat(({fr:'fr-FR',en:'en-GB',es:'es-ES',ar:'ar'})[lang()]||'fr-FR',{day:'numeric',month:'long',year:'numeric'}).format(d)}catch(e){return ''}}
-function nextSignal(){if(!window.USER||typeof window.apV51Signals!=='function')return null;try{const start=new Date(),cand=[];for(let d=0;d<=180;d+=10){const dt=new Date(start);dt.setDate(dt.getDate()+d);for(const x of window.apV51Signals(dt,'marque')||[])cand.push({dt,x})}cand.sort((a,b)=>(b.x?.strength||b.x?.force||0)-(a.x?.strength||a.x?.force||0));return cand[0]||null}catch(e){return null}}
-function signalTitle(s){if(!s)return tx('next');const d=s.x?.domain||'general',pol=s.x?.polarite||'';const labels={fr:{amour:'Amour',travail:'Travail',finances:'Argent',argent:'Argent',sante:'Bien-être',famille:'Famille',voyage:'Voyage',general:'Évolution'},en:{amour:'Love',travail:'Work',finances:'Money',argent:'Money',sante:'Well-being',famille:'Family',voyage:'Travel',general:'Evolution'},es:{amour:'Amor',travail:'Trabajo',finances:'Dinero',argent:'Dinero',sante:'Bienestar',famille:'Familia',voyage:'Viaje',general:'Evolución'},ar:{amour:'الحب',travail:'العمل',finances:'المال',argent:'المال',sante:'الرفاه',famille:'العائلة',voyage:'السفر',general:'التطور'}};const states={fr:{positive:'période favorable',difficile:'période exigeante',other:'période à observer'},en:{positive:'favorable period',difficile:'demanding period',other:'period to watch'},es:{positive:'período favorable',difficile:'período exigente',other:'período a observar'},ar:{positive:'فترة داعمة',difficile:'فترة أكثر تحديًا',other:'فترة تستحق المتابعة'}};const l=lang(),lab=(labels[l]||labels.fr)[d]||(labels[l]||labels.fr).general,st=(states[l]||states.fr)[pol]||(states[l]||states.fr).other;return `${lab} — ${st}`}
-
-function ensureStyle(){
- if(document.getElementById('ap-v137-client-style'))return;
- const s=document.createElement('style');s.id='ap-v137-client-style';s.textContent=`
- #mod-question,#ap-v130-question-card,[onclick*="question" i],[data-feature="question"],[data-module="question"]{display:none!important}
- .ap-v137-media-clean,.ap121-feature .pic,.ap121-today-img{background-size:contain!important;background-repeat:no-repeat!important;background-position:center!important;background-color:#2b182d!important}
- .ap121-feature .pic{min-height:210px!important}
- .ap121-banner,.ap121-hero{background-size:cover!important;background-position:center!important}
- .ap121-banner-copy,.ap121-hero-copy{position:relative!important;z-index:3!important;background:rgba(255,250,242,.94)!important;color:#35102f!important;border:1px solid rgba(96,55,79,.14)!important;border-radius:18px!important;padding:20px 22px!important;max-width:560px!important;box-shadow:0 12px 35px rgba(40,18,36,.10)!important;text-shadow:none!important}
- .ap121-hero-copy h1,.ap121-hero-copy h2,.ap121-hero-copy h3,.ap121-banner-copy h1,.ap121-banner-copy h2,.ap121-banner-copy h3{color:#35102f!important;text-shadow:none!important}
- .ap121-hero-copy p,.ap121-banner-copy p{color:#654f60!important;text-shadow:none!important}
- .per-btn.actif,.f-btn.actif,.dom-btn.actif,.genre-btn.actif,.mod-onglet.actif,.mod-onglet.active,[aria-selected="true"]{background:#42183d!important;color:#fffaf2!important;border-color:#42183d!important;box-shadow:0 5px 14px rgba(66,24,61,.18)!important}
+function addStyle(){
+ if(document.getElementById('ap-v137-style'))return;
+ const s=document.createElement('style');s.id='ap-v137-style';s.textContent=`
+ #mod-question,#ap-v130-question-card,[data-feature="question"],[data-module="question"],[onclick*="question" i]{display:none!important}
+ .ap-v137-split{display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr)!important;gap:0!important;min-height:0!important;padding:0!important;background:#fffaf2!important;border-radius:26px!important;overflow:hidden!important;border:1px solid rgba(91,40,83,.12)!important;box-shadow:0 18px 48px rgba(69,30,59,.10)!important;position:relative!important}
+ .ap-v137-split:before{content:'';display:block!important;grid-column:1!important;grid-row:1!important;min-height:330px!important;background-image:var(--ap-v137-image)!important;background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important}
+ .ap-v137-split>.ap121-hero-copy,.ap-v137-split>.ap121-banner-copy{grid-column:2!important;grid-row:1!important;align-self:stretch!important;display:flex!important;flex-direction:column!important;justify-content:center!important;max-width:none!important;width:auto!important;margin:0!important;padding:34px 36px!important;background:#fffaf2!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:#35102f!important;text-shadow:none!important;position:relative!important;z-index:2!important}
+ .ap-v137-split>.ap121-hero-copy h1,.ap-v137-split>.ap121-hero-copy h2,.ap-v137-split>.ap121-hero-copy h3,.ap-v137-split>.ap121-banner-copy h1,.ap-v137-split>.ap121-banner-copy h2,.ap-v137-split>.ap121-banner-copy h3{color:#35102f!important;text-shadow:none!important}
+ .ap-v137-split>.ap121-hero-copy p,.ap-v137-split>.ap121-banner-copy p{color:#6d5968!important;text-shadow:none!important}
+ .ap-v137-split>.ap121-brand{position:absolute!important;z-index:4!important;left:0!important;right:0!important;top:0!important;padding:14px 18px!important;background:linear-gradient(180deg,rgba(255,250,242,.96),rgba(255,250,242,.78),transparent)!important;color:#35102f!important}
+ .ap121-feature{overflow:hidden!important;background:#fffaf2!important;border-radius:20px!important}
+ .ap121-feature .pic,.ap121-today-img{background-size:contain!important;background-position:center center!important;background-repeat:no-repeat!important;background-color:#2d1930!important;transform:none!important;min-height:210px!important}
+ .ap121-feature .copy{background:#fffaf2!important;color:#35102f!important;padding:18px 20px!important;position:relative!important;z-index:2!important}
+ .ap121-feature .copy h3,.ap121-feature .copy p{position:static!important;text-shadow:none!important}
+ .ap-v128-clean-art:after,.ap-v128-card-art-clean:after{display:none!important}
+ .ap-v128-clean-art>img,.ap-v128-card-art-clean img{transform:none!important;object-position:center center!important;object-fit:contain!important}
+ .per-btn.actif,.f-btn.actif,.dom-btn.actif,.genre-btn.actif,.mod-onglet.actif,.mod-onglet.active,.ap-v137-selected,[aria-selected="true"]{background:#42183d!important;color:#fffaf2!important;border-color:#42183d!important;box-shadow:0 6px 16px rgba(66,24,61,.20)!important}
  .f-btn.actif .f-label{color:#fffaf2!important}
- @media(max-width:760px){.ap121-feature .pic{min-height:180px!important}.ap121-banner-copy,.ap121-hero-copy{max-width:calc(100% - 24px)!important;margin:12px!important;padding:16px!important}}
+ @media(max-width:760px){.ap-v137-split{grid-template-columns:1fr!important}.ap-v137-split:before{grid-column:1!important;grid-row:1!important;min-height:235px!important}.ap-v137-split>.ap121-hero-copy,.ap-v137-split>.ap121-banner-copy{grid-column:1!important;grid-row:2!important;padding:22px 20px!important}.ap121-feature .pic,.ap121-today-img{min-height:185px!important}}
  `;document.head.appendChild(s)
 }
 
-function removeQuestion(){
+function hideQuestion(){
  document.body?.classList.remove('ap-v130-question-open');
- document.querySelectorAll('#mod-question,#ap-v130-question-card,[onclick*="question" i],[data-feature="question"],[data-module="question"]').forEach(el=>el.remove());
- document.querySelectorAll('button,a,article,div').forEach(el=>{const t=(el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();if(['ma question','my question','mi pregunta','سؤالي'].includes(t))el.remove()});
- const qpack=document.getElementById('q-pack-btn');if(qpack)qpack.remove();
+ document.querySelectorAll('#mod-question,#ap-v130-question-card,[data-feature="question"],[data-module="question"],[onclick*="question" i]').forEach(el=>{el.style.setProperty('display','none','important');el.setAttribute('aria-hidden','true')});
+ document.querySelectorAll('a,button,.ap121-feature,.ap100-feature-card,.service-card,.feature-card').forEach(el=>{const t=norm(el.textContent).toLowerCase();if(['ma question','my question','mi pregunta','سؤالي'].includes(t)){el.style.setProperty('display','none','important');el.setAttribute('aria-hidden','true')}})
 }
 
-function cleanInternalCopy(){
- const replacements=[
-  [/\bV\s*121\b/gi,''],[/\bV121\b/gi,''],[/\bmoteur\s+V121\b/gi,'calcul astrologique'],[/\bmême moteur astrologique\b/gi,'même méthode de calcul'],[/\bmême moteur\b/gi,'même méthode de calcul'],
-  [/Le résultat ne se limite plus à un score\s*:\s*/gi,''],[/Les mois calmes restent volontairement discrets\s*:\s*/gi,''],[/sans transformer deux ans en [«"]grands tournants de toute une vie[»"]/gi,''],
-  [/Le graphique vous donne la vue d['’]ensemble\s*;\s*/gi,''],[/Aucune date ne réunit assez de preuves astrologiques propres à cette intention\./gi,'Aucune période suffisamment nette ne ressort pour cette intention.'],
-  [/Les bons scores d['’]autres domaines sont volontairement ignorés\./gi,''],[/Le moteur ne remplace pas ce manque de signal par un événement d['’]un autre domaine\./gi,''],
-  [/Ce repère vient directement du même moteur que vos prévisions et vos grands événements\./gi,'Ce repère est calculé à partir de votre thème et de vos cycles actuels.'],
-  [/Une synthèse qui croise vos dominantes, planètes, maisons et aspects au lieu d['’]aligner des définitions génériques\./gi,'Une synthèse de vos dominantes, planètes, maisons et aspects.']
- ];
- document.querySelectorAll('h1,h2,h3,h4,p,span,small,button,label,div').forEach(el=>{
-   if(el.children.length>0&& !el.matches('button,label'))return;
-   let v=el.textContent||'',n=v;for(const [r,to] of replacements)n=n.replace(r,to);n=n.replace(/\s{2,}/g,' ').replace(/\s+([,.;:!?])/g,'$1').trim();if(n!==v&&n)el.textContent=n;
- });
+const COPY_REPLACEMENTS=[
+ [/\bV\s*121\b/gi,''],[/\bV121\b/gi,''],[/lectures\s+V121/gi,'indicateurs'],[/transits\s+V121/gi,'transits astrologiques'],
+ [/La courbe utilise les activations réelles de chaque mois, y compris les tendances faibles, sans les transformer en événements\.?/gi,'La courbe présente les tendances astrologiques de chaque mois, y compris les plus discrètes.'],
+ [/La courbe utilise les activations V121 réelles de chaque mois, y compris les tendances faibles, sans les transformer en événements\.?/gi,'La courbe présente les tendances astrologiques de chaque mois, y compris les plus discrètes.'],
+ [/Le résultat ne se limite plus à un score\s*:\s*/gi,''],[/Le résultat ne se limite pas à un score\s*:\s*/gi,''],
+ [/communication, attachement, attraction, soutien, tensions et complémentarités sont reliés dans une lecture structurée\.?/gi,'Explorez la communication, l’attachement, l’attraction, le soutien, les tensions et les complémentarités de votre relation.'],
+ [/Une synthèse qui croise vos dominantes, planètes, maisons et aspects au lieu d['’]aligner des définitions génériques\.?/gi,'Une synthèse de vos dominantes, planètes, maisons et aspects.'],
+ [/Les mois calmes restent volontairement discrets\s*:\s*seuls les mouvements significatifs ressortent\.?/gi,'Visualisez les mouvements les plus marquants de votre année, mois par mois.'],
+ [/Les périodes vraiment marquantes, sans transformer deux ans en [«"]grands tournants de toute une vie[»"]\.?/gi,'Repérez les périodes marquantes des 24 prochains mois.'],
+ [/Le graphique vous donne la vue d['’]ensemble\s*;\s*les modules ci-dessous expliquent ce qui se joue réellement\.?/gi,'Explorez ensuite chaque période plus en détail.'],
+ [/Ce repère vient directement du même moteur que vos prévisions et vos grands événements\.?/gi,'Un repère à explorer dans vos prévisions.'],
+ [/Aucune date ne réunit assez de preuves astrologiques propres à cette intention\.?/gi,'Aucune période suffisamment nette ne ressort pour cette intention.'],
+ [/Les bons scores d['’]autres domaines sont volontairement ignorés\.?/gi,''],[/Le moteur ne remplace pas ce manque de signal par un événement d['’]un autre domaine\.?/gi,''],
+ [/No sufficiently clear trend is available for this area over this period\.?/gi,'No sufficiently clear trend is available for this area over this period.']
+];
+function cleanCopy(){
+ const root=document.body;if(!root)return;const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];let n;while((n=walker.nextNode()))nodes.push(n);
+ nodes.forEach(node=>{const p=node.parentElement;if(!p||p.closest('script,style,noscript,textarea,pre,code'))return;let v=node.nodeValue||'',nv=v;COPY_REPLACEMENTS.forEach(([re,to])=>nv=nv.replace(re,to));nv=nv.replace(/\s{2,}/g,' ');if(nv!==v)node.nodeValue=nv})
 }
 
-function selectedButtons(){
- document.addEventListener('click',e=>{
-  const b=e.target.closest('.per-btn,.f-btn,.dom-btn,.genre-btn,.mod-onglet');if(!b)return;
-  const group=b.closest('.per-btns,.f-intentions,.dom-btns,.genre-btns,.mod-onglets,.mod-tabs')||b.parentElement;if(!group)return;
-  const selector=b.classList.contains('per-btn')?'.per-btn':b.classList.contains('f-btn')?'.f-btn':b.classList.contains('dom-btn')?'.dom-btn':b.classList.contains('genre-btn')?'.genre-btn':'.mod-onglet';
-  group.querySelectorAll(selector).forEach(x=>{x.classList.remove('actif','active');x.setAttribute('aria-selected','false')});b.classList.add('actif');b.setAttribute('aria-selected','true');
- },true)
+const HOME_IMAGES=[
+ {re:/portrait natal|natal portrait|retrato natal|الخريطة الشخصية/i,url:'assets/img/natal.jpg'},
+ {re:/mon avenir|my future|mi futuro|مستقبلي/i,url:'assets/img/future.jpg'},
+ {re:/relations|synastr|relationships|relaciones|العلاقات/i,url:'assets/img/relations.jpg'},
+ {re:/portrait enfant|child portrait|retrato infantil|صورة الطفل/i,url:'assets/img/profile.jpg'},
+ {re:/prévisions|previsions|forecast|previsiones|التوقعات/i,url:'assets/img/forecast.jpg'},
+ {re:/bon moment|ideal timing|momento ideal|التوقيت الأنسب/i,url:'assets/img/jupiter.jpg'},
+ {re:/24 mois|24 months|24 meses|24 شهر/i,url:'assets/img/story2.jpg'}
+];
+function fixCardImages(){
+ document.querySelectorAll('#ap121-home .ap121-feature,.ap100-feature-card,.service-card,.feature-card').forEach(card=>{const t=norm(card.textContent),hit=HOME_IMAGES.find(x=>x.re.test(t));if(!hit)return;const pic=card.querySelector('.pic,[class*="art"],[style*="background-image"]');if(pic){pic.style.setProperty('background-image',`url('${hit.url}')`,'important');pic.style.setProperty('background-size','contain','important');pic.style.setProperty('background-position','center center','important');pic.style.setProperty('background-repeat','no-repeat','important')}const img=card.querySelector('img');if(img){img.src=hit.url;img.style.setProperty('object-fit','contain','important');img.style.setProperty('object-position','center center','important');img.style.setProperty('transform','none','important')}})
+}
+
+function splitVisualBlocks(){
+ document.querySelectorAll('.ap121-hero,.ap121-banner,#ap121-module-banner').forEach(el=>{if(el.classList.contains('ap-v137-split'))return;let bg=el.style.backgroundImage||getComputedStyle(el).backgroundImage||'';if(!bg||bg==='none'||!bg.includes('url('))return;el.style.setProperty('--ap-v137-image',bg);el.style.setProperty('background-image','none','important');el.classList.add('ap-v137-split')})
+}
+
+function translateHome(){
+ const l=lang();document.documentElement.dir=l==='ar'?'rtl':'ltr';if(l==='fr')return;const dict=HOME_TRANSLATIONS[l];if(!dict)return;
+ const root=document.querySelector('#ap121-home');const nav=document.querySelector('#ap121-nav');[root,nav].filter(Boolean).forEach(host=>{const walker=document.createTreeWalker(host,NodeFilter.SHOW_TEXT);const nodes=[];let n;while((n=walker.nextNode()))nodes.push(n);nodes.forEach(node=>{let text=norm(node.nodeValue);if(!text)return;for(const [fr,tr] of Object.entries(dict)){if(text===fr){node.nodeValue=node.nodeValue.replace(fr,tr);return}if(text.startsWith(fr+', ')){node.nodeValue=node.nodeValue.replace(fr,tr);return}if(text.startsWith(fr+' ')){node.nodeValue=node.nodeValue.replace(fr,tr);return}}})})
+}
+
+function keepSelected(){
+ document.querySelectorAll('.per-btn.actif,.f-btn.actif,.dom-btn.actif,.genre-btn.actif,.mod-onglet.actif,.mod-onglet.active,[aria-selected="true"]').forEach(el=>el.classList.add('ap-v137-selected'));
+}
+function bindSelection(){
+ if(window.__apV137SelectionBound)return;window.__apV137SelectionBound=true;
+ document.addEventListener('click',e=>{const b=e.target.closest('.per-btn,.f-btn,.dom-btn,.genre-btn,.mod-onglet');if(!b)return;setTimeout(()=>{const group=b.closest('.per-btns,.f-intentions,.dom-btns,.genre-btns,.mod-onglets,.mod-tabs')||b.parentElement;if(group)group.querySelectorAll('.ap-v137-selected').forEach(x=>x.classList.remove('ap-v137-selected'));b.classList.add('ap-v137-selected');b.setAttribute('aria-selected','true')},0)},false)
 }
 
 function patchIdealTiming(){
- const form=document.getElementById('f-form');if(form){
-  const p=form.querySelector('.bloc p');if(p&&/10\s+prochaines?\s+ann[ée]es|10\s+ans/i.test(p.textContent||''))p.textContent='Choisissez votre intention. Astro Paquita recherche les meilleures périodes dans les 24 prochains mois.';
- }
- const fn=window.lancerFenetre;if(typeof fn==='function'&&!fn.__apV137){
-  try{
-   let src=fn.toString();
-   src=src.replace('const nbJours = 365 * 10;','const nbJours = 365 * 2;')
-          .replace("horizon:'10 ans'","horizon:'24 mois'")
-          .replace(/Scan 10 ans/g,'Scan 24 mois')
-          .replace(/scan 10 ans/g,'scan 24 mois');
-   const patched=(0,eval)('('+src+')');patched.__apV137=true;window.lancerFenetre=patched;
-  }catch(e){console.warn('Correctif horizon Bon moment non appliqué',e)}
- }
+ const form=document.getElementById('f-form');if(form){const p=form.querySelector('.bloc p');if(p&&/10\s+prochaines?\s+ann[ée]es|10\s+ans/i.test(p.textContent||''))p.textContent='Choisissez votre intention. Astro Paquita recherche les meilleures périodes dans les 24 prochains mois.'}
+ const fn=window.lancerFenetre;if(typeof fn==='function'&&!fn.__apV137){try{let src=fn.toString();src=src.replace('const nbJours = 365 * 10;','const nbJours = 365 * 2;').replace("horizon:'10 ans'","horizon:'24 mois'").replace(/Scan 10 ans/g,'Scan 24 mois').replace(/scan 10 ans/g,'scan 24 mois');const patched=(0,eval)('('+src+')');patched.__apV137=true;window.lancerFenetre=patched}catch(e){console.warn('Horizon Bon moment non modifié',e)}}
 }
 
-function renderHomeTranslated(){
- const h=document.getElementById('ap121-home');if(!h||!h.classList.contains('active'))return;
- const IMG={home:'assets/img/home.jpg',today:'assets/img/today.jpg',jupiter:'assets/img/jupiter.jpg',natal:'assets/img/natal.jpg',future:'assets/img/future.jpg',relations:'assets/img/relations.jpg',futureBanner:'assets/img/futureBanner.jpg'};
- const s=nextSignal(),name=activeName();
- h.innerHTML=`<div class="ap121-hero" style="background-image:url(${IMG.home})"><div class="ap121-brand"><div class="ap121-brandword">☾ Astro Paquita<small>${esc(tx('tagline'))}</small></div><div class="ap121-brand-actions"><button class="ap121-pill" type="button">${lang().toUpperCase()}⌄</button><button class="ap121-avatar" onclick="v121Go('profile')">♙</button></div></div><div class="ap121-hero-copy"><div class="ap121-kicker">${esc(tx('heroKicker'))}</div><h1>${tx('heroTitle')}</h1><p>${esc(tx('heroText'))}${name?` ${esc(name)}.`:''}</p><button class="ap121-cta" onclick="ap121Open('prev')">${esc(tx('heroCta'))}</button></div></div><div class="ap121-wrap"><article class="ap121-card ap121-today"><div class="ap121-today-img ap-v137-media-clean" style="background-image:url(${IMG.today})"></div><div><div class="ap121-title-row"><div><span class="ap121-label">☉ ${esc(tx('today'))}</span><h2 style="margin:9px 0 4px">${esc(tx('climate'))}</h2></div><span class="ap121-label">☾ ${esc(tx('personal'))}</span></div><p>${esc(tx('todayText'))}</p><button class="ap121-link" onclick="ap121Open('prev')">${esc(tx('todayCta'))}</button></div></article><article class="ap121-card ap121-today"><div class="ap121-today-img ap-v137-media-clean" style="background-image:url(${IMG.jupiter})"></div><div><span class="ap121-kicker" style="color:#b0772b">${esc(tx('next'))}</span><h2 style="margin:6px 0">${esc(signalTitle(s))}</h2><div class="ap121-date">${s?esc(formatDate(s.dt)):'—'}</div><button class="ap121-link" onclick="v121Go('future')">${esc(tx('details'))}</button></div></article><div class="ap121-title-row" style="margin:28px 6px 14px"><h2 style="font:600 36px/1 'Cormorant Garamond',Georgia,serif;color:#341840">${esc(tx('explore'))}</h2><span class="ap121-kicker" style="color:#9b6a32">${esc(tx('align'))}</span></div><div class="ap121-card-grid"><article class="ap121-feature" onclick="v121Go('natal')"><div class="pic ap-v137-media-clean" style="background-image:url(${IMG.natal})"></div><div class="copy"><h3>${esc(tx('natal'))}</h3><p>${esc(tx('natalDesc'))}</p></div><span class="ap121-arrow">→</span></article><article class="ap121-feature" onclick="v121Go('future')"><div class="pic ap-v137-media-clean" style="background-image:url(${IMG.future})"></div><div class="copy"><h3>${esc(tx('future'))}</h3><p>${esc(tx('futureDesc'))}</p></div><span class="ap121-arrow">→</span></article><article class="ap121-feature" onclick="v121Go('relations')"><div class="pic ap-v137-media-clean" style="background-image:url(${IMG.relations})"></div><div class="copy"><h3>${esc(tx('relations'))}</h3><p>${esc(tx('relationsDesc'))}</p></div><span class="ap121-arrow">→</span></article></div><div class="ap121-banner" style="background-image:url(${IMG.futureBanner});margin-top:18px"><div class="ap121-banner-copy"><h3>${esc(tx('banner'))}</h3><p>${esc(tx('bannerSub'))}</p></div></div></div>`;
- const nav=document.getElementById('ap121-nav');if(nav){const labels={home:tx('home'),natal:tx('natal'),future:tx('future'),relations:tx('relations'),profile:tx('profile')};nav.querySelectorAll('button[data-k]').forEach(b=>{const span=b.querySelector('span'),ico=span?span.outerHTML:'';b.innerHTML=ico+esc(labels[b.dataset.k]||b.dataset.k)})}
+function hookLanguage(){
+ if(window.__apV137LangHook)return;window.__apV137LangHook=true;
+ const wrap=name=>{const base=window[name];if(typeof base!=='function'||base.__apV137)return;const fn=function(){const r=base.apply(this,arguments);setTimeout(run,35);setTimeout(run,180);return r};fn.__apV137=true;window[name]=fn};wrap('v100SetLang');wrap('apSetLang')
 }
 
-function removeOverlayCopy(){
- document.querySelectorAll('.ap121-feature .pic,.ap121-today-img').forEach(el=>{el.classList.add('ap-v137-media-clean');el.querySelectorAll('h1,h2,h3,h4,p,span,.copy,.text').forEach(x=>x.remove())});
-}
-
-function run(){ensureStyle();removeQuestion();patchIdealTiming();cleanInternalCopy();removeOverlayCopy();renderHomeTranslated()}
-selectedButtons();
+function run(){addStyle();hideQuestion();cleanCopy();fixCardImages();splitVisualBlocks();translateHome();keepSelected();patchIdealTiming();hookLanguage()}
+bindSelection();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
-let t;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(run,120)}).observe(document.documentElement,{childList:true,subtree:true});
-window.addEventListener('storage',()=>setTimeout(run,20));
+let timer;new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(run,90)}).observe(document.documentElement,{childList:true,subtree:true});
+setTimeout(run,300);setTimeout(run,1200);
 })();
