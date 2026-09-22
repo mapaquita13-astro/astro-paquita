@@ -1,4 +1,4 @@
-/* Astro Paquita — V141 Portrait enfant réel.
+/* Astro Paquita — V144 Portrait enfant réel.
    Adaptation éditoriale uniquement : les positions, maisons, aspects et dominantes restent ceux du moteur V121. */
 (function(){
 'use strict';
@@ -83,7 +83,7 @@ function refreshUi(){
     if(bs[1]){bs[1].textContent='↓ Télécharger le portrait enfant en PDF';bs[1].removeAttribute('onclick');bs[1].onclick=()=>{if(typeof window.exporterPDF==='function')window.exporterPDF('n-res','Portrait enfant')}}
   }
 }
-function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]))}
 
 function patchNatalFunctions(){
   if(window.__apV141NatalPatched)return;
@@ -99,7 +99,7 @@ function patchNatalFunctions(){
   window.natalFingerprint=function(){
     const fp=String(baseFingerprint.apply(this,arguments)||'');
     if(!activeChild())return fp;
-    const a=ageNow();return `${fp}|portrait-enfant-v141|${ageBand(a)}|age-${a==null?'x':a}`;
+    const a=ageNow();return `${fp}|portrait-enfant-v144|${ageBand(a)}|age-${a==null?'x':a}`;
   };
   window.displayNatal=function(text,meta){
     const r=baseDisplay.apply(this,arguments);setTimeout(refreshUi,0);setTimeout(refreshUi,120);return r;
@@ -113,17 +113,18 @@ function patchNavigation(){
   if(typeof open==='function'){
     window.ap121Open=function(id){
       const natal=String(id||'').toLowerCase()==='natal';
-      if(natal&&childLaunchPending){childLaunchPending=false;}
-      else if(!natal||!childLaunchPending)exitChildMode();
+      if(natal&&childMode)childLaunchPending=false;
+      else if(!natal)exitChildMode();
       const r=open.apply(this,arguments);setTimeout(refreshUi,100);return r;
     };
   }
   const go=window.v121Go;
   if(typeof go==='function'){
     window.v121Go=function(id){
-      const k=String(id||'').toLowerCase();
-      if(k!=='natal'||!childLaunchPending)exitChildMode();
-      return go.apply(this,arguments);
+      const natal=String(id||'').toLowerCase()==='natal';
+      if(natal&&childMode)childLaunchPending=false;
+      else if(!natal)exitChildMode();
+      const r=go.apply(this,arguments);setTimeout(refreshUi,100);return r;
     };
   }
   window.__apV141NavPatched=true;
