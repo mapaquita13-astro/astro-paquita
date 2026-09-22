@@ -1,23 +1,21 @@
-/* Astro Paquita — compatibilité V134
+/* Astro Paquita — compatibilité V135
    Ancien moteur parallèle V127 volontairement neutralisé.
    La V121 reste l’unique source de vérité pour les maisons, transits,
    prévisions, synastries et scores.
    Ce fichier ne fait qu'amorcer les correctifs d'interface sûrs : nettoyage
-   visuel, maintenance, notifications et restauration du vrai module V121
-   « Ma question » lorsqu'une ancienne couche V99/V100 le supprime. */
+   visuel, maintenance, notifications, restauration de « Ma question » et
+   raccordement des parcours de paiement déjà prévus par l'application. */
 (function(){
 'use strict';
 window.__AP_TRUTH_ENGINE_DISABLED__=true;
 
-// Sauvegarde le vrai module V121 AVANT DOMContentLoaded : V99/V100 le suppriment
-// ensuite physiquement du DOM. On ne recrée aucun calcul ni formulaire inventé.
 const originalQuestion=document.getElementById('mod-question');
 const questionTemplate=originalQuestion?originalQuestion.cloneNode(true):null;
 const questionOriginalParent=originalQuestion&&originalQuestion.parentElement?originalQuestion.parentElement:null;
 
 function ensureQuestionStyle(){
-  if(document.getElementById('ap-v134-question-style'))return;
-  const s=document.createElement('style');s.id='ap-v134-question-style';s.textContent=`
+  if(document.getElementById('ap-v135-question-style'))return;
+  const s=document.createElement('style');s.id='ap-v135-question-style';s.textContent=`
   body.ap-v130-question-open #mod-question{display:block!important}
   body.ap-v130-question-open #q-credit-box{display:block!important}
   body.ap-v130-question-open #q-pack-btn,
@@ -37,11 +35,11 @@ function protectQuestionModule(){
   if(!questionTemplate)return;
   ensureQuestionStyle();
   const root=document.body||document.documentElement;
-  if(root&&!window.__AP_V134_QUESTION_OBSERVER__){
-    window.__AP_V134_QUESTION_OBSERVER__=new MutationObserver(()=>{
+  if(root&&!window.__AP_V135_QUESTION_OBSERVER__){
+    window.__AP_V135_QUESTION_OBSERVER__=new MutationObserver(()=>{
       if(!document.getElementById('mod-question'))queueMicrotask(ensureQuestionModule);
     });
-    window.__AP_V134_QUESTION_OBSERVER__.observe(root,{childList:true,subtree:true});
+    window.__AP_V135_QUESTION_OBSERVER__.observe(root,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{
     ensureQuestionModule();
@@ -53,7 +51,7 @@ function protectQuestionModule(){
 
 function bridgeQuestionCredits(){
   const base=window.appelerClaude;
-  if(typeof base!=='function'||base.__apV134CreditsBridge)return;
+  if(typeof base!=='function'||base.__apV135CreditsBridge)return;
   const wrapped=async function(payload){
     const data=await base.apply(this,arguments);
     try{
@@ -69,14 +67,12 @@ function bridgeQuestionCredits(){
     }catch(e){}
     return data;
   };
-  wrapped.__apV134CreditsBridge=true;
-  wrapped.__apV134Base=base;
+  wrapped.__apV135CreditsBridge=true;
+  wrapped.__apV135Base=base;
   window.appelerClaude=wrapped;
 }
 
 function disablePublicQuestionHistory(){
-  // Le cahier actuel retire l'historique utilisateur du site public.
-  // On n'efface pas les anciennes données locales ; on cesse simplement d'en créer de nouvelles.
   try{
     window.sauvegarderHistorique=function(){};
     window.chargerHistorique=function(){
@@ -84,6 +80,67 @@ function disablePublicQuestionHistory(){
       const cont=document.getElementById('q-historique');if(cont)cont.style.setProperty('display','none','important');
     };
   }catch(e){}
+}
+
+function bridgePremiumPromo(){
+  const applyBase=window.appliquerCodePromo;
+  if(typeof applyBase==='function'&&!applyBase.__apV135PromoBridge){
+    const wrappedApply=async function(code,msgEl){
+      const data=await applyBase.apply(this,arguments);
+      try{
+        if(data&&data.type==='reduction_pourcentage'&&data.checkout_required){
+          const promo=String(data.code||code||'').trim().toUpperCase();
+          if(promo)sessionStorage.setItem('ap-premium-promo-pending',promo);
+          if(msgEl){
+            msgEl.textContent=`Code ${promo} validé : -${Number(data.valeur)||0}% sera appliqué au paiement Premium.`;
+            msgEl.style.color='#4ade80';
+          }
+        }else if(data){
+          sessionStorage.removeItem('ap-premium-promo-pending');
+        }
+      }catch(e){}
+      return data;
+    };
+    wrappedApply.__apV135PromoBridge=true;
+    window.appliquerCodePromo=wrappedApply;
+  }
+
+  const premiumBase=window.passerPremium;
+  if(typeof premiumBase==='function'&&!premiumBase.__apV135PromoBridge){
+    const wrappedPremium=async function(){
+      const input=document.getElementById('compte-champ-promo');
+      let code='';
+      try{code=String(input&&input.value||sessionStorage.getItem('ap-premium-promo-pending')||'').trim().toUpperCase()}catch(e){}
+      if(!code)return premiumBase.apply(this,arguments);
+      const token=localStorage.getItem('astro-token')||'';
+      if(!token){
+        if(typeof window.ouvrirCompte==='function')window.ouvrirCompte();
+        return;
+      }
+      const msg=document.getElementById('compte-promo-msg');
+      try{
+        const resp=await fetch('/api/stripe/checkout',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body:JSON.stringify({codePromo:code})
+        });
+        const data=await resp.json().catch(()=>({}));
+        if(!resp.ok){
+          if(msg){msg.textContent=data.erreur||'Code promo ou paiement indisponible.';msg.style.color='#f87171';}
+          else alert(data.erreur||'Paiement indisponible pour le moment.');
+          return;
+        }
+        if(data.url){window.location.href=data.url;return;}
+        if(msg){msg.textContent='Réponse Stripe invalide.';msg.style.color='#f87171';}
+      }catch(e){
+        if(msg){msg.textContent='Erreur de connexion au paiement.';msg.style.color='#f87171';}
+        else alert('Erreur de connexion au paiement.');
+      }
+    };
+    wrappedPremium.__apV135PromoBridge=true;
+    wrappedPremium.__apV135Base=premiumBase;
+    window.passerPremium=wrappedPremium;
+  }
 }
 
 function secureMaintenanceBypass(){
@@ -116,17 +173,18 @@ function disableLegacyNotifications(){
 
 if(!document.querySelector('script[src*="assets/v128-visual-cleanup.js"]')){
   const s=document.createElement('script');
-  s.src='assets/v128-visual-cleanup.js?v=134';
+  s.src='assets/v128-visual-cleanup.js?v=135';
   s.defer=true;
-  s.setAttribute('data-ap-v134-visual-cleanup','1');
+  s.setAttribute('data-ap-v135-visual-cleanup','1');
   document.head.appendChild(s);
 }
 protectQuestionModule();
 bridgeQuestionCredits();
 disablePublicQuestionHistory();
+bridgePremiumPromo();
 secureMaintenanceBypass();
 disableLegacyNotifications();
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bridgeQuestionCredits();disablePublicQuestionHistory()},{once:true});
-setTimeout(()=>{bridgeQuestionCredits();disablePublicQuestionHistory()},250);
-setTimeout(()=>{bridgeQuestionCredits();disablePublicQuestionHistory()},1200);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bridgeQuestionCredits();disablePublicQuestionHistory();bridgePremiumPromo()},{once:true});
+setTimeout(()=>{bridgeQuestionCredits();disablePublicQuestionHistory();bridgePremiumPromo()},250);
+setTimeout(()=>{bridgeQuestionCredits();disablePublicQuestionHistory();bridgePremiumPromo()},1200);
 })();
