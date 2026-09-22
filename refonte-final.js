@@ -1,4 +1,4 @@
-/* Astro Paquita — chargeur de compatibilité interface */
+/* Astro Paquita — chargeur de compatibilité interface V148 */
 (function(){
 'use strict';
 function neutraliseAncienneInterface(){
@@ -13,8 +13,8 @@ function ensureActiveLayer(){
   neutraliseAncienneInterface();
   if(document.querySelector('script[src*="assets/refonte-final.js"]'))return;
   const s=document.createElement('script');
-  s.src='assets/refonte-final.js?v=139';
-  s.defer=true;
+  s.src='assets/refonte-final.js?v=148';
+  s.async=false;
   s.setAttribute('data-ap-active-loader','1');
   document.head.appendChild(s);
 }
@@ -22,7 +22,7 @@ function ensureQuestionGuard(done){
   if(document.querySelector('script[src*="assets/v139-question-guard.js"]')){done();return}
   const s=document.createElement('script');
   s.src='assets/v139-question-guard.js?v=139';
-  s.defer=true;
+  s.async=false;
   s.setAttribute('data-ap-question-guard','1');
   s.onload=done;
   s.onerror=done;
