@@ -1,4 +1,4 @@
-/* Astro Paquita — V133 nettoyage visuel et cohérence d'interface.
+/* Astro Paquita — V140 nettoyage visuel et cohérence d'interface.
    Aucune logique astrologique n'est modifiée. */
 (function(){
 'use strict';
@@ -41,10 +41,11 @@ function cleanBanners(){
   });
 }
 function hideEmbeddedCopy(){
+  /* Ne jamais masquer .ap121-banner-copy : c'est le vrai texte HTML de la bannière.
+     On retire seulement d'éventuels calques décoratifs dupliqués. */
   document.querySelectorAll('.ap121-banner,.ap121-hero').forEach(b=>{
-    const title=b.querySelector('h1,h2,.ap121-title,.ap121-hero-title');
-    if(!title)return;
-    b.querySelectorAll('.ap121-banner-copy,.decorative-copy,.image-copy').forEach(x=>{if(x!==title)x.style.setProperty('display','none','important')});
+    b.querySelectorAll('.decorative-copy,.image-copy').forEach(x=>x.style.setProperty('display','none','important'));
+    b.querySelectorAll('.ap121-banner-copy').forEach(x=>x.style.removeProperty('display'));
   });
 }
 function standaloneLabel(el){
