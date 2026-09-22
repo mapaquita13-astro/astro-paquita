@@ -50,6 +50,29 @@ function protectQuestionModule(){
   else ensureQuestionModule();
 }
 
+function bridgeQuestionCredits(){
+  const base=window.appelerClaude;
+  if(typeof base!=='function'||base.__apV134CreditsBridge)return;
+  const wrapped=async function(payload){
+    const data=await base.apply(this,arguments);
+    try{
+      if(payload&&payload.feature==='question'&&data&&Object.prototype.hasOwnProperty.call(data,'question_credits')){
+        const credits=Number(data.question_credits)||0;
+        data.astro_meta={...(data.astro_meta||{}),question_credits:credits};
+        if(window.USER_CONNECTE){
+          window.USER_CONNECTE.question_credits=credits;
+          if(typeof window.majCreditsQuestionsUI==='function')window.majCreditsQuestionsUI();
+          if(typeof window.majVueCompte==='function')window.majVueCompte();
+        }
+      }
+    }catch(e){}
+    return data;
+  };
+  wrapped.__apV134CreditsBridge=true;
+  wrapped.__apV134Base=base;
+  window.appelerClaude=wrapped;
+}
+
 function secureMaintenanceBypass(){
   try{
     const url=new URL(location.href);
@@ -86,6 +109,10 @@ if(!document.querySelector('script[src*="assets/v128-visual-cleanup.js"]')){
   document.head.appendChild(s);
 }
 protectQuestionModule();
+bridgeQuestionCredits();
 secureMaintenanceBypass();
 disableLegacyNotifications();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bridgeQuestionCredits,{once:true});
+setTimeout(bridgeQuestionCredits,250);
+setTimeout(bridgeQuestionCredits,1200);
 })();
