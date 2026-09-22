@@ -1,4 +1,4 @@
-/* Astro Paquita — compatibilité V138
+/* Astro Paquita — compatibilité V139
    Couche technique interne. Aucun calcul astrologique n'est remplacé ici. */
 (function(){
 'use strict';
@@ -106,6 +106,7 @@ function loadOnce(src,marker){
   const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(marker,'1');document.head.appendChild(s);
 }
 
+loadOnce('assets/v139-question-guard.js?v=139','data-ap-v139-question-guard');
 loadOnce('assets/v128-visual-cleanup.js?v=137','data-ap-v137-visual-cleanup');
 loadOnce('assets/client-cleanup-v137.js?v=138','data-ap-v138-client-cleanup');
 hideQuestionModule();
