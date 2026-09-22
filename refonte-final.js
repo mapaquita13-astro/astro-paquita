@@ -13,12 +13,22 @@ function ensureActiveLayer(){
   neutraliseAncienneInterface();
   if(document.querySelector('script[src*="assets/refonte-final.js"]'))return;
   const s=document.createElement('script');
-  s.src='assets/refonte-final.js?v=138';
+  s.src='assets/refonte-final.js?v=139';
   s.defer=true;
   s.setAttribute('data-ap-active-loader','1');
   document.head.appendChild(s);
 }
-function boot(){ensureActiveLayer()}
+function ensureQuestionGuard(done){
+  if(document.querySelector('script[src*="assets/v139-question-guard.js"]')){done();return}
+  const s=document.createElement('script');
+  s.src='assets/v139-question-guard.js?v=139';
+  s.defer=true;
+  s.setAttribute('data-ap-question-guard','1');
+  s.onload=done;
+  s.onerror=done;
+  document.head.appendChild(s);
+}
+function boot(){ensureQuestionGuard(ensureActiveLayer)}
 window.addEventListener('pageshow',neutraliseAncienneInterface);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
