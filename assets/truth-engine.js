@@ -22,6 +22,7 @@ function ensureQuestionStyle(){
   body.ap-v130-question-open #q-credit-box{display:block!important}
   body.ap-v130-question-open #q-pack-btn,
   body.ap-v130-question-open button[onclick*="acheterPackQuestions"]{display:inline-flex!important}
+  #q-historique-bloc,#q-historique{display:none!important}
   `;document.head.appendChild(s);
 }
 function ensureQuestionModule(){
@@ -73,6 +74,18 @@ function bridgeQuestionCredits(){
   window.appelerClaude=wrapped;
 }
 
+function disablePublicQuestionHistory(){
+  // Le cahier actuel retire l'historique utilisateur du site public.
+  // On n'efface pas les anciennes données locales ; on cesse simplement d'en créer de nouvelles.
+  try{
+    window.sauvegarderHistorique=function(){};
+    window.chargerHistorique=function(){
+      const bloc=document.getElementById('q-historique-bloc');if(bloc)bloc.style.setProperty('display','none','important');
+      const cont=document.getElementById('q-historique');if(cont)cont.style.setProperty('display','none','important');
+    };
+  }catch(e){}
+}
+
 function secureMaintenanceBypass(){
   try{
     const url=new URL(location.href);
@@ -110,9 +123,10 @@ if(!document.querySelector('script[src*="assets/v128-visual-cleanup.js"]')){
 }
 protectQuestionModule();
 bridgeQuestionCredits();
+disablePublicQuestionHistory();
 secureMaintenanceBypass();
 disableLegacyNotifications();
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bridgeQuestionCredits,{once:true});
-setTimeout(bridgeQuestionCredits,250);
-setTimeout(bridgeQuestionCredits,1200);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bridgeQuestionCredits();disablePublicQuestionHistory()},{once:true});
+setTimeout(()=>{bridgeQuestionCredits();disablePublicQuestionHistory()},250);
+setTimeout(()=>{bridgeQuestionCredits();disablePublicQuestionHistory()},1200);
 })();
