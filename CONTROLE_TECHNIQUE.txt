@@ -1,4 +1,4 @@
-ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE ACTUELLE — 22/09/2026 — V147
+ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE ACTUELLE — 22/09/2026 — V148
 
 BASE ASTROLOGIQUE VERROUILLÉE
 - V121 stable de référence : commit 21d70a2b523c64425a8fd7b1f1cb8e9dd8255082.
@@ -7,20 +7,28 @@ BASE ASTROLOGIQUE VERROUILLÉE
 - Toute courbe, carte, synthèse ou texte de tendance doit partir des données réellement calculées par la base V121.
 - Contrôle du 22/09/2026 : comparaison V121 -> main effectuée ; aucun fichier historique du moteur de calcul n’apparaît modifié. Les évolutions sont concentrées dans l’interface, l’administration, les images, les chargeurs et les couches de compatibilité.
 
+CONTRÔLE SPÉCIFIQUE DE INDEX.HTML
+- Comparaison directe V121 (21d70a2...) -> restauration V127 (19515a4...) : index.html présente seulement 23 changements de lignes au total, soit 15 ajouts et 8 suppressions.
+- Ces 23 différences étaient déjà présentes au moment de la restauration V127 du 20/09/2026 ; les corrections V142 à V148 ne les ont pas ajoutées.
+- Le contrôle technique du lot V127, conservé dans l’historique Git, documentait ces changements directs comme limités à : version/build, chargement des couches visuelles/compatibilité, racine de la nouvelle interface et suppression de l’ancien fallback de clé Admin côté navigateur.
+- Le comparatif V121 -> main ne montre pas de modification d’un fichier historique de calcul astrologique.
+- Conclusion de verrouillage : index.html conserve le moteur historique ; les différences connues relèvent du raccord d’interface et de sécurité/chargement, pas d’un remplacement des calculs astrologiques.
+
 SAUVEGARDES GIT
 - Sauvegarde pré-refonte : backup-main-2026-09-21-pre-refonte.
-- Sauvegarde après audit/corrections V147 : backup-v147-2026-09-22, pointée sur c1ae9464929b49c0994ec121999908992c644c4e.
+- Sauvegarde avant V148 : backup-v147-2026-09-22, pointée sur c1ae9464929b49c0994ec121999908992c644c4e.
 
 ARCHITECTURE FRONTEND ACTUELLE
 - index.html : base historique conservée ; les changements autour de la refonte sont des raccords/chargeurs d’interface.
 - refonte-final.js à la racine : chargeur de compatibilité, neutralise l’ancienne interface de refonte puis charge assets/refonte-final.js.
 - assets/refonte-final.js : couche d’interface active ; utilise les fonctions de calcul déjà présentes pour les tendances, sans remplacer le moteur astrologique.
-- assets/v139-question-guard.js : verrouille la suppression publique de « Ma question ».
+- assets/v139-question-guard.js : verrouille la suppression publique de « Ma question » avec un sentinelle caché stable portant l’identifiant attendu par l’ancienne couche. Cela empêche la recréation périodique de la carte dans le DOM public.
 - assets/v141-child-portrait.js : Portrait enfant adapté à l’âge, sécurisé et multilingue ; réutilise les données du thème natal existant.
 - assets/v143-ui-sync.js : synchronisation FR/EN/ES/AR et sélection visuelle des périodes/domaines.
 - assets/v128-visual-cleanup.js : nettoyage des anciens doublons et entrées publiques obsolètes.
 - assets/truth-engine.js : couche de compatibilité/chargement ; ne contient pas de moteur astrologique parallèle.
-- sw.js : anti-cache de l’interface ; version courante V147 au moment de ce document.
+- V148 : les scripts dynamiques sont chargés avec async=false afin de garantir l’ordre V139 -> V146 -> V147 -> V138 -> V143. Ne pas remettre un chargement asynchrone non ordonné, sinon les nettoyages/traductions peuvent s’exécuter dans le mauvais ordre.
+- sw.js : anti-cache de l’interface ; version courante V148 au moment de ce document.
 
 DIRECTION VISUELLE VALIDÉE
 - Univers crème / prune / violet nuit / doré.
@@ -61,7 +69,7 @@ PORTRAIT ENFANT — RÈGLES ACTUELLES
 - L’interface et le texte généré suivent FR / EN / ES / AR.
 - Le calcul natal n’est pas remplacé : seule l’interprétation éditoriale est adaptée à l’âge.
 
-NETTOYAGE PUBLIC V147
+NETTOYAGE PUBLIC V147+
 - Verrouillage des anciennes variantes FR/EN/ES/AR de Timeline autonome, Avenir raconté, Historique, Notifications, Grands événements autonomes et comparateur de dates autonome.
 - « Les 24 mois qui comptent » est explicitement protégé du nettoyage.
 - Les références techniques V121 ne doivent jamais être montrées comme texte client.
