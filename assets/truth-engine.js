@@ -1,4 +1,4 @@
-/* Astro Paquita — compatibilité V148
+/* Astro Paquita — compatibilité V149
    Couche technique interne. Aucun calcul astrologique n'est remplacé ici. */
 (function(){
 'use strict';
@@ -27,8 +27,6 @@ function loadOnce(src,marker){
   if(document.querySelector(`script[${marker}]`)||document.querySelector(`script[src*="${src.split('?')[0]}"]`))return;
   const s=document.createElement('script');
   s.src=src;
-  /* Les scripts injectés dynamiquement sont asynchrones par défaut :
-     async=false garantit l'ordre V139 -> V146 -> V147 -> V138 -> V143. */
   s.async=false;
   s.setAttribute(marker,'1');
   document.head.appendChild(s);
@@ -40,6 +38,7 @@ loadOnce('assets/v141-child-portrait.js?v=146','data-ap-v141-child-portrait');
 loadOnce('assets/v128-visual-cleanup.js?v=147','data-ap-v147-visual-cleanup');
 loadOnce('assets/client-cleanup-v137.js?v=138','data-ap-v138-client-cleanup');
 loadOnce('assets/v143-ui-sync.js?v=143','data-ap-v143-ui-sync');
+loadOnce('assets/v149-copy-fix.js?v=149','data-ap-v149-copy-fix');
 hideQuestionModule();bridgePremiumPromo();secureMaintenanceBypass();disableLegacyNotifications();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideQuestionModule();bridgePremiumPromo()},{once:true});
 setTimeout(()=>{hideQuestionModule();bridgePremiumPromo()},250);setTimeout(()=>{hideQuestionModule();bridgePremiumPromo()},1200);
