@@ -1,7 +1,13 @@
-/* Astro Paquita — V132 nettoyage visuel et cohérence d'interface.
+/* Astro Paquita — V133 nettoyage visuel et cohérence d'interface.
    Aucune logique astrologique n'est modifiée. */
 (function(){
 'use strict';
+const PREMIUM_COPY={
+  fr:{desc:'Mon avenir et sa chronologie, Le bon moment, les 24 mois qui comptent, la synastrie avancée et les analyses détaillées dans la langue choisie.',timeline:'Chronologie intégrée à Mon avenir',compare:'Comparaison dans Le bon moment',events:'Les 24 mois qui comptent'},
+  en:{desc:'My Future and its timeline, Ideal Timing, the 24 key months, advanced synastry and detailed analyses in the selected language.',timeline:'Timeline integrated into My Future',compare:'Comparison inside Ideal Timing',events:'The 24 key months'},
+  es:{desc:'Mi futuro y su cronología, El momento ideal, los 24 meses clave, la sinastría avanzada y los análisis detallados en el idioma elegido.',timeline:'Cronología integrada en Mi futuro',compare:'Comparación dentro de El momento ideal',events:'Los 24 meses clave'},
+  ar:{desc:'مستقبلي وخطه الزمني، التوقيت الأنسب، أهم 24 شهرًا، التوافق المتقدم والتحليلات المفصلة باللغة المختارة.',timeline:'الخط الزمني مدمج في مستقبلي',compare:'المقارنة داخل التوقيت الأنسب',events:'أهم 24 شهرًا'}
+};
 function ensureStyle(){
   if(document.getElementById('ap-v128-cleanup-style'))return;
   const s=document.createElement('style');s.id='ap-v128-cleanup-style';s.textContent=`
@@ -35,8 +41,6 @@ function cleanBanners(){
   });
 }
 function hideEmbeddedCopy(){
-  // Certains anciens bandeaux embarquent une seconde copie HTML décorative : on la masque uniquement
-  // lorsqu'un titre principal est déjà présent dans le même bloc.
   document.querySelectorAll('.ap121-banner,.ap121-hero').forEach(b=>{
     const title=b.querySelector('h1,h2,.ap121-title,.ap121-hero-title');
     if(!title)return;
@@ -66,7 +70,21 @@ function hideStandalonePublicEntries(){
     if(isStandaloneDuplicate(label))el.style.setProperty('display','none','important');
   });
 }
-function run(){cleanCards();cleanBanners();hideEmbeddedCopy();hideStandalonePublicEntries()}
+function removeLegacyMobileTools(){
+  document.getElementById('ap-v30-tools')?.remove();
+  document.querySelectorAll('#v30-home button').forEach(btn=>{
+    const oc=String(btn.getAttribute('onclick')||'').toLowerCase();
+    if(/v30gomodule\(['"](?:timeline|compare|journal)['"]\)/.test(oc))btn.remove();
+  });
+}
+function cleanPremiumShowcase(){
+  const code=String(window.AP_LANG||localStorage.getItem('astro-lang')||'fr').toLowerCase().slice(0,2);
+  const c=PREMIUM_COPY[code]||PREMIUM_COPY.fr;
+  const desc=document.querySelector('[data-ap="premium_desc"]');if(desc&&desc.textContent!==c.desc)desc.textContent=c.desc;
+  const labels={premium_timeline:c.timeline,premium_compare:c.compare,premium_events:c.events};
+  Object.entries(labels).forEach(([key,value])=>document.querySelectorAll(`[data-ap="${key}"]`).forEach(el=>{if(el.textContent!==value)el.textContent=value}));
+}
+function run(){cleanCards();cleanBanners();hideEmbeddedCopy();hideStandalonePublicEntries();removeLegacyMobileTools();cleanPremiumShowcase()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
 new MutationObserver(()=>{clearTimeout(window.__apV128CleanupT);window.__apV128CleanupT=setTimeout(run,80)}).observe(document.documentElement,{childList:true,subtree:true});
 })();
