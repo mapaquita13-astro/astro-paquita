@@ -93,9 +93,12 @@ function disableLegacyNotifications(){
   window.apCheckUpcomingWindows=function(){document.getElementById('ap-notification-badge')?.remove();return []};
 }
 
-function removeQuestionModule(){
+function hideQuestionModule(){
   try{document.body&&document.body.classList.remove('ap-v130-question-open')}catch(e){}
-  document.querySelectorAll('#mod-question,#ap-v130-question-card,[onclick*="question" i],[data-feature="question"],[data-module="question"]').forEach(el=>el.remove());
+  document.querySelectorAll('#mod-question,#ap-v130-question-card,[onclick*="question" i],[data-feature="question"],[data-module="question"]').forEach(el=>{
+    el.style.setProperty('display','none','important');
+    el.setAttribute('aria-hidden','true');
+  });
 }
 
 function loadOnce(src,marker){
@@ -105,11 +108,11 @@ function loadOnce(src,marker){
 
 loadOnce('assets/v128-visual-cleanup.js?v=137','data-ap-v137-visual-cleanup');
 loadOnce('assets/client-cleanup-v137.js?v=137','data-ap-v137-client-cleanup');
-removeQuestionModule();
+hideQuestionModule();
 bridgePremiumPromo();
 secureMaintenanceBypass();
 disableLegacyNotifications();
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{removeQuestionModule();bridgePremiumPromo()},{once:true});
-setTimeout(()=>{removeQuestionModule();bridgePremiumPromo()},250);
-setTimeout(()=>{removeQuestionModule();bridgePremiumPromo()},1200);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideQuestionModule();bridgePremiumPromo()},{once:true});
+setTimeout(()=>{hideQuestionModule();bridgePremiumPromo()},250);
+setTimeout(()=>{hideQuestionModule();bridgePremiumPromo()},1200);
 })();
