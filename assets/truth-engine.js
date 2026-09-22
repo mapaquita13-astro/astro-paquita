@@ -1,4 +1,4 @@
-/* Astro Paquita — compatibilité V147
+/* Astro Paquita — compatibilité V148
    Couche technique interne. Aucun calcul astrologique n'est remplacé ici. */
 (function(){
 'use strict';
@@ -23,7 +23,16 @@ function bridgePremiumPromo(){
 function secureMaintenanceBypass(){try{const url=new URL(location.href);if(url.searchParams.has('maintenance_preview')){url.searchParams.delete('maintenance_preview');history.replaceState(history.state,'',url.pathname+(url.searchParams.toString()?'?'+url.searchParams.toString():'')+url.hash)}localStorage.removeItem('astro-maintenance-bypass')}catch(e){}if(typeof window.verifierMaintenanceSite==='function')setTimeout(()=>{try{window.verifierMaintenanceSite()}catch(e){}},0)}
 function disableLegacyNotifications(){try{localStorage.removeItem('ap-notifications');for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.indexOf('ap-notified-')===0)localStorage.removeItem(k)}}catch(e){}document.getElementById('ap-notification-badge')?.remove();window.apEnableNotifications=async function(){try{localStorage.removeItem('ap-notifications')}catch(e){}document.getElementById('ap-notification-badge')?.remove();return false};window.apCheckUpcomingWindows=function(){document.getElementById('ap-notification-badge')?.remove();return []}}
 function hideQuestionModule(){try{document.body&&document.body.classList.remove('ap-v130-question-open')}catch(e){}document.querySelectorAll('#mod-question,#ap-v130-question-card,[onclick*="question" i],[data-feature="question"],[data-module="question"]').forEach(el=>{el.style.setProperty('display','none','important');el.setAttribute('aria-hidden','true')})}
-function loadOnce(src,marker){if(document.querySelector(`script[${marker}]`)||document.querySelector(`script[src*="${src.split('?')[0]}"]`))return;const s=document.createElement('script');s.src=src;s.defer=true;s.setAttribute(marker,'1');document.head.appendChild(s)}
+function loadOnce(src,marker){
+  if(document.querySelector(`script[${marker}]`)||document.querySelector(`script[src*="${src.split('?')[0]}"]`))return;
+  const s=document.createElement('script');
+  s.src=src;
+  /* Les scripts injectés dynamiquement sont asynchrones par défaut :
+     async=false garantit l'ordre V139 -> V146 -> V147 -> V138 -> V143. */
+  s.async=false;
+  s.setAttribute(marker,'1');
+  document.head.appendChild(s);
+}
 
 installPublicGuardStyle();
 loadOnce('assets/v139-question-guard.js?v=139','data-ap-v139-question-guard');
