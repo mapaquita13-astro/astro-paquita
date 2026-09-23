@@ -1,15 +1,16 @@
-ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE ACTUELLE — 22/09/2026 — V149
+ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE ACTUELLE — 23/09/2026 — INTERFACE PUBLIQUE V149 / ADMIN V150
 
 BASE ASTROLOGIQUE VERROUILLÉE
 - V121 stable de référence : commit 21d70a2b523c64425a8fd7b1f1cb8e9dd8255082.
 - La logique astrologique V121 reste la source canonique des maisons, positions, aspects, transits, prévisions, synastrie et scores.
 - Ne jamais remplacer ou recalculer ces données par une logique visuelle parallèle.
 - Toute courbe, carte, synthèse ou texte de tendance doit partir des données réellement calculées par la base V121.
-- Contrôle du 22/09/2026 : comparaison V121 -> main effectuée ; aucun fichier historique du moteur de calcul n’apparaît modifié. Les évolutions sont concentrées dans l’interface, l’administration, les images, les chargeurs et les couches de compatibilité.
+- Contrôle initial du 22/09/2026 : comparaison V121 -> main effectuée ; aucun fichier historique du moteur de calcul n’apparaît modifié. Les évolutions sont concentrées dans l’interface, l’administration, les images, les chargeurs et les couches de compatibilité.
+- Contrôle du 23/09/2026 : les modifications ajoutées après la sauvegarde V149 concernent uniquement admin.html, ses assets V150, le chargeur racine et la couche de texte/paiement multilingue. Aucun fichier de calcul astrologique n’a été modifié.
 
 CONTRÔLE SPÉCIFIQUE DE INDEX.HTML
 - Comparaison directe V121 (21d70a2...) -> restauration V127 (19515a4...) : index.html présente seulement 23 changements de lignes au total, soit 15 ajouts et 8 suppressions.
-- Ces 23 différences étaient déjà présentes au moment de la restauration V127 du 20/09/2026 ; les corrections V142 à V149 ne les ont pas ajoutées.
+- Ces 23 différences étaient déjà présentes au moment de la restauration V127 du 20/09/2026 ; les corrections V142 à V150 ne les ont pas ajoutées.
 - Le contrôle technique du lot V127, conservé dans l’historique Git, documentait ces changements directs comme limités à : version/build, chargement des couches visuelles/compatibilité, racine de la nouvelle interface et suppression de l’ancien fallback de clé Admin côté navigateur.
 - Le comparatif V121 -> main ne montre pas de modification d’un fichier historique de calcul astrologique.
 - Conclusion de verrouillage : index.html conserve le moteur historique ; les différences connues relèvent du raccord d’interface et de sécurité/chargement, pas d’un remplacement des calculs astrologiques.
@@ -17,19 +18,40 @@ CONTRÔLE SPÉCIFIQUE DE INDEX.HTML
 SAUVEGARDES GIT
 - Sauvegarde pré-refonte : backup-main-2026-09-21-pre-refonte.
 - Sauvegarde avant V148 : backup-v147-2026-09-22, pointée sur c1ae9464929b49c0994ec121999908992c644c4e.
+- Sauvegarde frontend avant les corrections du 23/09 : backup-v149-2026-09-23, pointée sur 07e9f743487fddefb0a44cb33cf6bdb1877be954.
+- Sauvegarde backend avant V137 : backup-backend-v136-2026-09-23, pointée sur 5801d8dcfbffa1923a9d6846195b0689cf9978bb.
 
 ARCHITECTURE FRONTEND ACTUELLE
 - index.html : base historique conservée ; les changements autour de la refonte sont des raccords/chargeurs d’interface.
-- refonte-final.js à la racine : chargeur de compatibilité, neutralise l’ancienne interface de refonte puis charge assets/refonte-final.js avec le cache-buster actif.
+- refonte-final.js à la racine : chargeur de compatibilité, neutralise l’ancienne interface de refonte puis charge assets/refonte-final.js avec le cache-buster V149. Le décalage V148/V149 a été corrigé le 23/09/2026.
 - assets/refonte-final.js : couche d’interface active ; utilise les fonctions de calcul déjà présentes pour les tendances, sans remplacer le moteur astrologique.
 - assets/v139-question-guard.js : verrouille la suppression publique de « Ma question » avec un sentinelle caché stable portant l’identifiant attendu par l’ancienne couche. Cela empêche la recréation périodique de la carte dans le DOM public.
 - assets/v141-child-portrait.js : Portrait enfant adapté à l’âge, sécurisé et multilingue ; réutilise les données du thème natal existant.
 - assets/v143-ui-sync.js : synchronisation FR/EN/ES/AR et sélection visuelle des périodes/domaines.
 - assets/v128-visual-cleanup.js : nettoyage des anciens doublons et entrées publiques obsolètes.
 - assets/v149-copy-fix.js : finition éditoriale finale FR/EN/ES/AR. Elle corrige notamment les phrases devenues incomplètes après retrait du jargon technique avant de supprimer les dernières mentions V121.
-- assets/truth-engine.js : couche de compatibilité/chargement ; ne contient pas de moteur astrologique parallèle.
+- assets/truth-engine.js : couche de compatibilité/chargement ; ne contient pas de moteur astrologique parallèle. Le 23/09, les messages promo/paiement de cette couche ont été rendus FR/EN/ES/AR.
 - V148+ : les scripts dynamiques sont chargés avec async=false afin de garantir l’ordre V139 -> V146 -> V147 -> V138 -> V143 -> V149. Ne pas remettre un chargement asynchrone non ordonné, sinon les nettoyages/traductions peuvent s’exécuter dans le mauvais ordre.
-- sw.js : anti-cache de l’interface ; version courante V149 au moment de ce document.
+- sw.js : anti-cache de l’interface publique ; version V149. Les assets admin V150 portent leur propre cache-buster ?v=150.
+
+ADMINISTRATION V150
+- admin.html est désormais une page légère qui charge assets/admin-v150.css et assets/admin-v150.js.
+- Vue d’ensemble claire sans grand tableau horizontal.
+- Utilisateurs en fiches avec recherche et filtres.
+- Historique des consultations par utilisateur sans stocker le texte des questions ni les réponses IA.
+- Profils astro créés et activité associée.
+- Statistiques : comptes, Premium, actifs 7/30 jours, consultations, langues et modules utilisés.
+- Blocage ciblé d’un utilisateur avec message d’indisponibilité et possibilité de réactivation.
+- Codes promo : questions gratuites, jours Premium, réduction %, limite d’utilisation/expiration.
+- Maintenance générale avec message visiteurs ET sélection réelle des comptes autorisés pendant la maintenance.
+- Vérification 23/09 : index.html consulte /api/me pendant la maintenance et laisse passer un Admin ou un compte ayant maintenance_allowed=true ; le sélecteur V150 pilote donc bien une fonction backend réellement consommée par le site public.
+- La clé ADMIN_KEY de secours n’est plus ajoutée aux requêtes admin ordinaires. Elle est conservée seulement dans sessionStorage et utilisée explicitement pour les opérations de récupération. Une ancienne valeur présente dans localStorage est migrée vers la session puis supprimée du stockage persistant.
+- Le bouton de visualisation maintenance n’utilise plus le paramètre historique maintenance_preview.
+
+CORRECTION STATISTIQUE BACKEND V137
+- Défaut corrigé le 23/09 : bloquer/réactiver ou promouvoir/rétrograder un compte ne doit pas mettre à jour artificiellement last_activity_at.
+- Motif : les indicateurs « Actifs 7 jours » et « Actifs 30 jours » reposent sur last_activity_at ; une action de gestion faite par un administrateur ne doit pas être comptée comme activité de l’utilisateur.
+- server-v137.js intercepte uniquement les changements de suspension et de rôle afin de préserver la vraie dernière activité utilisateur, puis laisse toute la chaîne backend existante fonctionner.
 
 DIRECTION VISUELLE VALIDÉE
 - Univers crème / prune / violet nuit / doré.
@@ -76,21 +98,11 @@ NETTOYAGE PUBLIC V147+
 - Les références techniques V121 ne doivent jamais être montrées comme texte client.
 - V149 ajoute un passage éditorial final afin qu’un retrait technique ne laisse jamais une phrase sans sujet ou grammaticalement cassée.
 
-ADMINISTRATION — CAHIER ACTUEL
-- Vue d’ensemble claire sans grand tableau horizontal.
-- Utilisateurs en fiches avec recherche et filtres.
-- Historique des consultations par utilisateur sans stocker le texte des questions ni les réponses IA.
-- Profils astro créés et activité associée.
-- Statistiques : comptes, Premium, actifs 7/30 jours, consultations, langues et modules utilisés.
-- Blocage ciblé d’un utilisateur avec message d’indisponibilité et possibilité de réactivation.
-- Codes promo : questions gratuites, jours Premium, réduction %, limite d’utilisation/expiration.
-- Maintenance générale avec message visiteurs et comptes autorisés.
-- Accès / récupération Administrateur.
-
 BACKEND ACTUEL
 - Dépôt : mapaquita13-astro/astro-paquita-backend.
-- package.json démarre server-v134.js.
-- Chaîne réelle de démarrage : server-v134.js -> server-v128.js -> server.js.
+- package.json démarre server-v137.js.
+- Chaîne réelle de démarrage : server-v137.js -> server-v134.js -> server-v128.js -> server.js.
+- server-v137.js : correction ciblée de la contamination statistique par les actions Admin ; aucune logique astrologique.
 - server-v134.js : couche Stripe sécurisée pour réductions Premium et confirmation des achats de packs questions.
 - server-v128.js : couche Admin/compatibilité, suspension ciblée, crédits questions et routes complémentaires.
 - server.js : backend historique, comptes, profils, activité, OpenRouter, routes Admin principales, maintenance, promotions et Stripe historique.
