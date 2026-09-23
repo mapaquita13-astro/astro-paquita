@@ -1,4 +1,4 @@
-/* Astro Paquita — chargeur de compatibilité interface V150 */
+/* Astro Paquita — chargeur de compatibilité interface V151 */
 (function(){
 'use strict';
 function neutraliseAncienneInterface(){
@@ -19,8 +19,9 @@ function loadOnce(src,marker){
 }
 function ensureActiveLayer(){
   neutraliseAncienneInterface();
-  loadOnce('assets/refonte-final.js?v=150','data-ap-active-loader');
+  loadOnce('assets/refonte-final.js?v=151','data-ap-active-loader');
   loadOnce('assets/v150-image-frame-fix.js?v=150','data-ap-v150-image-frame-fix');
+  loadOnce('assets/v151-banner-home-fix.js?v=151','data-ap-v151-banner-home-fix');
 }
 function ensureQuestionGuard(done){
   if(document.querySelector('script[src*="assets/v139-question-guard.js"]')){done();return}
