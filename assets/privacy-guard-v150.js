@@ -14,6 +14,8 @@ function resetSelect(id,label){
 }
 function clearPrivateProfileUi(){
   if(accountReady())return false;
+  try{if(typeof window.apEffacerDonneesPriveesAffichees==='function')window.apEffacerDonneesPriveesAffichees()}catch(e){}
+  try{window.USER=null}catch(e){}
   resetSelect('v37-profile-select','—');
   resetSelect('profils-select','— Sélectionner un profil —');
   resetSelect('y-profils-select','— Sélectionner un profil —');
@@ -21,6 +23,8 @@ function clearPrivateProfileUi(){
   const pb=document.getElementById('profils-bloc');if(pb)pb.style.display='none';
   const yb=document.getElementById('y-profils-bloc');if(yb)yb.style.display='none';
   document.getElementById('ap-v130-child-pop')?.remove();
+  const profileDetails=document.getElementById('v98-v30-details');
+  if(profileDetails)profileDetails.textContent='Connectez-vous pour retrouver vos profils enregistrés.';
   return true;
 }
 function wrap(name,opts){
@@ -39,10 +43,24 @@ function wrap(name,opts){
   window[name]=guarded;
 }
 function install(){
+  // Anciennes listes et changements de profils.
   wrap('v37RafraichirSelectProfil');
   wrap('v37ChangerProfil',{returnValue:false});
   wrap('rafraichirSelectProfils');
   wrap('rafraichirSelectProfilsSynastrie');
+
+  // V110 pouvait reconstruire USER depuis le premier profil local avant auth.
+  // Le calcul lui-même reste intact après connexion : seule son invocation
+  // hors session privée est refusée.
+  wrap('v37CalculerUserDepuisDonnees',{returnValue:false});
+  wrap('ap110SyncUser',{returnValue:false});
+
+  // Anciennes cartes profil/situation : aucune lecture/édition locale hors auth.
+  wrap('v98OpenProfile',{openAccount:true,returnValue:false});
+  wrap('v98EditBirthProfile',{openAccount:true,returnValue:false});
+  wrap('v98RefreshProfileCard',{returnValue:false});
+  wrap('v100OpenProfile',{openAccount:true,returnValue:false});
+
   clearPrivateProfileUi();
 }
 
@@ -50,5 +68,5 @@ install();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
 window.addEventListener('pageshow',install);
 window.addEventListener('storage',e=>{if(!e.key||e.key==='astro-token'||e.key==='astra_profils')install()});
-let tries=0;const timer=setInterval(()=>{install();if(++tries>=12)clearInterval(timer)},250);
+let tries=0;const timer=setInterval(()=>{install();if(++tries>=20)clearInterval(timer)},250);
 })();
