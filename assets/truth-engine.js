@@ -91,6 +91,43 @@ function localizePromoError(text){
   return uiMessage('promo_invalid');
 }
 
+function privateAccountReady(){
+  try{if(typeof window.apComptePriveActif==='function')return !!window.apComptePriveActif()}catch(e){}
+  try{return !!(window.USER_CONNECTE&&window.USER_CONNECTE.email&&localStorage.getItem('astro-token'))}catch(e){return false}
+}
+function protectPrivateChildProfiles(){
+  if(!privateAccountReady())document.getElementById('ap-v130-child-pop')?.remove();
+  const base=window.apV130OpenChild;
+  if(typeof base==='function'&&!base.__apV150PrivateGuard){
+    const wrapped=function(){
+      if(!privateAccountReady()){
+        document.getElementById('ap-v130-child-pop')?.remove();
+        if(typeof window.ouvrirCompte==='function')window.ouvrirCompte();
+        return false;
+      }
+      return base.apply(this,arguments);
+    };
+    wrapped.__apV150PrivateGuard=true;
+    window.apV130OpenChild=wrapped;
+  }
+}
+function installPrivateChildCapture(){
+  if(window.__apV150PrivateChildCapture)return;
+  window.__apV150PrivateChildCapture=true;
+  document.addEventListener('click',e=>{
+    const target=e.target&&typeof e.target.closest==='function'?e.target.closest('#ap-v130-child-card'):null;
+    if(target&&!privateAccountReady()){
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation==='function')e.stopImmediatePropagation();
+      document.getElementById('ap-v130-child-pop')?.remove();
+      if(typeof window.ouvrirCompte==='function')window.ouvrirCompte();
+      return false;
+    }
+    setTimeout(protectPrivateChildProfiles,0);
+  },true);
+}
+
 function installPublicGuardStyle(){
   if(document.getElementById('ap-v139-public-guard-style'))return;
   const s=document.createElement('style');s.id='ap-v139-public-guard-style';
@@ -171,6 +208,7 @@ function loadOnce(src,marker){
 }
 
 installPublicGuardStyle();
+installPrivateChildCapture();protectPrivateChildProfiles();
 loadOnce('assets/v139-question-guard.js?v=139','data-ap-v139-question-guard');
 loadOnce('assets/v141-child-portrait.js?v=146','data-ap-v141-child-portrait');
 loadOnce('assets/v128-visual-cleanup.js?v=147','data-ap-v147-visual-cleanup');
@@ -178,6 +216,6 @@ loadOnce('assets/client-cleanup-v137.js?v=138','data-ap-v138-client-cleanup');
 loadOnce('assets/v143-ui-sync.js?v=143','data-ap-v143-ui-sync');
 loadOnce('assets/v149-copy-fix.js?v=149','data-ap-v149-copy-fix');
 hideQuestionModule();bridgePremiumPromo();secureMaintenanceBypass();disableLegacyNotifications();
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideQuestionModule();bridgePremiumPromo()},{once:true});
-setTimeout(()=>{hideQuestionModule();bridgePremiumPromo()},250);setTimeout(()=>{hideQuestionModule();bridgePremiumPromo()},1200);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideQuestionModule();bridgePremiumPromo();protectPrivateChildProfiles()},{once:true});
+setTimeout(()=>{hideQuestionModule();bridgePremiumPromo();protectPrivateChildProfiles()},250);setTimeout(()=>{hideQuestionModule();bridgePremiumPromo();protectPrivateChildProfiles()},1200);
 })();
