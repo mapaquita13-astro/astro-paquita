@@ -1,4 +1,4 @@
-/* Astro Paquita — chargeur de compatibilité interface V149 */
+/* Astro Paquita — chargeur de compatibilité interface V150 */
 (function(){
 'use strict';
 function neutraliseAncienneInterface(){
@@ -9,14 +9,18 @@ function neutraliseAncienneInterface(){
     [...document.body.classList].filter(c=>c.indexOf('ap-route-')===0).forEach(c=>document.body.classList.remove(c));
   }
 }
+function loadOnce(src,marker){
+  if(document.querySelector(`script[${marker}]`)||document.querySelector(`script[src*="${src.split('?')[0]}"]`))return;
+  const s=document.createElement('script');
+  s.src=src;
+  s.async=false;
+  s.setAttribute(marker,'1');
+  document.head.appendChild(s);
+}
 function ensureActiveLayer(){
   neutraliseAncienneInterface();
-  if(document.querySelector('script[src*="assets/refonte-final.js"]'))return;
-  const s=document.createElement('script');
-  s.src='assets/refonte-final.js?v=149';
-  s.async=false;
-  s.setAttribute('data-ap-active-loader','1');
-  document.head.appendChild(s);
+  loadOnce('assets/refonte-final.js?v=150','data-ap-active-loader');
+  loadOnce('assets/v150-image-frame-fix.js?v=150','data-ap-v150-image-frame-fix');
 }
 function ensureQuestionGuard(done){
   if(document.querySelector('script[src*="assets/v139-question-guard.js"]')){done();return}
