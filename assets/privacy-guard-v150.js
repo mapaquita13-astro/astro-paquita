@@ -63,6 +63,11 @@ function install(){
   wrap('v37CalculerUserDepuisDonnees',{returnValue:false});
   wrap('ap110SyncUser',{returnValue:false});
 
+  // Aucune métadonnée/contexte de profil local ne sort hors session privée.
+  wrap('apProfileContextV94',{returnValue:{}});
+  wrap('apGetLifeContext',{returnValue:{}});
+  wrap('apSetLifeContext',{returnValue:false});
+
   // Anciennes cartes/entrées profil : aucune lecture locale ni prénom hors auth.
   wrap('v98OpenProfile',{openAccount:true,returnValue:false});
   wrap('v98EditBirthProfile',{openAccount:true,returnValue:false});
