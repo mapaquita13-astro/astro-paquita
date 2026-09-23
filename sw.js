@@ -1,5 +1,5 @@
-/* Astro Paquita V151 — anti-cache interface, sans notifications */
-const VERSION='astro-paquita-v151-20260923';
+/* Astro Paquita V152 — anti-cache interface, sans notifications */
+const VERSION='astro-paquita-v152-20260923';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil((async()=>{for(const n of await caches.keys())await caches.delete(n);await self.clients.claim();})()));
 self.addEventListener('fetch',event=>{
