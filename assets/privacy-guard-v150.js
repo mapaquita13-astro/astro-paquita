@@ -12,6 +12,12 @@ function resetSelect(id,label){
   el.innerHTML='<option value="">'+(label||'—')+'</option>';
   el.value='';
 }
+function resetTopProfileButton(){
+  const btn=document.getElementById('v100-profile-btn');if(!btn)return;
+  btn.textContent='Profil';
+  btn.title='Voir ou modifier le profil';
+  btn.setAttribute('aria-label','Voir ou modifier le profil');
+}
 function clearPrivateProfileUi(){
   if(accountReady())return false;
   try{if(typeof window.apEffacerDonneesPriveesAffichees==='function')window.apEffacerDonneesPriveesAffichees()}catch(e){}
@@ -20,6 +26,8 @@ function clearPrivateProfileUi(){
   resetSelect('profils-select','— Sélectionner un profil —');
   resetSelect('y-profils-select','— Sélectionner un profil —');
   resetSelect('ap100-profile-select','—');
+  resetTopProfileButton();
+  const mobileName=document.getElementById('ap100-mobile-profile-name');if(mobileName)mobileName.textContent='Créer mon profil';
   const pb=document.getElementById('profils-bloc');if(pb)pb.style.display='none';
   const yb=document.getElementById('y-profils-bloc');if(yb)yb.style.display='none';
   document.getElementById('ap-v130-child-pop')?.remove();
@@ -55,11 +63,13 @@ function install(){
   wrap('v37CalculerUserDepuisDonnees',{returnValue:false});
   wrap('ap110SyncUser',{returnValue:false});
 
-  // Anciennes cartes profil/situation : aucune lecture/édition locale hors auth.
+  // Anciennes cartes/entrées profil : aucune lecture locale ni prénom hors auth.
   wrap('v98OpenProfile',{openAccount:true,returnValue:false});
   wrap('v98EditBirthProfile',{openAccount:true,returnValue:false});
   wrap('v98RefreshProfileCard',{returnValue:false});
+  wrap('v99OpenProfileFromNav',{openAccount:true,returnValue:false});
   wrap('v100OpenProfile',{openAccount:true,returnValue:false});
+  wrap('v101RefreshTopProfileButton',{returnValue:false});
 
   clearPrivateProfileUi();
 }
