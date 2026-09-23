@@ -1,7 +1,15 @@
-/* Astro Paquita — V149 finition des textes publics.
+/* Astro Paquita — V149 finition des textes publics + raccord V150 confidentialité.
    Affichage uniquement : aucun calcul astrologique n'est modifié. */
 (function(){
 'use strict';
+
+if(!document.querySelector('script[src*="privacy-guard-v150.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/privacy-guard-v150.js?v=150';
+  s.async=false;
+  s.setAttribute('data-ap-v150-privacy','1');
+  document.head.appendChild(s);
+}
 
 const RULES=[
   [/La\s+(?:V\s*121\s+)?ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
