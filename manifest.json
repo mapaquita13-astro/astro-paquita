@@ -1,13 +1,14 @@
 {
+  "id": "./",
   "name": "Astro Paquita — Votre Destinée",
   "short_name": "Astro Paquita",
-  "description": "Thème astral, synastrie, prévisions et fenêtres idéales — votre guide astrologique personnel.",
+  "description": "Portrait natal, prévisions, périodes clés, synastrie et portrait enfant — votre guide astrologique personnel.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0f0c29",
-  "theme_color": "#0f0c29",
+  "background_color": "#f5eee4",
+  "theme_color": "#43163e",
   "lang": "fr",
   "dir": "ltr",
   "icons": [
