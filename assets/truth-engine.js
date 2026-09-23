@@ -15,6 +15,7 @@ const UI_MESSAGES={
     promo_expired:'Ce code a expiré.',
     promo_limit:'Ce code a atteint sa limite d’utilisation.',
     promo_used:'Tu as déjà utilisé ce code.',
+    promo_subscription_active:'Un abonnement Premium est déjà actif. Le code de jours offerts n’a pas été consommé.',
     promo_unavailable:'Code promo ou paiement indisponible.',
     payment_unavailable:'Paiement indisponible pour le moment.',
     invalid_response:'Réponse Stripe invalide.',
@@ -30,6 +31,7 @@ const UI_MESSAGES={
     promo_expired:'This code has expired.',
     promo_limit:'This code has reached its usage limit.',
     promo_used:'You have already used this code.',
+    promo_subscription_active:'A Premium subscription is already active. The free-days code was not consumed.',
     promo_unavailable:'Promo code or payment unavailable.',
     payment_unavailable:'Payment is currently unavailable.',
     invalid_response:'Invalid Stripe response.',
@@ -45,6 +47,7 @@ const UI_MESSAGES={
     promo_expired:'Este código ha caducado.',
     promo_limit:'Este código ha alcanzado su límite de usos.',
     promo_used:'Ya has utilizado este código.',
+    promo_subscription_active:'Ya hay una suscripción Premium activa. El código de días gratuitos no se ha consumido.',
     promo_unavailable:'Código promocional o pago no disponible.',
     payment_unavailable:'El pago no está disponible en este momento.',
     invalid_response:'Respuesta de Stripe no válida.',
@@ -60,6 +63,7 @@ const UI_MESSAGES={
     promo_expired:'انتهت صلاحية هذا الرمز.',
     promo_limit:'بلغ هذا الرمز الحد الأقصى للاستخدام.',
     promo_used:'لقد استخدمت هذا الرمز من قبل.',
+    promo_subscription_active:'يوجد اشتراك Premium نشط بالفعل. لم يتم استهلاك رمز الأيام المجانية.',
     promo_unavailable:'رمز الخصم أو الدفع غير متاح حاليًا.',
     payment_unavailable:'الدفع غير متاح حاليًا.',
     invalid_response:'استجابة Stripe غير صالحة.',
@@ -79,9 +83,11 @@ function uiMessage(key,vars){
 function localizePromoError(text){
   if(uiLang()==='fr')return String(text||'')||uiMessage('promo_invalid');
   const raw=String(text||'').toLowerCase();
-  if(/expir/.test(raw))return uiMessage('promo_expired');
-  if(/limite|limit/.test(raw))return uiMessage('promo_limit');
+  if(/abonnement premium.*actif|premium stripe.*actif|subscription.*active/.test(raw))return uiMessage('promo_subscription_active');
+  if(/invalide|invalid/.test(raw))return uiMessage('promo_invalid');
   if(/déjà utilisé|deja utilise|already used/.test(raw))return uiMessage('promo_used');
+  if(/limite|limit/.test(raw))return uiMessage('promo_limit');
+  if(/expir|expired/.test(raw))return uiMessage('promo_expired');
   return uiMessage('promo_invalid');
 }
 
