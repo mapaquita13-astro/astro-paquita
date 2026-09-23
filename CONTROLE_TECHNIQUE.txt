@@ -1,4 +1,4 @@
-ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE ACTUELLE — 23/09/2026 — INTERFACE PUBLIQUE V149 / ADMIN V150
+ASTRO PAQUITA — RÉFÉRENCE TECHNIQUE ACTUELLE — 23/09/2026 — INTERFACE PUBLIQUE V149 + GARDE CONFIDENTIALITÉ V150 / ADMIN V150
 
 BASE ASTROLOGIQUE VERROUILLÉE
 - V121 stable de référence : commit 21d70a2b523c64425a8fd7b1f1cb8e9dd8255082.
@@ -6,7 +6,7 @@ BASE ASTROLOGIQUE VERROUILLÉE
 - Ne jamais remplacer ou recalculer ces données par une logique visuelle parallèle.
 - Toute courbe, carte, synthèse ou texte de tendance doit partir des données réellement calculées par la base V121.
 - Contrôle initial du 22/09/2026 : comparaison V121 -> main effectuée ; aucun fichier historique du moteur de calcul n’apparaît modifié. Les évolutions sont concentrées dans l’interface, l’administration, les images, les chargeurs et les couches de compatibilité.
-- Contrôle du 23/09/2026 : les modifications ajoutées après la sauvegarde V149 concernent uniquement admin.html, ses assets V150, le chargeur racine et la couche de texte/paiement multilingue. Aucun fichier de calcul astrologique n’a été modifié.
+- Contrôle du 23/09/2026 : les modifications ajoutées après la sauvegarde V149 concernent uniquement l’administration, les couches d’interface/compatibilité, les textes promo/paiement, la confidentialité des profils et la documentation. Aucun fichier de calcul astrologique n’a été modifié.
 
 CONTRÔLE SPÉCIFIQUE DE INDEX.HTML
 - Comparaison directe V121 (21d70a2...) -> restauration V127 (19515a4...) : index.html présente seulement 23 changements de lignes au total, soit 15 ajouts et 8 suppressions.
@@ -14,12 +14,14 @@ CONTRÔLE SPÉCIFIQUE DE INDEX.HTML
 - Le contrôle technique du lot V127, conservé dans l’historique Git, documentait ces changements directs comme limités à : version/build, chargement des couches visuelles/compatibilité, racine de la nouvelle interface et suppression de l’ancien fallback de clé Admin côté navigateur.
 - Le comparatif V121 -> main ne montre pas de modification d’un fichier historique de calcul astrologique.
 - Conclusion de verrouillage : index.html conserve le moteur historique ; les différences connues relèvent du raccord d’interface et de sécurité/chargement, pas d’un remplacement des calculs astrologiques.
+- Dette technique non bloquante : index.html porte encore des chaînes de requête historiques `?v=20260920-v127` sur truth-engine.js et assets/refonte-final.js. Elles ne désignent pas d’anciens fichiers : le navigateur demande bien les fichiers actuels sous ces URLs. Le service worker V149 force en outre les GET contrôlés en `cache:no-store`. Ne pas réécrire le gros index historique uniquement pour changer ces deux libellés sans méthode de patch sûre.
 
 SAUVEGARDES GIT
 - Sauvegarde pré-refonte : backup-main-2026-09-21-pre-refonte.
 - Sauvegarde avant V148 : backup-v147-2026-09-22, pointée sur c1ae9464929b49c0994ec121999908992c644c4e.
 - Sauvegarde frontend avant les corrections du 23/09 : backup-v149-2026-09-23, pointée sur 07e9f743487fddefb0a44cb33cf6bdb1877be954.
 - Sauvegarde backend avant V137 : backup-backend-v136-2026-09-23, pointée sur 5801d8dcfbffa1923a9d6846195b0689cf9978bb.
+- Sauvegarde backend avant protection des codes jours Premium : backup-backend-v137-pre-promo-days-2026-09-23, pointée sur 40037a169617a15c93bfafda9a0f9218079805c7.
 
 ARCHITECTURE FRONTEND ACTUELLE
 - index.html : base historique conservée ; les changements autour de la refonte sont des raccords/chargeurs d’interface.
@@ -29,10 +31,23 @@ ARCHITECTURE FRONTEND ACTUELLE
 - assets/v141-child-portrait.js : Portrait enfant adapté à l’âge, sécurisé et multilingue ; réutilise les données du thème natal existant.
 - assets/v143-ui-sync.js : synchronisation FR/EN/ES/AR et sélection visuelle des périodes/domaines.
 - assets/v128-visual-cleanup.js : nettoyage des anciens doublons et entrées publiques obsolètes.
-- assets/v149-copy-fix.js : finition éditoriale finale FR/EN/ES/AR. Elle corrige notamment les phrases devenues incomplètes après retrait du jargon technique avant de supprimer les dernières mentions V121.
+- assets/v149-copy-fix.js : finition éditoriale finale FR/EN/ES/AR et chargement du garde confidentialité V150. Elle corrige notamment les phrases devenues incomplètes après retrait du jargon technique avant de supprimer les dernières mentions V121.
+- assets/privacy-guard-v150.js : garde d’interface qui empêche toute réapparition nominative des profils stockés localement avant authentification ; il ne supprime pas les profils et ne modifie aucun calcul.
 - assets/truth-engine.js : couche de compatibilité/chargement ; ne contient pas de moteur astrologique parallèle. Le 23/09, les messages promo/paiement de cette couche ont été rendus FR/EN/ES/AR.
 - V148+ : les scripts dynamiques sont chargés avec async=false afin de garantir l’ordre V139 -> V146 -> V147 -> V138 -> V143 -> V149. Ne pas remettre un chargement asynchrone non ordonné, sinon les nettoyages/traductions peuvent s’exécuter dans le mauvais ordre.
-- sw.js : anti-cache de l’interface publique ; version V149. Les assets admin V150 portent leur propre cache-buster ?v=150.
+- sw.js : anti-cache de l’interface publique ; version V149. Les assets admin V150 et confidentialité V150 portent leur propre cache-buster ?v=150.
+
+CONFIDENTIALITÉ PROFILS V150
+- Règle : aucun prénom, date de naissance, ville ou profil local ne doit être affiché avant qu’un compte privé soit réellement actif.
+- Les profils restent stockés localement et redeviennent disponibles après reconnexion ; le garde ne les efface pas.
+- La Synastrie historique possédait déjà un contrôle : hors connexion, ses sélecteurs sont vidés avant tout appel à getProfils().
+- La couche moderne V100/V121 contrôle déjà accountReady avant d’exposer le profil actif, le nom actif ou la liste des profils.
+- Correctif 23/09 : l’ancien sélecteur v37-profile-select est vidé et ses fonctions de rafraîchissement/changement sont bloquées hors connexion.
+- Correctif 23/09 : Portrait enfant ne lit plus astra_profils et n’ouvre plus son sélecteur hors connexion ; il ouvre la connexion à la place.
+- Correctif 23/09 : V110 ne peut plus reconstruire USER depuis le premier profil local hors connexion. La fonction de calcul historique v37CalculerUserDepuisDonnees reste inchangée et fonctionne normalement après authentification.
+- Correctif 23/09 : anciennes cartes/entrées profil V98/V99/V101 sont neutralisées hors connexion ; le bouton de profil redevient générique et aucun prénom n’est repris depuis le stockage.
+- Correctif 23/09 : apProfileContextV94 et apGetLifeContext renvoient un contexte vide hors connexion ; apSetLifeContext n’écrit rien hors connexion.
+- apEffacerDonneesPriveesAffichees continue d’être utilisé pour remettre USER et les champs privés visibles à zéro lors d’une session non active.
 
 ADMINISTRATION V150
 - admin.html est désormais une page légère qui charge assets/admin-v150.css et assets/admin-v150.js.
@@ -47,6 +62,14 @@ ADMINISTRATION V150
 - Vérification 23/09 : index.html consulte /api/me pendant la maintenance et laisse passer un Admin ou un compte ayant maintenance_allowed=true ; le sélecteur V150 pilote donc bien une fonction backend réellement consommée par le site public.
 - La clé ADMIN_KEY de secours n’est plus ajoutée aux requêtes admin ordinaires. Elle est conservée seulement dans sessionStorage et utilisée explicitement pour les opérations de récupération. Une ancienne valeur présente dans localStorage est migrée vers la session puis supprimée du stockage persistant.
 - Le bouton de visualisation maintenance n’utilise plus le paramètre historique maintenance_preview.
+
+CODES PROMO / PAIEMENT V150
+- Les trois types sont câblés : questions gratuites, jours Premium, réduction %.
+- Les messages utilisateur de validation, connexion requise et erreurs sont harmonisés FR / EN / ES / AR dans la couche active.
+- Les erreurs distinctes sont gérées : code invalide, expiré, déjà utilisé, limite atteinte, indisponibilité paiement et abonnement Premium déjà actif.
+- Une réduction % reste appliquée au checkout Stripe sans modifier le fonctionnement Stripe historique.
+- Protection backend 23/09 : un compte possédant déjà un abonnement Stripe Premium actif ne peut pas appliquer un code « jours Premium » qui créerait une date d’expiration locale contradictoire. Le backend répond sans consommer le code.
+- Pour un compte sans abonnement Stripe actif, le code « jours Premium » prolonge une éventuelle période Premium temporaire existante ou démarre à la date courante.
 
 CORRECTION STATISTIQUE BACKEND V137
 - Défaut corrigé le 23/09 : bloquer/réactiver ou promouvoir/rétrograder un compte ne doit pas mettre à jour artificiellement last_activity_at.
@@ -102,7 +125,7 @@ BACKEND ACTUEL
 - Dépôt : mapaquita13-astro/astro-paquita-backend.
 - package.json démarre server-v137.js.
 - Chaîne réelle de démarrage : server-v137.js -> server-v134.js -> server-v128.js -> server.js.
-- server-v137.js : correction ciblée de la contamination statistique par les actions Admin ; aucune logique astrologique.
+- server-v137.js : correction ciblée de la contamination statistique par les actions Admin + protection des abonnés Stripe actifs contre un code local de jours Premium ; aucune logique astrologique.
 - server-v134.js : couche Stripe sécurisée pour réductions Premium et confirmation des achats de packs questions.
 - server-v128.js : couche Admin/compatibilité, suspension ciblée, crédits questions et routes complémentaires.
 - server.js : backend historique, comptes, profils, activité, OpenRouter, routes Admin principales, maintenance, promotions et Stripe historique.
