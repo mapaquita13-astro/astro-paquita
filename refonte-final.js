@@ -1,4 +1,4 @@
-/* Astro Paquita — chargeur de compatibilité interface V148 */
+/* Astro Paquita — chargeur de compatibilité interface V149 */
 (function(){
 'use strict';
 function neutraliseAncienneInterface(){
@@ -13,7 +13,7 @@ function ensureActiveLayer(){
   neutraliseAncienneInterface();
   if(document.querySelector('script[src*="assets/refonte-final.js"]'))return;
   const s=document.createElement('script');
-  s.src='assets/refonte-final.js?v=148';
+  s.src='assets/refonte-final.js?v=149';
   s.async=false;
   s.setAttribute('data-ap-active-loader','1');
   document.head.appendChild(s);
