@@ -1,32 +1,45 @@
-# Astro Paquita — Version PWA installable
+# Astro Paquita — PWA Android / iPhone
 
-## Ce qui a été ajouté à ton fichier HTML
-- `manifest.json` : nom, icônes, couleur de thème, mode "standalone" (plein écran, sans barre du navigateur)
-- `sw.js` : service worker qui met l'app en cache pour qu'elle fonctionne même hors-ligne (une fois ouverte une première fois)
-- `icons/` : 6 icônes générées à partir de ton logo (192px, 512px, version "maskable" pour Android, apple-touch-icon pour iOS, favicons)
-- Dans le HTML : lien vers le manifest, les icônes, l'enregistrement du service worker, et un bouton "📲 Installer" qui apparaît automatiquement sur Android/Chrome quand l'app est installable
+## État actuel
+Astro Paquita est installable comme application web depuis son site HTTPS.
 
-## ⚠️ Condition indispensable : HTTPS
-Une PWA ne peut s'installer QUE si elle est servie en HTTPS (ou en local via `localhost`). Un simple fichier ouvert en `file://` ne suffit pas pour l'installation, même s'il s'affiche très bien.
+Fichiers utilisés :
+- `manifest.json` : nom, identité visuelle, mode standalone et icônes Android ;
+- `sw.js` : service worker V150 utilisé pour forcer les mises à jour de l’interface et supprimer les anciens caches ;
+- `icons/` : icônes 192 px, 512 px, maskable, favicon et `apple-touch-icon`.
 
-## Comment déployer (le plus simple : gratuit, en quelques minutes)
+## Important : fonctionnement en ligne
+Le service worker actuel **ne fournit pas un mode hors ligne complet**. C’est volontaire : Astro Paquita dépend de l’authentification, du backend, de Stripe et des appels IA. Le worker privilégie donc les fichiers frais du serveur et purge les anciens caches après une mise à jour.
 
-### Option A — Netlify (glisser-déposer, sans compte GitHub)
-1. Va sur https://app.netlify.com/drop
-2. Glisse le dossier entier (`index.html`, `manifest.json`, `sw.js`, `icons/`) dans la zone
-3. Netlify te donne une URL en `https://....netlify.app` — c'est fini, l'app est installable
+Ne pas réintroduire un cache hors ligne global sans stratégie précise : il pourrait faire réapparaître une ancienne interface après un déploiement.
 
-### Option B — GitHub Pages (si tu veux la relier à ton dépôt existant)
-1. Mets ces fichiers à la racine d'un dépôt GitHub (ou dans un dossier `docs/`)
-2. Dans les paramètres du dépôt → Pages → choisis la branche et le dossier
-3. GitHub te donne une URL `https://tonpseudo.github.io/tonrepo/`
+## Android / Chrome
+1. Ouvrir le site Astro Paquita en HTTPS.
+2. Utiliser l’option du navigateur **Installer l’application** / **Ajouter à l’écran d’accueil** lorsqu’elle est proposée.
+3. L’application s’ouvre ensuite en mode standalone avec l’identité Astro Paquita.
 
-### Option C — Sur ton Render existant
-Si tu as déjà un service Render pour le backend, tu peux servir ces fichiers statiques depuis le même service (dossier `public/` avec Express `express.static`), ou créer un second "Static Site" Render qui pointe vers ce dossier.
+Le manifeste contient les icônes 192×192, 512×512 et une icône maskable adaptées à l’installation Android.
 
-## Test d'installation
-- **Android (Chrome)** : ouvre l'URL, le bouton "📲 Installer" apparaît dans l'en-tête (ou menu ⋮ → "Installer l'application")
-- **iPhone (Safari)** : ouvre l'URL → bouton Partager → "Sur l'écran d'accueil" (iOS n'a pas de bouton d'installation automatique, c'est une limite d'Apple, pas de l'app)
+## iPhone / Safari
+1. Ouvrir Astro Paquita dans Safari.
+2. Toucher **Partager**.
+3. Choisir **Sur l’écran d’accueil**.
 
-## Prochaine amélioration possible
-Les icônes actuelles sont générées à partir du logo existant (agrandi). Si tu as un logo carré haute résolution (idéalement 512×512 ou plus), je peux régénérer des icônes plus nettes.
+`apple-touch-icon.png` est présent pour l’icône iOS. Le site contient également les balises `apple-mobile-web-app-capable` nécessaires à l’ouverture en mode application web.
+
+## Google Play
+La PWA installable n’est pas, à elle seule, une application publiée sur Google Play. Pour une publication Play Store, il faudra emballer le site dans une application Android adaptée (par exemple une Trusted Web Activity ou une enveloppe native), configurer le package Android, la signature, les fiches Play Console et vérifier les règles de paiement applicables au modèle commercial retenu.
+
+Ne pas modifier la logique astrologique pour cette étape : la future application mobile doit rester une enveloppe de l’interface et du backend validés.
+
+## Contrôles après chaque déploiement
+- chargement de la dernière interface sans ancien cache ;
+- connexion/déconnexion et confidentialité des profils ;
+- installation Android ;
+- ajout à l’écran d’accueil iPhone ;
+- FR / EN / ES / AR ;
+- Portrait natal, Prévisions, Mon avenir, Synastrie et Portrait enfant ;
+- accès backend et paiements lorsque ces fonctions sont testées.
+
+## Limite de validation actuelle
+Les fichiers du dépôt sont contrôlés, mais ce document ne vaut pas test navigateur réel sur Render. Après déploiement, les contrôles Android/iPhone et les parcours Stripe/IA doivent être exécutés sur le site de production.
