@@ -1,0 +1,1 @@
+Astro Paquita V156 deploy marker — 2026-09-26 — c5eabfa + hotfix cache/deploy chain
