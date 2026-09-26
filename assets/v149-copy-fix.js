@@ -21,6 +21,16 @@ if(!document.querySelector('script[src*="v151-annual-forecast-guard.js"]')){
   document.head.appendChild(s);
 }
 
+// V155 — langage public compréhensible pour les convergences.
+// Chargée avant V152 afin que sa règle de langage soit appliquée en dernier dans la requête finale.
+if(!document.querySelector('script[src*="v155-convergence-language.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v155-convergence-language.js?v=155';
+  s.async=false;
+  s.setAttribute('data-ap-v155-convergence-language','1');
+  document.head.appendChild(s);
+}
+
 // V152 — règles de restitution des temps forts sur 24 mois.
 // Cette couche cible uniquement le module events et ne modifie aucun calcul astrologique.
 if(!document.querySelector('script[src*="v152-events-24m-guard.js"]')){
@@ -48,16 +58,6 @@ if(!document.querySelector('script[src*="v154-report-editorial.js"]')){
   s.src='assets/v154-report-editorial.js?v=154';
   s.async=false;
   s.setAttribute('data-ap-v154-report-editorial','1');
-  document.head.appendChild(s);
-}
-
-// V155 — langage public compréhensible pour les convergences.
-// Les nombres techniques restent internes ou dans le détail ; aucun calcul n'est modifié.
-if(!document.querySelector('script[src*="v155-convergence-language.js"]')){
-  const s=document.createElement('script');
-  s.src='assets/v155-convergence-language.js?v=155';
-  s.async=false;
-  s.setAttribute('data-ap-v155-convergence-language','1');
   document.head.appendChild(s);
 }
 
