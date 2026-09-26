@@ -11,6 +11,16 @@ if(!document.querySelector('script[src*="privacy-guard-v150.js"]')){
   document.head.appendChild(s);
 }
 
+// V156 — charte éditoriale transversale.
+// Chargée avant les autres wrappers IA afin que ses règles soient appliquées en dernier avant l'appel réseau.
+if(!document.querySelector('script[src*="v156-editorial-guard.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v156-editorial-guard.js?v=156';
+  s.async=false;
+  s.setAttribute('data-ap-v156-editorial-guard','1');
+  document.head.appendChild(s);
+}
+
 // V151 — règles de restitution des prévisions annuelles.
 // Cette couche agit uniquement sur le prompt éditorial et ne touche jamais aux calculs V121.
 if(!document.querySelector('script[src*="v151-annual-forecast-guard.js"]')){
@@ -58,6 +68,16 @@ if(!document.querySelector('script[src*="v154-report-editorial.js"]')){
   s.src='assets/v154-report-editorial.js?v=154';
   s.async=false;
   s.setAttribute('data-ap-v154-report-editorial','1');
+  document.head.appendChild(s);
+}
+
+// V156 — cohérence produit, tableau de bord Mon avenir, rapports, mobile et impression/PDF.
+// Cette couche ne recalcule aucune donnée : elle réutilise uniquement les résultats déjà affichés.
+if(!document.querySelector('script[src*="v156-product-coherence.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v156-product-coherence.js?v=156';
+  s.async=false;
+  s.setAttribute('data-ap-v156-product-coherence','1');
   document.head.appendChild(s);
 }
 
