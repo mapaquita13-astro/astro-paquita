@@ -60,13 +60,13 @@ function findHeading(){
 function hasPeriodPoint(text){const n=norm(text);return (n.includes('periode :')||n.includes('period:')||n.includes('periodo:'))&&(n.includes('point fort :')||n.includes('peak:')||n.includes('punto fuerte:'))}
 function rawCandidates(scope){
   const all=[...scope.querySelectorAll('article,section,li,div')].filter(el=>{
-    if(el.closest('.ap-v154-report,.ap-v154-detail'))return false;
+    if(el.dataset.apV154Hidden==='1'||el.closest('.ap-v154-report,.ap-v154-detail'))return false;
     const t=clean(el.innerText);if(t.length<100||t.length>5000||!hasPeriodPoint(t))return false;
     const pc=countMatches(norm(t),/(?:periode\s*:|period\s*:|periodo\s*:)/g);
     const xc=countMatches(norm(t),/(?:point fort\s*:|peak\s*:|punto fuerte\s*:)/g);
     return pc===1&&xc===1;
   });
-  return all.filter(el=>!all.some(other=>other!==el&&el.contains(other)));
+  return all.filter(el=>!all.some(other=>other!==el&&other.contains(el)));
 }
 function findScope(heading){
   let node=heading&&heading.parentElement;
@@ -102,7 +102,7 @@ function parseManifestations(ls){
     const n=norm(s);
     if(n.includes('manifestations possibles')||n.includes('ce qui est le plus susceptible de se produire')||n.includes('possible manifestations')){capture=true;expect=false;continue}
     if(!capture)continue;
-    if(n.includes('possibilites astrologiques relatives')||n.includes('astrological possibilities')||n==='en bref'||n.includes('périodes sans convergence'))break;
+    if(n.includes('possibilites astrologiques relatives')||n.includes('astrological possibilities')||n==='en bref'||n.includes('periodes sans convergence'))break;
     if(n==='scenario principal'||n==='autre possibilite'||n==='manifestation possible'||n==='main scenario'||n==='other possibility'){expect=true;continue}
     if(expect||(!n.includes('importance')&&!n.includes('point fort')&&!n.includes('periode :'))){
       if(s.length>12&&s.length<240&&!/^Manifestations? possibles?$/i.test(s)){out.push(s);expect=false}
@@ -167,9 +167,8 @@ function installStyle(){
 }
 
 function findCoverage(scope){
-  const els=[...scope.querySelectorAll('div,section,p,article')];
-  const hit=els.find(el=>{const t=clean(el.innerText);const n=norm(t);return t.length>80&&t.length<1800&&(n.includes('aucune autre fenetre independante')||n.includes('periodes sans convergence majeure supplementaire')||n.includes('no other independent window'))});
-  return hit?clean(hit.innerText):'';
+  const hits=[...scope.querySelectorAll('div,section,p,article')].filter(el=>!el.closest('.ap-v154-report,.ap-v154-detail')).map(el=>({el,t:clean(el.innerText)})).filter(x=>{const n=norm(x.t);return x.t.length>80&&x.t.length<1800&&(n.includes('aucune autre fenetre independante')||n.includes('periodes sans convergence majeure supplementaire')||n.includes('no other independent window'))}).sort((a,b)=>a.t.length-b.t.length);
+  return hits[0]?hits[0].t:'';
 }
 function hideOldSummary(scope){
   [...scope.querySelectorAll('h2,h3,h4,strong,b')].forEach(h=>{const n=norm(h.textContent);if(n==='en bref'||n==='in brief'){let p=h.parentElement;for(let i=0;p&&p!==scope&&i<3;i++,p=p.parentElement){const t=clean(p.innerText);if(t.length>150&&t.length<2200&&!hasPeriodPoint(t)){p.style.display='none';break}}}});
