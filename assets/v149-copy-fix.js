@@ -41,6 +41,16 @@ if(!document.querySelector('script[src*="v153-monthly-bars.js"]')){
   document.head.appendChild(s);
 }
 
+// V154 — présentation éditoriale des rapports 24 mois.
+// Synthèse, frise et détail uniquement : les résultats astrologiques d'origine restent inchangés.
+if(!document.querySelector('script[src*="v154-report-editorial.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v154-report-editorial.js?v=154';
+  s.async=false;
+  s.setAttribute('data-ap-v154-report-editorial','1');
+  document.head.appendChild(s);
+}
+
 const RULES=[
   [/La\s+(?:V\s*121\s+)?ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
   [/La\s+ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
