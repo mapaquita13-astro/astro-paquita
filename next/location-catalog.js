@@ -45,8 +45,8 @@ const EXTRA_CITIES=[
 ];
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()}
 function score(city,q){const n=norm(q);if(!n)return 99;const aliases=[city.nom,city.fr,...(city.aliases||[])].map(norm);if(aliases.some(a=>a===n))return 0;if(aliases.some(a=>a.startsWith(n)))return 1;if(aliases.some(a=>a.includes(n)))return 2;return 99}
-function extraSearch(q){return EXTRA_CITIES.map(c=>({c,s:score(c,q)})).filter(x=>x.s<99).sort((a,b)=>a.s-b.s||a.c.nom.localeCompare(b.c.nom,'fr')).map(({c})=>({label:`${c.fr} / ${c.nom} — Italie`,nom:c.nom,pays:c.pays,lat:c.lat,lon:c.lon,tz:c.tz,source:'GeoNames'}))}
+function extraSearch(q){return EXTRA_CITIES.map(c=>({c,s:score(c,q)})).filter(x=>x.s<99).sort((a,b)=>a.s-b.s||a.c.nom.localeCompare(b.c.nom,'fr')).map(({c})=>({label:`${c.fr} / ${c.nom} — Italie · GeoNames`,nom:c.nom,pays:c.pays,lat:c.lat,lon:c.lon,tz:c.tz,source:'GeoNames'}))}
 const baseSearch=E.searchCities.bind(E);
 E.searchCities=async function(q){const base=await baseSearch(q),extra=extraSearch(q),all=[...extra,...(base||[])],seen=new Set(),out=[];for(const r of all){const k=`${norm(r.nom)}|${norm(r.pays)}|${Number(r.lat).toFixed(4)}|${Number(r.lon).toFixed(4)}`;if(seen.has(k))continue;seen.add(k);out.push(r);if(out.length>=10)break}return out};
-window.AstroLocationCatalog={count:EXTRA_CITIES.length,countries:['IT'],source:'GeoNames',license:'CC BY'};
+window.AstroLocationCatalog={count:EXTRA_CITIES.length,countries:['IT'],source:'GeoNames',license:'CC BY',attribution:'GeoNames — www.geonames.org'};
 })();
