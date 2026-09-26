@@ -38,6 +38,9 @@ async function natalTechnical(){const w=await syncProfile();if(typeof w.natalTec
 async function natalTechnicalFor(key){const all=localProfiles();if(!all[key])throw new Error('Profil introuvable');const old=activeKey(),w=await waitReady();try{localStorage.setItem(ACTIVE_KEY,key);w.v37ChangerProfil(key);await sleep(20);const m=typeof w.natalTechnical==='function'?w.natalTechnical():null;if(!m)throw new Error('Calcul natal indisponible');return clone(m)}finally{if(old&&all[old]){localStorage.setItem(ACTIVE_KEY,old);try{w.v37ChangerProfil(old)}catch(e){}}}}
 async function account(){const token=localStorage.getItem('astro-token');if(!token)return null;try{const r=await fetch('/api/me?ts='+Date.now(),{headers:{Authorization:'Bearer '+token},cache:'no-store'});if(!r.ok)return null;return await r.json()}catch(e){return null}}
 async function premium(){const a=await account();return !!(a&&(a.premium||a.role==='admin'||a.is_admin))}
+async function login(email,password){const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,motDePasse:password})});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.erreur||data.error||'Connexion impossible');const token=data.token||data.access_token;if(!token)throw new Error('Jeton de connexion absent');localStorage.setItem('astro-token',token);readyPromise=null;return data}
+async function signup(email,password,prenom){const r=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,motDePasse:password,prenom})});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.erreur||data.error||'Inscription impossible');const token=data.token||data.access_token;if(token)localStorage.setItem('astro-token',token);readyPromise=null;return data}
+function logout(){localStorage.removeItem('astro-token');localStorage.removeItem('astro-admin-key');readyPromise=null}
 async function ai(payload){const token=localStorage.getItem('astro-token');if(!token)throw new Error('Connexion requise');const headers={'Content-Type':'application/json','Authorization':'Bearer '+token};const admin=localStorage.getItem('astro-admin-key');if(admin)headers['x-admin-key']=admin;const r=await fetch('/api/claude',{method:'POST',headers,body:JSON.stringify(payload)});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.erreur||data.error||'Analyse indisponible');return data}
 async function syncAccountInEngine(w){try{if(typeof w.chargerStatutCompte==='function')await w.chargerStatutCompte()}catch(e){}}
 async function events24(){
@@ -62,10 +65,11 @@ async function timing(intention){
  if(!await premium())throw new Error('Fonction Premium');
  if(typeof w.lancerFenetre!=='function'||typeof w.selIntent!=='function')throw new Error('Moteur de timing V121 indisponible');
  try{if(typeof w.resetFenetre==='function')w.resetFenetre()}catch(e){}
+ const engineIntent=intention==='rencontre'?'amour':intention;
  const buttons=[...w.document.querySelectorAll('#f-intentions .f-btn')];
- const btn=buttons.find(b=>String(b.getAttribute('onclick')||'').includes("'"+intention+"'"));
+ const btn=buttons.find(b=>String(b.getAttribute('onclick')||'').includes("'"+engineIntent+"'"));
  if(!btn)throw new Error('Intention non prise en charge par V121');
- w.selIntent(intention,btn);
+ w.selIntent(engineIntent,btn);
  await w.lancerFenetre();
  const d=w.document;
  return {title:text(d.getElementById('f-res-titre')),subtitle:text(d.getElementById('f-res-sous')),windows:[...(d.getElementById('f-fenetres')?.children||[])].map(text).filter(Boolean),report:text(d.getElementById('f-rapport'))};
@@ -93,10 +97,10 @@ async function question(q,domain='general'){
  const input=d.getElementById('q-texte');if(!input)throw new Error('Question V121 indisponible');input.value=q;
  if(domain&&domain!=='general'&&typeof w.selDomQ==='function'){
   const bs=[...d.querySelectorAll('#q-domaines .dom-btn')];const b=bs.find(x=>String(x.getAttribute('onclick')||'').includes("'"+domain+"'"));if(b)w.selDomQ(domain,b);
- }else{try{if(typeof w.selDomQ==='function'){const bs=[...d.querySelectorAll('#q-domaines .dom-btn')];const b=bs.find(x=>String(x.getAttribute('onclick')||'').includes("'general'"));if(b)w.selDomQ('general',b)}}catch(e){}}
+ }else{try{w.domQ=null}catch(e){}}
  await w.poserQuestion();
  return {title:text(d.getElementById('q-res-titre')),subtitle:text(d.getElementById('q-res-sous')),report:text(d.getElementById('q-rapport'))};
 }
 function diagnostics(){return {activeKey:activeKey(),profiles:Object.keys(localProfiles()).length,token:!!localStorage.getItem('astro-token'),engine:!!frame()?.contentWindow}}
-window.AstroEngine={waitReady,profiles:localProfiles,activeKey,profile,selectProfile,dailySignals,monthlyTrends,natalTechnical,natalTechnicalFor,events24,timing,relation,question,account,premium,ai,diagnostics,version:'V121'};
+window.AstroEngine={waitReady,profiles:localProfiles,activeKey,profile,selectProfile,dailySignals,monthlyTrends,natalTechnical,natalTechnicalFor,events24,timing,relation,question,account,premium,login,signup,logout,ai,diagnostics,version:'V121'};
 })();
