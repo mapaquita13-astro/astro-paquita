@@ -1,0 +1,26 @@
+name: Reconstruction syntax check
+
+on:
+  push:
+    branches:
+      - rebuild-from-zero-2026-09-26
+    paths:
+      - 'next/**'
+      - '.github/workflows/rebuild-syntax.yml'
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check reconstruction JavaScript
+        run: |
+          set -e
+          for file in next/*.js; do
+            echo "Checking $file"
+            node --check "$file"
+          done
