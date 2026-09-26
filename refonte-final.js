@@ -1,40 +1,22 @@
-/* Astro Paquita — chargeur de compatibilité interface V152 */
+/* Astro Paquita — V160 chargeur du moteur historique uniquement.
+   L'interface publique est désormais construite séparément par V160. */
 (function(){
 'use strict';
-function neutraliseAncienneInterface(){
+function loadOnce(src,marker){
+  const base=src.split('?')[0];
+  if(document.querySelector(`script[${marker}]`)||document.querySelector(`script[src*="${base}"]`))return;
+  const s=document.createElement('script');s.src=src;s.async=false;s.setAttribute(marker,'1');document.head.appendChild(s);
+}
+function neutraliseAncienneCoque(){
   const root=document.getElementById('ap-final-root');
   if(root){root.innerHTML='';root.style.setProperty('display','none','important')}
-  if(document.body){
-    document.body.classList.remove('ap-final-active','ap-auth-open');
-    [...document.body.classList].filter(c=>c.indexOf('ap-route-')===0).forEach(c=>document.body.classList.remove(c));
-  }
+  if(document.body){document.body.classList.remove('ap-final-active','ap-auth-open');[...document.body.classList].filter(c=>c.indexOf('ap-route-')===0).forEach(c=>document.body.classList.remove(c))}
 }
-function loadOnce(src,marker){
-  if(document.querySelector(`script[${marker}]`)||document.querySelector(`script[src*="${src.split('?')[0]}"]`))return;
-  const s=document.createElement('script');
-  s.src=src;
-  s.async=false;
-  s.setAttribute(marker,'1');
-  document.head.appendChild(s);
+function boot(){
+  neutraliseAncienneCoque();
+  /* Ce fichier contient les fonctions historiques et les calculs à conserver. */
+  loadOnce('assets/refonte-final.js?v=160-core','data-ap-v160-core');
 }
-function ensureActiveLayer(){
-  neutraliseAncienneInterface();
-  loadOnce('assets/refonte-final.js?v=152','data-ap-active-loader');
-  loadOnce('assets/v150-image-frame-fix.js?v=150','data-ap-v150-image-frame-fix');
-  loadOnce('assets/v151-banner-home-fix.js?v=151','data-ap-v151-banner-home-fix');
-  loadOnce('assets/v152-image-refine.js?v=152','data-ap-v152-image-refine');
-}
-function ensureQuestionGuard(done){
-  if(document.querySelector('script[src*="assets/v139-question-guard.js"]')){done();return}
-  const s=document.createElement('script');
-  s.src='assets/v139-question-guard.js?v=139';
-  s.async=false;
-  s.setAttribute('data-ap-question-guard','1');
-  s.onload=done;
-  s.onerror=done;
-  document.head.appendChild(s);
-}
-function boot(){ensureQuestionGuard(ensureActiveLayer)}
-window.addEventListener('pageshow',neutraliseAncienneInterface);
+window.addEventListener('pageshow',neutraliseAncienneCoque);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
