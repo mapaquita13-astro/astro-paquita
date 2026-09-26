@@ -27,7 +27,7 @@ const COPY={
   "Comprenez vos liens, votre manière d'aimer et la dynamique entre deux thèmes.":{fr:"Comprenez vos liens, votre manière d'aimer et la dynamique entre deux thèmes.",en:'Understand your bonds, your way of loving and the dynamics between two charts.',es:'Comprende tus vínculos, tu forma de amar y la dinámica entre dos cartas.',ar:'افهم روابطك وطريقتك في الحب وديناميكية خريطتين.'},
   'Prévisions':{fr:'Prévisions',en:'Forecasts',es:'Previsiones',ar:'التوقعات'},
   'Le bon moment':{fr:'Le bon moment',en:'Ideal timing',es:'Momento ideal',ar:'التوقيت الأنسب'},
-  'Les 24 mois qui comptent':{fr:'Les 24 mois qui comptent',en:'The 24 key months',es:'Los 24 meses clave',ar:'أهم 24 شهرًا'},
+  'Les 24 mois qui comptent':{fr:'Les temps forts des 24 prochains mois',en:'Key periods in the next 24 months',es:'Períodos clave de los próximos 24 meses',ar:'أبرز فترات الأشهر الـ24 المقبلة'},
   'Portrait enfant':{fr:'Portrait enfant',en:'Child portrait',es:'Retrato infantil',ar:'صورة الطفل'},
   'Des étoiles pour avancer, un espace pour être vous.':{fr:'Des étoiles pour avancer, un espace pour être vous.',en:'Stars to move forward, space to be yourself.',es:'Estrellas para avanzar, un espacio para ser tú.',ar:'نجوم تساعدك على التقدم ومساحة لتكون نفسك.'},
   'Mieux se connaître, pour mieux rayonner.':{fr:'Mieux se connaître, pour mieux rayonner.',en:'Know yourself better, shine more freely.',es:'Conocerte mejor para brillar más.',ar:'اعرف نفسك أكثر لتتألق أكثر.'},
