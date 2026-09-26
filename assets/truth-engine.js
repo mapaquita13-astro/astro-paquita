@@ -215,6 +215,9 @@ loadOnce('assets/v128-visual-cleanup.js?v=147','data-ap-v147-visual-cleanup');
 loadOnce('assets/client-cleanup-v137.js?v=138','data-ap-v138-client-cleanup');
 loadOnce('assets/v143-ui-sync.js?v=143','data-ap-v143-ui-sync');
 loadOnce('assets/v149-copy-fix.js?v=149','data-ap-v149-copy-fix');
+// V156 est chargée directement ici pour ne plus dépendre de la chaîne V149.
+loadOnce('assets/v156-editorial-guard.js?v=156.2','data-ap-v156-editorial-guard-direct');
+loadOnce('assets/v156-product-coherence.js?v=156.2','data-ap-v156-product-coherence-direct');
 hideQuestionModule();bridgePremiumPromo();secureMaintenanceBypass();disableLegacyNotifications();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideQuestionModule();bridgePremiumPromo();protectPrivateChildProfiles()},{once:true});
 setTimeout(()=>{hideQuestionModule();bridgePremiumPromo();protectPrivateChildProfiles()},250);setTimeout(()=>{hideQuestionModule();bridgePremiumPromo();protectPrivateChildProfiles()},1200);
