@@ -11,6 +11,16 @@ if(!document.querySelector('script[src*="privacy-guard-v150.js"]')){
   document.head.appendChild(s);
 }
 
+// V151 — règles de restitution des prévisions annuelles.
+// Cette couche agit uniquement sur le prompt éditorial et ne touche jamais aux calculs V121.
+if(!document.querySelector('script[src*="v151-annual-forecast-guard.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v151-annual-forecast-guard.js?v=151';
+  s.async=false;
+  s.setAttribute('data-ap-v151-annual-forecast-guard','1');
+  document.head.appendChild(s);
+}
+
 const RULES=[
   [/La\s+(?:V\s*121\s+)?ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
   [/La\s+ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
@@ -23,6 +33,9 @@ const RULES=[
   [/The curve uses the real(?:\s+V\s*121)? activations for each month, including weaker trends, without turning them into events\.?/gi,'The curve presents the astrological trends for each month, including subtler ones.'],
   [/La curva utiliza las activaciones(?:\s+V\s*121)? reales de cada mes, incluidas las tendencias débiles, sin convertirlas en eventos\.?/gi,'La curva presenta las tendencias astrológicas de cada mes, incluidas las más sutiles.'],
   [/يستخدم المنحنى تفعيلات(?:\s+V\s*121)? الحقيقية لكل شهر، بما في ذلك الاتجاهات الضعيفة، دون تحويلها إلى أحداث\.?/gi,'يعرض المنحنى الاتجاهات الفلكية لكل شهر، بما في ذلك الاتجاهات الأكثر دقة.'],
+  [/\bMeilleure journée de l[’']année\b/gi,'Pic de convergence de l’année'],
+  [/\bVigilance maximale de l[’']année\b/gi,'Pic de vigilance de l’année'],
+  [/Rien ne laisse penser que cela se produit sous contrainte\s*[—-]\s*les données indiquent clairement une évolution favorable, voulue\.?/gi,'La configuration souligne fortement ce domaine sans permettre, à elle seule, de déterminer si l’évolution sera choisie ou contrainte.'],
   [/\bV\s*121\b/gi,'']
 ];
 
