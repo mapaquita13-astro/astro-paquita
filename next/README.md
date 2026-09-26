@@ -10,6 +10,7 @@ Branche de développement uniquement. Ne pas déployer sur `main` tant que la no
 - `next/engine-adapter.js` lit les résultats V121 sans modifier les calculs.
 - `next/access-policy.js` centralise les droits propres aux nouveaux usages, sans modifier les calculs.
 - `next/bootstrap.js` vérifie le mode maintenance avant de charger l’application.
+- `next/account-center.js` centralise compte, Premium, crédits questions, Stripe, codes promo et réinitialisation du mot de passe.
 
 ## Architecture produit retenue
 
@@ -52,12 +53,28 @@ Raccordé au moteur V121 :
 - synastrie / relations ;
 - portrait enfant ;
 - Ma question avec le vrai `poserQuestion()` V121 et les crédits backend ;
-- authentification compte ;
 - création, sélection, modification et suppression des profils de naissance ;
 - recherche de ville avec la même API française et la même base de villes/fuseaux V121 ;
 - protection du cas « aucun profil actif » afin de ne jamais conserver d’anciens résultats en mémoire ;
 - mode maintenance avant démarrage ;
 - impression / PDF navigateur.
+
+Centre de compte raccordé :
+- connexion et inscription ;
+- mot de passe oublié ;
+- réinitialisation avec `reset_token` / `reset_email` ;
+- affichage Gratuit / Premium / Administrateur ;
+- affichage du nombre de questions disponibles ;
+- achat Premium Stripe avec code de réduction éventuel ;
+- codes promo : questions gratuites, jours Premium, réduction de paiement ;
+- achat du pack de 5 questions ;
+- confirmation Stripe du pack avant ajout des crédits ;
+- retour de paiement Premium relu depuis le backend ;
+- suppression définitive du compte avec annulation de l’abonnement serveur ;
+- accès direct à `admin.html` pour un administrateur ;
+- session expirée nettoyée ;
+- message de compte suspendu conservé au lieu d’être transformé en faux écran de connexion ;
+- les fenêtres compte/profil sont exclues de l’impression.
 
 Corrections de compatibilité déjà intégrées :
 - les demandes éditoriales `natal` du nouveau front sont envoyées au backend comme `portrait` ;
@@ -71,9 +88,9 @@ Important : `monthlyTrends()` n’est volontairement pas utilisé tant qu’aucu
 
 ## Restant avant validation
 
-- Intégrer proprement dans la nouvelle interface compte : mot de passe oublié/réinitialisation, achat Premium, codes promo, crédits/pack de questions, suppression du compte et accès admin.
-- Tester desktop + mobile : navigation, création/modification/suppression/changement de profil, portrait natal, journée, année, timing, relation, enfant, question et impression.
+- Tester desktop + mobile : navigation, création/modification/suppression/changement de profil, portrait natal, journée, année, timing, relation, enfant, question, compte et impression.
 - Vérifier le comportement de la recherche de villes France / étranger en conditions réelles.
 - Tester les parcours gratuit / Premium / administrateur / compte suspendu / maintenance.
+- Vérifier les retours Stripe réels sur une préproduction avant toute bascule.
 - Corriger uniquement les défauts observés pendant ces tests.
 - Ne proposer une bascule de `main` qu’après validation explicite de la nouvelle application et de la branche backend V138.
