@@ -6,6 +6,7 @@ function token(){return localStorage.getItem('astro-token')||''}
 function payload(){const all=E.profiles()||{};return{active_key:E.activeKey()||'',profiles:Object.entries(all).map(([key,p])=>({key,prenom:p.prenom||'',date:p.date||'',heure:p.heure||'',ville:p.ville||'',lat:p.lat,lon:p.lon,tz:p.tz||'',genre:p.genre||''}))}}
 let running=null,pending=false,lastExternalProfile=null;
 async function sync(){if(!token())return false;if(running){pending=true;return running}running=(async()=>{try{const r=await fetch('/api/me/profiles/sync',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token()},body:JSON.stringify(payload())});return r.ok}catch(e){return false}finally{running=null;if(pending){pending=false;setTimeout(sync,50)}})();return running}
+async function recordVisitOnce(){if(!token()||typeof E.account!=='function')return false;try{const a=await E.account();const email=String(a&&a.email||'').trim().toLowerCase();if(!email)return false;const key='astro-visite-session-'+email;if(sessionStorage.getItem(key))return true;const r=await fetch('/api/activity/visit',{method:'POST',headers:{'Authorization':'Bearer '+token()}});if(r.ok){sessionStorage.setItem(key,'1');return true}}catch(e){}return false}
 for(const name of ['saveProfile','deleteProfile','selectProfile']){
   if(typeof E[name]!=='function')continue;
   const base=E[name].bind(E);
@@ -21,5 +22,6 @@ if(typeof E.ai==='function'){
   E.ai=async function(input){const p=input&&typeof input==='object'?{...input}:{};p.featureContext={...(p.featureContext||{})};let ref=null;if(p.featureContext.child&&lastExternalProfile)ref=lastExternalProfile;else{const key=E.activeKey(),cur=E.profile();if(key&&cur)ref={key,name:cur.prenom||key}}if(ref){if(!p.featureContext.profile_key)p.featureContext.profile_key=ref.key;if(!p.featureContext.profile_name)p.featureContext.profile_name=ref.name}try{return await baseAi(p)}finally{if(p.featureContext.child)lastExternalProfile=null}};
 }
 E.syncProfiles=sync;
-E.waitReady().then(()=>sync()).catch(()=>{});
+E.recordVisitOnce=recordVisitOnce;
+E.waitReady().then(()=>Promise.allSettled([sync(),recordVisitOnce()])).catch(()=>{});
 })();
