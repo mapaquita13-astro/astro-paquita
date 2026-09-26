@@ -2,11 +2,26 @@
    Aucune logique astrologique n'est modifiée. */
 (function(){
 'use strict';
+
+// V157 devient l'unique coque visuelle publique. On la démarre avant les couches suivantes
+// et on neutralise l'ancien tableau de bord V156 pour éviter tout empilement d'interfaces.
+if(!window.__AP_V157_BOOTSTRAP__){
+  window.__AP_V157_BOOTSTRAP__=true;
+  window.__AP_V156_PRODUCT_COHERENCE__=true;
+  if(!document.querySelector('script[src*="v157-loader.js"]')){
+    const v157=document.createElement('script');
+    v157.src='assets/v157-loader.js?v=157';
+    v157.async=false;
+    v157.setAttribute('data-ap-v157-bootstrap','1');
+    document.head.appendChild(v157);
+  }
+}
+
 const PREMIUM_COPY={
-  fr:{desc:'Mon avenir et sa chronologie, Le bon moment, les 24 mois qui comptent, la synastrie avancée et les analyses détaillées dans la langue choisie.',timeline:'Chronologie intégrée à Mon avenir',compare:'Comparaison dans Le bon moment',events:'Les 24 mois qui comptent'},
-  en:{desc:'My Future and its timeline, Ideal Timing, the 24 key months, advanced synastry and detailed analyses in the selected language.',timeline:'Timeline integrated into My Future',compare:'Comparison inside Ideal Timing',events:'The 24 key months'},
-  es:{desc:'Mi futuro y su cronología, El momento ideal, los 24 meses clave, la sinastría avanzada y los análisis detallados en el idioma elegido.',timeline:'Cronología integrada en Mi futuro',compare:'Comparación dentro de El momento ideal',events:'Los 24 meses clave'},
-  ar:{desc:'مستقبلي وخطه الزمني، التوقيت الأنسب، أهم 24 شهرًا، التوافق المتقدم والتحليلات المفصلة باللغة المختارة.',timeline:'الخط الزمني مدمج في مستقبلي',compare:'المقارنة داخل التوقيت الأنسب',events:'أهم 24 شهرًا'}
+  fr:{desc:'Votre thème, vos prévisions, les temps forts, Le bon moment, la synastrie avancée et les analyses détaillées dans la langue choisie.',timeline:'Chronologie intégrée aux Temps forts',compare:'Comparaison dans Le bon moment',events:'Temps forts · 12 mois + horizon 24 mois'},
+  en:{desc:'Your chart, forecasts, key periods, Ideal Timing, advanced synastry and detailed readings in the selected language.',timeline:'Timeline integrated into Key periods',compare:'Comparison inside Ideal Timing',events:'Key periods · 12 months + 24-month horizon'},
+  es:{desc:'Tu carta, previsiones, períodos clave, El mejor momento, la sinastría avanzada y los análisis detallados en el idioma elegido.',timeline:'Cronología integrada en Períodos clave',compare:'Comparación dentro de El mejor momento',events:'Períodos clave · 12 meses + horizonte de 24 meses'},
+  ar:{desc:'خريطتك وتوقعاتك والفترات المهمة والتوقيت الأنسب والتوافق المتقدم والتحليلات المفصلة باللغة المختارة.',timeline:'الخط الزمني مدمج في الفترات المهمة',compare:'المقارنة داخل التوقيت الأنسب',events:'الفترات المهمة · 12 شهرًا + أفق 24 شهرًا'}
 };
 function ensureStyle(){
   if(document.getElementById('ap-v128-cleanup-style'))return;
@@ -46,10 +61,7 @@ function hideStandalonePublicEntries(){
   document.querySelectorAll(selectors).forEach(el=>{const label=standaloneLabel(el);if(isStandaloneDuplicate(label))el.style.setProperty('display','none','important')});
   document.getElementById('ap121-story')?.style.setProperty('display','none','important');
 }
-function removeLegacyMobileTools(){
-  document.getElementById('ap-v30-tools')?.remove();
-  document.querySelectorAll('#v30-home button').forEach(btn=>{const oc=String(btn.getAttribute('onclick')||'').toLowerCase();if(/v30gomodule\(['"](?:timeline|compare|journal)['"]\)/.test(oc))btn.remove()});
-}
+function removeLegacyMobileTools(){document.getElementById('ap-v30-tools')?.remove();document.querySelectorAll('#v30-home button').forEach(btn=>{const oc=String(btn.getAttribute('onclick')||'').toLowerCase();if(/v30gomodule\(['"](?:timeline|compare|journal)['"]\)/.test(oc))btn.remove()})}
 function cleanPremiumShowcase(){
   const code=String(window.AP_LANG||localStorage.getItem('astro-lang')||'fr').toLowerCase().slice(0,2),c=PREMIUM_COPY[code]||PREMIUM_COPY.fr;
   const desc=document.querySelector('[data-ap="premium_desc"]');if(desc&&desc.textContent!==c.desc)desc.textContent=c.desc;
