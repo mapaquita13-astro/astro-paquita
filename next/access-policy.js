@@ -12,4 +12,16 @@ E.ai=async function(payload){
   }
   return baseAi(p);
 };
+if(typeof E.question==='function'){
+  const baseQuestion=E.question.bind(E);
+  const labels={amour:'Amour',travail:'Travail',argent:'Argent',famille:'Famille',sante:'Bien-être',voyage:'Voyage',general:'Général'};
+  E.question=async function(q,domain='general'){
+    const d=String(domain||'general');
+    try{
+      const w=document.getElementById('v121-engine')?.contentWindow;
+      if(w&&typeof w.eval==='function')w.eval(`domLabel=${JSON.stringify(labels[d]||'Général')}`);
+    }catch(e){}
+    return baseQuestion(q,d);
+  };
+}
 })();
