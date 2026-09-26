@@ -31,6 +31,16 @@ if(!document.querySelector('script[src*="v152-events-24m-guard.js"]')){
   document.head.appendChild(s);
 }
 
+// V153 — représentation mensuelle en colonnes indépendantes.
+// La V153 transforme uniquement l'affichage du graphique existant ; les scores mensuels restent ceux de la V121.
+if(!document.querySelector('script[src*="v153-monthly-bars.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v153-monthly-bars.js?v=153';
+  s.async=false;
+  s.setAttribute('data-ap-v153-monthly-bars','1');
+  document.head.appendChild(s);
+}
+
 const RULES=[
   [/La\s+(?:V\s*121\s+)?ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
   [/La\s+ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
