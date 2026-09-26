@@ -35,10 +35,29 @@ Cette architecture remplace volontairement le catalogue historique de modules.
 5. Pas de `MutationObserver` de réparation d’interface.
 6. Un seul système de design.
 7. Mobile d’abord.
+8. Toute synthèse éditoriale doit être construite uniquement à partir des sorties V121 déjà calculées.
+9. La vue 24 mois reste une chronologie des événements V121 ; la lecture éditoriale annuelle est limitée aux 12 prochains mois.
 
-## Étapes suivantes
+## État au 26 septembre 2026
 
-- Cartographier les fonctions V121 de portrait natal, détection de périodes, timing, synastrie et question.
-- Exposer ces fonctions par l’adaptateur.
-- Remplacer les états vides écran par écran.
-- Valider localement desktop + mobile avant toute proposition de bascule.
+Raccordé au moteur V121 :
+- signaux quotidiens et lecture « Maintenant » ;
+- thème natal technique et portrait éditorial ;
+- détection des événements / temps forts 12–24 mois ;
+- lecture annuelle éditoriale 12 mois fondée exclusivement sur les événements V121 ;
+- Le bon moment / fenêtres V121 ;
+- synastrie / relations ;
+- portrait enfant ;
+- Ma question ;
+- authentification compte ;
+- impression / PDF navigateur.
+
+Important : `monthlyTrends()` n’est volontairement pas utilisé tant qu’aucune sortie mensuelle V121 native n’est exposée. Il ne faut pas fabriquer une courbe ou un score mensuel à partir d’un agrégat de remplacement.
+
+## Prochaines étapes
+
+- Raccorder proprement la création / modification des profils de naissance à la logique V121 existante, sans dupliquer les règles de villes, coordonnées et fuseaux.
+- Vérifier les parcours compte gratuit / Premium et les erreurs de droits.
+- Tester desktop + mobile : navigation, changement de profil, portrait natal, journée, année, timing, relation, enfant, question et impression.
+- Corriger uniquement les défauts observés pendant ces tests.
+- Ne proposer une bascule de `main` qu’après validation explicite de la nouvelle application.
