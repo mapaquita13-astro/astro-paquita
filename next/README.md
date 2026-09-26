@@ -50,14 +50,17 @@ Raccordé au moteur V121 :
 - portrait enfant ;
 - Ma question ;
 - authentification compte ;
+- création, sélection, modification et suppression des profils de naissance ;
+- recherche de ville avec la même API française et la même base de villes/fuseaux V121 ;
+- protection du cas « aucun profil actif » afin de ne jamais conserver d’anciens résultats en mémoire ;
 - impression / PDF navigateur.
 
 Important : `monthlyTrends()` n’est volontairement pas utilisé tant qu’aucune sortie mensuelle V121 native n’est exposée. Il ne faut pas fabriquer une courbe ou un score mensuel à partir d’un agrégat de remplacement.
 
 ## Prochaines étapes
 
-- Raccorder proprement la création / modification des profils de naissance à la logique V121 existante, sans dupliquer les règles de villes, coordonnées et fuseaux.
 - Vérifier les parcours compte gratuit / Premium et les erreurs de droits.
-- Tester desktop + mobile : navigation, changement de profil, portrait natal, journée, année, timing, relation, enfant, question et impression.
+- Tester desktop + mobile : navigation, création/modification/suppression/changement de profil, portrait natal, journée, année, timing, relation, enfant, question et impression.
+- Vérifier le comportement de la recherche de villes France / étranger en conditions réelles.
 - Corriger uniquement les défauts observés pendant ces tests.
 - Ne proposer une bascule de `main` qu’après validation explicite de la nouvelle application.
