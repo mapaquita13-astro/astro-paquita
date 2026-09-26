@@ -51,6 +51,16 @@ if(!document.querySelector('script[src*="v154-report-editorial.js"]')){
   document.head.appendChild(s);
 }
 
+// V155 — langage public compréhensible pour les convergences.
+// Les nombres techniques restent internes ou dans le détail ; aucun calcul n'est modifié.
+if(!document.querySelector('script[src*="v155-convergence-language.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v155-convergence-language.js?v=155';
+  s.async=false;
+  s.setAttribute('data-ap-v155-convergence-language','1');
+  document.head.appendChild(s);
+}
+
 const RULES=[
   [/La\s+(?:V\s*121\s+)?ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
   [/La\s+ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
