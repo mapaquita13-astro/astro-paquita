@@ -21,6 +21,16 @@ if(!document.querySelector('script[src*="v151-annual-forecast-guard.js"]')){
   document.head.appendChild(s);
 }
 
+// V152 — règles de restitution des temps forts sur 24 mois.
+// Cette couche cible uniquement le module events et ne modifie aucun calcul astrologique.
+if(!document.querySelector('script[src*="v152-events-24m-guard.js"]')){
+  const s=document.createElement('script');
+  s.src='assets/v152-events-24m-guard.js?v=152';
+  s.async=false;
+  s.setAttribute('data-ap-v152-events-24m-guard','1');
+  document.head.appendChild(s);
+}
+
 const RULES=[
   [/La\s+(?:V\s*121\s+)?ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
   [/La\s+ne renvoie pas assez de matière pour ce domaine sur(?:\s+\{?year\}?|\s+\d{4})?\.?\s*(?:Aucun tracé artificiel n[’']est fabriqué\.)?/gi,'Aucune tendance suffisamment nette n’est disponible pour ce domaine sur cette période.'],
