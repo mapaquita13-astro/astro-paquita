@@ -26,13 +26,14 @@ function secureMaintenanceBypass(){try{const url=new URL(location.href);if(url.s
 function protectChildAccess(){if(window.__AP_V160_CHILD_GUARD__)return;window.__AP_V160_CHILD_GUARD__=true;document.addEventListener('click',e=>{const target=e.target&&e.target.closest&&e.target.closest('#ap-v130-child-card');if(!target)return;let connected=false;try{connected=!!(localStorage.getItem('astro-token')||window.USER_CONNECTE&&window.USER_CONNECTE.email)}catch(err){}if(!connected){e.preventDefault();e.stopPropagation();if(typeof e.stopImmediatePropagation==='function')e.stopImmediatePropagation();if(typeof window.ouvrirCompte==='function')window.ouvrirCompte()}},true)}
 
 /* Technique conservée : confidentialité + portrait enfant. */
-loadScript('assets/privacy-guard-v150.js?v=160','data-ap-v160-privacy');
-loadScript('assets/v141-child-portrait.js?v=160','data-ap-v160-child');
+loadScript('assets/privacy-guard-v150.js?v=160.1','data-ap-v160-privacy');
+loadScript('assets/v141-child-portrait.js?v=160.1','data-ap-v160-child');
 
 /* Nouvelle application : aucune ancienne couche V128–V159 n'est chargée. */
-loadStyle('assets/v160-from-scratch.css?v=160','data-ap-v160-style');
-loadScript('assets/v160-editorial-core.js?v=160','data-ap-v160-editorial');
-loadScript('assets/v160-from-scratch.js?v=160','data-ap-v160-ui');
+loadStyle('assets/v160-from-scratch.css?v=160.1','data-ap-v160-style');
+loadScript('assets/v160-editorial-core.js?v=160.1','data-ap-v160-editorial');
+loadScript('assets/v160-from-scratch.js?v=160.1','data-ap-v160-ui');
+loadScript('assets/v160-runtime-guard.js?v=160.1','data-ap-v160-runtime');
 
 protectChildAccess();secureMaintenanceBypass();disableLegacyNotifications();
 setTimeout(()=>document.documentElement.classList.remove('ap160-booting'),4000);
