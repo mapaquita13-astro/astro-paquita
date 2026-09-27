@@ -1,0 +1,135 @@
+/* Astro Paquita V162 — corrections mobiles issues du test vidéo du 27/09/2026.
+   Couche purement visuelle : aucun calcul astrologique modifié. */
+
+@media (max-width:760px){
+  html,body{overflow-x:hidden!important}
+  #ap-final-root,.ap-main,.ap-content,#ap-page{max-width:100%!important;overflow-x:hidden!important}
+
+  /* Accueil : recadre l'image pour éliminer les textes imprimés dans le visuel. */
+  .ap-home-landscape{
+    position:relative!important;
+    overflow:hidden!important;
+    background-size:176% auto!important;
+    background-position:50% 45%!important;
+  }
+  .ap-home-landscape::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    background:linear-gradient(180deg,rgba(40,15,37,.06),rgba(40,15,37,.18) 52%,rgba(40,15,37,.34));
+    pointer-events:none;
+  }
+  .ap-home-landscape::after{z-index:1!important}
+  .ap-home-sky{z-index:2!important}
+
+  /* Bouton profil vide : plus de point d'interrogation donnant une impression d'erreur. */
+  .ap-mobile-action.ap-v162-empty-profile{
+    font-size:0!important;
+  }
+  .ap-mobile-action.ap-v162-empty-profile::after{
+    content:"＋";
+    font:700 25px/1 Lato,Arial,sans-serif;
+    color:#4b183f;
+  }
+
+  /* Profil : une seule colonne sur téléphone. */
+  .ap-route-profile .ap-content{
+    padding:16px 14px 112px!important;
+    position:relative!important;
+  }
+  .ap-route-profile .ap-content::before,
+  .ap-route-profile .ap-content::after{
+    display:none!important;
+    content:none!important;
+  }
+  .ap-route-profile #ap-page>section>.ap-eyebrow{display:none!important}
+  .ap-route-profile #ap-page>section>.ap-title{
+    margin:2px 0 8px!important;
+    font-size:42px!important;
+    line-height:.98!important;
+  }
+  .ap-route-profile #ap-page>section>.ap-subtitle{
+    margin:0 0 18px!important;
+    max-width:none!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+  }
+  .ap-route-profile .ap-grid{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:14px!important;
+    padding-top:0!important;
+    width:100%!important;
+  }
+  .ap-route-profile .ap-card,
+  .ap-route-profile .ap-span-7,
+  .ap-route-profile .ap-span-5,
+  .ap-route-profile #ap-profile-form{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    grid-column:auto!important;
+    margin:0!important;
+  }
+  .ap-route-profile .ap-span-7{order:1!important}
+  .ap-route-profile .ap-span-5{order:2!important}
+  .ap-route-profile #ap-profile-form{order:3!important;padding:20px 16px!important}
+  .ap-route-profile .ap-card>div:first-child{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    flex-wrap:wrap!important;
+  }
+  .ap-route-profile .ap-card>div:first-child h3,
+  .ap-route-profile .ap-card>h3{
+    font-size:25px!important;
+    line-height:1.05!important;
+  }
+  .ap-route-profile .ap-field-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+  .ap-route-profile .ap-profile-row{
+    grid-template-columns:42px minmax(0,1fr)!important;
+    width:100%!important;
+    overflow:hidden!important;
+  }
+  .ap-route-profile .ap-profile-row>div:nth-child(2){min-width:0!important}
+  .ap-route-profile .ap-profile-row strong,
+  .ap-route-profile .ap-profile-row small{
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+  .ap-route-profile .ap-profile-actions{
+    grid-column:1/-1!important;
+    width:100%!important;
+    justify-content:flex-start!important;
+  }
+  .ap-route-profile .ap-note{
+    font-size:12px!important;
+    line-height:1.55!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+  }
+  .ap-route-profile select,
+  .ap-route-profile input,
+  .ap-route-profile textarea{max-width:100%!important}
+
+  /* Écrans sans profil : carte lisible plutôt qu'une grande page vide. */
+  .ap-v162-profile-required{
+    margin:8px 0 0!important;
+    padding:22px 18px!important;
+    border:1px solid #e3d2bc!important;
+    border-radius:20px!important;
+    background:#fffaf2!important;
+    box-shadow:0 9px 28px rgba(67,22,62,.06)!important;
+  }
+  .ap-v162-profile-required .ap-title{font-size:34px!important;line-height:1!important}
+
+  /* Garde une vraie réserve sous la navigation fixe. */
+  body.ap-final-active{padding-bottom:92px!important}
+  .ap-mobile-nav{z-index:2147483100!important}
+}
