@@ -129,6 +129,15 @@
   }
   .ap-v162-profile-required .ap-title{font-size:34px!important;line-height:1!important}
 
+  /* Courbe : on conserve la largeur nécessaire aux 12 mois et le glissement tactile,
+     mais la barre de défilement visible de la vidéo disparaît. */
+  .ap-route-future .ap-chart{
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:none!important;
+    -ms-overflow-style:none!important;
+  }
+  .ap-route-future .ap-chart::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+
   /* Garde une vraie réserve sous la navigation fixe. */
   body.ap-final-active{padding-bottom:92px!important}
   .ap-mobile-nav{z-index:2147483100!important}
