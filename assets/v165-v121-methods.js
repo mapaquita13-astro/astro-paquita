@@ -61,7 +61,7 @@ function v121Period(start,months){
     const d=new Date(firstMonth.getFullYear(),firstMonth.getMonth()+i,15,12);
     const raw=rawMonthSignals(d);
     const scores={};
-    UI_DOMAINS.forEach(dom=>{scores[dom]=+(v121MonthScore(raw,dom)*5).toFixed(2);}); // simple mise à l'échelle pour le graphe -5/+5
+    UI_DOMAINS.forEach(dom=>{scores[dom]=+(v121MonthScore(raw,dom)*5).toFixed(2);});
     const vals=Object.values(scores),abs=Math.max(0,...vals.map(Math.abs));
     const avg=vals.reduce((a,b)=>a+b,0)/Math.max(1,vals.length);
     const polarity=avg>1.25?'positive':avg<-1.25?'difficult':abs<.6?'calm':'mixed';
@@ -106,7 +106,7 @@ async function runLegacySynastry(ev){
   relationBusy=true;relationLoader(true);relationError('');
   const out=q('#ap-rel-result');
   try{
-    if(typeof window.analyserSynastrie!=='function')throw new Error('La méthode V121 de synastrie est indisponible.');
+    if(typeof window.analyserSynastrie!=='function')throw new Error('La synastrie est temporairement indisponible.');
     const id=q('#ap-rel-profile')?.value;const p=A.getProfileById?A.getProfileById(id):null;
     if(!p)throw new Error('Le second profil est introuvable.');
     try{const cur=A.currentProfile&&A.currentProfile();if(cur?.profileId&&A.activate)A.activate(cur.profileId);}catch(e){}
@@ -129,8 +129,8 @@ function bindRelations(){
   const b=q('.ap-route-relations #ap-rel-run');if(!b||b.dataset.v165==='1')return;
   b.dataset.v165='1';b.onclick=runLegacySynastry;
   const hero=q('.ap-route-relations .ap-hero-copy p');
-  if(hero)hero.textContent='Le type de relation change réellement les points du thème observés : couple, famille, amitié et travail n’utilisent pas la même grille d’analyse.';
-  const out=q('#ap-rel-result');if(out&&!out.dataset.v165){out.dataset.v165='1';out.innerHTML='<h3>Votre dynamique relationnelle</h3><p>Sélectionnez un profil et le type de lien. La lecture détaillée sera produite à partir de la méthode relationnelle V121.</p>';}
+  if(hero)hero.textContent='Le type de relation adapte l’analyse au contexte choisi : couple, famille, amitié ou travail.';
+  const out=q('#ap-rel-result');if(out&&!out.dataset.v165){out.dataset.v165='1';out.innerHTML='<h3>Votre dynamique relationnelle</h3><p>Sélectionnez un profil et le type de lien. La lecture détaillée s’adaptera au contexte de la relation.</p>';}
 }
 function cleanFutureUi(){
   const sub=q('.ap-route-future .ap-subtitle');
@@ -138,7 +138,7 @@ function cleanFutureUi(){
   qa('.ap-route-future .v161-summary-card em').forEach(e=>e.remove());
   const h=q('.ap-route-future .ap-future-milestones h3');if(h)h.textContent='Périodes à retenir';
 }
-function apply(){scheduled=false;if(observer)observer.disconnect();try{bindRelations();cleanFutureUi();document.documentElement.dataset.astroMethods='v165-v121';}finally{watch();}}
+function apply(){scheduled=false;if(observer)observer.disconnect();try{bindRelations();cleanFutureUi();document.documentElement.removeAttribute('data-astro-methods');}finally{watch();}}
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(apply);}
 function watch(){if(!observer)observer=new MutationObserver(schedule);observer.observe(q('#ap-final-root')||document.body,{childList:true,subtree:true});}
 function start(){watch();schedule();}
