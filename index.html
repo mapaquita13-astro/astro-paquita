@@ -19,7 +19,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 <script>
 (()=>{
  'use strict';
- const VERSION='20260927-v162e';
+ const VERSION='20260927-v162f';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -91,6 +91,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    for(let i=0;i<16&&!w.AstroTruth;i++)await sleep(125);
    if(!w.AstroTruth){try{await loadScript(d,'/assets/truth-engine.js');}catch(e){fail('Le moteur astrologique V121/V161 n’a pas pu être chargé.');return;}}
    try{await loadScript(d,'/assets/v162-runtime-fix.js');}catch(e){fail('Le raccord des prévisions V162d n’a pas pu être chargé.');return;}
+   try{await loadScript(d,'/assets/v162-markdown-fix.js');}catch(e){fail('Le rendu des interprétations V162f n’a pas pu être chargé.');return;}
    for(let i=0;i<16&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    if(!root.querySelector('.ap-shell,.ap-auth-shell')){
      try{await loadScript(d,'/assets/refonte-final.js');}catch(e){fail('La nouvelle interface V162 n’a pas pu être chargée.');return;}
