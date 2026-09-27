@@ -19,7 +19,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 <script>
 (()=>{
  'use strict';
- const VERSION='20260927-v162d';
+ const VERSION='20260927-v162e';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -59,7 +59,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    `;d.head.appendChild(s);
  }
  function ensureCss(d){
-   if([...d.querySelectorAll('link[rel="stylesheet"]')].some(x=>(x.getAttribute('href')||'').includes('refonte-final.css')))return;
+   const existing=[...d.querySelectorAll('link[rel="stylesheet"]')].find(x=>(x.getAttribute('href')||'').includes('refonte-final.css'));
+   if(existing){existing.href='/assets/refonte-final.css?v='+VERSION;return;}
    const l=d.createElement('link');l.rel='stylesheet';l.href='/assets/refonte-final.css?v='+VERSION;d.head.appendChild(l);
  }
  function loadScript(d,src){return new Promise((resolve,reject)=>{const s=d.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'v='+VERSION;s.onload=resolve;s.onerror=()=>reject(new Error('Chargement impossible : '+src));d.body.appendChild(s);});}
