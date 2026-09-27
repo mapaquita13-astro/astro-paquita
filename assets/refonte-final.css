@@ -6,3 +6,6 @@
 @import url('./v161-future.css?v=20260927-v168');
 @import url('./v162-mobile.css?v=20260927-v168');
 @import url('./v168-readable.css?v=20260927-v168');
+
+/* Aucun numéro de version interne ne doit apparaître dans l’interface publique. */
+.ap-version-chip{display:none!important;}
