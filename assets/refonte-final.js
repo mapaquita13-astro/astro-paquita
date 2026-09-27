@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260927-global-i18n';
+const VER='20260927-global-i18n2';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -47,7 +47,9 @@ function loadInterface(){
                         load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile',function(){
                           load('assets/v171-visual-polish.js?v='+VER,'ap-v171-visual-polish',function(){
                             load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
-                              load('assets/global-i18n.js?v='+VER,'ap-global-i18n');
+                              load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
+                                load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes');
+                              });
                             });
                           });
                         });
