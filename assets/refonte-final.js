@@ -1,11 +1,11 @@
-/* Astro Paquita V168 — bootstrap sécurisé.
+/* Astro Paquita V169 — bootstrap sécurisé.
    Le moteur astrologique V121 reste inchangé. Cette entrée charge les raccords
    de compatibilité, les méthodes V121 restaurées et les corrections d'interface. */
 (function(){
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260927-v168';
+const VER='20260927-v169';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -19,7 +19,7 @@ function load(src,id,onload){
   s.src=src;
   s.async=false;
   s.onload=function(){s.dataset.loaded='1';if(onload)onload();};
-  s.onerror=function(){console.error('Astro Paquita V168 : chargement impossible',src);};
+  s.onerror=function(){console.error('Astro Paquita V169 : chargement impossible',src);};
   document.head.appendChild(s);
 }
 function ensureCss(){
@@ -36,12 +36,14 @@ function loadInterface(){
   load('assets/v162-runtime-fix.js?v='+VER,'ap-v162d-runtime',function(){
     load('assets/v165-v121-methods.js?v='+VER,'ap-v165-methods',function(){
       load('assets/v162-markdown-fix.js?v='+VER,'ap-v162f-markdown',function(){
-        load('assets/refonte-v127-base.js?v='+VER,'ap-v161-base',function(){
-          load('assets/v164-analysis-restore.js?v='+VER,'ap-v164-analysis',function(){
-            load('assets/v166-domain-timing.js?v='+VER,'ap-v166-domain-timing',function(){
-              load('assets/v167-forecast-ui.js?v='+VER,'ap-v167-forecast-ui',function(){
-                load('assets/v168-future-hub.js?v='+VER,'ap-v168-future-hub',function(){
-                  load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile');
+        load('assets/v169-natal-houses.js?v='+VER,'ap-v169-natal-houses',function(){
+          load('assets/refonte-v127-base.js?v='+VER,'ap-v161-base',function(){
+            load('assets/v164-analysis-restore.js?v='+VER,'ap-v164-analysis',function(){
+              load('assets/v166-domain-timing.js?v='+VER,'ap-v166-domain-timing',function(){
+                load('assets/v167-forecast-ui.js?v='+VER,'ap-v167-forecast-ui',function(){
+                  load('assets/v168-future-hub.js?v='+VER,'ap-v168-future-hub',function(){
+                    load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile');
+                  });
                 });
               });
             });
@@ -56,13 +58,13 @@ function start(){
   if(!root){
     attempts++;
     if(attempts<240)setTimeout(start,50);
-    else console.error('Astro Paquita V168 : #ap-final-root introuvable.');
+    else console.error('Astro Paquita V169 : #ap-final-root introuvable.');
     return;
   }
   if(window.AstroTruth){loadInterface();return;}
   load('assets/truth-engine.js?v='+VER,'ap-v161-truth',function(){
     if(window.AstroTruth)loadInterface();
-    else console.error('Astro Paquita V168 : AstroTruth non initialisé après chargement.');
+    else console.error('Astro Paquita V169 : AstroTruth non initialisé après chargement.');
   });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
