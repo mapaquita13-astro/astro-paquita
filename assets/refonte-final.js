@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260927-global-i18n2';
+const VER='20260927-i18n-public-cleanup';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
