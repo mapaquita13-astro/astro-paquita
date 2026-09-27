@@ -1,12 +1,12 @@
-/* Astro Paquita V162 — bootstrap sécurisé.
+/* Astro Paquita V162d — bootstrap sécurisé.
    Le moteur astrologique V121 reste inchangé. Cette entrée charge d’abord
-   la couche de vérité structurée, puis l’interface V127 sécurisée et enfin
-   les corrections d’interface V161/V162. */
+   la couche de vérité structurée, puis le raccord V162d, l’interface V127
+   sécurisée et enfin les corrections d’interface V161/V162. */
 (function(){
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260927-v162c';
+const VER='20260927-v162d';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -20,7 +20,7 @@ function load(src,id,onload){
   s.src=src;
   s.async=false;
   s.onload=function(){s.dataset.loaded='1';if(onload)onload();};
-  s.onerror=function(){console.error('Astro Paquita V162 : chargement impossible',src);};
+  s.onerror=function(){console.error('Astro Paquita V162d : chargement impossible',src);};
   document.head.appendChild(s);
 }
 function ensureCss(){
@@ -33,9 +33,11 @@ function ensureCss(){
 }
 function loadInterface(){
   ensureCss();
-  load('assets/refonte-v127-base.js?v='+VER,'ap-v161-base',function(){
-    load('assets/v161-logic.js?v='+VER,'ap-v161-logic',function(){
-      load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile');
+  load('assets/v162-runtime-fix.js?v='+VER,'ap-v162d-runtime',function(){
+    load('assets/refonte-v127-base.js?v='+VER,'ap-v161-base',function(){
+      load('assets/v161-logic.js?v='+VER,'ap-v161-logic',function(){
+        load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile');
+      });
     });
   });
 }
@@ -44,13 +46,13 @@ function start(){
   if(!root){
     attempts++;
     if(attempts<240)setTimeout(start,50);
-    else console.error('Astro Paquita V162 : #ap-final-root introuvable.');
+    else console.error('Astro Paquita V162d : #ap-final-root introuvable.');
     return;
   }
   if(window.AstroTruth){loadInterface();return;}
   load('assets/truth-engine.js?v='+VER,'ap-v161-truth',function(){
     if(window.AstroTruth)loadInterface();
-    else console.error('Astro Paquita V162 : AstroTruth non initialisé après chargement.');
+    else console.error('Astro Paquita V162d : AstroTruth non initialisé après chargement.');
   });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
