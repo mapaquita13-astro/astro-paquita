@@ -1,7 +1,7 @@
-/* Astro Paquita V162 — point d’entrée visuel propre.
+/* Astro Paquita V162e — point d’entrée visuel propre.
    La base V127 est conservée séparément, puis les couches V161/V162 l’affinent.
    Aucun calcul astrologique dans ce fichier. */
-@import url('./refonte-v127-base.css?v=20260927-v162c');
-@import url('./v161-ui.css?v=20260927-v162c');
-@import url('./v161-future.css?v=20260927-v162c');
-@import url('./v162-mobile.css?v=20260927-v162c');
+@import url('./refonte-v127-base.css?v=20260927-v162e');
+@import url('./v161-ui.css?v=20260927-v162e');
+@import url('./v161-future.css?v=20260927-v162e');
+@import url('./v162-mobile.css?v=20260927-v162e');
