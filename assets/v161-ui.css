@@ -1,0 +1,70 @@
+/* ASTRO PAQUITA V161 — couche visuelle propre au-dessus de la base V127
+   Périmètre: accueil, navigation, profils + harmonisation générale.
+   Aucun calcul astrologique n'est modifié. */
+
+:root{
+  --v161-cream:#f7f0e6;
+  --v161-cream-2:#fcf8f1;
+  --v161-paper:#fffdf8;
+  --v161-plum:#43163e;
+  --v161-plum-2:#5b2451;
+  --v161-plum-3:#744061;
+  --v161-gold:#bd9551;
+  --v161-gold-soft:#ead7ae;
+  --v161-ink:#2e2730;
+  --v161-muted:#766b73;
+  --v161-line:#e5d7c5;
+  --v161-shadow:0 18px 55px rgba(67,22,62,.09);
+  --v161-shadow-soft:0 8px 26px rgba(67,22,62,.06);
+  --v161-radius:22px;
+}
+
+body.ap-final-active{
+  background:radial-gradient(circle at 82% 4%,rgba(189,149,81,.11),transparent 27%),radial-gradient(circle at 16% 88%,rgba(67,22,62,.055),transparent 25%),var(--v161-cream)!important;
+  color:var(--v161-ink)!important;
+}
+#ap-final-root{background:transparent!important;color:var(--v161-ink)}
+#ap-final-root button,#ap-final-root input,#ap-final-root select,#ap-final-root textarea{font-family:Lato,Arial,sans-serif}
+.ap-content{max-width:1320px;padding:34px 42px 110px}
+.ap-title,.ap-section-title,.ap-card h3{color:var(--v161-plum)}
+.ap-subtitle,.ap-section-lead,.ap-muted{color:var(--v161-muted)}
+.ap-eyebrow{color:#9b7135;letter-spacing:.19em}
+
+.ap-shell{grid-template-columns:248px minmax(0,1fr)}
+.ap-side{padding:25px 16px 20px;background:radial-gradient(circle at 28px 32px,rgba(255,255,255,.48) 0 1px,transparent 1.6px),radial-gradient(circle at 195px 92px,rgba(234,215,174,.45) 0 1.2px,transparent 2px),radial-gradient(circle at 88px 318px,rgba(255,255,255,.28) 0 1px,transparent 1.7px),linear-gradient(180deg,#351030 0%,#48163f 49%,#34102f 100%);box-shadow:14px 0 42px rgba(48,16,43,.09)}
+.ap-brand{gap:11px;padding:5px 8px 21px;border-bottom:1px solid rgba(255,255,255,.11);cursor:pointer}
+.ap-brand-orbit{width:48px;height:48px;border-color:rgba(234,215,174,.72);color:#ecd59f;box-shadow:0 0 0 5px rgba(255,255,255,.025),inset 0 0 22px rgba(234,215,174,.08)}
+.ap-brand-name{font-size:22px;letter-spacing:.035em;color:#fffaf0}.ap-brand-sub{font-size:8.5px;letter-spacing:.17em;color:#d5c0cf}
+.ap-nav{gap:4px;margin-top:18px}.ap-navbtn{min-height:43px;padding:10px 11px;border-radius:11px;color:#e7d8e2;font-size:12.5px;font-weight:500}.ap-navbtn:hover{background:rgba(255,255,255,.075);transform:translateX(1px)}.ap-navbtn.active{background:rgba(255,255,255,.11);box-shadow:inset 2px 0 0 #e1c17d;color:#fff}.ap-navicon{width:23px;color:#dfc27f;font-size:19px}
+.ap-side-bottom{padding:15px 7px 0}.ap-profile-mini{padding:11px;border-radius:13px;background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.14)}.ap-profile-mini:hover{background:rgba(255,255,255,.09)}.ap-profile-mini .ap-avatar{width:35px;height:35px;background:#ecd9bd;color:var(--v161-plum)}.ap-premium{color:#dfc589;font-size:9px;margin-top:8px}
+
+.ap-top{height:68px;padding:0 34px;background:rgba(250,246,239,.9);border-bottom:1px solid rgba(164,130,82,.18);backdrop-filter:blur(18px)}
+.ap-breadcrumb{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;letter-spacing:.01em;color:var(--v161-plum)}
+.ap-route-home .ap-desktop-crumb{font-size:0}html[lang="fr"] .ap-route-home .ap-desktop-crumb:after{content:"Quel moment voulez-vous éclairer ?";font-size:17px}
+.ap-lang,.ap-ghost-btn{background:#fffaf2;border-color:var(--v161-line);color:var(--v161-plum)}.ap-ghost-btn:hover,.ap-lang:hover{border-color:#cdb58d}
+
+.ap-card{background:rgba(255,253,248,.96);border-color:var(--v161-line);border-radius:var(--v161-radius);box-shadow:var(--v161-shadow-soft)}.ap-card:hover{border-color:#dbc5a2}
+.ap-btn{min-height:39px}.ap-btn-primary{background:linear-gradient(135deg,var(--v161-plum),#6e315e);box-shadow:none}.ap-btn-gold{background:#c5a05e;color:#3b2135}.ap-btn-soft{background:#f2e6d7;color:var(--v161-plum)}.ap-btn-outline{border-color:#d9c5aa;color:var(--v161-plum);background:#fffaf3}.ap-tabs,.ap-chips{gap:7px}.ap-tab,.ap-chip{background:#fffaf3;border-color:var(--v161-line);color:#675863}.ap-tab.active,.ap-chip.active{background:var(--v161-plum);border-color:var(--v161-plum)}
+
+.ap-route-home .ap-content{padding-top:27px}
+.ap-home-desktop .ap-hero-card{min-height:285px;padding:34px 37px;border:1px solid var(--v161-line);border-radius:27px;box-shadow:var(--v161-shadow);background:var(--v161-paper);color:var(--v161-ink);align-items:center}
+.ap-home-desktop .ap-hero-card:before{background:linear-gradient(90deg,#fffaf3 0%,#fffaf3 42%,rgba(255,250,243,.94) 52%,rgba(255,250,243,.2) 76%,rgba(255,250,243,.02) 100%),var(--hero) 82% center/56% 100% no-repeat}
+.ap-home-desktop .ap-hero-copy{max-width:53%}.ap-home-desktop .ap-hero-copy .ap-eyebrow{color:#9c743a}.ap-home-desktop .ap-hero-copy h1{color:var(--v161-plum);font-size:0;margin:7px 0 13px}
+html[lang="fr"] .ap-home-desktop .ap-hero-copy h1:after{content:"Quel moment voulez-vous éclairer ?";display:block;max-width:520px;font:500 clamp(42px,4.7vw,66px)/.91 'Cormorant Garamond',Georgia,serif;letter-spacing:-.02em}
+.ap-home-desktop .ap-hero-copy p{font-size:13.5px;line-height:1.65;color:#6e6069;max-width:490px}html[lang="fr"] .ap-home-desktop .ap-hero-copy p{font-size:0}html[lang="fr"] .ap-home-desktop .ap-hero-copy p:after{content:"Votre thème reste la base. Choisissez ce que vous voulez comprendre aujourd’hui : vous, les mois à venir, une relation ou le meilleur moment pour agir.";display:block;font:400 13.5px/1.65 Lato,Arial,sans-serif}
+.ap-home-desktop .ap-hero-copy .ap-actions{margin-top:19px}.ap-home-desktop .ap-grid{gap:16px;margin-top:18px}.ap-home-desktop .ap-stat{min-height:73px;align-items:center}.ap-home-desktop .ap-stat-icon{background:#f4e7d5;color:#a2783d;width:48px;height:48px}.ap-home-desktop .ap-stat b{font-size:20px;color:var(--v161-plum)}.ap-home-desktop .ap-stat small{font-size:10.5px}
+.ap-home-desktop .ap-tile{min-height:235px;padding:147px 19px 18px;justify-content:flex-start;background:var(--v161-paper);color:var(--v161-ink);border:1px solid var(--v161-line);box-shadow:var(--v161-shadow-soft)}.ap-home-desktop .ap-tile:before{top:0;bottom:auto;height:132px;background:linear-gradient(180deg,rgba(40,17,38,.03),rgba(40,17,38,.18)),var(--img) center/cover no-repeat;border-bottom:1px solid var(--v161-line)}.ap-home-desktop .ap-tile:hover:before{transform:scale(1.018)}.ap-home-desktop .ap-tile h3{color:var(--v161-plum);font-size:24px;margin:0 0 6px}.ap-home-desktop .ap-tile p{color:var(--v161-muted);font-size:11.5px;line-height:1.5;max-width:87%}.ap-home-desktop .ap-tile .ap-arrow{top:143px;right:15px;background:#fffaf3;color:var(--v161-plum);border:1px solid var(--v161-line)}
+
+.ap-route-profile .ap-title{font-size:48px}html[lang="fr"] .ap-route-profile .ap-subtitle{font-size:0}html[lang="fr"] .ap-route-profile .ap-subtitle:after{content:"Créez, choisissez ou mettez à jour vos profils de naissance. Les données astronomiques restent associées au bon profil, sans ressaisie inutile.";display:block;font:400 13.5px/1.65 Lato,Arial,sans-serif;color:var(--v161-muted)}
+.ap-route-profile .ap-grid{gap:17px}.ap-route-profile .ap-span-7{grid-column:span 8}.ap-route-profile .ap-span-5{grid-column:span 4}.ap-route-profile .ap-card>div:first-child h3,.ap-route-profile .ap-card>h3{font-size:25px}.ap-profile-list{gap:8px}.ap-profile-row{padding:12px;border-radius:13px;background:#fffbf4;border-color:var(--v161-line);transition:.16s}.ap-profile-row:hover{background:#fff8eb;border-color:#d8c19c}.ap-profile-row.active{background:#fff8e9;box-shadow:inset 3px 0 0 var(--v161-gold)}.ap-profile-row strong{color:var(--v161-plum)}.ap-profile-row small{line-height:1.45}.ap-profile-actions{gap:5px}.ap-profile-actions .ap-btn{min-height:33px;padding:7px 10px;font-size:9.5px}.ap-route-profile #ap-profile-form{grid-column:span 12;padding:26px 28px}.ap-route-profile #ap-profile-form h3{font-size:31px;padding-bottom:10px;border-bottom:1px solid var(--v161-line)}
+.ap-field label{color:#796972}.ap-field input,.ap-field select,.ap-field textarea{background:#fffdf8;border-color:#dfcfbb;border-radius:11px}.ap-note{background:#faf2e6;border-left-color:var(--v161-gold);color:#6c5d64}
+
+.ap-wheel-wrap{background:radial-gradient(circle,#fffdf8 0 46%,#f2e4d2 47% 100%);border-color:var(--v161-line)}.ap-planet-row{background:#faf1e5}.ap-period.positive{background:#eaf2eb}.ap-period.difficult{background:#f5e8e8}.ap-period.mixed,.ap-period.calm{background:#f6eddd}.ap-report{color:#4b4148}.ap-report h2,.ap-report h3,.ap-report h4{color:var(--v161-plum)}
+
+@media(max-width:760px){
+  body.ap-final-active{padding-bottom:84px!important}#ap-final-root{background:#f8f1e7!important}.ap-top{height:62px;padding:0 12px;background:rgba(255,251,245,.97);border-bottom:1px solid #ead9c4}.ap-mobile-title{color:var(--v161-plum)!important;font-size:20px!important}.ap-mobile-back{border-color:#d9c4a9!important;color:var(--v161-plum)!important}.ap-mobile-action{border-color:#dec6a5!important;background:#f5e5cf!important;color:var(--v161-plum)!important}.ap-content{padding:14px 12px 105px;max-width:520px}.ap-route-home .ap-content{padding-top:0}.ap-home-mobile{margin:0 -12px!important}.ap-home-quote{padding:13px 12px 12px!important;color:var(--v161-plum)!important;background:#fffaf2!important;font-size:16px!important}.ap-home-landscape{height:285px!important;background-position:58% center!important}.ap-home-landscape:after{background:linear-gradient(180deg,rgba(38,16,38,.01),rgba(38,16,38,.15) 48%,rgba(38,16,38,.48))!important}.ap-home-sky{left:12px!important;right:12px!important;bottom:11px!important;padding:14px!important;border-radius:17px!important;background:linear-gradient(135deg,rgba(55,19,51,.93),rgba(78,35,66,.88))!important;border-color:rgba(233,205,148,.62)!important}.ap-home-sky small{font-size:20px!important}.ap-home-horoscope{height:38px!important;background:#f2d08e!important;color:#3d2337!important}.ap-home-shortcuts{grid-template-columns:repeat(3,1fr)!important;gap:7px!important;padding:11px 12px 6px!important;background:#fffaf2!important}.ap-home-shortcuts button{min-height:88px!important;border-radius:12px!important;border-color:#ead8c1!important;background:#fffdf8!important;color:var(--v161-plum)!important;font-size:10.5px!important}.ap-home-shortcuts i{width:41px!important;height:41px!important;background:#f6e8d6!important;color:#a16f36!important;border-color:#ebd4b8!important}.ap-home-mantra{background:#fffaf2!important;color:#766175!important;padding-bottom:15px!important}
+  .ap-mobile-nav{left:10px!important;right:10px!important;bottom:max(8px,env(safe-area-inset-bottom))!important;height:68px!important;border-radius:20px!important;background:linear-gradient(135deg,#2f102d,#4a193f 62%,#35122f)!important;border:1px solid rgba(234,207,153,.26)!important;box-shadow:0 12px 30px rgba(41,15,37,.25)!important}.ap-mob-btn{color:#f1e6ed!important}.ap-mob-btn.active,.ap-mob-btn.active b{color:#e6c476!important}.ap-mob-btn.active:after{background:#e6c476!important}
+  .ap-route-profile .ap-content:before{content:"Mes profils";display:block;margin:2px 0 3px;font:600 31px/1 'Cormorant Garamond',Georgia,serif;color:var(--v161-plum)}.ap-route-profile .ap-content:after{content:"Sélectionnez le profil utilisé pour les calculs ou modifiez ses données de naissance.";display:block;position:absolute;top:48px;left:12px;right:12px;font:400 11px/1.45 Lato,Arial,sans-serif;color:var(--v161-muted);pointer-events:none}.ap-route-profile .ap-grid{padding-top:48px!important}.ap-route-profile .ap-card{border-radius:16px!important}.ap-route-profile .ap-card>div:first-child{align-items:center!important}.ap-route-profile .ap-card>div:first-child h3{font-size:22px!important}.ap-profile-row{grid-template-columns:40px 1fr!important;padding:10px!important;border-radius:12px!important}.ap-profile-actions{grid-column:1/-1!important;justify-content:flex-start!important}.ap-profile-actions .ap-btn{font-size:9px!important}.ap-route-profile #ap-profile-form{padding:17px!important}.ap-route-profile #ap-profile-form h3{font-size:26px!important}
+}
+@media(max-width:390px){.ap-home-landscape{height:268px!important}.ap-home-shortcuts button{min-height:83px!important}.ap-home-shortcuts i{width:38px!important;height:38px!important}}
+html[dir="rtl"] .ap-navbtn{text-align:right}html[dir="rtl"] .ap-navbtn.active{box-shadow:inset -2px 0 0 #e1c17d}html[dir="rtl"] .ap-profile-row.active{box-shadow:inset -3px 0 0 var(--v161-gold)}
