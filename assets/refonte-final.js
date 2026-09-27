@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260927-relforecast';
+const VER='20260927-global-i18n';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -46,7 +46,9 @@ function loadInterface(){
                       load('assets/v170-profile-inputs-places.js?v='+VER,'ap-v170-profile-inputs-places',function(){
                         load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile',function(){
                           load('assets/v171-visual-polish.js?v='+VER,'ap-v171-visual-polish',function(){
-                            load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui');
+                            load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
+                              load('assets/global-i18n.js?v='+VER,'ap-global-i18n');
+                            });
                           });
                         });
                       });
