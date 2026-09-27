@@ -17,5 +17,15 @@
 .v161-best{background:#eaf2eb;color:#355f46;border-color:#d4e5d8}
 .v161-delicate{background:#f5e8e8;color:#805058;border-color:#ead1d4}
 .v161-advice{background:#f7eedf;color:#795b2d;border-color:#eadabd}
+
+/* Le texte est désormais fourni par v161-logic.js dans les 4 langues : on neutralise les anciens pseudo-textes FR de la première couche. */
+.ap-home-desktop .ap-hero-copy h1{font-size:clamp(42px,4.7vw,66px)!important}
+.ap-home-desktop .ap-hero-copy h1:after{content:none!important;display:none!important}
+.ap-home-desktop .ap-hero-copy p{font-size:13.5px!important}
+.ap-home-desktop .ap-hero-copy p:after{content:none!important;display:none!important}
+.ap-route-profile .ap-subtitle{font-size:13.5px!important}
+.ap-route-profile .ap-subtitle:after{content:none!important;display:none!important}
+html:not([lang="fr"]) .ap-route-home .ap-desktop-crumb{font-size:17px!important}
+
 @media(max-width:900px) and (min-width:761px){.v161-domain-tabs{grid-template-columns:repeat(3,1fr)}.v161-summary-grid{grid-template-columns:1fr 1fr}.v161-advice{grid-column:1/-1}}
 @media(max-width:760px){.v161-future-intro{font-size:10.5px;margin:0 0 10px}.v161-domain-tabs{grid-template-columns:repeat(3,1fr);gap:6px;margin:7px 0 12px}.v161-domain-tabs button{min-height:61px;border-radius:11px;font-size:9.5px}.v161-domain-tabs button i{font-size:21px}.ap-route-future .ap-future-chart-card{padding:14px!important}.ap-route-future .ap-future-chart-card h3{font-size:21px!important}.ap-route-future .ap-chart{overflow-x:auto!important}.ap-route-future .ap-chart svg{min-width:650px!important;height:260px!important}.v161-summary-grid{grid-template-columns:1fr;gap:7px;margin-top:7px}.v161-summary-card{min-height:74px;padding:11px 12px;border-radius:13px}.v161-summary-card>span{width:32px;height:32px;font-size:18px}.v161-summary-card strong{font-size:16px}}
