@@ -1,6 +1,9 @@
 /* Astro Paquita V161 — service worker de prévisualisation */
-const VERSION='astro-paquita-v161-preview-20260927-2';
+const VERSION='astro-paquita-v161-preview-20260927-3';
 const UI_PATHS=new Set([
+  '/truth-engine.js',
+  '/refonte-final.js',
+  '/refonte-final.css',
   '/assets/truth-engine.js',
   '/assets/refonte-final.js',
   '/assets/refonte-final.css',
@@ -29,7 +32,7 @@ self.addEventListener('fetch',event=>{
   }
 
   if(u.origin===self.location.origin && UI_PATHS.has(u.pathname)){
-    u.searchParams.set('v','20260927-v161-preview-2');
+    u.searchParams.set('v','20260927-v161c');
     event.respondWith(fetch(u.toString(),{cache:'no-store',credentials:'same-origin'}).catch(()=>fetch(r,{cache:'no-store'})));
     return;
   }
