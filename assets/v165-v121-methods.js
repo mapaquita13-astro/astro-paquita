@@ -13,8 +13,15 @@ const A=window.AstroTruth;
 if(!A)return;
 const UI_DOMAINS=['amour','travail','argent','bienetre','famille','voyage'];
 const LEGACY_DOMAIN={amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',famille:'famille',voyage:'voyage'};
+const TX={
+  fr:{synUnavailable:'La synastrie est temporairement indisponible.',missingSecond:'Le second profil est introuvable.',partnerIncomplete:'Le profil partenaire est incomplet.',analysis:'Analyse de la relation',loading:'Lecture personnalisée en cours…',relation:'Votre relation',none:'Aucune interprétation n’a été produite.',synFailed:'La synastrie n’a pas pu être générée.',cannot:'Impossible de générer la lecture pour le moment.',relAnalysis:'Analyse relationnelle',hero:'Le type de relation adapte l’analyse au contexte choisi : couple, famille, amitié ou travail.',dynamic:'Votre dynamique relationnelle',select:'Sélectionnez un profil et le type de lien. La lecture détaillée s’adaptera au contexte de la relation.',future:'La courbe donne un repère visuel mois par mois. Pour comprendre réellement une période, ouvrez les prévisions détaillées : elles analysent la période complète.',periods:'Périodes à retenir'},
+  en:{synUnavailable:'Synastry is temporarily unavailable.',missingSecond:'The second profile could not be found.',partnerIncomplete:'The other profile is incomplete.',analysis:'Relationship analysis',loading:'Preparing your personalised reading…',relation:'Your relationship',none:'No interpretation was produced.',synFailed:'The synastry could not be generated.',cannot:'The reading cannot be generated right now.',relAnalysis:'Relationship analysis',hero:'The relationship type adapts the analysis to the chosen context: couple, family, friendship or work.',dynamic:'Your relationship dynamic',select:'Select a profile and the type of relationship. The detailed reading will adapt to the relationship context.',future:'The curve gives a month-by-month visual guide. For a full understanding of a period, open the detailed forecasts: they analyse the entire period.',periods:'Periods to remember'},
+  es:{synUnavailable:'La sinastría no está disponible temporalmente.',missingSecond:'No se encuentra el segundo perfil.',partnerIncomplete:'El otro perfil está incompleto.',analysis:'Análisis de la relación',loading:'Preparando tu lectura personalizada…',relation:'Tu relación',none:'No se ha generado ninguna interpretación.',synFailed:'No se ha podido generar la sinastría.',cannot:'No se puede generar la lectura en este momento.',relAnalysis:'Análisis de la relación',hero:'El tipo de relación adapta el análisis al contexto elegido: pareja, familia, amistad o trabajo.',dynamic:'Tu dinámica relacional',select:'Selecciona un perfil y el tipo de relación. La lectura detallada se adaptará al contexto de la relación.',future:'La curva ofrece una referencia visual mes a mes. Para comprender realmente un período, abre las previsiones detalladas: analizan el período completo.',periods:'Períodos a recordar'},
+  ar:{synUnavailable:'التوافق غير متاح مؤقتاً.',missingSecond:'تعذر العثور على الملف الثاني.',partnerIncomplete:'الملف الآخر غير مكتمل.',analysis:'تحليل العلاقة',loading:'جارٍ إعداد قراءتك المخصصة…',relation:'علاقتك',none:'لم يتم إنشاء أي تفسير.',synFailed:'تعذر إنشاء تحليل التوافق.',cannot:'لا يمكن إنشاء القراءة حالياً.',relAnalysis:'تحليل العلاقة',hero:'نوع العلاقة يكيّف التحليل مع السياق المختار: شراكة أو عائلة أو صداقة أو عمل.',dynamic:'ديناميكية علاقتك',select:'اختر ملفاً ونوع العلاقة. ستتكيف القراءة المفصلة مع سياق العلاقة.',future:'يقدم المنحنى دليلاً بصرياً شهراً بعد شهر. لفهم فترة كاملة افتح التوقعات المفصلة، فهي تحلل الفترة بأكملها.',periods:'فترات مهمة'}
+};
 let observer=null,scheduled=false,relationBusy=false;
-
+function lang(){const l=String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2);return TX[l]?l:'fr';}
+function tr(k){return TX[lang()][k]||TX.fr[k]||k;}
 function q(s,r){return (r||document).querySelector(s);}
 function qa(s,r){return Array.from((r||document).querySelectorAll(s));}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -38,8 +45,6 @@ function normalizeSignal(x,d){
     label:x.label||(Array.isArray(x.scenarios)&&x.scenarios[0])||x.hint||'',scenarios:x.scenarios||[],source:x.source||null,target:x.target||null};
 }
 function rawMonthSignals(d){try{return typeof apV51Signals==='function'?(apV51Signals(d,'marque')||[]):[];}catch(e){return[];}}
-
-// Formule V121 originale de monthlyData(): somme signée / poids, bornée à [-1,1].
 function v121MonthScore(raw,uiDomain){
   const legacy=LEGACY_DOMAIN[uiDomain];
   const xs=(raw||[]).filter(x=>x&&((x.domain===legacy)||(legacy==='finances'&&x.domain==='argent')));
@@ -57,7 +62,6 @@ function v121Period(start,months){
   const firstMonth=new Date(base.getFullYear(),base.getMonth(),1,12);
   const points=[],milestones=[];
   for(let i=0;i<m;i++){
-    // V121 prend le 15 comme repère visuel mensuel. Ce n'est PAS la prévision mensuelle détaillée.
     const d=new Date(firstMonth.getFullYear(),firstMonth.getMonth()+i,15,12);
     const raw=rawMonthSignals(d);
     const scores={};
@@ -106,22 +110,22 @@ async function runLegacySynastry(ev){
   relationBusy=true;relationLoader(true);relationError('');
   const out=q('#ap-rel-result');
   try{
-    if(typeof window.analyserSynastrie!=='function')throw new Error('La synastrie est temporairement indisponible.');
+    if(typeof window.analyserSynastrie!=='function')throw new Error(tr('synUnavailable'));
     const id=q('#ap-rel-profile')?.value;const p=A.getProfileById?A.getProfileById(id):null;
-    if(!p)throw new Error('Le second profil est introuvable.');
+    if(!p)throw new Error(tr('missingSecond'));
     try{const cur=A.currentProfile&&A.currentProfile();if(cur?.profileId&&A.activate)A.activate(cur.profileId);}catch(e){}
     const mode=relationMode(q('#ap-rel-type')?.value);
-    if(!prepareLegacyPartner(p,mode))throw new Error('Le profil partenaire est incomplet.');
-    if(out)out.innerHTML='<h3>Analyse de la relation</h3><p class="ap-muted">Lecture personnalisée en cours…</p>';
+    if(!prepareLegacyPartner(p,mode))throw new Error(tr('partnerIncomplete'));
+    if(out)out.innerHTML='<h3>'+esc(tr('analysis'))+'</h3><p class="ap-muted">'+esc(tr('loading'))+'</p>';
     await window.analyserSynastrie();
     const report=document.getElementById('y-rapport')?.innerHTML?.trim()||'';
-    const title=document.getElementById('y-rapport-titre')?.textContent?.trim()||'Votre relation';
+    const title=document.getElementById('y-rapport-titre')?.textContent?.trim()||tr('relation');
     const err=document.getElementById('y-err');
-    if(!report){const em=(err&&err.style.display!=='none')?(err.textContent||'').trim():'';throw new Error(em||'Aucune interprétation n’a été produite.');}
-    if(out)out.innerHTML='<div class="ap-eyebrow">Analyse relationnelle</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2><div class="ap-report">'+report+'</div>';
+    if(!report){const em=(err&&err.style.display!=='none')?(err.textContent||'').trim():'';throw new Error(em||tr('none'));}
+    if(out)out.innerHTML='<div class="ap-eyebrow">'+esc(tr('relAnalysis'))+'</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2><div class="ap-report">'+report+'</div>';
   }catch(e){
-    relationError(e&&e.message?e.message:'La synastrie n’a pas pu être générée.');
-    if(out)out.innerHTML='<h3>Analyse relationnelle</h3><p>Impossible de générer la lecture pour le moment.</p>';
+    relationError(e&&e.message?e.message:tr('synFailed'));
+    if(out)out.innerHTML='<h3>'+esc(tr('relAnalysis'))+'</h3><p>'+esc(tr('cannot'))+'</p>';
   }finally{relationBusy=false;relationLoader(false);}
   return false;
 }
@@ -129,18 +133,18 @@ function bindRelations(){
   const b=q('.ap-route-relations #ap-rel-run');if(!b||b.dataset.v165==='1')return;
   b.dataset.v165='1';b.onclick=runLegacySynastry;
   const hero=q('.ap-route-relations .ap-hero-copy p');
-  if(hero)hero.textContent='Le type de relation adapte l’analyse au contexte choisi : couple, famille, amitié ou travail.';
-  const out=q('#ap-rel-result');if(out&&!out.dataset.v165){out.dataset.v165='1';out.innerHTML='<h3>Votre dynamique relationnelle</h3><p>Sélectionnez un profil et le type de lien. La lecture détaillée s’adaptera au contexte de la relation.</p>';}
+  if(hero)hero.textContent=tr('hero');
+  const out=q('#ap-rel-result');if(out&&!out.dataset.v165){out.dataset.v165='1';out.innerHTML='<h3>'+esc(tr('dynamic'))+'</h3><p>'+esc(tr('select'))+'</p>';}
 }
 function cleanFutureUi(){
   const sub=q('.ap-route-future .ap-subtitle');
-  if(sub)sub.textContent='La courbe donne un repère visuel mois par mois. Pour comprendre réellement une période, ouvrez les prévisions détaillées : elles analysent la période complète.';
+  if(sub)sub.textContent=tr('future');
   qa('.ap-route-future .v161-summary-card em').forEach(e=>e.remove());
-  const h=q('.ap-route-future .ap-future-milestones h3');if(h)h.textContent='Périodes à retenir';
+  const h=q('.ap-route-future .ap-future-milestones h3');if(h)h.textContent=tr('periods');
 }
 function apply(){scheduled=false;if(observer)observer.disconnect();try{bindRelations();cleanFutureUi();document.documentElement.removeAttribute('data-astro-methods');}finally{watch();}}
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(apply);}
 function watch(){if(!observer)observer=new MutationObserver(schedule);observer.observe(q('#ap-final-root')||document.body,{childList:true,subtree:true});}
-function start(){watch();schedule();}
+function start(){watch();schedule();document.addEventListener('change',e=>{if(e.target&&(['ap-lang','ap-profile-lang'].includes(e.target.id)||e.target.classList?.contains('ap-lang-select')))setTimeout(schedule,0);},true);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
