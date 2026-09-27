@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>Astro Paquita — Prévisualisation V167</title>
+<title>Astro Paquita — Prévisualisation V168</title>
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;color:#4b2149;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
 #ap-preview-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f7efe5;visibility:hidden}
@@ -14,12 +14,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 </style>
 </head>
 <body>
-<div id="ap-preview-boot"><div class="ap-boot-card" id="ap-boot-card"><div class="ap-moon">☾</div><strong>Astro Paquita</strong><p>Chargement de la nouvelle interface…</p></div><div id="ap-preview-error"><div class="ap-error-title">Prévisualisation indisponible</div><div id="ap-preview-error-text"></div><div class="ap-error-code">V167 — aucune ancienne interface ne sera affichée en secours.</div></div></div>
-<iframe id="ap-preview-frame" title="Astro Paquita V167"></iframe>
+<div id="ap-preview-boot"><div class="ap-boot-card" id="ap-boot-card"><div class="ap-moon">☾</div><strong>Astro Paquita</strong><p>Chargement de la nouvelle interface…</p></div><div id="ap-preview-error"><div class="ap-error-title">Prévisualisation indisponible</div><div id="ap-preview-error-text"></div><div class="ap-error-code">V168 — aucune ancienne interface ne sera affichée en secours.</div></div></div>
+<iframe id="ap-preview-frame" title="Astro Paquita V168"></iframe>
 <script>
 (()=>{
  'use strict';
- const VERSION='20260927-v167';
+ const VERSION='20260927-v168';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -34,7 +34,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    try{if('caches' in window){for(const key of await caches.keys())await caches.delete(key);}}catch(e){}
  }
  function patchApiFetch(w){
-   if(w.__AP_V167_API_PATCH__)return;
+   if(w.__AP_V168_API_PATCH__)return;
    const original=w.fetch.bind(w);
    const origin=w.location.origin;
    w.fetch=function(input,init){
@@ -46,7 +46,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
      }catch(e){}
      return original(input,init);
    };
-   w.__AP_V167_API_PATCH__=true;
+   w.__AP_V168_API_PATCH__=true;
  }
  function addStyle(d){
    if(d.getElementById('ap-v162-gate-style'))return;
@@ -89,12 +89,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    patchApiFetch(w);addStyle(d);ensureCss(d);
    try{if(w.navigator&&'serviceWorker' in w.navigator){for(const reg of await w.navigator.serviceWorker.getRegistrations())await reg.unregister();}}catch(e){}
    for(let i=0;i<16&&!w.AstroTruth;i++)await sleep(125);
-   if(!w.AstroTruth){try{await loadScript(d,'/assets/truth-engine.js');}catch(e){fail('Le moteur astrologique V121/V167 n’a pas pu être chargé.');return;}}
+   if(!w.AstroTruth){try{await loadScript(d,'/assets/truth-engine.js');}catch(e){fail('Le moteur astrologique V121/V168 n’a pas pu être chargé.');return;}}
    try{await loadScript(d,'/assets/v162-runtime-fix.js');}catch(e){fail('Le raccord des prévisions n’a pas pu être chargé.');return;}
    try{await loadScript(d,'/assets/v162-markdown-fix.js');}catch(e){fail('Le rendu des interprétations n’a pas pu être chargé.');return;}
    for(let i=0;i<16&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    if(!root.querySelector('.ap-shell,.ap-auth-shell')){
-     try{await loadScript(d,'/assets/refonte-final.js');}catch(e){fail('La nouvelle interface V167 n’a pas pu être chargée.');return;}
+     try{await loadScript(d,'/assets/refonte-final.js');}catch(e){fail('La nouvelle interface V168 n’a pas pu être chargée.');return;}
    }
    for(let i=0;i<28&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    const mounted=root.querySelector('.ap-shell,.ap-auth-shell');
