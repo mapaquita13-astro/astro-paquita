@@ -19,7 +19,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 <script>
 (()=>{
  'use strict';
- const VERSION='20260927-v162a';
+ const VERSION='20260927-v162b';
+ const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
  const card=document.getElementById('ap-boot-card');
@@ -32,6 +33,21 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    try{if('serviceWorker' in navigator){for(const reg of await navigator.serviceWorker.getRegistrations())await reg.unregister();}}catch(e){}
    try{if('caches' in window){for(const key of await caches.keys())await caches.delete(key);}}catch(e){}
  }
+ function patchApiFetch(w){
+   if(w.__AP_V162_API_PATCH__)return;
+   const original=w.fetch.bind(w);
+   const origin=w.location.origin;
+   w.fetch=function(input,init){
+     try{
+       if(typeof input==='string'){
+         if(input.startsWith('/api/'))return original(API_ORIGIN+input,init);
+         if(input.startsWith(origin+'/api/'))return original(API_ORIGIN+input.slice(origin.length),init);
+       }
+     }catch(e){}
+     return original(input,init);
+   };
+   w.__AP_V162_API_PATCH__=true;
+ }
  function addStyle(d){
    if(d.getElementById('ap-v162-gate-style'))return;
    const s=d.createElement('style');s.id='ap-v162-gate-style';s.textContent=`
@@ -39,6 +55,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
      body{overflow:hidden!important;}
      #ap-final-root{position:fixed!important;inset:0!important;display:block!important;visibility:visible!important;z-index:2147483000!important;overflow:auto!important;background:#f8f1e7!important;}
      #modal-compte,.ap-toast{z-index:2147483647!important;}
+     #ap-auth-forgot{display:block;width:100%;margin:10px 0 2px;border:0;background:transparent;color:#6a2a61;font:700 14px/1.3 Lato,Arial,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:5px;}
    `;d.head.appendChild(s);
  }
  function ensureCss(d){
@@ -46,11 +63,29 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    const l=d.createElement('link');l.rel='stylesheet';l.href='/assets/refonte-final.css?v='+VERSION;d.head.appendChild(l);
  }
  function loadScript(d,src){return new Promise((resolve,reject)=>{const s=d.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'v='+VERSION;s.onload=resolve;s.onerror=()=>reject(new Error('Chargement impossible : '+src));d.body.appendChild(s);});}
+ function installForgotPassword(d,w){
+   const submit=d.getElementById('ap-auth-submit');
+   if(!submit||d.getElementById('ap-auth-forgot'))return;
+   const b=d.createElement('button');b.type='button';b.id='ap-auth-forgot';b.textContent='Mot de passe oublié ?';submit.insertAdjacentElement('afterend',b);
+   b.onclick=async()=>{
+     const email=(d.getElementById('ap-auth-email')?.value||'').trim();
+     const e=d.getElementById('ap-auth-error');
+     if(!email){if(e){e.textContent='Saisis d’abord ton adresse e-mail.';e.classList.add('show');}return;}
+     b.disabled=true;b.textContent='Envoi du lien…';
+     try{
+       const r=await w.fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+       const data=await r.json().catch(()=>({}));
+       if(!r.ok)throw new Error(data.erreur||'Demande impossible.');
+       if(e){e.textContent=data.email_configured===false?'La réinitialisation existe, mais l’envoi d’e-mail n’est pas encore configuré sur le serveur.':(data.message||'Si un compte existe avec cet e-mail, un lien de réinitialisation va être envoyé.');e.classList.add('show');}
+     }catch(x){if(e){e.textContent=x.message||'Envoi du lien impossible.';e.classList.add('show');}}
+     finally{b.disabled=false;b.textContent='Mot de passe oublié ?';}
+   };
+ }
  async function forceNewInterface(){
    let w,d,root;
    try{w=frame.contentWindow;d=frame.contentDocument;root=d&&d.getElementById('ap-final-root');}catch(e){fail('La page de prévisualisation n’est pas accessible.');return;}
    if(!d||!root){fail('Le socle V121 ne contient pas le point de montage de la nouvelle interface.');return;}
-   addStyle(d);ensureCss(d);
+   patchApiFetch(w);addStyle(d);ensureCss(d);
    try{if(w.navigator&&'serviceWorker' in w.navigator){for(const reg of await w.navigator.serviceWorker.getRegistrations())await reg.unregister();}}catch(e){}
    for(let i=0;i<16&&!w.AstroTruth;i++)await sleep(125);
    if(!w.AstroTruth){try{await loadScript(d,'/assets/truth-engine.js');}catch(e){fail('Le moteur astrologique V121/V161 n’a pas pu être chargé.');return;}}
@@ -61,6 +96,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    for(let i=0;i<28&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    const mounted=root.querySelector('.ap-shell,.ap-auth-shell');
    if(!mounted){fail('Le moteur est présent, mais la nouvelle interface ne s’est pas initialisée.');return;}
+   installForgotPassword(d,w);
+   const authObs=new MutationObserver(()=>installForgotPassword(d,w));authObs.observe(root,{childList:true,subtree:true});
    d.body.classList.add('ap-final-active');
    root.style.setProperty('display','block','important');
    root.style.setProperty('visibility','visible','important');
