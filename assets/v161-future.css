@@ -1,0 +1,21 @@
+/* V161 — grandes tendances par domaine */
+.v161-future-intro{margin:4px 0 15px;color:#766b73;font-size:12px;line-height:1.55}
+.v161-domain-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:8px 0 18px}
+.v161-domain-tabs button{min-height:68px;border:1px solid #e2d3c0;border-radius:14px;background:#fffaf3;color:#5e4d58;display:grid;place-items:center;align-content:center;gap:3px;cursor:pointer;font:700 10.5px Lato,Arial,sans-serif;transition:.16s}
+.v161-domain-tabs button:hover{background:#fbf1e5;border-color:#ceb58e}
+.v161-domain-tabs button i{font:24px/1 'Cormorant Garamond',Georgia,serif;color:#875876;font-style:normal}
+.v161-domain-tabs button.active{background:#4a1a43;color:#fff;border-color:#4a1a43;box-shadow:0 8px 18px rgba(67,22,62,.13)}
+.v161-domain-tabs button.active i{color:#e5c77d}
+.ap-future-chart-card .ap-chart{margin-top:2px}
+.v161-summary-grid{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:10px;margin-top:6px}
+.v161-summary-card{min-height:94px;border-radius:16px;padding:14px 15px;display:flex;align-items:flex-start;gap:11px;border:1px solid transparent}
+.v161-summary-card>span{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;font:21px/1 'Cormorant Garamond',Georgia,serif;background:rgba(255,255,255,.58)}
+.v161-summary-card small{display:block;font:700 9px/1.2 Lato,Arial,sans-serif;text-transform:uppercase;letter-spacing:.08em;opacity:.78}
+.v161-summary-card strong{display:block;font:600 18px/1.1 'Cormorant Garamond',Georgia,serif;margin-top:5px}
+.v161-summary-card em{display:block;font:600 9px/1 Lato,Arial,sans-serif;margin-top:5px;font-style:normal;opacity:.72}
+.v161-summary-card p{margin:4px 0 0!important;font-size:10.5px!important;line-height:1.45!important;color:inherit!important}
+.v161-best{background:#eaf2eb;color:#355f46;border-color:#d4e5d8}
+.v161-delicate{background:#f5e8e8;color:#805058;border-color:#ead1d4}
+.v161-advice{background:#f7eedf;color:#795b2d;border-color:#eadabd}
+@media(max-width:900px) and (min-width:761px){.v161-domain-tabs{grid-template-columns:repeat(3,1fr)}.v161-summary-grid{grid-template-columns:1fr 1fr}.v161-advice{grid-column:1/-1}}
+@media(max-width:760px){.v161-future-intro{font-size:10.5px;margin:0 0 10px}.v161-domain-tabs{grid-template-columns:repeat(3,1fr);gap:6px;margin:7px 0 12px}.v161-domain-tabs button{min-height:61px;border-radius:11px;font-size:9.5px}.v161-domain-tabs button i{font-size:21px}.ap-route-future .ap-future-chart-card{padding:14px!important}.ap-route-future .ap-future-chart-card h3{font-size:21px!important}.ap-route-future .ap-chart{overflow-x:auto!important}.ap-route-future .ap-chart svg{min-width:650px!important;height:260px!important}.v161-summary-grid{grid-template-columns:1fr;gap:7px;margin-top:7px}.v161-summary-card{min-height:74px;padding:11px 12px;border-radius:13px}.v161-summary-card>span{width:32px;height:32px;font-size:18px}.v161-summary-card strong{font-size:16px}}
