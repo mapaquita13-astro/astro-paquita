@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>Astro Paquita — Prévisualisation V163</title>
+<title>Astro Paquita — Prévisualisation V163b</title>
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;color:#4b2149;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
 #ap-preview-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f7efe5;visibility:hidden}
@@ -14,12 +14,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 </style>
 </head>
 <body>
-<div id="ap-preview-boot"><div class="ap-boot-card" id="ap-boot-card"><div class="ap-moon">☾</div><strong>Astro Paquita</strong><p>Chargement de la nouvelle interface…</p></div><div id="ap-preview-error"><div class="ap-error-title">Prévisualisation indisponible</div><div id="ap-preview-error-text"></div><div class="ap-error-code">V163 — aucune ancienne interface ne sera affichée en secours.</div></div></div>
-<iframe id="ap-preview-frame" title="Astro Paquita V163"></iframe>
+<div id="ap-preview-boot"><div class="ap-boot-card" id="ap-boot-card"><div class="ap-moon">☾</div><strong>Astro Paquita</strong><p>Chargement de la nouvelle interface…</p></div><div id="ap-preview-error"><div class="ap-error-title">Prévisualisation indisponible</div><div id="ap-preview-error-text"></div><div class="ap-error-code">V163b — aucune ancienne interface ne sera affichée en secours.</div></div></div>
+<iframe id="ap-preview-frame" title="Astro Paquita V163b"></iframe>
 <script>
 (()=>{
  'use strict';
- const VERSION='20260927-v163';
+ const VERSION='20260927-v163b';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -99,7 +99,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    for(let i=0;i<28&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    const mounted=root.querySelector('.ap-shell,.ap-auth-shell');
    if(!mounted){fail('Le moteur est présent, mais la nouvelle interface ne s’est pas initialisée.');return;}
-   try{await loadScript(d,'/assets/v163-spec-alignment.js');}catch(e){fail('L’alignement V163 du cahier des charges n’a pas pu être chargé.');return;}
+   try{await loadScript(d,'/assets/v163-master-alignment.js');}catch(e){fail('L’alignement V163b du cahier des charges n’a pas pu être chargé.');return;}
    installForgotPassword(d,w);
    const authObs=new MutationObserver(()=>installForgotPassword(d,w));authObs.observe(root,{childList:true,subtree:true});
    d.body.classList.add('ap-final-active');
