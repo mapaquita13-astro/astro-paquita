@@ -4,32 +4,70 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>Astro Paquita — Prévisualisation V161</title>
+<title>Astro Paquita — Prévisualisation V162</title>
 <style>
-html,body{margin:0;min-height:100%;background:#f7efe5;color:#4b2149;font-family:system-ui,-apple-system,Segoe UI,sans-serif}body{display:grid;place-items:center;min-height:100vh}.boot{padding:28px;text-align:center}.moon{font-size:44px}.boot p{margin:12px 0 0;color:#75646d;font-size:14px}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;color:#4b2149;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+#ap-preview-frame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f7efe5;visibility:hidden}
+#ap-preview-boot{position:fixed;inset:0;display:grid;place-items:center;background:#f7efe5;z-index:10}
+.ap-boot-card{text-align:center;padding:28px}.ap-moon{font-size:44px}.ap-boot-card p{margin:12px 0 0;color:#75646d;font-size:14px}
+#ap-preview-error{display:none;max-width:520px;padding:24px;text-align:center;line-height:1.55}.ap-error-title{font:600 28px Georgia,serif;margin-bottom:10px}.ap-error-code{font-size:12px;color:#7d6a74;margin-top:12px}
 </style>
 </head>
 <body>
-<div class="boot"><div class="moon">☾</div><strong>Astro Paquita</strong><p>Chargement de la prévisualisation…</p></div>
+<div id="ap-preview-boot"><div class="ap-boot-card" id="ap-boot-card"><div class="ap-moon">☾</div><strong>Astro Paquita</strong><p>Chargement de la nouvelle interface…</p></div><div id="ap-preview-error"><div class="ap-error-title">Prévisualisation indisponible</div><div id="ap-preview-error-text"></div><div class="ap-error-code">V162 — aucune ancienne interface ne sera affichée en secours.</div></div></div>
+<iframe id="ap-preview-frame" title="Astro Paquita V162"></iframe>
 <script>
-(async()=>{
-  const target='/app-v121.html?preview=20260927-v161d';
-  try{
-    if('serviceWorker' in navigator){
-      const reg=await navigator.serviceWorker.register('/sw-v161-preview.js?v=20260927-v161d',{scope:'/',updateViaCache:'none'});
-      await reg.update();
-      await navigator.serviceWorker.ready;
-      if(!navigator.serviceWorker.controller){
-        await new Promise(resolve=>{
-          let done=false;
-          const finish=()=>{if(done)return;done=true;resolve();};
-          navigator.serviceWorker.addEventListener('controllerchange',finish,{once:true});
-          setTimeout(finish,1400);
-        });
-      }
-    }
-  }catch(e){console.warn('Prévisualisation: service worker',e);}
-  location.replace(target);
+(()=>{
+ 'use strict';
+ const VERSION='20260927-v162a';
+ const frame=document.getElementById('ap-preview-frame');
+ const boot=document.getElementById('ap-preview-boot');
+ const card=document.getElementById('ap-boot-card');
+ const err=document.getElementById('ap-preview-error');
+ const errText=document.getElementById('ap-preview-error-text');
+ let done=false;
+ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+ const fail=msg=>{if(done)return;done=true;frame.style.visibility='hidden';card.style.display='none';err.style.display='block';errText.textContent=msg||'La nouvelle interface n’a pas pu démarrer.';};
+ async function clearOldWorkers(){
+   try{if('serviceWorker' in navigator){for(const reg of await navigator.serviceWorker.getRegistrations())await reg.unregister();}}catch(e){}
+   try{if('caches' in window){for(const key of await caches.keys())await caches.delete(key);}}catch(e){}
+ }
+ function addStyle(d){
+   if(d.getElementById('ap-v162-gate-style'))return;
+   const s=d.createElement('style');s.id='ap-v162-gate-style';s.textContent=`
+     html,body{margin:0!important;min-height:100%!important;background:#f8f1e7!important;}
+     body{overflow:hidden!important;}
+     #ap-final-root{position:fixed!important;inset:0!important;display:block!important;visibility:visible!important;z-index:2147483000!important;overflow:auto!important;background:#f8f1e7!important;}
+     #modal-compte,.ap-toast{z-index:2147483647!important;}
+   `;d.head.appendChild(s);
+ }
+ function ensureCss(d){
+   if([...d.querySelectorAll('link[rel="stylesheet"]')].some(x=>(x.getAttribute('href')||'').includes('refonte-final.css')))return;
+   const l=d.createElement('link');l.rel='stylesheet';l.href='/assets/refonte-final.css?v='+VERSION;d.head.appendChild(l);
+ }
+ function loadScript(d,src){return new Promise((resolve,reject)=>{const s=d.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'v='+VERSION;s.onload=resolve;s.onerror=()=>reject(new Error('Chargement impossible : '+src));d.body.appendChild(s);});}
+ async function forceNewInterface(){
+   let w,d,root;
+   try{w=frame.contentWindow;d=frame.contentDocument;root=d&&d.getElementById('ap-final-root');}catch(e){fail('La page de prévisualisation n’est pas accessible.');return;}
+   if(!d||!root){fail('Le socle V121 ne contient pas le point de montage de la nouvelle interface.');return;}
+   addStyle(d);ensureCss(d);
+   try{if(w.navigator&&'serviceWorker' in w.navigator){for(const reg of await w.navigator.serviceWorker.getRegistrations())await reg.unregister();}}catch(e){}
+   for(let i=0;i<16&&!w.AstroTruth;i++)await sleep(125);
+   if(!w.AstroTruth){try{await loadScript(d,'/assets/truth-engine.js');}catch(e){fail('Le moteur astrologique V121/V161 n’a pas pu être chargé.');return;}}
+   for(let i=0;i<16&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
+   if(!root.querySelector('.ap-shell,.ap-auth-shell')){
+     try{await loadScript(d,'/assets/refonte-final.js');}catch(e){fail('La nouvelle interface V162 n’a pas pu être chargée.');return;}
+   }
+   for(let i=0;i<28&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
+   const mounted=root.querySelector('.ap-shell,.ap-auth-shell');
+   if(!mounted){fail('Le moteur est présent, mais la nouvelle interface ne s’est pas initialisée.');return;}
+   d.body.classList.add('ap-final-active');
+   root.style.setProperty('display','block','important');
+   root.style.setProperty('visibility','visible','important');
+   frame.style.visibility='visible';boot.style.display='none';done=true;
+ }
+ frame.addEventListener('load',()=>{setTimeout(forceNewInterface,80);},{once:true});
+ (async()=>{await clearOldWorkers();frame.src='/app-v121.html?preview='+VERSION+'&nocache='+Date.now();setTimeout(()=>{if(!done)fail('Le chargement dépasse le délai prévu. Réessayez en actualisant cette page.');},12000);})();
 })();
 </script>
 </body>
