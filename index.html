@@ -19,7 +19,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 <script>
 (()=>{
  'use strict';
- const VERSION='20260927-i18n-public-cleanup2';
+ const VERSION='20260928-account-isolation1';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -63,7 +63,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    if(existing){existing.href='/assets/refonte-final.css?v='+VERSION;return;}
    const l=d.createElement('link');l.rel='stylesheet';l.href='/assets/refonte-final.css?v='+VERSION;d.head.appendChild(l);
  }
- function loadScript(d,src){return new Promise((resolve,reject)=>{const s=d.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'v='+VERSION;s.onload=resolve;s.onerror=()=>reject(new Error('Chargement impossible : '+src));d.body.appendChild(s);});}
+ function loadScript(d,src){return new Promise((resolve,reject)=>{const existing=[...d.scripts].find(s=>(s.getAttribute('src')||'').split('?')[0]===src);if(existing){if(existing.dataset.loaded==='1')return resolve();existing.addEventListener('load',resolve,{once:true});setTimeout(resolve,250);return;}const s=d.createElement('script');s.src=src+(src.includes('?')?'&':'?')+'v='+VERSION;s.onload=()=>{s.dataset.loaded='1';resolve();};s.onerror=()=>reject(new Error('Chargement impossible : '+src));d.body.appendChild(s);});}
  function installForgotPassword(d,w){
    const submit=d.getElementById('ap-auth-submit');
    if(!submit||d.getElementById('ap-auth-forgot'))return;
@@ -88,6 +88,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    if(!d||!root){fail('La page de base ne contient pas le point de montage de la nouvelle interface.');return;}
    patchApiFetch(w);addStyle(d);ensureCss(d);
    try{if(w.navigator&&'serviceWorker' in w.navigator){for(const reg of await w.navigator.serviceWorker.getRegistrations())await reg.unregister();}}catch(e){}
+   try{await loadScript(d,'/assets/account-isolation.js');}catch(e){fail('La séparation des comptes n’a pas pu être chargée.');return;}
    for(let i=0;i<16&&!w.AstroTruth;i++)await sleep(125);
    if(!w.AstroTruth){try{await loadScript(d,'/assets/truth-engine.js');}catch(e){fail('Le moteur astrologique n’a pas pu être chargé.');return;}}
    try{await loadScript(d,'/assets/v162-runtime-fix.js');}catch(e){fail('Le raccord des prévisions n’a pas pu être chargé.');return;}
