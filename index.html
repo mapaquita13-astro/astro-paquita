@@ -11,6 +11,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 #ap-preview-boot{position:fixed;inset:0;display:grid;place-items:center;background:#f7efe5;z-index:10}
 .ap-boot-card{text-align:center;padding:28px}.ap-moon{font-size:44px}.ap-boot-card p{margin:12px 0 0;color:#75646d;font-size:14px}
 #ap-preview-error{display:none;max-width:520px;padding:24px;text-align:center;line-height:1.55}.ap-error-title{font:600 28px Georgia,serif;margin-bottom:10px}.ap-error-code{font-size:12px;color:#7d6a74;margin-top:12px}
+.ap-reset-screen{position:fixed;inset:0;z-index:100;background:linear-gradient(180deg,#fbf5ec,#f5e9da);display:grid;place-items:center;padding:22px;overflow:auto}.ap-reset-card{width:min(460px,100%);background:#fffaf4;border:1px solid #e3d2bf;border-radius:28px;padding:30px;box-shadow:0 24px 70px rgba(72,28,63,.14)}.ap-reset-card h1{font:600 34px/1.05 Georgia,serif;margin:8px 0 12px;color:#4b2149}.ap-reset-card p{line-height:1.55;color:#6f5e68}.ap-reset-field{margin-top:16px}.ap-reset-field label{display:block;font-weight:700;margin-bottom:7px}.ap-reset-field input{box-sizing:border-box;width:100%;padding:13px 14px;border:1px solid #d9c8b8;border-radius:14px;background:white;font:inherit;color:#402039}.ap-reset-btn{width:100%;margin-top:20px;padding:14px 18px;border:0;border-radius:999px;background:#53164a;color:white;font-weight:800;font-size:16px;cursor:pointer}.ap-reset-btn:disabled{opacity:.55;cursor:default}.ap-reset-msg{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f3e6df;color:#6d3944;display:none;line-height:1.45}.ap-reset-msg.ok{display:block;background:#e8f2ea;color:#315e3c}.ap-reset-msg.err{display:block;background:#f6e4e4;color:#8a3e45}.ap-reset-back{display:block;text-align:center;margin-top:14px;color:#6a2a61;font-weight:700;text-decoration:none}
 </style>
 </head>
 <body>
@@ -19,7 +20,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 <script>
 (()=>{
  'use strict';
- const VERSION='20260928-account-isolation2';
+ const VERSION='20260928-password-reset';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -29,6 +30,37 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
  let done=false;
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const fail=msg=>{if(done)return;done=true;frame.style.visibility='hidden';card.style.display='none';err.style.display='block';errText.textContent=msg||'La nouvelle interface n’a pas pu démarrer.';};
+ function resetRequest(){
+   const p=new URLSearchParams(location.search);
+   const token=p.get('reset_token')||'';
+   const email=p.get('reset_email')||'';
+   return token&&email?{token,email}:null;
+ }
+ function showResetPassword(req){
+   done=true;frame.style.display='none';boot.style.display='none';
+   const wrap=document.createElement('div');wrap.className='ap-reset-screen';
+   wrap.innerHTML='<form class="ap-reset-card" id="ap-reset-form"><div class="ap-moon">☾</div><h1>Nouveau mot de passe</h1><p>Choisissez un nouveau mot de passe pour <strong id="ap-reset-email"></strong>.</p><div class="ap-reset-field"><label for="ap-reset-pass1">Nouveau mot de passe</label><input id="ap-reset-pass1" type="password" autocomplete="new-password" minlength="8" required placeholder="8 caractères minimum"></div><div class="ap-reset-field"><label for="ap-reset-pass2">Confirmer le mot de passe</label><input id="ap-reset-pass2" type="password" autocomplete="new-password" minlength="8" required placeholder="Retapez le mot de passe"></div><button class="ap-reset-btn" id="ap-reset-submit" type="submit">Enregistrer mon nouveau mot de passe</button><div class="ap-reset-msg" id="ap-reset-msg"></div><a class="ap-reset-back" href="/">Retour à la connexion</a></form>';
+   document.body.appendChild(wrap);
+   document.getElementById('ap-reset-email').textContent=req.email;
+   const form=document.getElementById('ap-reset-form'),btn=document.getElementById('ap-reset-submit'),msg=document.getElementById('ap-reset-msg');
+   form.addEventListener('submit',async ev=>{
+     ev.preventDefault();
+     const a=document.getElementById('ap-reset-pass1').value,b=document.getElementById('ap-reset-pass2').value;
+     msg.className='ap-reset-msg';msg.textContent='';
+     if(a.length<8){msg.className='ap-reset-msg err';msg.textContent='Le mot de passe doit contenir au moins 8 caractères.';return;}
+     if(a!==b){msg.className='ap-reset-msg err';msg.textContent='Les deux mots de passe ne correspondent pas.';return;}
+     btn.disabled=true;btn.textContent='Enregistrement…';
+     try{
+       const r=await fetch(API_ORIGIN+'/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:req.email,token:req.token,motDePasse:a})});
+       const data=await r.json().catch(()=>({}));
+       if(!r.ok)throw new Error(data.erreur||'La réinitialisation a échoué.');
+       try{if(data.token)localStorage.setItem('astro-token',data.token);}catch(e){}
+       msg.className='ap-reset-msg ok';msg.textContent='Votre mot de passe a bien été modifié. Vous pouvez maintenant vous reconnecter.';
+       btn.textContent='Mot de passe modifié';
+       setTimeout(()=>{location.href='/';},1600);
+     }catch(x){msg.className='ap-reset-msg err';msg.textContent=x.message||'La réinitialisation a échoué.';btn.disabled=false;btn.textContent='Enregistrer mon nouveau mot de passe';}
+   });
+ }
  async function clearOldWorkers(){
    try{if('serviceWorker' in navigator){for(const reg of await navigator.serviceWorker.getRegistrations())await reg.unregister();}}catch(e){}
    try{if('caches' in window){for(const key of await caches.keys())await caches.delete(key);}}catch(e){}
@@ -77,7 +109,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
        const r=await w.fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
        const data=await r.json().catch(()=>({}));
        if(!r.ok)throw new Error(data.erreur||'Demande impossible.');
-       if(e){e.textContent=data.email_configured===false?'La réinitialisation existe, mais l’envoi d’e-mail n’est pas encore configuré sur le serveur.':(data.message||'Si un compte existe avec cet e-mail, un lien de réinitialisation va être envoyé.');e.classList.add('show');}
+       if(e){e.textContent=data.email_configured===false?'L’envoi d’e-mail de récupération n’est pas encore configuré sur le serveur.':(data.message||'Si un compte existe avec cet e-mail, un lien de réinitialisation va être envoyé.');e.classList.add('show');}
      }catch(x){if(e){e.textContent=x.message||'Envoi du lien impossible.';e.classList.add('show');}}
      finally{b.disabled=false;b.textContent='Mot de passe oublié ?';}
    };
@@ -94,7 +126,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    try{await loadScript(d,'/assets/v162-runtime-fix.js');}catch(e){fail('Le raccord des prévisions n’a pas pu être chargé.');return;}
    try{await loadScript(d,'/assets/v162-markdown-fix.js');}catch(e){fail('Le rendu des interprétations n’a pas pu être chargé.');return;}
    try{await loadScript(d,'/assets/v169-natal-houses.js');}catch(e){fail('Le raccord des maisons natales n’a pas pu être chargé.');return;}
-   try{await loadScript(d,'/assets/v170-profile-inputs-places.js');}catch(e){fail('La saisie du profil et la recherche mondiale des lieux n’ont pas pu être chargées.');return;}
+   try{await loadScript(d,'/assets/v170-profile-inputs-places.js');}catch(e){fail('La saisie du profil et la recherche mondiale des lieux n’a pas pu être chargée.');return;}
    for(let i=0;i<16&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    if(!root.querySelector('.ap-shell,.ap-auth-shell')){
      try{await loadScript(d,'/assets/refonte-final.js');}catch(e){fail('La nouvelle interface n’a pas pu être chargée.');return;}
@@ -110,7 +142,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    frame.style.visibility='visible';boot.style.display='none';done=true;
  }
  frame.addEventListener('load',()=>{setTimeout(forceNewInterface,80);},{once:true});
- (async()=>{await clearOldWorkers();frame.src='/app-v121.html?preview='+VERSION+'&nocache='+Date.now();setTimeout(()=>{if(!done)fail('Le chargement dépasse le délai prévu. Réessayez en actualisant cette page.');},12000);})();
+ (async()=>{
+   const req=resetRequest();
+   if(req){showResetPassword(req);return;}
+   await clearOldWorkers();frame.src='/app-v121.html?preview='+VERSION+'&nocache='+Date.now();setTimeout(()=>{if(!done)fail('Le chargement dépasse le délai prévu. Réessayez en actualisant cette page.');},12000);
+ })();
 })();
 </script>
 </body>
