@@ -1,11 +1,11 @@
 /* Astro Paquita — bootstrap sécurisé.
-   Cette entrée charge les raccords de compatibilité, les méthodes astrologiques
-   restaurées et les corrections d'interface. */
+   Cette entrée charge d'abord l'isolation des comptes, puis les raccords de
+   compatibilité et les corrections d'interface. */
 (function(){
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260927-i18n-public-cleanup2';
+const VER='20260928-account-isolation1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -65,6 +65,13 @@ function loadInterface(){
     });
   });
 }
+function startCore(){
+  if(window.AstroTruth){loadInterface();return;}
+  load('assets/truth-engine.js?v='+VER,'ap-v161-truth',function(){
+    if(window.AstroTruth)loadInterface();
+    else console.error('Astro Paquita : moteur astrologique non initialisé après chargement.');
+  });
+}
 function start(){
   const root=document.getElementById('ap-final-root');
   if(!root){
@@ -73,11 +80,7 @@ function start(){
     else console.error('Astro Paquita : #ap-final-root introuvable.');
     return;
   }
-  if(window.AstroTruth){loadInterface();return;}
-  load('assets/truth-engine.js?v='+VER,'ap-v161-truth',function(){
-    if(window.AstroTruth)loadInterface();
-    else console.error('Astro Paquita : moteur astrologique non initialisé après chargement.');
-  });
+  load('assets/account-isolation.js?v='+VER,'ap-account-isolation',startCore);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
 else start();
