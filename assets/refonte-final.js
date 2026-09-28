@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260928-account-isolation2';
+const VER='20260928-profile-recovery1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -80,7 +80,9 @@ function start(){
     else console.error('Astro Paquita : #ap-final-root introuvable.');
     return;
   }
-  load('assets/account-isolation.js?v='+VER,'ap-account-isolation',startCore);
+  load('assets/account-isolation.js?v='+VER,'ap-account-isolation',function(){
+    load('assets/profile-recovery-fix.js?v='+VER,'ap-profile-recovery-fix',startCore);
+  });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
 else start();
