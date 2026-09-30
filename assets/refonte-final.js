@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260930-health-v175-useful1';
+const VER='20260930-health-v176-detail-mobile';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -34,17 +34,19 @@ function ensureCss(){
 function continueInterface(){
   load('assets/v164-analysis-restore.js?v='+VER,'ap-v164-analysis',function(){
     load('assets/v175-health-domain.js?v='+VER,'ap-v175-health-domain',function(){
-      load('assets/v174-forecast-v121-navigation.js?v='+VER,'ap-v174-forecast-nav',function(){
-        load('assets/v166-domain-timing.js?v='+VER,'ap-v166-domain-timing',function(){
-          load('assets/v173-timing-v121-range.js?v='+VER,'ap-v173-timing-v121-range',function(){
-            load('assets/v167-forecast-ui.js?v='+VER,'ap-v167-forecast-ui',function(){
-              load('assets/v168-future-hub.js?v='+VER,'ap-v168-future-hub',function(){
-                load('assets/v170-profile-inputs-places.js?v='+VER,'ap-v170-profile-inputs-places',function(){
-                  load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile',function(){
-                    load('assets/v171-visual-polish.js?v='+VER,'ap-v171-visual-polish',function(){
-                      load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
-                        load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
-                          load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes');
+      load('assets/v176-health-detail-mobile.js?v='+VER,'ap-v176-health-detail',function(){
+        load('assets/v174-forecast-v121-navigation.js?v='+VER,'ap-v174-forecast-nav',function(){
+          load('assets/v166-domain-timing.js?v='+VER,'ap-v166-domain-timing',function(){
+            load('assets/v173-timing-v121-range.js?v='+VER,'ap-v173-timing-v121-range',function(){
+              load('assets/v167-forecast-ui.js?v='+VER,'ap-v167-forecast-ui',function(){
+                load('assets/v168-future-hub.js?v='+VER,'ap-v168-future-hub',function(){
+                  load('assets/v170-profile-inputs-places.js?v='+VER,'ap-v170-profile-inputs-places',function(){
+                    load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile',function(){
+                      load('assets/v171-visual-polish.js?v='+VER,'ap-v171-visual-polish',function(){
+                        load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
+                          load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
+                            load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes');
+                          });
                         });
                       });
                     });
