@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260930-health-v175';
+const VER='20260930-health-v175-wording2';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
