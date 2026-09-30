@@ -66,7 +66,7 @@ function clusters(hits){
  return out.sort((a,b)=>b.peak.score-a.peak.score);
 }
 function rangeLabel(c){return iso(c.start)===iso(c.end)?fmt(c.start):fmt(c.start)+' → '+fmt(c.end);}
-function card(c){const very=c.items.some(x=>x.conv.very);const text=c.pol==='difficult'?tr('watchText'):tr('goodText');return '<div class="ap-period '+(c.pol==='difficult'?'negative':'positive')+'" style="margin-bottom:10px"><div><b>'+esc(c.pol==='difficult'?tr('watch'):tr('good'))+'</b><strong>'+esc(rangeLabel(c))+'</strong><small>'+esc(very?tr('very'):tr('confirmed'))+' · '+esc(text)+'</small></div></div>';}
+function card(c){const very=c.items.some(x=>x.conv.very);const text=c.pol==='difficult'?tr('watchText'):tr('goodText');return '<div class="ap-period '+(c.pol==='difficult'?'difficult':'positive')+'" style="margin-bottom:10px"><div><b>'+esc(c.pol==='difficult'?tr('watch'):tr('good'))+'</b><strong>'+esc(rangeLabel(c))+'</strong><small>'+esc(very?tr('very'):tr('confirmed'))+' · '+esc(text)+'</small></div></div>';}
 function titleRange(start,days){const end=new Date(start);end.setDate(end.getDate()+Math.max(0,days-1));return days===1?fmt(start):fmt(start)+' → '+fmt(end);}
 async function runHealth(start,days,period,onProgress){
  const hits=await scan(new Date(start),Math.max(1,Number(days)||1),onProgress);const groups=clusters(hits);
