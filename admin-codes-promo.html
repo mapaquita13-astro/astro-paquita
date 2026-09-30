@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Codes promo — Astro Paquita</title>
+<style>
+:root{--plum:#43143d;--plum2:#5c1b53;--gold:#b58b42;--cream:#f8f4ed;--paper:#fffdf9;--line:#e7ddcf;--muted:#7d6e79;--green:#2d7a50;--red:#a13e45;--ink:#20142a}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:1100px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}.top h1{font:600 30px Georgia,serif;color:var(--plum);margin:0}.tag{display:inline-block;margin-top:6px;padding:5px 9px;border-radius:999px;background:#e8f3eb;color:#276241;font-size:11px;font-weight:800}.back{background:#ece6ef;color:var(--plum);text-decoration:none;padding:10px 13px;border-radius:10px;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1.4fr;gap:14px}.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 7px 24px rgba(52,30,46,.06)}h2{font:600 22px Georgia,serif;color:var(--plum);margin:0 0 12px}label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px}input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:white;font:inherit}button{border:0;border-radius:10px;padding:10px 13px;font:inherit;font-weight:800;cursor:pointer;background:var(--plum2);color:white}.danger{background:var(--red)}.secondary{background:#ece6ef;color:var(--plum)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.status{padding:11px 12px;border-radius:10px;background:#f1edf2;color:var(--plum);font-size:13px;margin-bottom:14px}.ok{background:#e9f4ec;color:#235f3d}.err{background:#f8eaea;color:#8a3038}.table{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:700px;background:#fff}th,td{padding:11px;border-bottom:1px solid var(--line);text-align:left;font-size:12px}th{background:#f5eff5;color:var(--plum)}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}.active{background:#e4f2e8;color:#25613f}.inactive{background:#f8e2e4;color:#8d3038}.muted{color:var(--muted);font-size:13px}.empty{text-align:center;padding:24px;color:var(--muted)}@media(max-width:800px){.grid{grid-template-columns:1fr}.wrap{padding:14px}.top{align-items:flex-start}.top h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div><h1>Codes promo</h1><span class="tag">✓ ADMIN · SITE DÉFINITIF</span></div><a class="back" href="admin.html">← Retour Admin</a></div>
+  <div id="status" class="status">Vérification du compte Administrateur…</div>
+  <div class="grid">
+    <section class="card">
+      <h2>Créer un code promo</h2>
+      <label>Code</label><input id="code" placeholder="PROMO-2026">
+      <label>Type</label><select id="type"><option value="jours_premium">Jours Premium offerts</option><option value="reduction_pourcentage">Réduction %</option></select>
+      <label>Valeur</label><input id="valeur" type="number" min="1" value="7">
+      <label>Nombre max d'utilisations</label><input id="max" type="number" min="1" placeholder="Illimité si vide">
+      <label>Date d'expiration</label><input id="expire" type="date">
+      <div class="actions"><button onclick="createPromo()">Créer le code</button></div>
+    </section>
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2>Codes existants</h2><div class="muted">Désactiver conserve l’historique et empêche toute nouvelle utilisation.</div></div><button class="secondary" onclick="loadPromos()">↻ Actualiser</button></div>
+      <div class="table" style="margin-top:14px"><table><thead><tr><th>Code</th><th>Type</th><th>Valeur</th><th>Utilisations</th><th>Expiration</th><th>Statut</th><th>Action</th></tr></thead><tbody id="rows"><tr><td colspan="7" class="empty">Chargement…</td></tr></tbody></table></div>
+    </section>
+  </div>
+</div>
+<script>
+'use strict';
+const API='https://astro-paquita-backend.onrender.com';
+function token(){return localStorage.getItem('astro-token')||''}
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function status(msg,type=''){const e=document.getElementById('status');e.textContent=msg;e.className='status '+type}
+async function api(path,opts={}){const headers={...(opts.headers||{})};if(token())headers.Authorization='Bearer '+token();if(opts.body)headers['Content-Type']='application/json';const r=await fetch(API+path,{...opts,headers,cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.erreur||('Erreur HTTP '+r.status));return d}
+async function verify(){if(!token()){status('⚠ Connecte-toi d’abord sur Astro Paquita avec ton compte Administrateur.','err');return false}try{const u=await api('/api/me?ts='+Date.now());if(u.role!=='admin'){status('⚠ Ce compte n’est pas Administrateur.','err');return false}status('👑 Administrateur actif — '+(u.prenom||u.email),'ok');return true}catch(e){status('⚠ '+e.message,'err');return false}}
+function formatDate(v){if(!v)return'—';const d=new Date(v+'T12:00:00');return isNaN(d)?esc(v):d.toLocaleDateString('fr-FR')}
+async function loadPromos(){if(!await verify())return;const body=document.getElementById('rows');body.innerHTML='<tr><td colspan="7" class="empty">Chargement…</td></tr>';try{const a=await api('/api/admin/promo?ts='+Date.now());body.innerHTML=a.map(c=>`<tr><td><strong>${esc(c.code)}</strong></td><td>${esc(c.type)}</td><td>${Number(c.valeur)||0}</td><td>${Number(c.utilisations_count)||0}${c.max_utilisations?' / '+Number(c.max_utilisations):''}</td><td>${formatDate(c.expire_le)}</td><td>${c.actif?'<span class="badge active">ACTIF</span>':'<span class="badge inactive">DÉSACTIVÉ</span>'}</td><td>${c.actif?`<button class="danger" onclick="disablePromo('${encodeURIComponent(String(c.id))}','${encodeURIComponent(String(c.code||''))}')">Désactiver</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucun code promo.</td></tr>'}catch(e){body.innerHTML='<tr><td colspan="7" class="empty">⚠ '+esc(e.message)+'</td></tr>'}}
+async function createPromo(){if(!await verify())return;const body={code:document.getElementById('code').value.trim(),type:document.getElementById('type').value,valeur:Number(document.getElementById('valeur').value),maxUtilisations:document.getElementById('max').value?Number(document.getElementById('max').value):null,expireLe:document.getElementById('expire').value||null};if(!body.code){alert('Saisis un code.');return}try{await api('/api/admin/promo',{method:'POST',body:JSON.stringify(body)});document.getElementById('code').value='';await loadPromos();alert('Code promo créé.')}catch(e){alert(e.message)}}
+async function disablePromo(id,code){const name=decodeURIComponent(code||'');if(!confirm('Désactiver le code '+name+' ?\n\nSon historique sera conservé, mais il ne pourra plus être utilisé.'))return;try{await api('/api/admin/promo/'+decodeURIComponent(id)+'/desactiver',{method:'PATCH'});await loadPromos();alert('Code promo désactivé.')}catch(e){alert(e.message)}}
+window.addEventListener('load',loadPromos);
+</script>
+</body>
+</html>
