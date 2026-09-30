@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Copier les profils — Astro Paquita</title><style>body{font-family:system-ui;background:#f8f4ed;color:#2b1830;margin:0;padding:24px}.card{max-width:720px;margin:30px auto;background:#fffdf9;border:1px solid #e7ddcf;border-radius:18px;padding:22px;box-shadow:0 8px 30px rgba(50,20,45,.08)}h1{font-family:Georgia,serif;color:#43143d}button{border:0;border-radius:12px;padding:12px 16px;background:#5c1b53;color:#fff;font-weight:800;cursor:pointer}button:disabled{opacity:.55}.secondary{background:#ece6ef;color:#43143d}.status{margin:16px 0;padding:12px 14px;border-radius:12px;background:#f3edf4}.ok{background:#e9f4ec;color:#235f3d}.err{background:#f8eaea;color:#8a3038}.warn{background:#fff3d9;color:#73521b}.row{display:flex;gap:10px;flex-wrap:wrap}.muted{color:#7d6e79;font-size:13px}</style></head><body><div class="card"><h1>Copier tous les profils dans mon compte</h1><p>Cette opération <b>copie</b> les profils des autres utilisateurs dans ton compte Administrateur. Les profils d’origine restent chez leurs propriétaires.</p><div id="status" class="status">Vérification du compte…</div><div class="row"><button id="copy" disabled>Copier tous les profils</button><button class="secondary" onclick="location.href='admin.html'">Retour à l’Admin</button></div><p class="muted">Sécurité : aucun profil existant de ton compte n’est écrasé. Les copies reçoivent une clé distincte.</p></div><script>
+'use strict';
+const API='https://astro-paquita-backend.onrender.com';
+const statusEl=document.getElementById('status'),btn=document.getElementById('copy');
+let ME=null;
+function token(){return localStorage.getItem('astro-token')||''}
+function headers(json=false){const h={Authorization:'Bearer '+token()};if(json)h['Content-Type']='application/json';return h}
+async function get(path,opts={}){const r=await fetch(API+path,{...opts,cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.erreur||('Erreur HTTP '+r.status));return d}
+function h(s){let x=2166136261;for(const c of String(s)){x^=c.charCodeAt(0);x=Math.imul(x,16777619)}return (x>>>0).toString(36)}
+function localKey(email){return 'ap-account-scope-v1:'+h(String(email||'').trim().toLowerCase())+':profiles'}
+function rowToProfile(r){return {prenom:String(r.prenom||''),date:String(r.date||''),heure:String(r.heure||''),ville:String(r.ville||''),lat:r.lat==null?null:Number(r.lat),lon:r.lon==null?null:Number(r.lon),tz:String(r.tz||''),genre:String(r.genre||'')};}
+function rowToPayload(r,key){return {key,prenom:String(r.prenom||''),date:String(r.date||''),heure:String(r.heure||''),ville:String(r.ville||''),lat:r.lat==null?null:Number(r.lat),lon:r.lon==null?null:Number(r.lon),tz:String(r.tz||''),genre:String(r.genre||'')};}
+async function init(){try{if(!token())throw new Error('Aucune session active.');ME=await get('/api/me?ts='+Date.now(),{headers:headers()});if(ME.role!=='admin')throw new Error('Le compte connecté n’est pas Administrateur.');statusEl.textContent='Compte Administrateur vérifié : '+(ME.prenom||ME.email);statusEl.className='status ok';btn.disabled=false;}catch(e){statusEl.textContent='⚠ '+e.message;statusEl.className='status err'}}
+btn.onclick=async()=>{btn.disabled=true;statusEl.textContent='Préparation de la copie…';statusEl.className='status';try{
+ const ownResp=await get('/api/me/profiles?ts='+Date.now(),{headers:headers()});
+ const all=await get('/api/admin/profiles?ts='+Date.now(),{headers:headers()});
+ const own=Array.isArray(ownResp.profiles)?ownResp.profiles:[];
+ const others=(Array.isArray(all)?all:[]).filter(r=>String(r.owner_email||'').trim().toLowerCase()!==String(ME.email||'').trim().toLowerCase());
+ const payload=[],localObj={};const keys=new Set();let activeKey='';
+ for(const r of own){const k=String(r.profile_key||r.key||'').trim();if(!k||keys.has(k))continue;keys.add(k);payload.push(rowToPayload(r,k));localObj[k]=rowToProfile(r);if(r.active)activeKey=k;}
+ let added=0;
+ for(const r of others){const original=String(r.profile_key||r.key||'profil');const k=('copie:'+String(r.user_id||'u')+':'+h(original)+'_'+original).slice(0,180);if(keys.has(k))continue;keys.add(k);payload.push(rowToPayload(r,k));localObj[k]=rowToProfile(r);added++;}
+ if(payload.length>60)throw new Error('Il y a '+payload.length+' profils à conserver/copier. La limite serveur actuelle est de 60 ; aucune copie n’a été effectuée.');
+ const r=await fetch(API+'/api/me/profiles/sync',{method:'POST',headers:headers(true),body:JSON.stringify({profiles:payload,active_key:activeKey})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.erreur||('Erreur HTTP '+r.status));
+ localStorage.setItem(localKey(ME.email),JSON.stringify(localObj));localStorage.setItem('astra_profils',JSON.stringify(localObj));if(activeKey)localStorage.setItem('astro_paquita_profil_actif_v38',activeKey);
+ statusEl.textContent='✅ Copie terminée : '+added+' profil(s) ajoutés à ton compte. Les originaux sont restés chez leurs propriétaires.';statusEl.className='status ok';
+ }catch(e){statusEl.textContent='⚠ '+e.message;statusEl.className='status err'}finally{btn.disabled=false}};
+init();
+</script></body></html>
