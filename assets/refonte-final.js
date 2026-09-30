@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260930-profile-merge1';
+const VER='20260930-forecast-prev-next1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -31,33 +31,38 @@ function ensureCss(){
   l.href='assets/refonte-final.css?v='+VER;
   document.head.appendChild(l);
 }
+function continueInterface(){
+  load('assets/v164-analysis-restore.js?v='+VER,'ap-v164-analysis',function(){
+    load('assets/v166-domain-timing.js?v='+VER,'ap-v166-domain-timing',function(){
+      load('assets/v173-timing-v121-range.js?v='+VER,'ap-v173-timing-v121-range',function(){
+        load('assets/v167-forecast-ui.js?v='+VER,'ap-v167-forecast-ui',function(){
+          load('assets/v168-future-hub.js?v='+VER,'ap-v168-future-hub',function(){
+            load('assets/v170-profile-inputs-places.js?v='+VER,'ap-v170-profile-inputs-places',function(){
+              load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile',function(){
+                load('assets/v171-visual-polish.js?v='+VER,'ap-v171-visual-polish',function(){
+                  load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
+                    load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
+                      load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes');
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+}
 function loadInterface(){
   ensureCss();
   load('assets/v162-runtime-fix.js?v='+VER,'ap-v162d-runtime',function(){
     load('assets/v165-v121-methods.js?v='+VER,'ap-v165-methods',function(){
       load('assets/v162-markdown-fix.js?v='+VER,'ap-v162f-markdown',function(){
         load('assets/v169-natal-houses.js?v='+VER,'ap-v169-natal-houses',function(){
-          load('assets/refonte-v127-base.js?v='+VER,'ap-v161-base',function(){
-            load('assets/v164-analysis-restore.js?v='+VER,'ap-v164-analysis',function(){
-              load('assets/v166-domain-timing.js?v='+VER,'ap-v166-domain-timing',function(){
-                load('assets/v173-timing-v121-range.js?v='+VER,'ap-v173-timing-v121-range',function(){
-                  load('assets/v167-forecast-ui.js?v='+VER,'ap-v167-forecast-ui',function(){
-                    load('assets/v168-future-hub.js?v='+VER,'ap-v168-future-hub',function(){
-                      load('assets/v170-profile-inputs-places.js?v='+VER,'ap-v170-profile-inputs-places',function(){
-                        load('assets/v162-mobile.js?v='+VER,'ap-v162-mobile',function(){
-                          load('assets/v171-visual-polish.js?v='+VER,'ap-v171-visual-polish',function(){
-                            load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
-                              load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
-                                load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes');
-                              });
-                            });
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
+          load('assets/forecast-prev-next-loader.js?v='+VER,'ap-forecast-prev-next-loader',function(){
+            Promise.resolve(window.__AP_FORECAST_BASE_READY__).then(continueInterface).catch(function(e){
+              console.error('Astro Paquita : correction navigation Prévisions impossible',e);
             });
           });
         });
