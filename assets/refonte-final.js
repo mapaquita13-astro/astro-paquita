@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20260930-account-guard1';
+const VER='20260930-profile-merge1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -82,7 +82,9 @@ function start(){
   }
   load('assets/account-isolation.js?v='+VER,'ap-account-isolation',function(){
     load('assets/account-switch-guard.js?v='+VER,'ap-account-switch-guard',function(){
-      load('assets/profile-recovery-fix.js?v='+VER,'ap-profile-recovery-fix',startCore);
+      load('assets/profile-recovery-fix.js?v='+VER,'ap-profile-recovery-fix',function(){
+        load('assets/profile-server-merge.js?v='+VER,'ap-profile-server-merge',startCore);
+      });
     });
   });
 }
