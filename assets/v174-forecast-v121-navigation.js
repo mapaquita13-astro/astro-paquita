@@ -10,7 +10,7 @@ const A=window.AstroTruth;
 const META={fr:'fr-FR',en:'en-GB',es:'es-ES',ar:'ar'};
 let running=false;
 const q=(s,r)=> (r||document).querySelector(s);
-const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 function lang(){return String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2);}
 function iso(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
 function fromIso(raw){if(!/^\d{4}-\d{2}-\d{2}$/.test(String(raw||'')))return null;const d=new Date(raw+'T12:00:00');return isNaN(d)?null:d;}
@@ -54,7 +54,7 @@ function shift(dir){
 }
 function activateCurrent(){try{const p=A&&A.currentProfile?A.currentProfile():null;if(p&&p.profileId&&A.activate)A.activate(p.profileId);}catch(e){}}
 function setLegacySelection(domain,period){
-  const map={all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',famille:'famille',voyage:'voyage'};
+  const map={all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',sante:'sante',famille:'famille',voyage:'voyage'};
   const d=map[domain]||'general';
   try{domP=d;}catch(e){try{window.eval('domP='+JSON.stringify(d));}catch(_){} }
   try{perP=period;}catch(e){try{window.eval('perP='+JSON.stringify(period));}catch(_){} }
@@ -64,15 +64,20 @@ function setError(msg){const e=q('#ap-forecast-error');if(e){e.textContent=msg||
 async function generate(){
   if(running)return;
   const out=q('#ap-forecast-result');if(!out)return;
-  if(typeof window.lancerPrevDepuis!=='function'){
-    setError('Les prévisions sont momentanément indisponibles.');return;
-  }
   const period=activePeriod(),domain=activeDomain(),days=span(period),start=currentAnchor(period);
   const n=nav();if(n){n.dataset.v174Anchor=iso(start);n.dataset.v174Days=String(days);}
-  running=true;setBusy(true);setError('');activateCurrent();setLegacySelection(domain,period);
+  running=true;setBusy(true);setError('');activateCurrent();
   const title=fullRangeText(start,days);
-  out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse de la période sélectionnée…</p></div>';
   try{
+    if(domain==='sante'){
+      if(typeof window.apRunStrictHealthForecastV175!=='function')throw new Error('Le calcul Santé V121 est momentanément indisponible.');
+      out.innerHTML='<div class="ap-card"><h3>Santé · '+esc(title)+'</h3><p class="ap-muted">Analyse stricte des convergences V121…</p></div>';
+      out.innerHTML=await window.apRunStrictHealthForecastV175(new Date(start),days,period);
+      return;
+    }
+    if(typeof window.lancerPrevDepuis!=='function')throw new Error('Les prévisions sont momentanément indisponibles.');
+    setLegacySelection(domain,period);
+    out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse de la période sélectionnée…</p></div>';
     await window.lancerPrevDepuis(new Date(start),days,period);
     const legacy=q('#p-rapport');
     const html=legacy&&legacy.innerHTML?legacy.innerHTML.trim():'';
