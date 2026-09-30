@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Déconnexion Admin — Astro Paquita</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f8f4ed;color:#43143d;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;padding:20px}.card{width:min(460px,100%);background:#fffdf9;border:1px solid #e7ddcf;border-radius:22px;padding:26px;box-shadow:0 12px 36px rgba(60,24,52,.10)}h1{font-family:Georgia,serif;margin:0 0 10px}p{color:#756875;line-height:1.55}.actions{display:grid;gap:10px;margin-top:20px}button,a{display:block;text-align:center;text-decoration:none;border:0;border-radius:999px;padding:13px 16px;font:700 15px inherit;cursor:pointer}.logout{background:#a13e45;color:white}.back{background:#eee7ef;color:#43143d}.ok{display:none;margin-top:14px;padding:12px;border-radius:12px;background:#e9f4ec;color:#235f3d}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Déconnexion Administrateur</h1>
+<p>Cette action ferme uniquement ta session Astro Paquita sur cet appareil. Tes profils enregistrés restent attachés à ton compte.</p>
+<div class="actions">
+<button class="logout" id="logout">Se déconnecter</button>
+<a class="back" href="/admin.html">Annuler et revenir à l’Admin</a>
+</div>
+<div class="ok" id="ok">Session fermée. Retour à la connexion…</div>
+</div>
+<script>
+(function(){
+'use strict';
+document.getElementById('logout').addEventListener('click',function(){
+  try{
+    localStorage.removeItem('astro-token');
+    localStorage.removeItem('astro-admin-key');
+    localStorage.removeItem('astro-admin-url');
+    localStorage.removeItem('astro-maintenance-bypass');
+  }catch(e){}
+  document.getElementById('ok').style.display='block';
+  this.disabled=true;
+  setTimeout(function(){location.replace('/');},500);
+});
+})();
+</script>
+</body>
+</html>
