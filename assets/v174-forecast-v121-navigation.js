@@ -1,7 +1,7 @@
-/* Astro Paquita V178 — navigation temporelle des prévisions alignée sur la V121.
-   Tous les domaines, y compris Santé, passent désormais par lancerPrevDepuis(),
-   c'est-à-dire le moteur prévisionnel V121 complet. Aucun calcul natal, maison,
-   transit, progression, arc ou révolution solaire n'est réécrit ici. */
+/* Astro Paquita V179 — navigation temporelle des prévisions.
+   Bien-être conserve le domaine V121 quotidien. Santé utilise désormais le moteur
+   composite V179, qui croise les sorties V121 Identité + VI/XII sans recalculer
+   aucune planète, maison, progression, arc ou révolution solaire. */
 (function(){
 'use strict';
 if(window.__AP_V174_FORECAST_NAV__)return;
@@ -55,7 +55,7 @@ function shift(dir){
 }
 function activateCurrent(){try{const p=A&&A.currentProfile?A.currentProfile():null;if(p&&p.profileId&&A.activate)A.activate(p.profileId);}catch(e){}}
 function setLegacySelection(domain,period){
-  const map={all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',sante:'sante',famille:'famille',voyage:'voyage'};
+  const map={all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',famille:'famille',voyage:'voyage'};
   const d=map[domain]||'general';
   try{domP=d;}catch(e){try{window.eval('domP='+JSON.stringify(d));}catch(_){} }
   try{perP=period;}catch(e){try{window.eval('perP='+JSON.stringify(period));}catch(_){} }
@@ -70,6 +70,12 @@ async function generate(){
   running=true;setBusy(true);setError('');activateCurrent();
   const title=fullRangeText(start,days);
   try{
+    if(domain==='sante'){
+      if(typeof window.apRunHealthCompositeV179!=='function')throw new Error('Le calcul Santé complet est momentanément indisponible.');
+      out.innerHTML='<div class="ap-card"><h3>Santé · '+esc(title)+'</h3><p class="ap-muted">Analyse croisée V121 de la vitalité et des secteurs VI/XII…</p></div>';
+      out.innerHTML=await window.apRunHealthCompositeV179(new Date(start),days,period);
+      return;
+    }
     if(typeof window.lancerPrevDepuis!=='function')throw new Error('Les prévisions sont momentanément indisponibles.');
     setLegacySelection(domain,period);
     out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse complète de la période sélectionnée…</p></div>';
