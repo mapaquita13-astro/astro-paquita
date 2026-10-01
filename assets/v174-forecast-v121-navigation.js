@@ -1,6 +1,7 @@
-/* Astro Paquita — navigation temporelle des prévisions alignée sur la V121.
-   Ce correctif ne modifie aucun calcul astrologique. Il garantit que la date
-   choisie par Précédent / Suivant est bien celle transmise à lancerPrevDepuis(). */
+/* Astro Paquita V178 — navigation temporelle des prévisions alignée sur la V121.
+   Tous les domaines, y compris Santé, passent désormais par lancerPrevDepuis(),
+   c'est-à-dire le moteur prévisionnel V121 complet. Aucun calcul natal, maison,
+   transit, progression, arc ou révolution solaire n'est réécrit ici. */
 (function(){
 'use strict';
 if(window.__AP_V174_FORECAST_NAV__)return;
@@ -69,15 +70,9 @@ async function generate(){
   running=true;setBusy(true);setError('');activateCurrent();
   const title=fullRangeText(start,days);
   try{
-    if(domain==='sante'){
-      if(typeof window.apRunStrictHealthForecastV175!=='function')throw new Error('Le calcul Santé V121 est momentanément indisponible.');
-      out.innerHTML='<div class="ap-card"><h3>Santé · '+esc(title)+'</h3><p class="ap-muted">Analyse stricte des convergences V121…</p></div>';
-      out.innerHTML=await window.apRunStrictHealthForecastV175(new Date(start),days,period);
-      return;
-    }
     if(typeof window.lancerPrevDepuis!=='function')throw new Error('Les prévisions sont momentanément indisponibles.');
     setLegacySelection(domain,period);
-    out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse de la période sélectionnée…</p></div>';
+    out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse complète de la période sélectionnée…</p></div>';
     await window.lancerPrevDepuis(new Date(start),days,period);
     const legacy=q('#p-rapport');
     const html=legacy&&legacy.innerHTML?legacy.innerHTML.trim():'';
