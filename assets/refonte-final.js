@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261001-health-removed';
+const VER='20261003-world-places-v170-2';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
