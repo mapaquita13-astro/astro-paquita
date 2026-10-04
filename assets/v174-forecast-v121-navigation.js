@@ -1,7 +1,6 @@
-/* Astro Paquita V179 — navigation temporelle des prévisions.
-   Bien-être conserve le domaine V121 quotidien. Santé utilise désormais le moteur
-   composite V179, qui croise les sorties V121 Identité + VI/XII sans recalculer
-   aucune planète, maison, progression, arc ou révolution solaire. */
+/* Astro Paquita — navigation temporelle des prévisions V121.
+   Cette couche ne modifie aucun calcul astrologique : elle synchronise la période,
+   le domaine et le profil actif avec le moteur V121 avant chaque génération. */
 (function(){
 'use strict';
 if(window.__AP_V174_FORECAST_NAV__)return;
@@ -11,7 +10,7 @@ const A=window.AstroTruth;
 const META={fr:'fr-FR',en:'en-GB',es:'es-ES',ar:'ar'};
 let running=false;
 const q=(s,r)=> (r||document).querySelector(s);
-const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 function lang(){return String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2);}
 function iso(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
 function fromIso(raw){if(!/^\d{4}-\d{2}-\d{2}$/.test(String(raw||'')))return null;const d=new Date(raw+'T12:00:00');return isNaN(d)?null:d;}
@@ -53,7 +52,36 @@ function shift(dir){
   const label=q('.ap-forecast-range-label');if(label)label.textContent=rangeText(start,days);
   const out=q('#ap-forecast-result');if(out)out.innerHTML='';
 }
-function activateCurrent(){try{const p=A&&A.currentProfile?A.currentProfile():null;if(p&&p.profileId&&A.activate)A.activate(p.profileId);}catch(e){}}
+function legacyUserReady(){
+  try{return typeof USER!=='undefined'&&!!USER&&!!USER.prenom;}catch(e){return false;}
+}
+function ensureLegacyProfile(){
+  const p=A&&typeof A.currentProfile==='function'?A.currentProfile():null;
+  if(!p)throw new Error('Aucun profil actif. Sélectionne ou crée un profil puis réessaie.');
+  if(A&&typeof A.validation==='function'){
+    const v=A.validation(p);
+    if(!v||!v.ok)throw new Error('Le profil actif est incomplet. Vérifie la date, l’heure et le lieu de naissance.');
+  }
+
+  let activated=false;
+  try{if(A&&typeof A.activate==='function')activated=!!A.activate(p.profileId||p.legacyKey);}catch(e){}
+
+  /* Sécurité de compatibilité : certaines navigations de la nouvelle interface
+     conservent bien le profil AstroTruth mais l'ancien objet USER de V121 peut
+     avoir été remis à null. On le reconstruit alors avec la fonction V121 prévue
+     pour cela, sans toucher aux calculs ni aux données de naissance. */
+  if(!legacyUserReady()&&typeof window.v37CalculerUserDepuisDonnees==='function'){
+    try{
+      const payload={...p,__profileKey:p.legacyKey,__timeStatus:p.timeStatus||'exact'};
+      activated=!!window.v37CalculerUserDepuisDonnees(payload)||activated;
+    }catch(e){}
+  }
+
+  if(!legacyUserReady()){
+    throw new Error('Le profil actif n’a pas pu être initialisé pour les prévisions. Recharge la page puis réessaie.');
+  }
+  return {profile:p,activated};
+}
 function setLegacySelection(domain,period){
   const map={all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',famille:'famille',voyage:'voyage'};
   const d=map[domain]||'general';
@@ -67,15 +95,10 @@ async function generate(){
   const out=q('#ap-forecast-result');if(!out)return;
   const period=activePeriod(),domain=activeDomain(),days=span(period),start=currentAnchor(period);
   const n=nav();if(n){n.dataset.v174Anchor=iso(start);n.dataset.v174Days=String(days);}
-  running=true;setBusy(true);setError('');activateCurrent();
+  running=true;setBusy(true);setError('');
   const title=fullRangeText(start,days);
   try{
-    if(domain==='sante'){
-      if(typeof window.apRunHealthCompositeV179!=='function')throw new Error('Le calcul Santé complet est momentanément indisponible.');
-      out.innerHTML='<div class="ap-card"><h3>Santé · '+esc(title)+'</h3><p class="ap-muted">Analyse croisée V121 de la vitalité et des secteurs VI/XII…</p></div>';
-      out.innerHTML=await window.apRunHealthCompositeV179(new Date(start),days,period);
-      return;
-    }
+    ensureLegacyProfile();
     if(typeof window.lancerPrevDepuis!=='function')throw new Error('Les prévisions sont momentanément indisponibles.');
     setLegacySelection(domain,period);
     out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse complète de la période sélectionnée…</p></div>';
@@ -83,8 +106,14 @@ async function generate(){
     const legacy=q('#p-rapport');
     const html=legacy&&legacy.innerHTML?legacy.innerHTML.trim():'';
     out.innerHTML='<div class="ap-card ap-forecast-v174"><div class="ap-eyebrow">Prévision personnalisée</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2><div class="ap-report">'+(html||'<p>Aucun élément suffisamment marqué ne ressort sur cette période.</p>')+'</div></div>';
-  }catch(e){setError(e&&e.message?e.message:'La prévision n’a pas pu être générée.');out.innerHTML='';}
-  finally{running=false;setBusy(false);}
+  }catch(e){
+    console.error('Astro Paquita — génération prévisions :',e);
+    const raw=String(e&&e.message||'');
+    const msg=/Cannot read properties of null|reading ['\"]prenom['\"]/i.test(raw)
+      ?'Le profil actif n’a pas été correctement chargé. Recharge la page puis relance la prévision.'
+      :(raw||'La prévision n’a pas pu être générée.');
+    setError(msg);out.innerHTML='';
+  }finally{running=false;setBusy(false);}
 }
 
 document.addEventListener('click',function(ev){
