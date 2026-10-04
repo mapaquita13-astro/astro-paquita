@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261004-past-annual-v183-1';
+const VER='20261004-past-annual-v184-1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -34,7 +34,7 @@ function ensureCss(){
 function continueInterface(){
   load('assets/v164-analysis-restore.js?v='+VER,'ap-v164-analysis',function(){
     load('assets/v174-forecast-v121-navigation.js?v='+VER,'ap-v174-forecast-nav',function(){
-      load('assets/v183-past-annual-forecast.js?v='+VER,'ap-v183-past-annual',function(){
+      load('assets/v184-past-year-daily.js?v='+VER,'ap-v184-past-year-daily',function(){
         load('assets/v181-forecast-export.js?v='+VER,'ap-v181-forecast-export',function(){
           load('assets/v166-domain-timing.js?v='+VER,'ap-v166-domain-timing',function(){
             load('assets/v173-timing-v121-range.js?v='+VER,'ap-v173-timing-v121-range',function(){
