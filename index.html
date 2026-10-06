@@ -20,7 +20,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 <script>
 (()=>{
  'use strict';
- const VERSION='20261006-forecast-v192-1';
+ const VERSION='20260928-password-reset';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -134,10 +134,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    for(let i=0;i<28&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    const mounted=root.querySelector('.ap-shell,.ap-auth-shell');
    if(!mounted){fail('Le moteur est présent, mais la nouvelle interface ne s’est pas initialisée.');return;}
-   /* V192 : ces correctifs sont chargés explicitement même si l'interface était déjà montée.
-      Cela évite le chemin aléatoire qui sautait refonte-final.js et laissait l'ancien runForecast actif. */
-   try{await loadScript(d,'/assets/v192-forecast-controller.js');}catch(e){fail('Le contrôleur des prévisions n’a pas pu être chargé.');return;}
-   try{await loadScript(d,'/assets/v191-forecast-report-quality.js');}catch(e){console.error('Astro Paquita : enrichissement du rapport indisponible',e);}
    installForgotPassword(d,w);
    const authObs=new MutationObserver(()=>installForgotPassword(d,w));authObs.observe(root,{childList:true,subtree:true});
    d.body.classList.add('ap-final-active');
