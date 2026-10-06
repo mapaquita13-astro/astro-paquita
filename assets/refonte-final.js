@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261006-forecast-button-v189-1';
+const VER='20261006-quality-report-v190-1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
