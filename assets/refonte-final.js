@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261006-unified-forecast-v187-1';
+const VER='20261006-fast-forecast-v188-1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -46,8 +46,10 @@ function continueInterface(){
                         load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
                           load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
                             load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes',function(){
-                              load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
-                                load('assets/v186-premium-current-offer.js?v='+VER,'ap-v186-premium-current-offer');
+                              load('assets/v188-forecast-fast-ai.js?v='+VER,'ap-v188-forecast-fast-ai',function(){
+                                load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
+                                  load('assets/v186-premium-current-offer.js?v='+VER,'ap-v186-premium-current-offer');
+                                });
                               });
                             });
                           });
