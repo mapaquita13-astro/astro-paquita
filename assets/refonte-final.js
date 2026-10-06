@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261006-quality-report-v190-1';
+const VER='20261006-button-v189-quality-v191-1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -49,7 +49,9 @@ function continueInterface(){
                               load('assets/v188-forecast-fast-ai.js?v='+VER,'ap-v188-forecast-fast-ai',function(){
                                 load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
                                   load('assets/v186-premium-current-offer.js?v='+VER,'ap-v186-premium-current-offer',function(){
-                                    load('assets/v189-forecast-button-owner.js?v='+VER,'ap-v189-forecast-button-owner');
+                                    load('assets/v189-forecast-button-owner.js?v='+VER,'ap-v189-forecast-button-owner',function(){
+                                      load('assets/v191-forecast-report-quality.js?v='+VER,'ap-v191-forecast-report-quality');
+                                    });
                                   });
                                 });
                               });
