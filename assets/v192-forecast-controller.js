@@ -1,55 +1,94 @@
-/* Astro Paquita V192 — contrôleur unique et propre des prévisions.
-   Remplace physiquement les anciens boutons pour supprimer tous les anciens handlers.
-   Calculs astrologiques inchangés : AstroTruth.day / moteur V121. */
+/* Astro Paquita V194 — contrôleur fiable + moteur de prévisions V121 exact.
+   Le bouton et la navigation restent isolés des anciens handlers.
+   La source de vérité des prévisions redevient lancerPrevDepuis()/scannerJours V121,
+   afin de retrouver les mêmes tournants, périodes marquées, micro-chronologie et dates qu'avant. */
 (function(){
 'use strict';
-if(window.__AP_V192_FORECAST_CONTROLLER__)return;
+if(window.__AP_V194_FORECAST_EXACT__)return;
+window.__AP_V194_FORECAST_EXACT__=true;
 window.__AP_V192_FORECAST_CONTROLLER__=true;
-const A=window.AstroTruth;if(!A)return;
-const DOMAINS=['amour','travail','argent','bienetre','famille','voyage'];
+const A=window.AstroTruth;
 const q=(s,r)=>(r||document).querySelector(s);
-let running=false,seq=0,queued=false,lastTrigger=0;
+let running=false,queued=false,lastTrigger=0,runId=0;
 function lang(){return String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2)}
-const T={fr:{calc:'Calcul de votre prévision',ready:'Prévision personnalisée',none:'Aucune tendance dominante ne ressort sur cette période.',fav:'Période plutôt favorable',del:'Période de vigilance',mix:'Période contrastée',stable:'Période relativement stable',premium:'Cette période est réservée aux comptes Premium.',generate:'Générer mes prévisions →',prev:'Précédent',next:'Suivant'},en:{calc:'Calculating your forecast',ready:'Personal forecast',none:'No dominant trend stands out for this period.',fav:'Rather favourable period',del:'Period requiring caution',mix:'Mixed period',stable:'Relatively stable period',premium:'This period is reserved for Premium accounts.',generate:'Generate my forecasts →',prev:'Previous',next:'Next'},es:{calc:'Calculando tu previsión',ready:'Previsión personalizada',none:'No destaca ninguna tendencia dominante en este período.',fav:'Período bastante favorable',del:'Período de vigilancia',mix:'Período contrastado',stable:'Período relativamente estable',premium:'Este período está reservado a las cuentas Premium.',generate:'Generar mis previsiones →',prev:'Anterior',next:'Siguiente'},ar:{calc:'جارٍ حساب التوقع',ready:'توقع شخصي',none:'لا يظهر اتجاه مهيمن خلال هذه الفترة.',fav:'فترة مواتية نسبياً',del:'فترة تتطلب الحذر',mix:'فترة متباينة',stable:'فترة مستقرة نسبياً',premium:'هذه الفترة مخصصة لحسابات Premium.',generate:'إنشاء توقعاتي ←',prev:'السابق',next:'التالي'}};
+const T={
+ fr:{calc:'Analyse astrologique complète…',ready:'Prévision personnalisée',generate:'Générer mes prévisions →',prev:'Précédent',next:'Suivant',premium:'Cette période est réservée aux comptes Premium.',missing:'Le moteur de prévisions V121 n’est pas disponible.',empty:'La prévision n’a pas produit de rapport exploitable.',cache:'Prévision déjà calculée — affichage immédiat.'},
+ en:{calc:'Full astrological analysis…',ready:'Personal forecast',generate:'Generate my forecasts →',prev:'Previous',next:'Next',premium:'This period is reserved for Premium accounts.',missing:'The V121 forecast engine is unavailable.',empty:'The forecast did not produce a usable report.',cache:'Previously calculated forecast — displaying instantly.'},
+ es:{calc:'Análisis astrológico completo…',ready:'Previsión personalizada',generate:'Generar mis previsiones →',prev:'Anterior',next:'Siguiente',premium:'Este período está reservado a las cuentas Premium.',missing:'El motor de previsiones V121 no está disponible.',empty:'La previsión no produjo un informe utilizable.',cache:'Previsión ya calculada — visualización inmediata.'},
+ ar:{calc:'تحليل فلكي كامل…',ready:'توقع شخصي',generate:'إنشاء توقعاتي ←',prev:'السابق',next:'التالي',premium:'هذه الفترة مخصصة لحسابات Premium.',missing:'محرك توقعات V121 غير متاح.',empty:'لم ينتج التوقع تقريراً قابلاً للاستخدام.',cache:'تم حساب هذا التوقع سابقاً — عرض فوري.'}
+};
 function tx(k){const t=T[lang()]||T.fr;return t[k]||T.fr[k]||k}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function iso(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 function fromIso(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s||'')))return null;const d=new Date(s+'T12:00:00');return isNaN(d)?null:d}
 function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),12)}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
-function addMonths(d,n){const day=d.getDate(),x=new Date(d.getFullYear(),d.getMonth()+n,1,12),last=new Date(x.getFullYear(),x.getMonth()+1,0,12).getDate();x.setDate(Math.min(day,last));return x}
 function fmt(d,opt){return d.toLocaleDateString({fr:'fr-FR',en:'en-GB',es:'es-ES',ar:'ar'}[lang()]||'fr-FR',opt||{day:'numeric',month:'long',year:'numeric'})}
 function period(){return q('.ap-route-forecast .ap-period-choice.active')?.dataset.per||'mois'}
 function domain(){return q('.ap-route-forecast .ap-domain-choice.active')?.dataset.domain||'all'}
 function span(p){if(p==='jour'||p==='date')return 1;if(p==='semaine')return 7;if(p==='mois')return 30;if(p==='trimestre')return 90;return 365}
 function nav(){return q('.ap-route-forecast .ap-forecast-period-nav')}
-function start(p){if(p==='date'){const d=fromIso(q('#ap-forecast-date')?.value||'');if(d)return d}const n=nav(),d=fromIso(n?.dataset.v192Anchor||n?.dataset.v174Anchor||'');return d||today()}
+function start(p){if(p==='date'){const d=fromIso(q('#ap-forecast-date')?.value||'');if(d)return d}const n=nav(),d=fromIso(n?.dataset.v194Anchor||n?.dataset.v192Anchor||n?.dataset.v174Anchor||'');return d||today()}
 function rangeTitle(s,n){const e=addDays(s,n-1);return n===1?fmt(s):fmt(s)+' → '+fmt(e)}
 function rangeShort(s,n){const e=addDays(s,n-1),o={day:'numeric',month:'short',year:'numeric'};return n===1?fmt(s,o):fmt(s,o)+' → '+fmt(e,o)}
 function premium(){try{return document.body.classList.contains('ap-premium-user')||window.USER_CONNECTE?.role==='admin'||window.USER_CONNECTE?.premium===true}catch(e){return false}}
 function free(){return document.body.classList.contains('ap-free-user')}
 function premiumToast(){let x=q('.ap-premium-lock-toast');if(x){x.classList.add('show');clearTimeout(x._t);x._t=setTimeout(()=>x.classList.remove('show'),3200);return}const e=q('#ap-forecast-error');if(e){e.textContent=tx('premium');e.classList.add('show')}}
-function ensureProfile(){const p=A.currentProfile&&A.currentProfile();if(!p)throw new Error('Aucun profil actif.');try{A.activate&&A.activate(p.profileId||p.legacyKey)}catch(e){}try{if((typeof USER==='undefined'||!USER)&&typeof window.v37CalculerUserDepuisDonnees==='function')window.v37CalculerUserDepuisDonnees({...p,__profileKey:p.legacyKey,__timeStatus:p.timeStatus||'exact'})}catch(e){}return p}
-function syncNav(forceToday){const n=nav();if(!n)return;const p=period(),days=span(p);let s=forceToday?today():start(p);if(p==='date'){const d=fromIso(q('#ap-forecast-date')?.value||'');if(d)s=d}n.dataset.v192Anchor=iso(s);n.dataset.v174Anchor=iso(s);n.dataset.v174Days=String(days);const l=q('.ap-forecast-range-label',n);if(l)l.textContent=rangeShort(s,days)}
-function cancelRun(){if(!running)return;seq++;running=false;const b=q('#ap-run-forecast-v192');if(b){b.disabled=false;b.textContent=tx('generate')}}
-function shift(dir){cancelRun();const p=period(),days=span(p),s=start(p);s.setDate(s.getDate()+dir*days);const n=nav();if(n){n.dataset.v192Anchor=iso(s);n.dataset.v174Anchor=iso(s);n.dataset.v174Days=String(days)}if(p==='date'){const i=q('#ap-forecast-date');if(i)i.value=iso(s)}const l=q('.ap-forecast-range-label');if(l)l.textContent=rangeShort(s,days);const out=q('#ap-forecast-result');if(out)out.innerHTML=''}
-function bucketSpecs(s,days,p){const out=[];if(days===1)return[{start:s,end:addDays(s,1),label:fmt(s,{weekday:'long',day:'numeric',month:'long',year:'numeric'}),signals:[]}];if(p==='semaine'){for(let i=0;i<7;i++){const a=addDays(s,i);out.push({start:a,end:addDays(a,1),label:fmt(a,{weekday:'short',day:'numeric',month:'short'}),signals:[]})}return out}if(p==='mois'){for(let i=0;i<days;i+=7){const a=addDays(s,i),b=addDays(s,Math.min(days,i+7));out.push({start:a,end:b,label:fmt(a,{day:'numeric',month:'short'})+' → '+fmt(addDays(b,-1),{day:'numeric',month:'short'}),signals:[]})}return out}if(p==='trimestre'){for(let i=0;i<3;i++){const a=addMonths(s,i),b=i===2?addDays(s,days):addMonths(s,i+1);out.push({start:a,end:b,label:fmt(a,{month:'long',year:'numeric'}),signals:[]})}return out}for(let i=0;i<12;i++){const a=addMonths(s,i),b=i===11?addDays(s,days):addMonths(s,i+1);out.push({start:a,end:b,label:fmt(a,{month:'long',year:'numeric'}),signals:[]})}return out}
-function findBucket(bs,d){for(const b of bs)if(d>=b.start&&d<b.end)return b;return bs[bs.length-1]}
-function score(xs,dom){const a=(xs||[]).filter(s=>dom==='all'||s.domain===dom);if(!a.length)return 0;let v=0;for(const s of a){const sign=s.polarity==='difficile'?-1:s.polarity==='positive'?1:0;v+=sign*Math.max(1,Math.min(8,Number(s.force)||1))}return Math.max(-5,Math.min(5,v/Math.sqrt(a.length)))}
-function state(signals,dom){if(dom==='all'){const vals=DOMAINS.map(d=>score(signals,d)),avg=vals.reduce((a,b)=>a+b,0)/(vals.length||1),abs=Math.max(...vals.map(Math.abs),0);return avg>.35?'fav':avg<-.35?'del':abs>.8?'mix':'stable'}const sc=score(signals,dom);return sc>=1.25?'fav':sc<=-1.25?'del':Math.abs(sc)<.6?'stable':'mix'}
-function technical(s){return /\b(soleil|lune|mercure|v[ée]nus|mars|jupiter|saturne|uranus|neptune|pluton|maison\s*\d*|trigone|carr[ée]|sextile|opposition|conjonction|transit|orbe|degr[ée]|ascendant|aspect)\b/i.test(String(s||''))}
-function concrete(lines){const seen=new Set(),out=[];for(const s of (lines||[]).slice().sort((a,b)=>Math.abs(Number(b.force)||0)-Math.abs(Number(a.force)||0))){for(const c of (Array.isArray(s.scenarios)?s.scenarios:[])){const t=String(c||'').replace(/\s+/g,' ').trim();if(t.length<6||t.length>220||technical(t)||seen.has(t.toLowerCase()))continue;seen.add(t.toLowerCase());let prefix='';if(/^\d{4}-\d{2}-\d{2}$/.test(String(s.date||''))){const d=fromIso(s.date);if(d)prefix=fmt(d,{day:'numeric',month:'long'})+' : '}out.push(prefix+t);if(out.length===3)return out}}return out}
-function generic(dom,st){if(lang()!=='fr')return tx(st);const F={all:{fav:'Le climat général offre davantage de fluidité et d’ouvertures.',del:'Cette période demande davantage de prudence et d’anticipation.',mix:'Plusieurs tendances se croisent : il faut choisir les bons moments.',stable:'Le climat général reste assez régulier.'},amour:{fav:'Les échanges affectifs sont plus fluides et les rapprochements sont facilités.',del:'Les relations demandent davantage de tact et de recul.',mix:'La vie affective peut alterner rapprochements, hésitations ou tensions.',stable:'Le climat affectif reste relativement régulier.'},travail:{fav:'Le contexte professionnel soutient davantage les démarches, échanges et décisions.',del:'Le travail demande plus d’organisation et de prudence avant une décision importante.',mix:'Des possibilités existent, mais avec des ajustements à prévoir.',stable:'Le rythme professionnel reste relativement régulier.'},argent:{fav:'Les questions financières offrent davantage de marge de manœuvre.',del:'Budget, dépenses ou engagements financiers demandent plus de vigilance.',mix:'Les finances demandent des arbitrages entre ouvertures et contraintes.',stable:'La situation financière paraît relativement régulière.'},bienetre:{fav:'Le rythme personnel est plus porteur pour retrouver de l’élan.',del:'Mieux vaut ménager son rythme et éviter de trop tirer sur ses réserves.',mix:'L’énergie peut être irrégulière et demande des ajustements.',stable:'Le rythme personnel paraît relativement régulier.'},famille:{fav:'Les questions familiales ou de foyer peuvent avancer plus facilement.',del:'Les sujets familiaux ou de foyer demandent davantage de patience.',mix:'Le domaine familial mêle avancées et ajustements.',stable:'Le climat familial paraît relativement stable.'},voyage:{fav:'Les déplacements ou projets liés à l’extérieur sont plus fluides.',del:'Les déplacements demandent davantage d’anticipation et de vérifications.',mix:'Les projets de déplacement peuvent avancer avec quelques ajustements.',stable:'Aucun mouvement dominant ne ressort sur les déplacements.'}};return (F[dom]||F.all)[st]}
-async function run(){if(running)return;const out=q('#ap-forecast-result');if(!out)return;const p=period(),dom=domain(),days=span(p),s=start(p);if(p!=='jour'&&free()&&!premium()){premiumToast();return}const my=++seq;running=true;const btn=q('#ap-run-forecast-v192');if(btn){btn.disabled=true;btn.textContent=tx('calc')+'…'}const err=q('#ap-forecast-error');if(err){err.textContent='';err.classList.remove('show')}out.innerHTML='<div class="ap-card"><h3>'+esc(rangeTitle(s,days))+'</h3><p id="ap-v192-progress" class="ap-muted">'+esc(tx('calc'))+' : 0/'+days+'</p></div>';try{ensureProfile();const bs=bucketSpecs(s,days,p),all=[],every=days>=300?20:days>=90?10:days>=30?7:2;for(let i=0;i<days;i++){if(my!==seq)return;const d=addDays(s,i),t=A.day(d,dom),sig=Array.isArray(t?.signals)?t.signals:[];if(sig.length){findBucket(bs,d).signals.push(...sig);all.push(...sig)}if(i===days-1||i%every===every-1){const pr=q('#ap-v192-progress');if(pr)pr.textContent=tx('calc')+' : '+(i+1)+'/'+days;await new Promise(r=>setTimeout(r,0))}}const sections=bs.map(b=>{const st=state(b.signals,dom),lines=concrete(b.signals),body=(lines.length?lines:[generic(dom,st)]).map(x=>'<p>'+esc(x)+'</p>').join('');return '<section class="ap-v189-period"><div class="ap-v189-head"><strong>'+esc(b.label)+'</strong><span>'+esc(tx(st))+'</span></div>'+body+'</section>'}).join('');out.innerHTML='<div class="ap-card ap-forecast-v174 ap-forecast-v189 ap-forecast-v192"><div class="ap-eyebrow">'+esc(tx('ready'))+'</div><h2 style="margin:6px 0 14px">'+esc(rangeTitle(s,days))+'</h2><div class="ap-report"><div class="ap-v189-list">'+(sections||'<p>'+esc(tx('none'))+'</p>')+'</div></div></div>'}catch(e){console.error('Astro Paquita V192 :',e);if(err){err.textContent=e?.message||'La prévision n’a pas pu être calculée.';err.classList.add('show')}}finally{if(my===seq){running=false;const b=q('#ap-run-forecast-v192');if(b){b.disabled=false;b.textContent=tx('generate')}}}}
-function cleanClone(el,newId){if(!el)return null;const c=el.cloneNode(true);c.id=newId;c.disabled=false;c.removeAttribute('disabled');c.removeAttribute('onclick');c.removeAttribute('ontouchend');c.removeAttribute('onpointerup');c.dataset.v192='1';el.replaceWith(c);return c}
-function trigger(ev){const now=Date.now();if(now-lastTrigger<450){ev.preventDefault();ev.stopImmediatePropagation();return}lastTrigger=now;ev.preventDefault();ev.stopImmediatePropagation();run()}
-function ownGenerate(){let b=q('#ap-run-forecast-v192');if(b&&b.dataset.v192==='1')return;b=cleanClone(q('#ap-run-forecast,#ap-run-forecast-v189,#ap-run-forecast-v190'), 'ap-run-forecast-v192');if(!b)return;b.textContent=tx('generate');b.addEventListener('pointerup',trigger,true);b.addEventListener('click',trigger,true)}
-function ownNav(){const n=nav();if(!n)return;syncNav(false);let p=q('#ap-forecast-prev-v192',n),nx=q('#ap-forecast-next-v192',n);if(!p)p=cleanClone(q('#ap-forecast-prev',n),'ap-forecast-prev-v192');if(!nx)nx=cleanClone(q('#ap-forecast-next',n),'ap-forecast-next-v192');if(p&&p.dataset.bound!=='1'){p.dataset.bound='1';p.onclick=null;p.addEventListener('click',ev=>{ev.preventDefault();ev.stopImmediatePropagation();shift(-1)},true)}if(nx&&nx.dataset.bound!=='1'){nx.dataset.bound='1';nx.onclick=null;nx.addEventListener('click',ev=>{ev.preventDefault();ev.stopImmediatePropagation();shift(1)},true)}}
-function own(){if(!document.body.classList.contains('ap-route-forecast'))return;ownGenerate();ownNav()}
-document.addEventListener('click',ev=>{if(!document.body.classList.contains('ap-route-forecast'))return;const per=ev.target&&ev.target.closest?ev.target.closest('[data-per]'):null;if(per){cancelRun();setTimeout(()=>{syncNav(true);schedule()},0)}},true);
-document.addEventListener('change',ev=>{if(ev.target&&ev.target.id==='ap-forecast-date')setTimeout(()=>{syncNav(false);schedule()},0)},true);
-const style=document.createElement('style');style.id='ap-v192-style';style.textContent='#ap-forecast-prev-v192,#ap-forecast-next-v192{background:#efe7f2;color:#53164a;border:1px solid #decfe0}.ap-v189-list{display:grid;gap:12px}.ap-v189-period{padding:15px 16px;border:1px solid rgba(79,34,69,.12);border-radius:17px;background:rgba(255,250,244,.78)}.ap-v189-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.ap-v189-head strong{color:#4b2149}.ap-v189-head span{font-size:12px;font-weight:700;color:#715e69;text-align:right}.ap-v189-period p{margin:6px 0 0!important;line-height:1.55!important}@media(max-width:760px){.ap-forecast-period-nav{grid-template-columns:1fr 1fr!important;grid-template-areas:"range range" "prev next"!important}.ap-forecast-range-label{grid-area:range}#ap-forecast-prev-v192{grid-area:prev;width:100%}#ap-forecast-next-v192{grid-area:next;width:100%}}@media(max-width:560px){.ap-v189-head{display:block}.ap-v189-head span{display:block;text-align:left;margin-top:4px}}';document.head.appendChild(style);
-function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;own()})}
+function ensureProfile(){const p=A&&A.currentProfile&&A.currentProfile();if(!p)throw new Error('Aucun profil actif.');try{A.activate&&A.activate(p.profileId||p.legacyKey)}catch(e){}try{if((typeof USER==='undefined'||!USER)&&typeof window.v37CalculerUserDepuisDonnees==='function')window.v37CalculerUserDepuisDonnees({...p,__profileKey:p.legacyKey,__timeStatus:p.timeStatus||'exact'})}catch(e){}try{if(typeof USER==='undefined'||!USER)throw new Error('Le profil actif n’a pas pu être initialisé.')}catch(e){throw e}return p}
+function oldDomain(d){return ({all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',famille:'famille',voyage:'voyage'})[d]||'general'}
+function setLegacySelection(d,p){const od=oldDomain(d);try{domP=od}catch(e){try{window.eval('domP='+JSON.stringify(od))}catch(_){}}try{perP=p}catch(e){try{window.eval('perP='+JSON.stringify(p))}catch(_){}}}
+function profileKey(p){return [p?.profileId||p?.legacyKey||p?.prenom||'',p?.date||p?.dateISO||'',p?.heure||'',p?.lieu||p?.ville||''].join('|')}
+function cacheKey(p,s,days,per,dom){return 'ap:v194:v121exact:'+encodeURIComponent([profileKey(p),iso(s),days,per,oldDomain(dom),lang()].join('|'))}
+function getCache(k){try{const x=JSON.parse(localStorage.getItem(k)||'null');return x&&x.html?x:null}catch(e){return null}}
+function setCache(k,html,title){try{localStorage.setItem(k,JSON.stringify({html,title,at:Date.now()}))}catch(e){}}
+function renderReport(out,title,html,note){out.innerHTML='<div class="ap-card ap-forecast-v174 ap-forecast-v192 ap-forecast-v194"><div class="ap-eyebrow">'+esc(tx('ready'))+'</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2>'+(note?'<p class="ap-muted" style="margin-bottom:12px">'+esc(note)+'</p>':'')+'<div class="ap-report ap-v194-exact-report">'+html+'</div></div>'}
+function syncNav(forceToday){const n=nav();if(!n)return;const p=period(),days=span(p);let s=forceToday?today():start(p);if(p==='date'){const d=fromIso(q('#ap-forecast-date')?.value||'');if(d)s=d}n.dataset.v194Anchor=iso(s);n.dataset.v192Anchor=iso(s);n.dataset.v174Anchor=iso(s);n.dataset.v174Days=String(days);const l=q('.ap-forecast-range-label',n);if(l)l.textContent=rangeShort(s,days)}
+function cancelVisual(){runId++;running=false;const b=q('#ap-run-forecast-v192');if(b){b.disabled=false;b.textContent=tx('generate')}}
+function shift(dir){if(running)return;const p=period(),days=span(p),s=start(p);s.setDate(s.getDate()+dir*days);const n=nav();if(n){n.dataset.v194Anchor=iso(s);n.dataset.v192Anchor=iso(s);n.dataset.v174Anchor=iso(s);n.dataset.v174Days=String(days)}if(p==='date'){const i=q('#ap-forecast-date');if(i)i.value=iso(s)}const l=q('.ap-forecast-range-label');if(l)l.textContent=rangeShort(s,days);const out=q('#ap-forecast-result');if(out)out.innerHTML=''}
+function mirrorProgress(my){const pr=q('#ap-v194-progress');if(!pr||my!==runId)return;const a=q('#p-nav-pl'),b=q('#p-pl'),lab=(a&&a.textContent&&a.closest('#p-nav-pw')?.style.display!=='none'?a:b);const bar=(a&&a.textContent&&a.closest('#p-nav-pw')?.style.display!=='none'?q('#p-nav-pb'):q('#p-pb'));const text=lab?.textContent?.trim();const width=bar?.style?.width||'';if(text)pr.textContent=text+(width?' · '+width:'')}
+async function run(){
+ if(running)return;
+ const out=q('#ap-forecast-result');if(!out)return;
+ const p=period(),dom=domain(),days=span(p),s=start(p);
+ if(p!=='jour'&&free()&&!premium()){premiumToast();return}
+ const my=++runId;running=true;
+ const btn=q('#ap-run-forecast-v192');if(btn){btn.disabled=true;btn.textContent=tx('calc')}
+ const err=q('#ap-forecast-error');if(err){err.textContent='';err.classList.remove('show')}
+ const title=rangeTitle(s,days);
+ try{
+   const prof=ensureProfile();
+   if(typeof window.lancerPrevDepuis!=='function')throw new Error(tx('missing'));
+   setLegacySelection(dom,p);
+   const key=cacheKey(prof,s,days,p,dom),cached=getCache(key);
+   if(cached){renderReport(out,cached.title||title,cached.html,tx('cache'));return}
+   out.innerHTML='<div class="ap-card"><h3>'+esc(title)+'</h3><p id="ap-v194-progress" class="ap-muted">'+esc(tx('calc'))+'</p></div>';
+   const timer=setInterval(()=>mirrorProgress(my),220);
+   try{
+     await window.lancerPrevDepuis(new Date(s),days,p);
+   } finally { clearInterval(timer); }
+   if(my!==runId)return;
+   const legacy=q('#p-rapport');
+   const html=legacy&&legacy.innerHTML?legacy.innerHTML.trim():'';
+   if(!html||/Calcul en cours/i.test(legacy?.textContent||''))throw new Error(tx('empty'));
+   setCache(key,html,title);
+   renderReport(out,title,html,'');
+ }catch(e){
+   console.error('Astro Paquita V194 exact V121 :',e);
+   if(err){err.textContent=e?.message||'La prévision n’a pas pu être générée.';err.classList.add('show')}
+   if(out)out.innerHTML='';
+ }finally{
+   if(my===runId){running=false;const b=q('#ap-run-forecast-v192');if(b){b.disabled=false;b.textContent=tx('generate')}}
+ }
+}
+function cleanClone(el,newId){if(!el)return null;const c=el.cloneNode(true);c.id=newId;c.disabled=false;c.removeAttribute('disabled');c.removeAttribute('onclick');c.removeAttribute('ontouchend');c.removeAttribute('onpointerup');c.dataset.v194='1';el.replaceWith(c);return c}
+function trigger(ev){const now=Date.now();if(now-lastTrigger<500){ev.preventDefault();ev.stopImmediatePropagation();return}lastTrigger=now;ev.preventDefault();ev.stopImmediatePropagation();run()}
+function ownGenerate(){let b=q('#ap-run-forecast-v192');if(b&&b.dataset.v194==='1')return;b=cleanClone(q('#ap-run-forecast-v192,#ap-run-forecast,#ap-run-forecast-v189,#ap-run-forecast-v190'),'ap-run-forecast-v192');if(!b)return;b.textContent=tx('generate');b.addEventListener('click',trigger,true);b.addEventListener('touchend',trigger,{capture:true,passive:false})}
+function ownNav(id,dir){let b=q(id+'-v194');if(b&&b.dataset.v194==='1')return;const old=q(id);if(!old)return;b=cleanClone(old,id.slice(1)+'-v194');if(!b)return;b.dataset.v194='1';b.addEventListener('click',ev=>{ev.preventDefault();ev.stopImmediatePropagation();shift(dir)},true)}
+function normalizeNavIds(){const a=q('#ap-forecast-prev-v194');if(a)a.id='ap-forecast-prev-v194';const b=q('#ap-forecast-next-v194');if(b)b.id='ap-forecast-next-v194'}
+function ownControls(){if(!document.body.classList.contains('ap-route-forecast'))return;ownGenerate();ownNav('#ap-forecast-prev',-1);ownNav('#ap-forecast-next',1);normalizeNavIds();syncNav(false)}
+function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;ownControls()})}
 const obs=new MutationObserver(schedule);obs.observe(document.getElementById('ap-final-root')||document.body,{childList:true,subtree:true});
+document.addEventListener('change',ev=>{if(ev.target?.id==='ap-forecast-date')setTimeout(()=>syncNav(false),0)},true);
+document.addEventListener('click',ev=>{const p=ev.target?.closest?.('.ap-period-choice');if(p)setTimeout(()=>syncNav(true),0)},true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',schedule,{once:true});else schedule();
 })();
