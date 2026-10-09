@@ -2,7 +2,10 @@ name: Anti-régression Astro Paquita
 on:
   pull_request:
   push:
-    branches: [main, correctifs-audit-20261009]
+    branches: [main]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   verification:
     runs-on: ubuntu-latest
