@@ -90,7 +90,34 @@ async function deletePromo(id,code){const name=decodeURIComponent(code||'');if(!
 async function changeRole(id,role){try{await adminFetch('/api/admin/users/'+decodeURIComponent(id)+'/role',{method:'PATCH',body:JSON.stringify({role}),headers:{'Content-Type':'application/json'}});await loadUsers()}catch(e){alert(e.message)}}
 async function setSuspended(id,suspended,email){const mail=decodeURIComponent(email||'');if(suspended&&!confirm('Bloquer uniquement le compte '+mail+' ?\n\nCette personne verra l’écran de maintenance. Les autres comptes continueront à utiliser le site normalement.'))return;try{await adminFetch('/api/admin/users/'+decodeURIComponent(id)+'/suspension',{method:'PATCH',body:JSON.stringify({suspended:!!suspended}),headers:{'Content-Type':'application/json'}});await loadUsers();alert(suspended?'Compte bloqué. Lui seul verra l’écran de maintenance.':'Compte débloqué. Il peut de nouveau accéder au site.')}catch(e){alert(e.message)}}
 async function deleteUser(id,email){email=decodeURIComponent(email);if(!confirm('Supprimer définitivement '+email+' ?'))return;try{await adminFetch('/api/admin/users/'+decodeURIComponent(id),{method:'DELETE'});await loadUsers()}catch(e){alert(e.message)}}
-async function showHistory(id,email){document.getElementById('history-modal').style.display='flex';document.getElementById('history-user').textContent=decodeURIComponent(email);const box=document.getElementById('history-content');box.innerHTML='<div class="empty">Chargement…</div>';try{const d=await adminFetch('/api/admin/users/'+decodeURIComponent(id)+'/activity?limit=150&ts='+Date.now());const a=d.activities||[];box.innerHTML=a.length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Module</th></tr></thead><tbody>'+a.map(x=>`<tr><td>${fmt(x.created_at)}</td><td>${esc(x.feature||'—')}</td></tr>`).join('')+'</tbody></table></div>':'<div class="empty">Aucune consultation enregistrée.</div>'}catch(e){box.innerHTML='<div class="empty">⚠ '+esc(e.message)+'</div>'}}
+// Historique détaillé : exploite le contexte déjà conservé côté serveur sans exposer le contenu des questions.
+function historyModule(f){
+ const labels={portrait:'Portrait natal',forecast_today:'Prévision du jour',forecast_future:'Prévisions détaillées',window:'Le bon moment',events:'Événements',synastry:'Relations et synastrie',dashboard:'Tableau de bord (ancien)',timeline:'Chronologie (ancien)',compare:'Comparateur (ancien)',avoid_windows:'Fenêtres à éviter (ancien)',journal:'Journal (ancien)',life_context:'Contexte de vie',saved_window:'Fenêtre enregistrée',notification:'Notification',historical_validation:'Prévisions antérieures',natal:'Portrait natal',future:'Mon avenir',forecast:'Prévisions',timing:'Le bon moment',relations:'Relations',child:'Portrait enfant',calendar:'Calendrier',profile:'Mes profils'};
+ return labels[f]||f||'—';
+}
+async function showHistory(id,email){
+ const modal=document.getElementById('history-modal'),box=document.getElementById('history-content');
+ modal.style.display='flex';document.getElementById('history-user').textContent=decodeURIComponent(email);
+ box.innerHTML='<div class="empty">Chargement de l’historique détaillé…</div>';
+ try{
+  const d=await adminFetch('/api/admin/users/'+decodeURIComponent(id)+'/activity?limit=300&ts='+Date.now());
+  const a=Array.isArray(d.activities)?d.activities:[],p=Array.isArray(d.profiles)?d.profiles:[];
+  const names=new Map(p.map(x=>[String(x.profile_key||x.key||''),String(x.prenom||x.name||'')]));
+  if(!a.length){box.innerHTML='<div class="empty">Aucune consultation enregistrée pour ce compte.</div>';return;}
+  const items=a.map(x=>{
+   const c=x.context&&typeof x.context==='object'?x.context:{};
+   const prof=c.profile_name||names.get(String(c.profile_key||''))||'—';
+   const second=c.secondary_profile_name||names.get(String(c.secondary_profile_key||''));
+   const profile=second?prof+' / '+second:prof;
+   const span=[c.period,c.date||c.start,c.end?'au '+c.end:null,c.days!=null?c.days+' j':null,c.months!=null?c.months+' mois':null].filter(Boolean).join(' · ')||'—';
+   const domain=[c.domain,c.intent,c.relation].filter(Boolean).join(' · ')||'—';
+   const extra=[c.module,c.mode,c.horizon,c.label,c.surface,c.lang].filter(Boolean).join(' · ')||'—';
+   return '<tr><td>'+esc(fmt(x.created_at))+'</td><td>'+esc(historyModule(x.feature))+'</td><td>'+esc(profile)+'</td><td>'+esc(span)+'</td><td>'+esc(domain)+'</td><td>'+esc(extra)+'</td></tr>';
+  });
+  box.innerHTML='<p class="muted">'+a.length+' consultation(s) enregistrée(s) affichée(s), de la plus récente à la plus ancienne. Les anciennes consultations ne possèdent pas toutes un contexte détaillé.</p><div class="table-wrap"><table><thead><tr><th>Date et heure</th><th>Module</th><th>Profil</th><th>Période</th><th>Domaine</th><th>Autres détails</th></tr></thead><tbody>'+items.join('')+'</tbody></table></div>';
+ }catch(e){box.innerHTML='<div class="empty">⚠ '+esc(e.message)+'</div>';}
+}
+
 function recoveryHeaders(json=false){const h={'x-admin-key':adminKey()};if(json)h['Content-Type']='application/json';return h}
 async function recoveryFetch(path,body){if(!adminKey())throw new Error('ADMIN_KEY absente. Enregistre-la dans « Accès Admin ».');return rawFetch(path,{method:'POST',headers:recoveryHeaders(true),body:JSON.stringify(body)})}
 async function promoteByEmail(){const email=document.getElementById('recovery-email').value.trim().toLowerCase(),out=document.getElementById('recovery-result');try{await recoveryFetch('/api/admin/promote-by-email',{email});out.textContent='✅ Compte Administrateur activé.';await refreshAll()}catch(e){out.textContent='⚠ '+e.message}}
