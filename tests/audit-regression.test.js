@@ -8,11 +8,12 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 test('Tous les scripts JS du site sont syntaxiquement valides',()=>{
- const dirs=['assets'];let n=0;
+ const dirs=['assets'];let n=0,errors=[];
  for(const d of dirs)for(const f of fs.readdirSync(path.join(root,d)).filter(x=>x.endsWith('.js'))){
-  try{new vm.Script(read(d+'/'+f),{filename:f});}catch(e){throw new Error('Erreur syntaxique dans '+d+'/'+f+' : '+(e.stack||e.message));}n++;
+  try{new vm.Script(read(d+'/'+f),{filename:f});}catch(e){errors.push(d+'/'+f+': '+String(e.stack||e.message).split('\\n').slice(0,4).join(' | '));}n++;
  }
  assert.ok(n>=35,'Scripts assets manquants');
+ assert.deepEqual(errors,[],'Scripts JavaScript à corriger');
  for(const f of ['index.html','admin.html']){
   const html=read(f),rx=/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g;
   for(const hit of html.matchAll(rx))if(hit[1].trim())assert.doesNotThrow(()=>new vm.Script(hit[1],{filename:f}));
