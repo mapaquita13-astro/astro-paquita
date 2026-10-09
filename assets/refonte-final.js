@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261004-free-premium-locks-v182-1';
+const VER='20261009-audit-fixes-v186-1';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -45,7 +45,11 @@ function continueInterface(){
                       load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
                         load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
                           load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes',function(){
-                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard');
+                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
+                              load('assets/v186-premium-current-offer.js?v='+VER,'ap-v186-premium-current-offer',function(){
+                                load('assets/v195-activity-tracking.js?v='+VER,'ap-v195-activity-tracking');
+                              });
+                            });
                           });
                         });
                       });

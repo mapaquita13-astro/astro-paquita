@@ -12,7 +12,16 @@ const T={
 };
 const MONTHS={fr:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],en:['January','February','March','April','May','June','July','August','September','October','November','December'],es:['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],ar:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']};
 function lang(){const x=String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2);return T[x]?x:'fr';}
-function months(s,l){let out=s;MONTHS.fr.forEach((m,i)=>{out=out.replace(new RegExp(m,'gi'),MONTHS[l][i]);});return out;}
+// Ne pas traduire "mai" à l'intérieur de "maison" ni des fragments de noms propres.
+function months(s,l){
+ if(l==='fr')return s;
+ let out=s;
+ MONTHS.fr.forEach((m,i)=>{
+  const rx=new RegExp('(^|[^\\p{L}])('+m+')(?=$|[^\\p{L}])','giu');
+  out=out.replace(rx,(_,before)=>before+MONTHS[l][i]);
+ });
+ return out;
+}
 function setText(sel,html){const e=document.querySelector(sel);if(e)e.innerHTML=html;}
 function fixNav(l){
   setText('.ap-mob-btn[data-route="home"] span',T[l].home);

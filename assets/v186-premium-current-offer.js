@@ -9,12 +9,23 @@ const I18N={
  es:{title:'Lo que incluye Premium actualmente',note:'Las funciones siguientes corresponden a los módulos disponibles actualmente en Astro Paquita.',items:['Mi futuro','Previsiones detalladas: semana, mes, 3 meses, 12 meses y fecha concreta','El mejor momento','Relaciones y sinastría','Retrato infantil','Calendario personal']},
  ar:{title:'ما الذي يتضمنه Premium حالياً',note:'تتوافق الميزات التالية مع الوحدات المتاحة حالياً في Astro Paquita.',items:['مستقبلي','توقعات مفصلة: أسبوع، شهر، 3 أشهر، 12 شهراً وتاريخ محدد','الوقت الأنسب','العلاقات والتوافق','خريطة الطفل','التقويم الشخصي']}
 };
-const STALE=/(timeline|comparateur|compare(?:r)?\s+(?:des\s+)?dates?|comparador|grands?\s+év[ée]nements?|major\s+events?|grandes?\s+eventos?|avenir\s+racont[ée]|story\s+of\s+your\s+future|futuro\s+relatado|fen[êe]tres?\s+[àa]\s+[ée]viter|windows?\s+to\s+avoid|ventanas?\s+a\s+evitar|ma\s+question|my\s+question|mi\s+pregunta|notifications?|cr[ée]dits?\s+question)/i;
+const STALE=/(tableau\s+de\s+bord|dashboard\s+(?:90|details?)|d[ée]tails?\s+du\s+tableau\s+de\s+bord|timeline|comparateur|compare(?:r)?\s+(?:des\s+)?dates?|comparador|grands?\s+[ée]v[ée]nements?|major\s+events?|grandes?\s+eventos?|avenir\s+racont[ée]|story\s+of\s+your\s+future|futuro\s+relatado|fen[êe]tres?\s+[àa]\s+[ée]viter|windows?\s+to\s+avoid|ventanas?\s+a\s+evitar|ma\s+question|my\s+question|mi\s+pregunta|cr[ée]dits?\s+question)/i;
 function lang(){return String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2)}
 function tx(){return I18N[lang()]||I18N.fr}
 function visible(el){if(!el)return false;const s=getComputedStyle(el);return s.display!=='none'&&s.visibility!=='hidden'}
-function closestRow(el){return el.closest('li,[class*="feature"],[class*="benefit"],[class*="item"],p')||el}
-function removeStale(){document.querySelectorAll('li,p,[class*="feature"],[class*="benefit"],[class*="item"]').forEach(el=>{if(el.dataset.apPremiumClean==='1')return;const text=String(el.textContent||'').trim();if(text&&STALE.test(text)){const row=closestRow(el);row.style.display='none';row.dataset.apPremiumClean='1'}})}
+function closestRow(el){return el.closest('tr,li,[class*="feature"],[class*="benefit"],[class*="item"],p')||el}
+function removeStale(){
+ const h=premiumHeading();if(!h)return;
+ const scope=h.closest('[role="dialog"],dialog,.modal,.popup')||document.getElementById('modal-compte')||h.parentElement;
+ if(!scope)return;
+ scope.querySelectorAll('tr,li,p,[class*="feature"],[class*="benefit"],[class*="item"]').forEach(el=>{
+  if(el.dataset.apPremiumClean==='1')return;
+  const value=String(el.textContent||'').trim();
+  if(value && value.length<200 && STALE.test(value)){
+   const row=closestRow(el);row.style.display='none';row.dataset.apPremiumClean='1';
+  }
+ });
+}
 function premiumHeading(){const hs=[...document.querySelectorAll('h1,h2,h3,h4,strong')].filter(visible);return hs.find(h=>/^\s*(premium|بريميوم)\b/i.test(String(h.textContent||'').trim()))||null}
 function currentBlock(){const t=tx(),box=document.createElement('div');box.className='ap-premium-current-v186';box.innerHTML='<h3>'+t.title+'</h3><p>'+t.note+'</p><ul>'+t.items.map(x=>'<li>✓ '+x+'</li>').join('')+'</ul>';return box}
 function installBlock(){const h=premiumHeading();if(!h)return;let host=h.closest('[role="dialog"],.modal,.popup,.dialog,.card,.ap-card,section,article');if(!host)host=h.parentElement;if(!host||host.querySelector('.ap-premium-current-v186'))return;host.appendChild(currentBlock())}
