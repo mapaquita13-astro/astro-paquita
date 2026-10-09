@@ -10,7 +10,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 test('Tous les scripts JS du site sont syntaxiquement valides',()=>{
  const dirs=['assets'];let n=0;
  for(const d of dirs)for(const f of fs.readdirSync(path.join(root,d)).filter(x=>x.endsWith('.js'))){
-  try{new vm.Script(read(d+'/'+f),{filename:f});}catch(e){throw new Error('Erreur syntaxique dans '+d+'/'+f+' : '+e.message);}n++;
+  try{new vm.Script(read(d+'/'+f),{filename:f});}catch(e){throw new Error('Erreur syntaxique dans '+d+'/'+f+' : '+(e.stack||e.message));}n++;
  }
  assert.ok(n>=35,'Scripts assets manquants');
  for(const f of ['index.html','admin.html']){
