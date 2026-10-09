@@ -56,3 +56,32 @@ test('Traduction : protège les mois à l’intérieur des mots',()=>{
  assert.equal(months('Maison 3','en'),'Maison 3');
  assert.equal(months('9 mai 2026','en'),'9 May 2026');
 });
+
+
+test('La présentation Premium masque une ancienne fonction et affiche l’offre actuelle',()=>{
+ const row={textContent:'Tableau de bord 90 jours · grandes tendances',style:{},dataset:{},closest(){return this;}};
+ const modal={children:[],querySelectorAll:()=>[row],querySelector:()=>null,appendChild(x){this.children.push(x);}};
+ const heading={textContent:'Premium',closest:()=>modal,parentElement:modal};
+ const doc={readyState:'complete',body:{},head:{appendChild(){}},querySelectorAll:x=>x.includes('h1')?[heading]:[],getElementById:x=>x==='modal-compte'?modal:null,createElement:x=>({tagName:x,className:'',innerHTML:'',style:{},querySelector:()=>null})};
+ const context={window:{},document:doc,localStorage:{getItem:()=> 'fr'},MutationObserver:class{observe(){}},requestAnimationFrame:fn=>fn(),getComputedStyle:()=>({display:'block',visibility:'visible'})};
+ vm.runInNewContext(read('assets/v186-premium-current-offer.js'),context);
+ assert.equal(row.style.display,'none');
+ assert.equal(modal.children.length,1);
+ assert.match(modal.children[0].innerHTML,/Mon avenir/);
+});
+test('Deux comptes du même navigateur conservent des notes distinctes',()=>{
+ const src=read('assets/refonte-v127-base.js');
+ const a=src.indexOf('function calendarStorageKey()'),b=src.indexOf('\nfunction renderCalendar()',a);
+ assert.ok(a>=0&&b>a);
+ const memory=new Map(),store={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v))};
+ const win={USER_CONNECTE:{email:'a@example.test'}};
+ function setOwner(email){win.USER_CONNECTE.email=email;store.setItem('ap-account-scope-current-v1',JSON.stringify({email}));}
+ setOwner('a@example.test');
+ const api=vm.runInNewContext(src.slice(a,b)+';({calendarNotes,saveCalendarNote})',{window:win,localStorage:store});
+ api.saveCalendarNote('2026-10-09','privé A');
+ setOwner('b@example.test');
+ assert.equal(api.calendarNotes()['2026-10-09'],undefined);
+ api.saveCalendarNote('2026-10-09','privé B');
+ setOwner('a@example.test');
+ assert.equal(api.calendarNotes()['2026-10-09'],'privé A');
+});
