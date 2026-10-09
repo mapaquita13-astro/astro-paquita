@@ -134,6 +134,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
    for(let i=0;i<28&&!root.querySelector('.ap-shell,.ap-auth-shell');i++)await sleep(125);
    const mounted=root.querySelector('.ap-shell,.ap-auth-shell');
    if(!mounted){fail('Le moteur est présent, mais la nouvelle interface ne s’est pas initialisée.');return;}
+   // Correctif non destructif : présentation commerciale alignée sur les modules disponibles.
+   try{await loadScript(d,'/assets/v186-premium-current-offer.js');}catch(e){console.warn('Offre Premium non actualisée',e);}
    installForgotPassword(d,w);
    const authObs=new MutationObserver(()=>installForgotPassword(d,w));authObs.observe(root,{childList:true,subtree:true});
    d.body.classList.add('ap-final-active');
