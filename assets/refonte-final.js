@@ -46,7 +46,9 @@ function continueInterface(){
                         load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
                           load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes',function(){
                             load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
-                              load('assets/v186-premium-current-offer.js?v='+VER,'ap-v186-premium-current-offer');
+                              load('assets/v186-premium-current-offer.js?v='+VER,'ap-v186-premium-current-offer',function(){
+                                load('assets/v195-activity-tracking.js?v='+VER,'ap-v195-activity-tracking');
+                              });
                             });
                           });
                         });
