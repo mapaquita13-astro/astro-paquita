@@ -11,8 +11,13 @@ const API='https://astro-paquita-backend.onrender.com';
 const PREMIUM_ROUTES=new Set(['future','timing','relations','child','calendar']);
 let access='checking';
 let applying=false;
+let validationId=0;
+let retryTimer=null;
+let lastVerifiedToken='';
+let lastVerifiedAccess=null;
 
 function token(){try{return localStorage.getItem('astro-token')||'';}catch(e){return'';}}
+let observedToken=token();
 function currentRoute(){
   const cls=[...document.body.classList].find(x=>x.indexOf('ap-route-')===0);
   return cls?cls.slice('ap-route-'.length):'';
@@ -119,22 +124,50 @@ function apply(){
   else if(access==='premium')applyPremium();
 }
 async function resolveAccess(){
+  const id=++validationId;
+  if(retryTimer!==null){clearTimeout(retryTimer);retryTimer=null;}
   document.body.classList.add('ap-access-checking');
   const t=token();
-  if(!t){access='free';apply();return;}
+  observedToken=t;
+  if(!t){
+    lastVerifiedToken='';lastVerifiedAccess=null;
+    access='free';apply();return;
+  }
   try{
     const r=await fetch(API+'/api/me?ts='+Date.now(),{
       headers:{Authorization:'Bearer '+t},cache:'no-store'
     });
-    if(!r.ok)throw new Error('account');
+    if(!r.ok){const err=new Error('account');err.authDenied=(r.status===401||r.status===403);throw err;}
     const u=await r.json();
+    // Une réponse tardive pour un autre compte ne doit jamais changer les droits affichés.
+    if(id!==validationId||token()!==t)return;
     if(window.USER_CONNECTE&&typeof window.USER_CONNECTE==='object')Object.assign(window.USER_CONNECTE,u);
     access=(u&&((u.role==='admin')||u.premium===true))?'premium':'free';
+    lastVerifiedToken=t;
+    lastVerifiedAccess=access;
   }catch(e){
-    // En cas de doute, on traite le compte comme gratuit.
-    access='free';
+    if(id!==validationId||token()!==t)return;
+    if(e&&e.authDenied){
+      // Session réellement refusée : ne pas conserver un ancien droit Premium.
+      lastVerifiedToken='';lastVerifiedAccess=null;
+      access='free';
+    }else{
+      // Réseau ou serveur indisponible : ne pas révoquer un droit précédemment confirmé.
+      // Le backend reste le seul arbitre de l'accès aux fonctionnalités.
+      access=(lastVerifiedToken===t&&lastVerifiedAccess)?lastVerifiedAccess:'free';
+      retryTimer=setTimeout(()=>{
+        retryTimer=null;
+        if(token()===t)resolveAccess();
+      },5000);
+    }
   }
   apply();
+}
+function detectSessionChange(){
+  const t=token();
+  if(t===observedToken)return;
+  observedToken=t;
+  resolveAccess();
 }
 
 const style=document.createElement('style');
@@ -176,11 +209,13 @@ let scheduled=false;
 const obs=new MutationObserver(()=>{
   if(scheduled)return;
   scheduled=true;
-  requestAnimationFrame(()=>{scheduled=false;apply();});
+  requestAnimationFrame(()=>{scheduled=false;detectSessionChange();apply();});
 });
 function start(){
   obs.observe(document.getElementById('ap-final-root')||document.body,{childList:true,subtree:true});
   resolveAccess();
+  // Le changement de session dans cet onglet ne déclenche pas l'événement storage.
+  setInterval(detectSessionChange,1000);
   window.addEventListener('focus',()=>{if(document.visibilityState!=='hidden')resolveAccess();});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resolveAccess();});
 }
