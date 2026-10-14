@@ -137,7 +137,7 @@ async function resolveAccess(){
     const r=await fetch(API+'/api/me?ts='+Date.now(),{
       headers:{Authorization:'Bearer '+t},cache:'no-store'
     });
-    if(!r.ok)throw new Error('account');
+    if(!r.ok){const err=new Error('account');err.authDenied=(r.status===401||r.status===403);throw err;}
     const u=await r.json();
     // Une réponse tardive pour un autre compte ne doit jamais changer les droits affichés.
     if(id!==validationId||token()!==t)return;
@@ -147,13 +147,19 @@ async function resolveAccess(){
     lastVerifiedAccess=access;
   }catch(e){
     if(id!==validationId||token()!==t)return;
-    // Une erreur réseau ne révoque pas un droit déjà confirmé pour cette session.
-    // Le backend continue de contrôler chaque fonctionnalité Premium.
-    access=(lastVerifiedToken===t&&lastVerifiedAccess)?lastVerifiedAccess:'free';
-    retryTimer=setTimeout(()=>{
-      retryTimer=null;
-      if(token()===t)resolveAccess();
-    },5000);
+    if(e&&e.authDenied){
+      // Session réellement refusée : ne pas conserver un ancien droit Premium.
+      lastVerifiedToken='';lastVerifiedAccess=null;
+      access='free';
+    }else{
+      // Réseau ou serveur indisponible : ne pas révoquer un droit précédemment confirmé.
+      // Le backend reste le seul arbitre de l'accès aux fonctionnalités.
+      access=(lastVerifiedToken===t&&lastVerifiedAccess)?lastVerifiedAccess:'free';
+      retryTimer=setTimeout(()=>{
+        retryTimer=null;
+        if(token()===t)resolveAccess();
+      },5000);
+    }
   }
   apply();
 }
