@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261004-free-premium-locks-v182-1';
+const VER='20261014-premium-access-refresh';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
