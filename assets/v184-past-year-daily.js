@@ -186,8 +186,11 @@ function publicTruth(t){
 }
 function evidenceHtml(t){
  const french=lang()==='fr';
- const title=french?'Configurations astrologiques prises en compte':'Astrological signals considered';
- const sample=t.samplingDays>1?(french?'Relevés espacés de '+t.samplingDays+' jours ; aucune date précise ne peut être déduite.':'Samples '+t.samplingDays+' days apart; exact dates cannot be inferred.'):(french?'Relevés quotidiens.':'Daily samples.');
+ const l=lang();
+ const title=({fr:'Configurations astrologiques prises en compte',en:'Astrological signals considered',es:'Configuraciones astrológicas consideradas',ar:'التكوينات الفلكية المعتمدة'})[l]||'Configurations astrologiques prises en compte';
+ const sampler=({fr:'Relevés espacés de {n} jours ; aucune date précise ne peut être déduite.',en:'Samples {n} days apart; exact dates cannot be inferred.',es:'Muestreo cada {n} días; no se pueden deducir fechas exactas.',ar:'تُؤخذ عينات كل {n} أيام، ولا يمكن استنتاج تواريخ دقيقة.'})[l];
+ const daily=({fr:'Relevés quotidiens.',en:'Daily samples.',es:'Muestreo diario.',ar:'عينات يومية.'})[l];
+ const sample=t.samplingDays>1?String(sampler||'Relevés espacés de {n} jours.').replace('{n}',String(t.samplingDays)):(daily||'Relevés quotidiens.');
  const rows=(t.points||[]).map(p=>{
   const a=(p.signals||[]).slice(0,3).map(x=>{
    const basis=[x.source,x.target,x.aspect===0||x.aspect!=null?String(x.aspect)+'°':null].filter(v=>v!==null&&v!==undefined&&v!=='').join(' · ');
