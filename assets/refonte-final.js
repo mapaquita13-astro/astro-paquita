@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261014-premium-access-refresh';
+const VER='20261029-forecast-evidence-v188';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -45,7 +45,10 @@ function continueInterface(){
                       load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
                         load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
                           load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes',function(){
-                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard');
+                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
+                              // Relecture evidence V188 : ne s'applique qu'à la route Prévisions.
+                              load('assets/v184-past-year-daily.js?v='+VER,'ap-v188-forecast-evidence');
+                            });
                           });
                         });
                       });
