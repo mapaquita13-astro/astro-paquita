@@ -3,7 +3,8 @@
    Un seul clic = un seul calcul, avec cache, annulation et délai IA borné. */
 (function(){
 'use strict';
-if(window.__AP_V187_FORECAST__)return;
+if(window.__AP_V188_FORECAST__)return;
+window.__AP_V188_FORECAST__=true;
 window.__AP_V187_FORECAST__=true;
 /* Neutralise les anciennes couches annuelles : V187 prend désormais toutes les périodes. */
 window.__AP_V186_ANNUAL_FORECAST__=true;
@@ -70,7 +71,7 @@ function profileCacheId(){
  const p=A.currentProfile&&A.currentProfile();
  return p?String(p.profileId||p.legacyKey||'profile')+'|'+String(p.birthDataVersion||p.updatedAt||''):'profile'
 }
-function cacheBase(s,days,dom,per){return ['ap','forecast','v187',profileCacheId(),per,iso(s),String(days),dom,lang(),String(A.TRUTH_VERSION||'truth')].join(':')}
+function cacheBase(s,days,dom,per){return ['ap','forecast','v188-verified',profileCacheId(),per,iso(s),String(days),dom,lang(),String(A.TRUTH_VERSION||'truth')].join(':')}
 function truthKey(s,days,dom,per){return cacheBase(s,days,dom,per)+':truth'}
 function reportKey(s,days,dom,per){return cacheBase(s,days,dom,per)+':report'}
 function readJson(k){if(memTruth.has(k))return memTruth.get(k);try{const v=JSON.parse(localStorage.getItem(k)||'null');if(v)memTruth.set(k,v);return v}catch(e){return null}}
@@ -99,38 +100,56 @@ function bucketSpecs(s,days,per){
  return out
 }
 function findBucket(bs,d){for(const b of bs)if(d>=b.start&&d<b.end)return b;return bs[bs.length-1]}
+// Un aspect actif pendant plusieurs jours ne représente qu'une configuration.
+function uniqueSignals(xs){
+ const m=new Map();
+ for(const x of xs||[]){
+  if(!x)continue;
+  const src=String(x.source||'').toLowerCase(),dest=String(x.target||'').toLowerCase();
+  const asp=x.aspect===0||x.aspect!=null?String(x.aspect):'';
+  const label=String(x.label||x.scenarios?.[0]||x.families?.[0]||'inconnu').toLowerCase().replace(/\s+/g,' ').trim();
+  const key=[x.domain,x.polarity,(src||dest)?src+'|'+dest+'|'+asp:label].join('::');
+  const old=m.get(key);
+  if(!old||Math.abs(Number(x.force)||0)>Math.abs(Number(old.force)||0))m.set(key,x);
+ }
+ return [...m.values()];
+}
 function score(xs,dom){
- const a=(xs||[]).filter(s=>dom==='all'||s.domain===dom);
+ const a=uniqueSignals((xs||[]).filter(s=>dom==='all'||s.domain===dom));
  if(!a.length)return 0;
  let v=0;
- for(const s of a){const sign=s.polarity==='difficile'?-1:s.polarity==='positive'?1:0;v+=sign*Math.max(1,Math.min(8,Number(s.force)||1))}
- return Math.max(-5,Math.min(5,+(v/Math.sqrt(a.length)).toFixed(2)))
+ for(const x of a){const sign=x.polarity==='difficile'?-1:x.polarity==='positive'?1:0;v+=sign*Math.max(.1,Math.min(5,Math.abs(Number(x.force)||0)))}
+ return Math.max(-5,Math.min(5,+(v/a.length).toFixed(2)));
 }
 async function scan(s,days,dom,per,progress,job){
  const ck=truthKey(s,days,dom,per),cached=readJson(ck);
  if(cached&&cached.days===days&&Array.isArray(cached.points)){progress?.(days,true);return cached}
  ensureProfile();
  const bs=bucketSpecs(s,days,per),all=[];
- const yieldEvery=days>=300?25:days>=90?15:days>=30?10:4;
- for(let i=0;i<days;i++){
+ const stride=days>=300?7:days>=90?2:1;
+ const yieldEvery=days>=300?4:days>=90?6:days>=30?10:4;
+ let visited=0;
+ for(let i=0;i<days;i+=stride){
+   visited++;
    if(job!==jobSeq)throw cancelled();
    const d=addDays(s,i),t=A.day(d,dom),sig=Array.isArray(t?.signals)?t.signals:[];
    if(sig.length){findBucket(bs,d).signals.push(...sig);all.push(...sig)}
-   if(i===0||i===days-1||i%yieldEvery===yieldEvery-1){
-     progress?.(i+1,false);
+   if(i===0||i+stride>=days||visited%yieldEvery===0){
+     progress?.(Math.min(days,i+stride),false);
      await new Promise(r=>setTimeout(r,0));
      if(job!==jobSeq)throw cancelled()
    }
  }
  const points=bs.map(b=>{
+   const unique=uniqueSignals(b.signals);
    const scores={};
-   if(dom==='all')DOMAINS.forEach(x=>scores[x]=score(b.signals,x));else scores[dom]=score(b.signals,dom);
+   if(dom==='all')DOMAINS.forEach(x=>scores[x]=score(unique,x));else scores[dom]=score(unique,dom);
    const vals=Object.values(scores).map(Number).filter(Number.isFinite);
    const avg=vals.length?vals.reduce((a,c)=>a+c,0)/vals.length:0;
    const abs=vals.length?Math.max(...vals.map(Math.abs)):0;
-   return {label:b.label,start:iso(b.start),end:iso(addDays(b.end,-1)),scores,polarity:avg>.35?'positive':avg<-.35?'difficult':abs>.8?'mixed':'calm',signalCount:b.signals.length,signals:b.signals.slice().sort((a,c)=>Math.abs(Number(c.force)||0)-Math.abs(Number(a.force)||0)).slice(0,8)}
+   return {label:b.label,start:iso(b.start),end:iso(addDays(b.end,-1)),scores,polarity:avg>.35?'positive':avg<-.35?'difficult':abs>.8?'mixed':'calm',signalCount:unique.length,signals:unique.slice().sort((a,c)=>Math.abs(Number(c.force)||0)-Math.abs(Number(a.force)||0)).slice(0,8)}
  });
- const out={type:'ForecastTruth',engineVersion:A.ENGINE_VERSION,truthVersion:String(A.TRUTH_VERSION||'truth')+'+v187-unified',period:per,start:iso(s),end:iso(addDays(s,days-1)),days,domain:dom,points,keyDates:all.filter(x=>x&&(x.level==='exceptionnel'||x.level==='fort'||Number(x.force)>=2.2)).sort((a,b)=>Math.abs(Number(b.force)||0)-Math.abs(Number(a.force)||0)).slice(0,20)};
+ const out={type:'ForecastTruth',engineVersion:A.ENGINE_VERSION,truthVersion:String(A.TRUTH_VERSION||'truth')+'+v188-verified',period:per,start:iso(s),end:iso(addDays(s,days-1)),days,domain:dom,samplingDays:stride,points,keyDates:stride===1?uniqueSignals(all.filter(x=>x&&(x.level==='exceptionnel'||x.level==='fort'||Number(x.force)>=2.2))).sort((a,b)=>Math.abs(Number(b.force)||0)-Math.abs(Number(a.force)||0)).slice(0,12):[]};
  writeJson(ck,out);
  return out
 }
@@ -142,7 +161,7 @@ function stateOf(p,dom){
 function concreteHint(dom,state){
  const fr={
   argent:{fav:'Les questions d’argent offrent davantage de marge de manœuvre : démarches, négociations, rentrées ou décisions financières peuvent être plus fluides.',del:'Mieux vaut surveiller le budget, les dépenses, engagements ou décisions financières et éviter la précipitation.',mix:'Les finances demandent des arbitrages : certaines ouvertures peuvent coexister avec des dépenses ou contraintes à gérer.',stable:'La situation financière paraît relativement régulière, sans mouvement dominant.'},
-  travail:{fav:'Le contexte professionnel favorise les avancées, échanges, démarches ou décisions utiles.',del:'Le travail demande davantage de prudence, d’organisation et de recul avant une décision importante.',mix:'Le contexte professionnel est contrasté, avec des possibilités mais aussi des ajustements à prévoir.',stable:'Le rythme professionnel paraît relativement régulier.'},
+  travail:{fav:'Les indicateurs astrologiques sont plutôt favorables ; ils ne prouvent ni promotion ni proposition professionnelle.',del:'Le travail demande davantage de prudence, d’organisation et de recul avant une décision importante.',mix:'Le contexte professionnel est contrasté, avec des possibilités mais aussi des ajustements à prévoir.',stable:'Le rythme professionnel paraît relativement régulier.'},
   amour:{fav:'Les échanges affectifs sont plus faciles et les rapprochements ou décisions à deux peuvent être favorisés.',del:'Les relations demandent plus de tact, de recul et de prudence dans les réactions.',mix:'La vie affective peut alterner rapprochements et tensions ou hésitations.',stable:'La vie affective paraît relativement stable.'},
   famille:{fav:'Le climat familial ou les questions de foyer peuvent avancer plus facilement.',del:'Les questions familiales ou de foyer demandent davantage de patience et d’organisation.',mix:'Le domaine familial peut mêler avancées et ajustements.',stable:'Le climat familial paraît relativement stable.'},
   bienetre:{fav:'Le rythme personnel est plus porteur pour retrouver de l’élan et de l’équilibre.',del:'Il est préférable de ménager son rythme et de ne pas trop tirer sur ses réserves.',mix:'Le niveau d’énergie peut être irrégulier et demande des ajustements.',stable:'Le rythme personnel paraît relativement régulier.'},
@@ -156,8 +175,28 @@ function fallback(t,dom,note){
  const rows=(t.points||[]).map(p=>{const st=stateOf(p,dom);return '<div class="ap-aspect"><strong>'+esc(p.label)+'</strong><span>'+esc(tx(st))+'</span><span>'+esc(concreteHint(dom,st))+'</span></div>'}).join('');
  return (note?'<p class="ap-muted">'+esc(note)+'</p>':'')+(rows?'<div class="ap-aspect-list">'+rows+'</div>':'<p>'+esc(tx('none'))+'</p>')
 }
+function slimSignal(s){return {date:s.date,domain:s.domain,polarity:s.polarity,importance:s.level||null,
+ source:s.source||null,target:s.target||null,aspect:s.aspect??null,label:s.label||null,
+ scenarios:Array.isArray(s.scenarios)?s.scenarios.slice(0,2):[]}}
 function publicTruth(t){
- return {period:t.period,start:t.start,end:t.end,domain:t.domain,points:(t.points||[]).map(p=>({period:{start:p.start,end:p.end,label:p.label},trend:p.polarity,activity:p.signalCount?'marked':'quiet',signals:(p.signals||[]).slice(0,5).map(s=>({date:s.date,domain:s.domain,polarity:s.polarity,importance:s.level||null,scenarios:Array.isArray(s.scenarios)?s.scenarios.slice(0,2):[]}))})),keyDates:(t.keyDates||[]).slice(0,16).map(s=>({date:s.date,domain:s.domain,polarity:s.polarity,importance:s.level||null,scenarios:Array.isArray(s.scenarios)?s.scenarios.slice(0,2):[]}))}
+ return {period:t.period,start:t.start,end:t.end,domain:t.domain,samplingDays:t.samplingDays,
+  note:'Repères du moteur V121, dédoublonnés. Aucune validation des événements réels ni preuve de convergence de méthodes indépendantes.',
+  points:(t.points||[]).map(p=>({period:{start:p.start,end:p.end,label:p.label},trend:p.polarity,indicators:p.signalCount,signals:(p.signals||[]).slice(0,5).map(slimSignal)})),
+  keyDates:(t.keyDates||[]).slice(0,12).map(slimSignal)}
+}
+function evidenceHtml(t){
+ const french=lang()==='fr';
+ const title=french?'Configurations astrologiques prises en compte':'Astrological signals considered';
+ const sample=t.samplingDays>1?(french?'Relevés espacés de '+t.samplingDays+' jours ; aucune date précise ne peut être déduite.':'Samples '+t.samplingDays+' days apart; exact dates cannot be inferred.'):(french?'Relevés quotidiens.':'Daily samples.');
+ const rows=(t.points||[]).map(p=>{
+  const a=(p.signals||[]).slice(0,3).map(x=>{
+   const basis=[x.source,x.target,x.aspect===0||x.aspect!=null?String(x.aspect)+'°':null].filter(v=>v!==null&&v!==undefined&&v!=='').join(' · ');
+   const item=basis||x.label||'';
+   return item?'<li>'+esc(item)+'</li>':'';
+  }).join('');
+  return a?'<div style="margin-top:8px"><strong>'+esc(p.label)+'</strong><ul>'+a+'</ul></div>':'';
+ }).join('');
+ return '<details style="margin-top:18px;border:1px solid #dfd3de;border-radius:10px;padding:12px"><summary style="cursor:pointer;font-weight:700">'+esc(title)+'</summary><p>'+esc(sample)+'</p>'+rows+'</details>';
 }
 function aiText(x){try{if(typeof window.texteClaude==='function')return window.texteClaude(x)||''}catch(e){}return x?.content?.[0]?.text||x?.text||''}
 function htmlText(x){try{if(typeof window.formatRapport==='function')return window.formatRapport(x)}catch(e){}return String(x||'').split(/\n{2,}/).filter(Boolean).map(p=>'<p>'+esc(p)+'</p>').join('')}
@@ -165,12 +204,13 @@ function timeout(p,ms){return Promise.race([p,new Promise((_,rej)=>setTimeout(()
 function modeRule(s,days){const n=today(),e=addDays(s,days-1);if(e<n)return "La période est passée : propose une lecture rétrospective sans prétendre connaître les événements réellement vécus.";if(s>n)return "La période est future : formule des tendances et possibilités, jamais des certitudes.";return "La période touche le présent : distingue clairement ce qui est déjà écoulé et ce qui est à venir, sans inventer d’événements."}
 async function interpret(t,s,days,dom,per){
  if(typeof window.appelerClaude!=='function')throw new Error('IA indisponible');
- const system=`Tu rédiges une prévision Astro Paquita à partir de données déjà calculées. Le calcul est interne et ne doit jamais apparaître dans le texte utilisateur.
-INTERDICTIONS : ne cite ni planète, signe, maison, aspect, transit, degré, orbe, score, moteur, version technique, nombre de signaux ou méthode de calcul. Ne recopie pas de libellé technique.
-Transforme les données en conséquences concrètes et compréhensibles dans le domaine demandé. Respecte strictement les dates et les fenêtres réellement marquées. ${modeRule(s,days)}
-Structure : tendance générale ; périodes clés dans l’ordre chronologique ; meilleures périodes ; périodes de vigilance ; synthèse courte. Pour une journée, reste beaucoup plus concis. Évite le remplissage et les répétitions. Réponds intégralement dans la langue demandée.`;
+ const system=`Tu rédiges une lecture astrologique Astro Paquita, uniquement à partir des signaux fournis. ${modeRule(s,days)}
+N'invente ni planète, aspect, transit, maison, technique indépendante ou convergence. Tu peux expliciter une source/cible/aspect seulement si ces données sont réellement fournies. N'affiche aucun score de probabilité.
+Un indicateur positif ne démontre pas une promotion, une proposition, un contrat, une rencontre ou une rentrée d'argent. Ne présente jamais de tel événement comme attendu ou quasi certain. N'utilise pas « exceptionnel », « pic absolu », « concrétisation » sans fait probant. Distingue tendance astrologique et scénario hypothétique.
+Pour une année échantillonnée (samplingDays>1), parle seulement des périodes mensuelles : aucune date de jour précis. Pour le passé, ne prétends pas connaître les événements vécus. Si aucune dominante n'émerge, dis-le.
+Structure : vue générale, périodes clés, bases techniques disponibles, synthèse. Formule clairement, sans avertissements répétitifs. Réponds dans la langue demandée.`;
  const tokens=days>=300?1800:days>=90?1500:days>=30?1300:1000;
- const req=window.appelerClaude({feature:'forecast_future',featureContext:{module:'forecast',period:per,mode:'unified_v187',domain:dom,start:iso(s),truthVersion:t.truthVersion},model:'claude-sonnet-4-6',max_tokens:tokens,system,messages:[{role:'user',content:JSON.stringify({language:lang(),module:'forecast',requestedDomain:dom,data:publicTruth(t)})}]});
+ const req=window.appelerClaude({feature:'forecast_future',featureContext:{module:'forecast',period:per,mode:'verified_v188',domain:dom,start:iso(s),truthVersion:t.truthVersion},model:'claude-sonnet-4-6',max_tokens:tokens,system,messages:[{role:'user',content:JSON.stringify({language:lang(),module:'forecast',requestedDomain:dom,data:publicTruth(t)})}]});
  const data=await timeout(req,18000);
  return aiText(data)
 }
@@ -201,16 +241,16 @@ async function run(){
  const rk=reportKey(s,days,dom,per),cachedReport=readReport(rk);
  out.innerHTML='<div class="ap-card ap-forecast-v174 ap-forecast-v187"><div class="ap-eyebrow">'+esc(tx('forecast'))+'</div><h2 style="margin:6px 0 14px">'+esc(rangeTitle(s,days))+'</h2><div class="ap-report" id="ap-v187-report">'+fallback(t,dom,'')+'</div><div class="ap-loader show" id="ap-v187-ai"><i class="ap-spinner"></i><span>'+esc(tx('interpret'))+'</span></div></div>';
  const rep=q('#ap-v187-report'),ai=q('#ap-v187-ai');
- if(cachedReport){if(rep)rep.innerHTML=htmlText(cachedReport);ai?.classList.remove('show');return}
+ if(cachedReport){if(rep)rep.innerHTML=htmlText(cachedReport)+evidenceHtml(t);ai?.classList.remove('show');return}
 
  try{
    const txt=await interpret(t,s,days,dom,per);
    if(job!==jobSeq)return;
-   if(txt){if(rep)rep.innerHTML=htmlText(txt);writeReport(rk,txt)}
-   else if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))
+   if(txt){if(rep)rep.innerHTML=htmlText(txt)+evidenceHtml(t);writeReport(rk,txt)}
+   else if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))+evidenceHtml(t)
  }catch(e){
    if(job!==jobSeq)return;
-   if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))
+   if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))+evidenceHtml(t)
  }finally{
    if(job===jobSeq)ai?.classList.remove('show')
  }
