@@ -46,4 +46,17 @@ http.createServer(async(req,res)=>{
    const result=pdf(data);res.writeHead(200,{'Content-Type':'application/pdf','Content-Length':result.length,'Content-Disposition':'attachment; filename="rapport-atelier-TEST.pdf"'});return res.end(result);
  }
  return json(res,404,{error:'Route inconnue'});
-}).listen(PORT,'0.0.0.0',()=>console.log('Atelier previsualisation :'+PORT+' — ventes desactivees'));
+}).listen(PORT,'0.0.0.0',()=>{
+ console.log('Atelier previsualisation :'+PORT+' — ventes desactivees');
+ (async()=>{
+  try{
+   const response=await fetch('http://127.0.0.1:'+PORT+'/api/test/pdf',{method:'POST',headers:{'Origin':ALLOWED,'Content-Type':'application/json'},body:JSON.stringify({firstName:'Camille',birthdate:'1990-05-15',birthtime:'08:30',birthplace:'Marseille, France'}),signal:AbortSignal.timeout(6000)});
+   const result=Buffer.from(await response.arrayBuffer());
+   console.log('SELFTEST_PDF',JSON.stringify({ok:response.ok && result.subarray(0,5).toString()==='%PDF-' && result.includes('Marseille, France'),status:response.status,bytes:result.length}));
+  }catch(e){console.log('SELFTEST_PDF',JSON.stringify({ok:false,reason:e.name}));}
+  try{
+   const response=await fetch('https://astro-paquita.onrender.com/app-v121.html',{redirect:'error',signal:AbortSignal.timeout(12000)});
+   console.log('SELFTEST_ASTRO_FRONTEND',JSON.stringify({accessible:response.ok,httpStatus:response.status,forecastGenerated:false}));
+  }catch(e){console.log('SELFTEST_ASTRO_FRONTEND',JSON.stringify({accessible:false,reason:e.name,forecastGenerated:false}));}
+ })();
+});
