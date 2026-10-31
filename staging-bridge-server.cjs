@@ -3,6 +3,8 @@
 const http=require('node:http');
 const PORT=Number(process.env.PORT||3600),ALLOWED='https://atelier-des-astres-apercu.onrender.com';
 const hits=new Map();
+const crypto=require('node:crypto');
+let stripeTestEvents=0;
 function json(res,code,body){res.writeHead(code,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));}
 function safe(s){return String(s).normalize('NFKD').replace(/[^\x20-\x7e]/g,'?').replace(/[\\()]/g,'\\$&').slice(0,140);}
 function pdf(data){
@@ -22,7 +24,7 @@ function pdf(data){
  out+='trailer\n<< /Size '+objects.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF';
  return Buffer.from(out,'latin1');
 }
-function body(req){return new Promise((resolve,reject)=>{let n=0,a=[];req.on('data',v=>{n+=v.length;if(n>8000){reject(Error('too_large'));req.destroy();}else a.push(v)});req.on('end',()=>resolve(Buffer.concat(a).toString('utf8')));req.on('error',reject)});}
+function body(req,max=8000){return new Promise((resolve,reject)=>{let n=0,a=[];req.on('data',v=>{n+=v.length;if(n>max){reject(Error('too_large'));req.destroy();}else a.push(v)});req.on('end',()=>resolve(Buffer.concat(a).toString('utf8')));req.on('error',reject)});}
 function validDate(s){if(typeof s!=='string'||!/^(19\d\d|20\d\d)-\d\d-\d\d$/.test(s))return false;const d=new Date(s+'T12:00:00Z');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===s&&d<=new Date();}
 http.createServer(async(req,res)=>{
  const origin=req.headers.origin||'';
@@ -32,6 +34,26 @@ http.createServer(async(req,res)=>{
  if(req.method==='OPTIONS'){res.writeHead(origin===ALLOWED?204:403);return res.end();}
  if(req.method==='GET'&&path==='/health')return json(res,200,{ok:true,service:'atelier-des-astres-apercu-serveur',salesEnabled:false});
  if(req.method==='GET'&&path==='/api/status')return json(res,200,{mode:'preview',payments:false,originalAstroPaquita:false,cityCoordinates:false,reportPdfTest:true,dataStored:false});
+ if(req.method==='GET'&&path==='/api/stripe/test-webhook-status')return json(res,200,{webhookTestReceived:stripeTestEvents,fulfilment:false,sales:false});
+ if(req.method==='POST'&&path==='/api/stripe/test-webhook'){
+   const secret=process.env.STRIPE_TEST_WEBHOOK_SECRET||'';
+   if(!/^whsec_/.test(secret))return json(res,503,{error:'Webhook TEST non configure'});
+   let raw;try{raw=await body(req,200000);}catch{return json(res,413,{error:'Payload invalide'});}
+   const parts=String(req.headers['stripe-signature']||'').split(',').map(x=>x.trim().split('='));
+   const ts=parts.find(x=>x[0]==='t')?.[1]||'';
+   const sigs=parts.filter(x=>x[0]==='v1').map(x=>x[1]);
+   if(!/^\d{10,}$/.test(ts)||Math.abs(Date.now()-Number(ts)*1000)>300000)return json(res,400,{error:'Signature invalide'});
+   const expected=crypto.createHmac('sha256',secret).update(ts+'.'+raw).digest('hex');
+   if(!sigs.some(sig=>/^[a-f0-9]{64}$/i.test(sig)&&crypto.timingSafeEqual(Buffer.from(sig,'hex'),Buffer.from(expected,'hex'))))
+     return json(res,400,{error:'Signature invalide'});
+   let evt;try{evt=JSON.parse(raw);}catch{return json(res,400,{error:'JSON invalide'});}
+   if(evt.livemode!==false)return json(res,400,{error:'Mode LIVE refuse'});
+   if(evt.type==='checkout.session.completed'){
+     const x=evt.data?.object||{};
+     if(x.mode==='payment'&&x.payment_status==='paid'&&x.amount_total===3990&&x.currency==='eur')stripeTestEvents++;
+   }
+   return json(res,200,{received:true,test:true,fulfilment:false});
+ }
  if(req.method==='GET'&&path==='/api/astro-connectivity'){
     try{const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),10000);
       const response=await fetch('https://astro-paquita.onrender.com/app-v121.html',{signal:ctrl.signal,redirect:'error'});clearTimeout(t);
