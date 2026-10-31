@@ -1,0 +1,8 @@
+# Isolated adapter: no API keys, no checkout, no customer orders.
+FROM mcr.microsoft.com/playwright/python:v1.55.0-noble
+WORKDIR /app
+RUN pip install --no-cache-dir 'fastapi>=0.115,<1' 'uvicorn>=0.30,<1' 'httpx>=0.27,<1' 'pydantic>=2,<3' 'playwright==1.55.0'
+COPY atelier-v08/adapter.py /app/adapter.py
+ENV PYTHONUNBUFFERED=1 PORT=10000
+EXPOSE 10000
+CMD ["sh","-c","uvicorn adapter:app --host 0.0.0.0 --port $PORT"]
