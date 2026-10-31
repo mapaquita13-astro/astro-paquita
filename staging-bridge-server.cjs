@@ -11,7 +11,7 @@ function pdf(data){
  ['Lieu saisi : '+data.birthplace,12],["La ville n'est pas geolocalisee dans ce test.",11],
  ['AUCUN CALCUL ASTROLOGIQUE - AUCUN PAIEMENT',11],
  ['Aucune donnee personnelle n est conservee sur le serveur.',10]];
- let commands='BT\n',y=740;for(const [s,size] of rows){commands+='/F1 '+size+' Tf 50 '+y+' Td ('+safe(s)+') Tj -50 -'+(size+24)+' Td\n';y-=size+24;}commands+='ET';
+ let commands='BT\n',y=740;for(const [s,size] of rows){commands+='/F1 '+size+' Tf 1 0 0 1 50 '+y+' Tm ('+safe(s)+') Tj\n';y-=size+24;}commands+='ET';
  const objects=[null,'<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
  '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',
  '<< /Length '+Buffer.byteLength(commands,'latin1')+' >>\nstream\n'+commands+'\nendstream',
