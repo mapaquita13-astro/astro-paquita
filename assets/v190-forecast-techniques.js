@@ -133,8 +133,11 @@ function makeEngine(A,profile){
   if(typeof window.calcPos==='function'&&typeof window.calcASMC==='function'){
    const pos=window.calcPos(jd);
    const angles=window.calcASMC(jd,latitude,longitude);
-   const cusps=typeof window.prevHouseCuspsV80==='function'
-    ?window.prevHouseCuspsV80(angles.AS,angles.MC,jd,latitude,longitude):null;
+   let cusps=null;
+   if(typeof window.prevHouseCuspsV80==='function'){
+    try{cusps=window.prevHouseCuspsV80(angles.AS,angles.MC,jd,latitude,longitude)}
+    catch(e){console.warn('Maisons Placidus non calculables pour ce lieu',e?.message||e)}
+   }
    value={jd,pos,AS:angles.AS,MC:angles.MC,cusps,houseSystem:cusps?cusps._system||'Placidus':null};
   }else{
    // Compatibilité : "UTC" était rejeté par AstroTruth.isIana().
@@ -242,7 +245,7 @@ async function compute({A,profile,truth,jobActive,locations}){
  const prior=candidates.filter(x=>x.instantUtc.slice(0,10)<truth.start).slice(-1);
  const inPeriod=candidates.filter(x=>x.instantUtc.slice(0,10)>=truth.start&&x.instantUtc.slice(0,10)<=truth.end);
  const solarReturns=[...prior,...inPeriod];
- return {engine:'V121 + calculs complémentaires V190',orbDegrees:1,precision:'transits lents relevés tous les 6 jours au maximum ; progressions relevées au milieu du segment ; aucune prétention à un relevé des exactitudes à la minute',
+ return {engine:'V121 + calculs complémentaires V194',orbDegrees:1,precision:'transits lents relevés tous les 6 jours au maximum ; progressions relevées au milieu du segment ; aucune prétention à un relevé des exactitudes à la minute',
   natalTimeStatus:profile.timeStatus||'exact',sect:eng.sect,points,solarReturns,
   unavailable:[...(!solarReturns.some(x=>x.houseCusps)?['maisons de révolution solaire : renseigner les coordonnées du lieu de présence de chaque année concernée']:[]),
     ...(!preciseBirth?['progressions précises, direction d’arc solaire, révolution solaire et firdaria : heure natale exacte manquante']:[])]};
