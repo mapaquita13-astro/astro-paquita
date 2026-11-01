@@ -205,7 +205,7 @@ function techniquesHtml(methods){
  if(!methods)return '<p class="ap-muted" style="margin-top:14px">Les techniques complémentaires n’ont pas pu être calculées ; cette lecture ne couvre que les signaux quotidiens.</p>';
  const fr=lang()==='fr';
  const langName={fr:'Méthodes complémentaires calculées',en:'Additional methods calculated',es:'Métodos adicionales calculados',ar:'الطرق الإضافية المحسوبة'}[lang()]||'Méthodes complémentaires calculées';
- const asText=a=>esc(a.source+' '+(a.aspectName||a.aspect+'°')+' '+a.target+' (orbe '+a.orb+'°)');
+ const asText=a=>esc(a.source+' '+(a.aspectName||a.aspect+'°')+' '+a.target+' (orbe '+a.orb+'°'+(a.observedDate?', relevé '+a.observedDate:'')+')');
  const rows=(methods.points||[]).map(p=>{
   const slow=(p.slowTransits||[]).slice(0,4);
   const prog=(p.progressions||[]).slice(0,3);
