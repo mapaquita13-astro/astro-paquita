@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261101-forecast-ai-v189';
+const VER='20261101-forecast-multimethod-v190';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -47,7 +47,9 @@ function continueInterface(){
                           load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes',function(){
                             load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
                               // Prévisions V189 : correction des délais IA et diagnostic, limitée à la route Prévisions.
-                              load('assets/v184-past-year-daily.js?v='+VER,'ap-v188-forecast-evidence');
+                              load('assets/v190-forecast-techniques.js?v='+VER,'ap-v190-forecast-techniques',function(){
+                                load('assets/v184-past-year-daily.js?v='+VER,'ap-v190-multimethod-forecast');
+                              });
                             });
                           });
                         });
