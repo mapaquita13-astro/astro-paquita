@@ -1,10 +1,10 @@
-/* Astro Paquita V187 — générateur unique de prévisions.
+/* Astro Paquita V189 — générateur unique de prévisions.
    Toutes les périodes utilisent AstroTruth.day / moteur V121.
    Un seul clic = un seul calcul, avec cache, annulation et délai IA borné. */
 (function(){
 'use strict';
-if(window.__AP_V188_FORECAST__)return;
-window.__AP_V188_FORECAST__=true;
+if(window.__AP_V189_FORECAST__)return;
+window.__AP_V189_FORECAST__=true;
 window.__AP_V187_FORECAST__=true;
 /* Neutralise les anciennes couches annuelles : V187 prend désormais toutes les périodes. */
 window.__AP_V186_ANNUAL_FORECAST__=true;
@@ -203,7 +203,25 @@ function evidenceHtml(t){
 }
 function aiText(x){try{if(typeof window.texteClaude==='function')return window.texteClaude(x)||''}catch(e){}return x?.content?.[0]?.text||x?.text||''}
 function htmlText(x){try{if(typeof window.formatRapport==='function')return window.formatRapport(x)}catch(e){}return String(x||'').split(/\n{2,}/).filter(Boolean).map(p=>'<p>'+esc(p)+'</p>').join('')}
-function timeout(p,ms){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>{const e=new Error('TIMEOUT');e.code='TIMEOUT';rej(e)},ms))])}
+function timeout(p,ms){
+ let timer;
+ return Promise.race([p,new Promise((_,rej)=>{timer=setTimeout(()=>{const e=new Error('TIMEOUT');e.code='TIMEOUT';rej(e)},ms)})])
+   .finally(()=>clearTimeout(timer));
+}
+function failureNote(e){
+ const message=String(e?.message||'').trim();
+ if(e?.code==='TIMEOUT')return tx('unavailable');
+ if(lang()!=='fr')return tx('unavailable');
+ if(/OPENROUTER_KEY_MISSING|OPENROUTER_API_KEY|n.est pas configurée/i.test(message))return 'Le fournisseur d’interprétation IA n’est pas configuré sur le serveur. La configuration OpenRouter doit être vérifiée.';
+ if(/429|Trop de requêtes|rate.limit|quota/i.test(message))return 'Le service d’interprétation limite actuellement les demandes. Vous pouvez réessayer.';
+ if(/401|Non connecté|Session invalide/i.test(message))return 'Votre session a expiré. Reconnectez-vous pour obtenir votre interprétation.';
+ if(/403|réservée aux profils Premium/i.test(message))return 'Votre accès Premium doit être vérifié pour générer cette interprétation.';
+ return 'L’interprétation détaillée n’a pas abouti'+(message?': '+message.slice(0,180):'.');
+}
+function retryButton(){
+ const labels={fr:'Réessayer l’interprétation',en:'Retry interpretation',es:'Reintentar la interpretación',ar:'إعادة محاولة التفسير'};
+ return '<button type="button" id="ap-forecast-retry-ai" style="margin-top:14px;padding:12px 18px;border:0;border-radius:999px;background:#53164a;color:#fff;font-weight:700;cursor:pointer">'+esc(labels[lang()]||labels.fr)+'</button>';
+}
 function modeRule(s,days){const n=today(),e=addDays(s,days-1);if(e<n)return "La période est passée : propose une lecture rétrospective sans prétendre connaître les événements réellement vécus.";if(s>n)return "La période est future : formule des tendances et possibilités, jamais des certitudes.";return "La période touche le présent : distingue clairement ce qui est déjà écoulé et ce qui est à venir, sans inventer d’événements."}
 async function interpret(t,s,days,dom,per){
  if(typeof window.appelerClaude!=='function')throw new Error('IA indisponible');
@@ -213,8 +231,9 @@ Un indicateur positif ne démontre pas une promotion, une proposition, un contra
 Pour une année échantillonnée (samplingDays>1), parle seulement des périodes mensuelles : aucune date de jour précis. Pour le passé, ne prétends pas connaître les événements vécus. Si aucune dominante n'émerge, dis-le.
 Structure : vue générale, périodes clés, bases techniques disponibles, synthèse. Formule clairement, sans avertissements répétitifs. Réponds dans la langue demandée.`;
  const tokens=days>=300?1800:days>=90?1500:days>=30?1300:1000;
- const req=window.appelerClaude({feature:'forecast_future',featureContext:{module:'forecast',period:per,mode:'verified_v188',domain:dom,start:iso(s),truthVersion:t.truthVersion},model:'claude-sonnet-4-6',max_tokens:tokens,system,messages:[{role:'user',content:JSON.stringify({language:lang(),module:'forecast',requestedDomain:dom,data:publicTruth(t)})}]});
- const data=await timeout(req,18000);
+ const isToday=days===1&&iso(s)===iso(today());
+ const req=window.appelerClaude({feature:isToday?'forecast_today':'forecast_future',featureContext:{module:'forecast',period:per,mode:'verified_v189',domain:dom,start:iso(s),date:iso(s),days,truthVersion:t.truthVersion},model:'claude-sonnet-4-6',max_tokens:tokens,system,messages:[{role:'user',content:JSON.stringify({language:lang(),module:'forecast',requestedDomain:dom,data:publicTruth(t)})}]});
+ const data=await timeout(req,90000);
  return aiText(data)
 }
 function cancelCurrent(){jobSeq++;computing=false;setBusy(false)}
@@ -222,7 +241,7 @@ async function run(){
  const out=q('#ap-forecast-result');if(!out)return;
  const per=period(),dom=domain(),days=span(per),s=start(per);
  if(!s){setError('Choisissez une date valide.');return}
- if(per!=='jour'&&freeAccess()&&!premiumAccess()){showPremium();return}
+ if(freeAccess()&&!premiumAccess()&&!(days===1&&iso(s)===iso(today()))){showPremium();return}
  if(computing)cancelCurrent();
  const job=++jobSeq;computing=true;setBusy(true);setError('');
  out.innerHTML='<div class="ap-card"><h3>'+esc(rangeTitle(s,days))+'</h3><p id="ap-v187-progress" class="ap-muted">'+esc(tx('analysis'))+'…</p></div>';
@@ -235,37 +254,37 @@ async function run(){
    console.error('Astro Paquita V187 scan :',e);
    setError(e?.message||'La prévision n’a pas pu être calculée.');
    out.innerHTML='';
+   computing=false;setBusy(false);
    return
- }finally{
-   if(job===jobSeq){computing=false;setBusy(false)}
  }
  if(job!==jobSeq||!t)return;
 
  const rk=reportKey(s,days,dom,per),cachedReport=readReport(rk);
  out.innerHTML='<div class="ap-card ap-forecast-v174 ap-forecast-v187"><div class="ap-eyebrow">'+esc(tx('forecast'))+'</div><h2 style="margin:6px 0 14px">'+esc(rangeTitle(s,days))+'</h2><div class="ap-report" id="ap-v187-report">'+fallback(t,dom,'')+'</div><div class="ap-loader show" id="ap-v187-ai"><i class="ap-spinner"></i><span>'+esc(tx('interpret'))+'</span></div></div>';
  const rep=q('#ap-v187-report'),ai=q('#ap-v187-ai');
- if(cachedReport){if(rep)rep.innerHTML=htmlText(cachedReport)+evidenceHtml(t);ai?.classList.remove('show');return}
+ if(cachedReport){if(rep)rep.innerHTML=htmlText(cachedReport)+evidenceHtml(t);ai?.classList.remove('show');computing=false;setBusy(false);return}
 
  try{
    const txt=await interpret(t,s,days,dom,per);
    if(job!==jobSeq)return;
    if(txt){if(rep)rep.innerHTML=htmlText(txt)+evidenceHtml(t);writeReport(rk,txt)}
-   else if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))+evidenceHtml(t)
+   else if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))+evidenceHtml(t)+retryButton()
  }catch(e){
    if(job!==jobSeq)return;
-   if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))+evidenceHtml(t)
+   console.warn('Astro Paquita : échec de l’interprétation',e?.code||'',e?.message||'');
+   if(rep)rep.innerHTML=fallback(t,dom,failureNote(e))+evidenceHtml(t)+retryButton()
  }finally{
-   if(job===jobSeq)ai?.classList.remove('show')
+   if(job===jobSeq){ai?.classList.remove('show');computing=false;setBusy(false)}
  }
 }
 
 window.addEventListener('click',function(ev){
- const t=ev.target?.closest?.('#ap-forecast-prev,#ap-forecast-next,#ap-run-forecast,[data-per]');
+ const t=ev.target?.closest?.('#ap-forecast-prev,#ap-forecast-next,#ap-run-forecast,#ap-forecast-retry-ai,[data-per]');
  if(!t||!document.body.classList.contains('ap-route-forecast'))return;
  if((t.id==='ap-forecast-prev'||t.id==='ap-forecast-next'||t.matches('[data-per]'))&&computing)cancelCurrent();
- if(t.id!=='ap-run-forecast')return;
- const per=period();
- if(per!=='jour'&&freeAccess()&&!premiumAccess()){
+ if(t.id!=='ap-run-forecast'&&t.id!=='ap-forecast-retry-ai')return;
+ const per=period(),days=span(per),s=start(per);
+ if(freeAccess()&&!premiumAccess()&&!(days===1&&iso(s)===iso(today()))){
    ev.preventDefault();ev.stopImmediatePropagation();showPremium();return
  }
  ev.preventDefault();ev.stopImmediatePropagation();run()
