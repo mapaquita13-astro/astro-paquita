@@ -1,10 +1,10 @@
-/* Astro Paquita V194 — générateur résilient avec méthodes indépendantes.
+/* Astro Paquita V195 — générateur résilient avec lecture locale en cas de panne IA.
    Toutes les périodes utilisent AstroTruth.day / moteur V121.
    Un seul clic = un seul calcul, avec cache, annulation et délai IA borné. */
 (function(){
 'use strict';
-if(window.__AP_V194_FORECAST__)return;
-window.__AP_V194_FORECAST__=true;
+if(window.__AP_V195_FORECAST__)return;
+window.__AP_V195_FORECAST__=true;
 window.__AP_V187_FORECAST__=true;
 /* Neutralise les anciennes couches annuelles : V187 prend désormais toutes les périodes. */
 window.__AP_V186_ANNUAL_FORECAST__=true;
@@ -18,7 +18,7 @@ const memTruth=new Map(),memReport=new Map();
 let jobSeq=0,computing=false;
 
 const I18N={
- fr:{forecast:'Prévision personnalisée',analysis:'Calcul de votre prévision',cached:'Prévision déjà calculée',interpret:'Interprétation en cours…',unavailable:'L’interprétation détaillée prend trop de temps. Les tendances calculées restent disponibles ci-dessous.',none:'Aucune tendance dominante ne ressort sur cette période.',fav:'Période plutôt favorable',del:'Période demandant davantage de prudence',mix:'Période contrastée',stable:'Période relativement stable',premium:'Cette période est réservée aux comptes Premium.',days:'jours'},
+ fr:{forecast:'Prévision personnalisée',analysis:'Calcul de votre prévision',cached:'Prévision déjà calculée',interpret:'Interprétation en cours…',unavailable:'Le service de rédaction automatique n’a pas répondu. La lecture personnalisée calculée reste disponible ci-dessous.',none:'Aucune tendance dominante ne ressort sur cette période.',fav:'Période plutôt favorable',del:'Période demandant davantage de prudence',mix:'Période contrastée',stable:'Période relativement stable',premium:'Cette période est réservée aux comptes Premium.',days:'jours'},
  en:{forecast:'Personal forecast',analysis:'Calculating your forecast',cached:'Forecast already calculated',interpret:'Preparing the interpretation…',unavailable:'The detailed interpretation is taking too long. The calculated trends remain available below.',none:'No dominant trend stands out for this period.',fav:'Rather favourable period',del:'Period requiring more caution',mix:'Mixed period',stable:'Relatively stable period',premium:'This period is reserved for Premium accounts.',days:'days'},
  es:{forecast:'Previsión personalizada',analysis:'Calculando tu previsión',cached:'Previsión ya calculada',interpret:'Preparando la interpretación…',unavailable:'La interpretación detallada está tardando demasiado. Las tendencias calculadas siguen disponibles.',none:'No destaca ninguna tendencia dominante en este período.',fav:'Período bastante favorable',del:'Período que requiere más prudencia',mix:'Período contrastado',stable:'Período relativamente estable',premium:'Este período está reservado a las cuentas Premium.',days:'días'},
  ar:{forecast:'توقع شخصي',analysis:'جارٍ حساب التوقع',cached:'تم حساب التوقع مسبقاً',interpret:'جارٍ إعداد التفسير…',unavailable:'يستغرق التفسير المفصل وقتاً طويلاً. تبقى الاتجاهات المحسوبة متاحة أدناه.',none:'لا يظهر اتجاه مهيمن خلال هذه الفترة.',fav:'فترة مواتية نسبياً',del:'فترة تتطلب مزيداً من الحذر',mix:'فترة متباينة',stable:'فترة مستقرة نسبياً',premium:'هذه الفترة مخصصة لحسابات Premium.',days:'أيام'}
@@ -71,11 +71,11 @@ function profileCacheId(){
  const p=A.currentProfile&&A.currentProfile();
  return p?String(p.profileId||p.legacyKey||'profile')+'|'+String(p.birthDataVersion||p.updatedAt||''):'profile'
 }
-function cacheBase(s,days,dom,per){return ['ap','forecast','v194-multimethod-resilient',profileCacheId(),per,iso(s),String(days),dom,lang(),String(A.TRUTH_VERSION||'truth')].join(':')}
+function cacheBase(s,days,dom,per){return ['ap','forecast','v195-compact-reading',profileCacheId(),per,iso(s),String(days),dom,lang(),String(A.TRUTH_VERSION||'truth')].join(':')}
 function truthKey(s,days,dom,per){return cacheBase(s,days,dom,per)+':truth'}
 function locationSnapshot(){try{return window.APForecastSolarLocations?.getLocations?.()||{}}catch(e){return{}}}
 function locationFingerprint(){return JSON.stringify(locationSnapshot())}
-function reportKey(s,days,dom,per){return cacheBase(s,days,dom,per)+':report-v194:'+locationFingerprint()}
+function reportKey(s,days,dom,per){return cacheBase(s,days,dom,per)+':report-v195:'+locationFingerprint()}
 function readJson(k){if(memTruth.has(k))return memTruth.get(k);try{const v=JSON.parse(localStorage.getItem(k)||'null');if(v)memTruth.set(k,v);return v}catch(e){return null}}
 function writeJson(k,v){memTruth.set(k,v);try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function readReport(k){if(memReport.has(k))return memReport.get(k);try{const v=localStorage.getItem(k)||'';if(v)memReport.set(k,v);return v}catch(e){return''}}
@@ -234,6 +234,7 @@ function techniquesHtml(methods){
  const note=fr?'Les aspects sont évalués avec 1° d’orbe aux dates d’échantillonnage ; l’absence d’aspect à ce relevé ne signifie pas qu’il n’existe aucun transit sur l’intervalle. Les maisons des révolutions solaires exigent le lieu de présence cette année-là.':'Aspects use a 1° orb at sampled dates. No aspect at a sample does not mean no aspect during the entire interval. Solar-return houses need the location for that year.';
  return status+skyStatus+'<p class="ap-muted" style="margin:12px 0">'+esc(countLine)+'</p><details style="margin-top:16px;border:1px solid #dfd3de;border-radius:10px;padding:12px"><summary style="cursor:pointer;font-weight:700">'+esc(langName)+'</summary><p>'+esc(note)+'</p>'+rows+(sol?'<p><strong>Révolutions solaires</strong></p><ul>'+sol+'</ul>':'')+(sky?'<p><strong>Éclipses sur la période</strong></p>'+(eclipses?'<ul>'+eclipses+'</ul>':'<p>Aucune éclipse sur la période.</p>')+(stations?'<p><strong>Stations et rétrogradations</strong></p><ul>'+stations+'</ul>':'')+(lunations?'<p><strong>Nouvelle et pleine lune</strong></p><ul>'+lunations+'</ul>':''):'<p>Éclipses et lunaisons indisponibles (éphéméride absente).</p>')+'</details>';
 }
+function localReading(t,methods){try{return window.APForecastReadableFallback?.render?.(t,methods,lang())||fallback(t,domain(),'')}catch(e){console.error('Lecture locale non disponible',e);return fallback(t,domain(),'')}}
 function aiText(x){try{if(typeof window.texteClaude==='function')return window.texteClaude(x)||''}catch(e){}return x?.content?.[0]?.text||x?.text||''}
 function htmlText(x){try{if(typeof window.formatRapport==='function')return window.formatRapport(x)}catch(e){}return String(x||'').split(/\n{2,}/).filter(Boolean).map(p=>'<p>'+esc(p)+'</p>').join('')}
 function timeout(p,ms){
@@ -258,18 +259,25 @@ function retryButton(){
 function modeRule(s,days){const n=today(),e=addDays(s,days-1);if(e<n)return "La période est passée : propose une lecture rétrospective sans prétendre connaître les événements réellement vécus.";if(s>n)return "La période est future : formule des tendances et possibilités, jamais des certitudes.";return "La période touche le présent : distingue clairement ce qui est déjà écoulé et ce qui est à venir, sans inventer d’événements."}
 async function interpret(t,s,days,dom,per,methods){
  if(typeof window.appelerClaude!=='function')throw new Error('IA indisponible');
- const system=`Tu rédiges une lecture astrologique Astro Paquita, uniquement à partir des signaux et calculs réellement fournis. ${modeRule(s,days)}
-La rubrique additionalMethods contient, lorsqu'elles ont pu être calculées : transits de Jupiter à Pluton sur thème natal, progressions secondaires (1 jour après naissance = 1 année), directions d’arc solaire, profections annuelles en signes entiers, périodes firdaria selon la secte, révolutions solaires (avec maisons seulement si lieu fourni), éclipses solaires et lunaires mondiales avec contacts au natal, lunaisons et stations rétrogrades. Les éclipses astronomiques datées sont distinctes des lunaisons ordinaires. Ne confonds jamais éclipse mondiale et visibilité locale. Si additionalMethods est vide, n'affirme pas avoir appliqué ces méthodes. Si des slowTransits sont fournis, il est interdit d'affirmer qu'il n'y a aucun transit lent. Commence par les tendances de fond documentées, puis utilise les transits rapides pour nuancer le court terme. Cite les aspects réels avec orbes et périodes correspondantes. Ne confonds pas un relevé échantillonné et une recherche exhaustive d'exactitudes. Pas de maison de révolution solaire sans lieu de présence connu ; pas de firdaria ni de profection si données absentes. Les maîtrises de période ne prouvent pas un événement.
-
-N'invente ni planète, aspect, transit, maison, technique indépendante ou convergence. Tu peux expliciter une source/cible/aspect seulement si ces données sont réellement fournies. N'affiche aucun score de probabilité.
-Un indicateur positif ne démontre pas une promotion, une proposition, un contrat, une rencontre ou une rentrée d'argent. Ne présente jamais de tel événement comme attendu ou quasi certain. N'utilise pas « exceptionnel », « pic absolu », « concrétisation » sans fait probant. Distingue tendance astrologique et scénario hypothétique.
-Pour les signaux du moteur V121 échantillonnés (samplingDays>1), ne déduis pas de date précise de transit ; les dates d'éclipses, de lunaisons et de stations contenues dans additionalMethods.sky sont des événements astronomiques calculés et peuvent être citées précisément. Une éclipse mondiale n'est pas nécessairement visible localement. Pour le passé, ne prétends pas connaître les événements vécus. Si aucune dominante n'émerge, dis-le.
-Structure : vue générale, périodes clés, bases techniques disponibles, synthèse. Formule clairement, sans avertissements répétitifs. Réponds dans la langue demandée.`;
- const tokens=days>=300?2800:days>=90?2200:days>=30?1800:1100;
+ const f=window.APForecastReadableFallback;
+ const compact=f&&typeof f.compact==='function'?f.compact(t,methods,lang()):publicTruth(t,methods);
+ const system=`Tu rédiges des prévisions astrologiques Astro Paquita UNIQUEMENT à partir des données fournies. ${modeRule(s,days)}
+Les techniques 'methods' contiennent des contacts calculés (transits lents, progressions secondaires, arc solaire, profections et firdaria), les retours solaires et les phénomènes astronomiques 'sky'. Les dates de contact échantillonnées ne sont pas des dates d'exactitude ; les éclipses et stations sont datées astronomiquement. Une éclipse mondiale n'est pas nécessairement visible sur place.
+Rédige une interprétation personnalisée, concrète et lisible : une vue d'ensemble de 4 phrases ; puis chaque période, avec les transits lents significatifs, leur nature, leur domaine de vie si calculé et le rôle des méthodes complémentaires ; puis une synthèse des priorités. Évite les répétitions, les détails techniques inutiles et les déclarations générales de stabilité lorsque des signaux existent.
+N'invente pas de positions, aspects, dates, maisons ou événements réels. Ne prétends pas à une promotion, rentrée d'argent, maladie ou rencontre certaine. Si une méthode manque, ne l'attribue pas au calcul. Pas d'avertissement répétitif, pas de probabilité chiffrée. Réponds uniquement dans la langue de language, sous forme de sections courtes.`;
+ const model=days>=30?'claude-haiku-4-5':'claude-sonnet-4-6';
+ const tokens=days>=300?2100:days>=90?1450:days>=30?1100:850;
  const isToday=days===1&&iso(s)===iso(today());
- const req=window.appelerClaude({feature:isToday?'forecast_today':'forecast_future',featureContext:{module:'forecast',period:per,mode:'multi_method_v194',domain:dom,start:iso(s),date:iso(s),days,truthVersion:t.truthVersion},model:'claude-sonnet-4-6',max_tokens:tokens,system,messages:[{role:'user',content:JSON.stringify({language:lang(),module:'forecast',requestedDomain:dom,data:publicTruth(t,methods)})}]});
- const data=await timeout(req,90000);
- return aiText(data)
+ const request=window.appelerClaude({
+  feature:isToday?'forecast_today':'forecast_future',
+  featureContext:{module:'forecast',period:per,mode:'compact_v195',domain:dom,start:iso(s),date:iso(s),days,truthVersion:t.truthVersion},
+  model,max_tokens:tokens,system,
+  messages:[{role:'user',content:JSON.stringify(compact)}]
+ });
+ const data=await timeout(request,65000);
+ const result=aiText(data);
+ if(!result||!result.trim()){const e=new Error('Le fournisseur IA a répondu sans texte exploitable.');e.code='EMPTY_AI_RESPONSE';throw e}
+ return result;
 }
 function cancelCurrent(){jobSeq++;computing=false;setBusy(false)}
 async function run(){
@@ -337,7 +345,7 @@ async function run(){
   if(sky)methods={...methods,sky};
  }
  const rk=reportKey(s,days,dom,per),cachedReport=readReport(rk);
- out.innerHTML='<div class="ap-card ap-forecast-v174 ap-forecast-v187"><div class="ap-eyebrow">'+esc(tx('forecast'))+'</div><h2 style="margin:6px 0 14px">'+esc(rangeTitle(s,days))+'</h2><div class="ap-report" id="ap-v187-report">'+fallback(t,dom,'')+'</div><div class="ap-loader show" id="ap-v187-ai"><i class="ap-spinner"></i><span>'+esc(tx('interpret'))+'</span></div></div>';
+ out.innerHTML='<div class="ap-card ap-forecast-v174 ap-forecast-v187"><div class="ap-eyebrow">'+esc(tx('forecast'))+'</div><h2 style="margin:6px 0 14px">'+esc(rangeTitle(s,days))+'</h2><div class="ap-report" id="ap-v187-report">'+localReading(t,methods)+techniquesHtml(methods)+evidenceHtml(t)+'</div><div class="ap-loader show" id="ap-v187-ai"><i class="ap-spinner"></i><span>'+esc(tx('interpret'))+'</span></div></div>';
  const rep=q('#ap-v187-report'),ai=q('#ap-v187-ai');
  if(cachedReport){if(rep)rep.innerHTML=htmlText(cachedReport)+techniquesHtml(methods)+evidenceHtml(t);ai?.classList.remove('show');computing=false;setBusy(false);return}
 
@@ -345,11 +353,11 @@ async function run(){
    const txt=await interpret(t,s,days,dom,per,methods);
    if(job!==jobSeq)return;
    if(txt){if(rep)rep.innerHTML=htmlText(txt)+techniquesHtml(methods)+evidenceHtml(t);if(!methods?.techniquesError&&!methods?.skyError)writeReport(rk,txt)}
-   else if(rep)rep.innerHTML=fallback(t,dom,tx('unavailable'))+techniquesHtml(methods)+evidenceHtml(t)+retryButton()
+   else if(rep)rep.innerHTML='<p class="ap-muted">'+esc(tx('unavailable'))+'</p>'+localReading(t,methods)+techniquesHtml(methods)+evidenceHtml(t)+retryButton()
  }catch(e){
    if(job!==jobSeq)return;
    console.warn('Astro Paquita : échec de l’interprétation',e?.code||'',e?.message||'');
-   if(rep)rep.innerHTML=fallback(t,dom,failureNote(e))+techniquesHtml(methods)+evidenceHtml(t)+retryButton()
+   if(rep)rep.innerHTML='<p class="ap-muted">'+esc(failureNote(e))+'</p>'+localReading(t,methods)+techniquesHtml(methods)+evidenceHtml(t)+retryButton()
  }finally{
    if(job===jobSeq){ai?.classList.remove('show');computing=false;setBusy(false)}
  }
