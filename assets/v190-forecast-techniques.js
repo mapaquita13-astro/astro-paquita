@@ -147,14 +147,31 @@ async function compute({A,profile,truth,jobActive}){
   const b=truth.points[i],from=fromIso(b.start),to=fromIso(b.end);
   if(!from||!to)continue;
   const d=new Date((from.getTime()+to.getTime())/2);
-  const trans=eng.positionAt(d);
   const progressed=preciseBirth?eng.progress(d):null;
+  // Les transits lents sont testés à intervalles de six jours maximum.
+  // Chaque configuration est dédoublonnée en conservant son orbe le plus serré.
+  const slowCandidates=new Map();
+  const duration=Math.max(0,Math.round((to.getTime()-from.getTime())/86400000));
+  const offsets=new Set([0,duration]);
+  for(let day=0;day<=duration;day+=6)offsets.add(day);
+  for(const offset of [...offsets].sort((a,b)=>a-b)){
+   if(jobActive&&!jobActive())throw Error('CALC_CANCELLED');
+   const date=new Date(from.getTime()+offset*86400000);
+   const trans=eng.positionAt(date);
+   const aspects=aspectsBetween(trans,eng.n,LONG,preciseBirth?NATAL_TARGETS:NATAL_TARGETS.filter(x=>x!=='Lune'&&x!=='Ascendant'&&x!=='MC'),40,'transit_lent');
+   for(const a of aspects){
+    const key=[a.source,a.target,a.aspect].join('|');
+    const prior=slowCandidates.get(key);
+    if(!prior||a.orb<prior.orb)slowCandidates.set(key,{...a,observedDate:iso(date)});
+   }
+  }
+  const slowTransits=[...slowCandidates.values()].sort((a,b)=>a.orb-b.orb).slice(0,12);
   points.push({period:b.label,date:iso(d),
-    slowTransits:aspectsBetween(trans,eng.n,LONG,preciseBirth?NATAL_TARGETS:NATAL_TARGETS.filter(x=>x!=='Lune'&&x!=='Ascendant'&&x!=='MC'),9,'transit_lent'),
+    slowTransits,
     progressions:progressed?aspectsBetween(progressed,eng.n,PROG,['Soleil','Lune','Vénus','Mars','Saturne','Ascendant','MC'],7,'progression_secondaire'):[],
     profection:profection(d,eng.birth,eng.n.angles?.ascendant),
     firdaria:firdaria(d,eng.birth,eng.sect?.sect)});
-  if(i%3===2)await new Promise(resolve=>setTimeout(resolve,0));
+  if(i%2===1)await new Promise(resolve=>setTimeout(resolve,0));
  }
  const solarYears=[...new Set([Number(truth.start.slice(0,4))-1,Number(truth.start.slice(0,4)),Number(truth.end.slice(0,4))])].sort((a,b)=>a-b);
  const candidates=[];
@@ -165,7 +182,7 @@ async function compute({A,profile,truth,jobActive}){
  const prior=candidates.filter(x=>x.instantLocalReference.slice(0,10)<truth.start).slice(-1);
  const inPeriod=candidates.filter(x=>x.instantLocalReference.slice(0,10)>=truth.start&&x.instantLocalReference.slice(0,10)<=truth.end);
  const solarReturns=[...prior,...inPeriod];
- return {engine:'V121 + calculs complémentaires V190',orbDegrees:1,precision:'relevés au milieu de chaque segment ; recherches des aspects au relevé seulement',
+ return {engine:'V121 + calculs complémentaires V190',orbDegrees:1,precision:'transits lents relevés tous les 6 jours au maximum ; progressions relevées au milieu du segment ; aucune prétention à un relevé des exactitudes à la minute',
   natalTimeStatus:profile.timeStatus||'exact',sect:eng.sect,points,solarReturns,
   unavailable:['éclipses : non calculées (données de syzygies et latitude lunaire non vérifiées)','maisons de révolution solaire : ville de présence annuelle non renseignée',...(!preciseBirth?['progressions précises, révolution solaire et firdaria : heure natale exacte manquante']:[])]};
 }
