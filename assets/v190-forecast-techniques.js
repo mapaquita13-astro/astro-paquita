@@ -1,7 +1,7 @@
-/* Astro Paquita V190 — calculs complémentaires de prévisions, sans modifier V121.
+/* Astro Paquita V192 — calculs complémentaires de prévisions, sans modifier V121.
    Ephemerides : AstroTruth.computeProfile -> moteur astronomique V121 existant.
    Les aspects ne sont émis que s'ils sont calculés à <= 1° d'orbe.
-   Révolution solaire : instant de retour du Soleil calculé, sans maisons (lieu de RS inconnu).
+   Révolution solaire : maisons uniquement si lieu de présence précisément fourni.
    Firdaria : ordre jour/nuit, noeuds en fin de cycle, année moyenne 365,2425 j.
 */
 (function(){
@@ -94,22 +94,25 @@ function makeEngine(A,profile){
  if(!birth)throw Error('Date de naissance manquante');
  const n={...natal,rawJd:natalRaw.jd,latitude:profile.lat,longitude:profile.lon};
  const cache=new Map();
- function positionAt(d){
-  const key=d.toISOString().slice(0,16);
+ function positionAt(d,geo){
+  const loc=(geo&&finite(geo.lat)&&finite(geo.lon))?geo:null;
+  const key=d.toISOString().slice(0,16)+'|'+(loc?loc.lat+','+loc.lon:'');
   if(cache.has(key))return cache.get(key);
-  const fake={...profile,date:civil(d),heure:String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0'),timeStatus:'exact'};
+  // L'instant d est UTC. Il doit être transmis à V121 sous le fuseau UTC,
+  // sans transformer par erreur l'heure UTC en heure civile de naissance.
+  const fake={...profile,date:civil(d),heure:String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0'),
+   tz:'UTC',timeStatus:'exact',lat:loc?Number(loc.lat):profile.lat,lon:loc?Number(loc.lon):profile.lon};
   const value=A.computeProfile(fake);
   cache.set(key,value);
   return value;
  }
  function progress(date){
   const age=diffYears(date,birth);
-  const base=new Date(birth);
-  const hm=String(profile.heure||'12:00').split(':').map(Number);
-  base.setUTCHours(Number.isFinite(hm[0])?hm[0]:12,Number.isFinite(hm[1])?hm[1]:0,0,0);
+  // UTC calculé par le moteur natal validé, évite de traiter l'heure locale comme UTC.
+  const base=new Date((Number(natalRaw.jd)-2440587.5)*86400000);
   return positionAt(new Date(base.getTime()+age*86400000));
  }
- function solarReturn(year){
+ function solarReturn(year,location){
   const sun=natalPos(n,'Soleil');if(sun===null)return null;
   const start=new Date(Date.UTC(year,birth.getUTCMonth(),birth.getUTCDate(),12)-4*86400000);
   let lo=null,hi=null,lv=null;
@@ -128,15 +131,24 @@ function makeEngine(A,profile){
    if(difference<0)lo=middle;else hi=middle;
   }
   const when=new Date(Math.round((lo.getTime()+hi.getTime())/120000)*60000);
-  const p=positionAt(when);
-  return {instantLocalReference:iso(when)+' '+String(when.getUTCHours()).padStart(2,'0')+':'+String(when.getUTCMinutes()).padStart(2,'0'),referenceZone:profile.tz,
-    method:'retour du Soleil à sa longitude natale; coordonnées planétaires seulement; maisons RS non calculées',
+  const valid=location&&finite(location.lat)&&finite(location.lon)&&Math.abs(Number(location.lat))<=90&&Math.abs(Number(location.lon))<=180;
+  const geo=valid?{city:String(location.city||''),lat:Number(location.lat),lon:Number(location.lon),tz:String(location.tz||'UTC')}:null;
+  const p=positionAt(when,geo);
+  let localDate=null;
+  if(geo){try{localDate=new Intl.DateTimeFormat('fr-FR',{timeZone:geo.tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(when)}
+   catch(e){localDate=null}}
+  return {instantUtc:when.toISOString(),localDate,referenceZone:geo?.tz||null,location:geo,
+    method:geo?'révolution solaire : retour exact du Soleil natal ; angles et maisons recalculés au lieu fourni':'retour du Soleil natal ; maisons indisponibles sans lieu de présence',
     sunOrb:+angle(numericPos(p,'Soleil'),sun).toFixed(3),
-    aspects:aspectsBetween(p,n,['Vénus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton'],['Soleil','Lune','Vénus','Mars','Ascendant','MC'],10,'revolution_solaire')};
+    ascendant:geo&&finite(p.AS)?+Number(p.AS).toFixed(3):null,
+    mc:geo&&finite(p.MC)?+Number(p.MC).toFixed(3):null,
+    houseSystem:geo&&p.cusps?(p.houseSystem||'Placidus'):null,
+    houseCusps:geo&&p.cusps?p.cusps:null,
+    aspects:aspectsBetween(p,n,['Lune','Vénus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton'],['Soleil','Lune','Vénus','Mars','Ascendant','MC'],14,'revolution_solaire')};
  }
  return {n,birth,positionAt,progress,solarReturn,sect:sectOf(n)};
 }
-async function compute({A,profile,truth,jobActive}){
+async function compute({A,profile,truth,jobActive,locations}){
  if(!A||typeof A.computeProfile!=='function'||!profile)throw Error('Moteur natal indisponible');
  const eng=makeEngine(A,profile);
  const preciseBirth=(profile.timeStatus||'exact')==='exact';
@@ -148,6 +160,10 @@ async function compute({A,profile,truth,jobActive}){
   if(!from||!to)continue;
   const d=new Date((from.getTime()+to.getTime())/2);
   const progressed=preciseBirth?eng.progress(d):null;
+  const natalSun=natalPos(eng.n,'Soleil'),progSun=numericPos(progressed,'Soleil');
+  const solarArc=preciseBirth&&natalSun!==null&&progSun!==null?mod(progSun-natalSun,360):null;
+  const solarArcChart=solarArc===null?null:{pos:Object.fromEntries(Object.entries(eng.n.positions||{}).filter(([,lon])=>finite(lon)).map(([key,lon])=>[key,mod(Number(lon)+solarArc,360)]))};
+  const solarArcDirections=solarArcChart?aspectsBetween(solarArcChart,eng.n,['Soleil','Lune','Mercure','Vénus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton'],NATAL_TARGETS,10,'direction_arc_solaire'):[];
   // Les transits lents sont testés à intervalles de six jours maximum.
   // Chaque configuration est dédoublonnée en conservant son orbe le plus serré.
   const slowCandidates=new Map();
@@ -169,6 +185,8 @@ async function compute({A,profile,truth,jobActive}){
   points.push({period:b.label,date:iso(d),
     slowTransits,
     progressions:progressed?aspectsBetween(progressed,eng.n,PROG,['Soleil','Lune','Vénus','Mars','Saturne','Ascendant','MC'],7,'progression_secondaire'):[],
+    solarArcDegrees:solarArc===null?null:+solarArc.toFixed(3),
+    solarArcDirections,
     profection:profection(d,eng.birth,eng.n.angles?.ascendant),
     firdaria:firdaria(d,eng.birth,eng.sect?.sect)});
   if(i%2===1)await new Promise(resolve=>setTimeout(resolve,0));
@@ -176,15 +194,16 @@ async function compute({A,profile,truth,jobActive}){
  const solarYears=[...new Set([Number(truth.start.slice(0,4))-1,Number(truth.start.slice(0,4)),Number(truth.end.slice(0,4))])].sort((a,b)=>a-b);
  const candidates=[];
  for(const year of (preciseBirth?solarYears:[])){if(jobActive&&!jobActive())throw Error('CALC_CANCELLED');
-  try{const sr=eng.solarReturn(year);if(sr)candidates.push({year,...sr})}catch(e){console.warn('Retour solaire non disponible',year,e?.message||e)}
+  try{const sr=eng.solarReturn(year,locations?.[year]);if(sr)candidates.push({year,...sr})}catch(e){console.warn('Retour solaire non disponible',year,e?.message||e)}
  }
- candidates.sort((a,b)=>a.instantLocalReference.localeCompare(b.instantLocalReference));
- const prior=candidates.filter(x=>x.instantLocalReference.slice(0,10)<truth.start).slice(-1);
- const inPeriod=candidates.filter(x=>x.instantLocalReference.slice(0,10)>=truth.start&&x.instantLocalReference.slice(0,10)<=truth.end);
+ candidates.sort((a,b)=>a.instantUtc.localeCompare(b.instantUtc));
+ const prior=candidates.filter(x=>x.instantUtc.slice(0,10)<truth.start).slice(-1);
+ const inPeriod=candidates.filter(x=>x.instantUtc.slice(0,10)>=truth.start&&x.instantUtc.slice(0,10)<=truth.end);
  const solarReturns=[...prior,...inPeriod];
  return {engine:'V121 + calculs complémentaires V190',orbDegrees:1,precision:'transits lents relevés tous les 6 jours au maximum ; progressions relevées au milieu du segment ; aucune prétention à un relevé des exactitudes à la minute',
   natalTimeStatus:profile.timeStatus||'exact',sect:eng.sect,points,solarReturns,
-  unavailable:['éclipses : non calculées (données de syzygies et latitude lunaire non vérifiées)','maisons de révolution solaire : ville de présence annuelle non renseignée',...(!preciseBirth?['progressions précises, révolution solaire et firdaria : heure natale exacte manquante']:[])]};
+  unavailable:[...(!solarReturns.some(x=>x.houseCusps)?['maisons de révolution solaire : renseigner les coordonnées du lieu de présence de chaque année concernée']:[]),
+    ...(!preciseBirth?['progressions précises, direction d’arc solaire, révolution solaire et firdaria : heure natale exacte manquante']:[])]};
 }
-window.APForecastMethods={compute,version:'v190',_test:{angle,profection,firdaria,sectOf,birthdayAge,signed}};
+window.APForecastMethods={compute,version:'v192',_test:{angle,profection,firdaria,sectOf,birthdayAge,signed}};
 })();
