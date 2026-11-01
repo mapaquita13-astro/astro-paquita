@@ -139,7 +139,8 @@ function makeEngine(A,profile){
 async function compute({A,profile,truth,jobActive}){
  if(!A||typeof A.computeProfile!=='function'||!profile)throw Error('Moteur natal indisponible');
  const eng=makeEngine(A,profile);
- if((profile.timeStatus||'exact')!=='exact')eng.sect=null;
+ const preciseBirth=(profile.timeStatus||'exact')==='exact';
+ if(!preciseBirth)eng.sect=null;
  const points=[];
  for(let i=0;i<(truth.points||[]).length;i++){
   if(jobActive&&!jobActive())throw Error('CALC_CANCELLED');
@@ -147,17 +148,17 @@ async function compute({A,profile,truth,jobActive}){
   if(!from||!to)continue;
   const d=new Date((from.getTime()+to.getTime())/2);
   const trans=eng.positionAt(d);
-  const progressed=eng.progress(d);
+  const progressed=preciseBirth?eng.progress(d):null;
   points.push({period:b.label,date:iso(d),
-    slowTransits:aspectsBetween(trans,eng.n,LONG,NATAL_TARGETS,9,'transit_lent'),
-    progressions:aspectsBetween(progressed,eng.n,PROG,['Soleil','Lune','Vénus','Mars','Saturne','Ascendant','MC'],7,'progression_secondaire'),
+    slowTransits:aspectsBetween(trans,eng.n,LONG,preciseBirth?NATAL_TARGETS:NATAL_TARGETS.filter(x=>x!=='Lune'&&x!=='Ascendant'&&x!=='MC'),9,'transit_lent'),
+    progressions:progressed?aspectsBetween(progressed,eng.n,PROG,['Soleil','Lune','Vénus','Mars','Saturne','Ascendant','MC'],7,'progression_secondaire'):[],
     profection:profection(d,eng.birth,eng.n.angles?.ascendant),
     firdaria:firdaria(d,eng.birth,eng.sect?.sect)});
   if(i%3===2)await new Promise(resolve=>setTimeout(resolve,0));
  }
  const solarYears=[...new Set([Number(truth.start.slice(0,4))-1,Number(truth.start.slice(0,4)),Number(truth.end.slice(0,4))])].sort((a,b)=>a-b);
  const candidates=[];
- for(const year of solarYears){if(jobActive&&!jobActive())throw Error('CALC_CANCELLED');
+ for(const year of (preciseBirth?solarYears:[])){if(jobActive&&!jobActive())throw Error('CALC_CANCELLED');
   try{const sr=eng.solarReturn(year);if(sr)candidates.push({year,...sr})}catch(e){console.warn('Retour solaire non disponible',year,e?.message||e)}
  }
  candidates.sort((a,b)=>a.instantLocalReference.localeCompare(b.instantLocalReference));
@@ -166,7 +167,7 @@ async function compute({A,profile,truth,jobActive}){
  const solarReturns=[...prior,...inPeriod];
  return {engine:'V121 + calculs complémentaires V190',orbDegrees:1,precision:'relevés au milieu de chaque segment ; recherches des aspects au relevé seulement',
   natalTimeStatus:profile.timeStatus||'exact',sect:eng.sect,points,solarReturns,
-  unavailable:['éclipses : non calculées (éphéméride des nœuds/lunaisons absente de ce module)','maisons de révolution solaire : ville de présence annuelle non renseignée']};
+  unavailable:['éclipses : non calculées (données de syzygies et latitude lunaire non vérifiées)','maisons de révolution solaire : ville de présence annuelle non renseignée',...(!preciseBirth?['progressions précises, révolution solaire et firdaria : heure natale exacte manquante']:[])]};
 }
 window.APForecastMethods={compute,version:'v190',_test:{angle,profection,firdaria,sectOf,birthdayAge,signed}};
 })();
