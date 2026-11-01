@@ -72,9 +72,14 @@ function collectLunations(lib,start,end,natal){
  }
  return out.sort((a,b)=>a.dateUtc.localeCompare(b.dateUtc));
 }
+function geoLongitude(lib,body,d){
+ // EclipticLongitude est héliocentrique pour les planètes ; on veut le mouvement
+ // géocentrique vu de la Terre, indispensable pour détecter les rétrogradations.
+ return lib.Ecliptic(lib.GeoVector(body,d,true)).elon;
+}
 function speed(lib,body,d){
  const at=new Date(d.getTime()-12*3600000),after=new Date(d.getTime()+12*3600000);
- return delta(lib.EclipticLongitude(body,after),lib.EclipticLongitude(body,at));
+ return delta(geoLongitude(lib,body,after),geoLongitude(lib,body,at));
 }
 function stations(lib,start,end,natal,alive){
  const out=[];const begin=new Date(start.getTime()-3*DAY),last=new Date(end.getTime()+3*DAY);
@@ -92,7 +97,7 @@ function stations(lib,start,end,natal,alive){
     }
     const date=new Date((low.getTime()+high.getTime())/2);
     if(date>=start&&date<=end){
-     const lon=lib.EclipticLongitude(eng,date);
+     const lon=geoLongitude(lib,eng,date);
      out.push({planet,dateUtc:date.toISOString(),motion:currentSpeed<0?'rétrograde':'direct',zodiac:placement(lon,natal),method:'longitude géocentrique de date / vitesse par différence centrée sur 24 h'});
     }
    }
