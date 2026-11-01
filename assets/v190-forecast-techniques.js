@@ -29,6 +29,21 @@ function birthdayAge(date,birth){let age=date.getUTCFullYear()-birth.getUTCFullY
 function numericPos(r,name){return finite(r?.pos?.[name])?Number(r.pos[name]):null}
 function natalPos(n,name){if(name==='Ascendant')return finite(n.angles?.ascendant)?Number(n.angles.ascendant):null;if(name==='MC')return finite(n.angles?.mc)?Number(n.angles.mc):null;return finite(n.positions?.[name])?Number(n.positions[name]):null}
 function houseOf(lon,asc){if(!finite(lon)||!finite(asc))return null;return mod(Math.floor(Number(lon)/30)-Math.floor(Number(asc)/30),12)+1}
+function cuspsAsArray(data){
+ if(!data)return null;
+ const x=Array.isArray(data)?(data.length>=13?data.slice(1,13):data.slice(0,12)):Array.from({length:12},(_,i)=>data[i+1]??data[String(i+1)]);
+ if(x.length!==12||x.some(n=>!finite(n)))return null;
+ return x.map(Number);
+}
+function placidusHouse(lon,cusps){
+ if(!finite(lon)||!cusps)return null;
+ for(let i=0;i<12;i++){
+  const from=mod(cusps[i],360),to=mod(cusps[(i+1)%12],360);
+  const width=mod(to-from,360),offset=mod(Number(lon)-from,360);
+  if(width>0&&offset<width)return i+1;
+ }
+ return null;
+}
 function aspectsBetween(current,natal,sourceNames,targets,max,group){
  const xs=[];
  for(const source of sourceNames){
@@ -144,6 +159,7 @@ function makeEngine(A,profile){
     mc:geo&&finite(p.MC)?+Number(p.MC).toFixed(3):null,
     houseSystem:geo&&p.cusps?(p.houseSystem||'Placidus'):null,
     houseCusps:geo&&p.cusps?p.cusps:null,
+    planets:geo?Object.entries(p.pos||{}).filter(([,lon])=>finite(lon)).map(([name,lon])=>({name,longitude:+Number(lon).toFixed(3),house:placidusHouse(lon,cuspsAsArray(p.cusps))})):[],
     aspects:aspectsBetween(p,n,['Lune','Vénus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton'],['Soleil','Lune','Vénus','Mars','Ascendant','MC'],14,'revolution_solaire')};
  }
  return {n,birth,positionAt,progress,solarReturn,sect:sectOf(n)};
