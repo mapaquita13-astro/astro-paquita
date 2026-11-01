@@ -1,4 +1,4 @@
-/* Astro Paquita V192 — calculs complémentaires de prévisions, sans modifier V121.
+/* Astro Paquita V194 — correction de la liaison aux calculs natals V121.
    Ephemerides : AstroTruth.computeProfile -> moteur astronomique V121 existant.
    Les aspects ne sont émis que s'ils sont calculés à <= 1° d'orbe.
    Révolution solaire : maisons uniquement si lieu de présence précisément fourni.
@@ -26,12 +26,24 @@ function civil(d){return [String(d.getUTCDate()).padStart(2,'0'),String(d.getUTC
 function birthDate(p){const s=String(p.date||'').trim(),m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);if(m)return new Date(Date.UTC(+m[3],+m[2]-1,+m[1],12));if(/^\d{4}-\d\d-\d\d$/.test(s))return fromIso(s);return null}
 function diffYears(a,b){return (a.getTime()-b.getTime())/(YEARS*86400000)}
 function birthdayAge(date,birth){let age=date.getUTCFullYear()-birth.getUTCFullYear();const m=date.getUTCMonth()-birth.getUTCMonth();if(m<0||(m===0&&date.getUTCDate()<birth.getUTCDate()))age--;return Math.max(0,age)}
-function numericPos(r,name){return finite(r?.pos?.[name])?Number(r.pos[name]):null}
-function natalPos(n,name){if(name==='Ascendant')return finite(n.angles?.ascendant)?Number(n.angles.ascendant):null;if(name==='MC')return finite(n.angles?.mc)?Number(n.angles.mc):null;return finite(n.positions?.[name])?Number(n.positions[name]):null}
+function positionValue(map,name){
+ const direct=map?.[name];
+ if(finite(direct))return Number(direct);
+ // Le moteur historique V121 utilise "Venus", la couche récente "Vénus".
+ if(name==='Vénus'&&finite(map?.Venus))return Number(map.Venus);
+ if(name==='Venus'&&finite(map?.['Vénus']))return Number(map['Vénus']);
+ return null;
+}
+function numericPos(r,name){return positionValue(r?.pos,name)}
+function natalPos(n,name){
+ if(name==='Ascendant')return finite(n.angles?.ascendant)?Number(n.angles.ascendant):null;
+ if(name==='MC')return finite(n.angles?.mc)?Number(n.angles.mc):null;
+ return positionValue(n.positions,name);
+}
 function houseOf(lon,asc){if(!finite(lon)||!finite(asc))return null;return mod(Math.floor(Number(lon)/30)-Math.floor(Number(asc)/30),12)+1}
 function cuspsAsArray(data){
  if(!data)return null;
- const x=Array.isArray(data)?(data.length>=13?data.slice(1,13):data.slice(0,12)):Array.from({length:12},(_,i)=>data[i+1]??data[String(i+1)]);
+ const x=Array.isArray(data)?(data.length>=13?data.slice(1,13):data.slice(0,12)):Array.from({length:12},(_,i)=>data['H'+(i+1)]??data[i+1]??data[String(i+1)]);
  if(x.length!==12||x.some(n=>!finite(n)))return null;
  return x.map(Number);
 }
@@ -110,14 +122,28 @@ function makeEngine(A,profile){
  const n={...natal,rawJd:natalRaw.jd,latitude:profile.lat,longitude:profile.lon};
  const cache=new Map();
  function positionAt(d,geo){
-  const loc=(geo&&finite(geo.lat)&&finite(geo.lon))?geo:null;
-  const key=d.toISOString().slice(0,16)+'|'+(loc?loc.lat+','+loc.lon:'');
+  const loc=geo&&finite(geo.lat)&&finite(geo.lon)?geo:null;
+  const latitude=loc?Number(loc.lat):Number(profile.lat),longitude=loc?Number(loc.lon):Number(profile.lon);
+  const key=d.toISOString().slice(0,16)+'|'+latitude+','+longitude;
   if(cache.has(key))return cache.get(key);
-  // L'instant d est UTC. Il doit être transmis à V121 sous le fuseau UTC,
-  // sans transformer par erreur l'heure UTC en heure civile de naissance.
-  const fake={...profile,date:civil(d),heure:String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0'),
-   tz:'UTC',timeStatus:'exact',lat:loc?Number(loc.lat):profile.lat,lon:loc?Number(loc.lon):profile.lon};
-  const value=A.computeProfile(fake);
+  const jd=d.getTime()/86400000+2440587.5;
+  let value;
+  // Le moteur V121 fournit directement des fonctions astronomiques capables
+  // de calculer un JD UTC sans fabriquer un profil de naissance fictif.
+  if(typeof window.calcPos==='function'&&typeof window.calcASMC==='function'){
+   const pos=window.calcPos(jd);
+   const angles=window.calcASMC(jd,latitude,longitude);
+   const cusps=typeof window.prevHouseCuspsV80==='function'
+    ?window.prevHouseCuspsV80(angles.AS,angles.MC,jd,latitude,longitude):null;
+   value={jd,pos,AS:angles.AS,MC:angles.MC,cusps,houseSystem:cusps?cusps._system||'Placidus':null};
+  }else{
+   // Compatibilité : "UTC" était rejeté par AstroTruth.isIana().
+   // Etc/UTC est reconnu et assure le même instant sans décalage de fuseau.
+   const fake={...profile,date:civil(d),
+    heure:String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0'),
+    tz:'Etc/UTC',timeStatus:'exact',lat:latitude,lon:longitude};
+   value=A.computeProfile(fake);
+  }
   cache.set(key,value);
   return value;
  }
@@ -221,5 +247,5 @@ async function compute({A,profile,truth,jobActive,locations}){
   unavailable:[...(!solarReturns.some(x=>x.houseCusps)?['maisons de révolution solaire : renseigner les coordonnées du lieu de présence de chaque année concernée']:[]),
     ...(!preciseBirth?['progressions précises, direction d’arc solaire, révolution solaire et firdaria : heure natale exacte manquante']:[])]};
 }
-window.APForecastMethods={compute,version:'v192',_test:{angle,profection,firdaria,sectOf,birthdayAge,signed}};
+window.APForecastMethods={compute,version:'v194',_test:{angle,profection,firdaria,sectOf,birthdayAge,signed}};
 })();
