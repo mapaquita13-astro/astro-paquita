@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261101-forecast-readable-v195';
+const VER='20261101-restore-validated-v121';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -45,20 +45,7 @@ function continueInterface(){
                       load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
                         load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
                           load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes',function(){
-                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
-                              // Prévisions V190 : méthodes complémentaires calculées, limitées à la route Prévisions.
-                              load('assets/vendor/astronomy-engine.min.js?v='+VER,'ap-astronomy-engine-mit',function(){
-                                load('assets/v191-forecast-eclipses.js?v='+VER,'ap-v191-sky-events',function(){
-                                  load('assets/v192-solar-location-ui.js?v='+VER,'ap-v192-solar-locations',function(){
-                                    load('assets/v190-forecast-techniques.js?v='+VER,'ap-v192-forecast-techniques',function(){
-                                      load('assets/v195-forecast-readable-fallback.js?v='+VER,'ap-v195-readable-forecast',function(){
-                                        load('assets/v184-past-year-daily.js?v='+VER,'ap-v195-multimethod-forecast');
-                                      });
-                                    });
-                                  });
-                                });
-                              });
-                            });
+                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard');
                           });
                         });
                       });
