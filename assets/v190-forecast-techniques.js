@@ -82,7 +82,7 @@ function firdaria(date,birth,sect){
  return null;
 }
 function profection(date,birth,asc){
- if(!birth||!finite(asc))return null;
+ if(!birth||date.getTime()<birth.getTime()||!finite(asc))return null;
  const age=birthdayAge(date,birth),house=(age%12)+1;
  const signIndex=mod(Math.floor(asc/30)+age,12);
  return {age,house,sign:SIGNS[signIndex],lord:RULERS[signIndex],houseSystem:'signes entiers'};
@@ -155,11 +155,15 @@ async function compute({A,profile,truth,jobActive}){
     firdaria:firdaria(d,eng.birth,eng.sect?.sect)});
   if(i%3===2)await new Promise(resolve=>setTimeout(resolve,0));
  }
- const solarYears=[...new Set([truth.start.slice(0,4),truth.end.slice(0,4),String(Number(truth.start.slice(0,4))-1)].map(Number))];
- const solarReturns=[];
+ const solarYears=[...new Set([Number(truth.start.slice(0,4))-1,Number(truth.start.slice(0,4)),Number(truth.end.slice(0,4))])].sort((a,b)=>a-b);
+ const candidates=[];
  for(const year of solarYears){if(jobActive&&!jobActive())throw Error('CALC_CANCELLED');
-  try{const sr=eng.solarReturn(year);if(sr)solarReturns.push({year,...sr})}catch(e){console.warn('Retour solaire non disponible',year,e?.message||e)}
+  try{const sr=eng.solarReturn(year);if(sr)candidates.push({year,...sr})}catch(e){console.warn('Retour solaire non disponible',year,e?.message||e)}
  }
+ candidates.sort((a,b)=>a.instantLocalReference.localeCompare(b.instantLocalReference));
+ const prior=candidates.filter(x=>x.instantLocalReference.slice(0,10)<truth.start).slice(-1);
+ const inPeriod=candidates.filter(x=>x.instantLocalReference.slice(0,10)>=truth.start&&x.instantLocalReference.slice(0,10)<=truth.end);
+ const solarReturns=[...prior,...inPeriod];
  return {engine:'V121 + calculs complémentaires V190',orbDegrees:1,precision:'relevés au milieu de chaque segment ; recherches des aspects au relevé seulement',
   natalTimeStatus:profile.timeStatus||'exact',sect:eng.sect,points,solarReturns,
   unavailable:['éclipses : non calculées (éphéméride des nœuds/lunaisons absente de ce module)','maisons de révolution solaire : ville de présence annuelle non renseignée']};
