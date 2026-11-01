@@ -260,7 +260,7 @@ La rubrique additionalMethods contient, lorsqu'elles ont pu être calculées : t
 
 N'invente ni planète, aspect, transit, maison, technique indépendante ou convergence. Tu peux expliciter une source/cible/aspect seulement si ces données sont réellement fournies. N'affiche aucun score de probabilité.
 Un indicateur positif ne démontre pas une promotion, une proposition, un contrat, une rencontre ou une rentrée d'argent. Ne présente jamais de tel événement comme attendu ou quasi certain. N'utilise pas « exceptionnel », « pic absolu », « concrétisation » sans fait probant. Distingue tendance astrologique et scénario hypothétique.
-Pour une année échantillonnée (samplingDays>1), parle seulement des périodes mensuelles : aucune date de jour précis. Pour le passé, ne prétends pas connaître les événements vécus. Si aucune dominante n'émerge, dis-le.
+Pour les signaux du moteur V121 échantillonnés (samplingDays>1), ne déduis pas de date précise de transit ; les dates d'éclipses, de lunaisons et de stations contenues dans additionalMethods.sky sont des événements astronomiques calculés et peuvent être citées précisément. Une éclipse mondiale n'est pas nécessairement visible localement. Pour le passé, ne prétends pas connaître les événements vécus. Si aucune dominante n'émerge, dis-le.
 Structure : vue générale, périodes clés, bases techniques disponibles, synthèse. Formule clairement, sans avertissements répétitifs. Réponds dans la langue demandée.`;
  const tokens=days>=300?2800:days>=90?2200:days>=30?1800:1100;
  const isToday=days===1&&iso(s)===iso(today());
