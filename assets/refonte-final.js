@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261101-forecast-eclipses-v193b';
+const VER='20261101-forecast-techniques-v194';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -51,7 +51,7 @@ function continueInterface(){
                                 load('assets/v191-forecast-eclipses.js?v='+VER,'ap-v191-sky-events',function(){
                                   load('assets/v192-solar-location-ui.js?v='+VER,'ap-v192-solar-locations',function(){
                                     load('assets/v190-forecast-techniques.js?v='+VER,'ap-v192-forecast-techniques',function(){
-                                      load('assets/v184-past-year-daily.js?v='+VER,'ap-v193-multimethod-forecast');
+                                      load('assets/v184-past-year-daily.js?v='+VER,'ap-v194-multimethod-forecast');
                                     });
                                   });
                                 });
