@@ -139,6 +139,7 @@ function makeEngine(A,profile){
 async function compute({A,profile,truth,jobActive}){
  if(!A||typeof A.computeProfile!=='function'||!profile)throw Error('Moteur natal indisponible');
  const eng=makeEngine(A,profile);
+ if((profile.timeStatus||'exact')!=='exact')eng.sect=null;
  const points=[];
  for(let i=0;i<(truth.points||[]).length;i++){
   if(jobActive&&!jobActive())throw Error('CALC_CANCELLED');
