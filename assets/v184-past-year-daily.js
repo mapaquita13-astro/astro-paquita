@@ -220,7 +220,8 @@ function techniquesHtml(methods){
   if(!statements.length)statements.push('Aucun aspect complémentaire à 1° au relevé de cette période');
   return '<div style="margin:12px 0"><strong>'+esc(p.period)+'</strong><ul>'+statements.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>';
  }).join('');
- const sol=(methods.solarReturns||[]).map(r=>'<li>'+esc(String(r.year)+' : '+r.instantUtc+' UTC'+(r.localDate?' ; heure locale '+r.localDate:'')+' ; orbe Soleil '+r.sunOrb+'°'+(r.houseCusps?' ; lieu '+r.location?.city+', Ascendant '+r.ascendant+'°, MC '+r.mc+'°, maisons '+r.houseSystem:' ; maisons non calculées (lieu non renseigné)'))+'</li>').join('');
+ const sol=(methods.solarReturns||[]).map(r=>'<li>'+esc(String(r.year)+' : '+r.instantUtc+' UTC'+(r.localDate?' ; heure locale '+r.localDate:'')+' ; orbe Soleil '+r.sunOrb+'°'+(r.houseCusps?' ; lieu '+r.location?.city+', Ascendant '+r.ascendant+'°, MC '+r.mc+'°, maisons '+r.houseSystem:' ; maisons non calculées (lieu non renseigné)')+
+ (r.planets?.length?' ; planètes : '+r.planets.filter(p=>p.house).slice(0,10).map(p=>p.name+' maison '+p.house).join(', '):''))+'</li>').join('');
  const sky=methods.sky||null;
  const eclipses=(sky?.eclipses||[]).map(e=>'<li>'+esc(e.dateUtc.slice(0,16).replace('T',' ')+' UTC : éclipse '+e.type+' '+e.kind+', '+e.zodiac.sign+' '+e.zodiac.degree+'°'+(e.zodiac.wholeSignHouse?' (maison '+e.zodiac.wholeSignHouse+')':'')+(e.zodiac.natalContacts?.length?' ; contact natal '+e.zodiac.natalContacts.slice(0,2).map(x=>x.aspectName+' '+x.target+' (orbe '+x.orb+'°)').join(', '):''))+'</li>').join('');
  const stations=(sky?.retrogradeStations||[]).map(e=>'<li>'+esc(e.dateUtc.slice(0,10)+' : '+e.planet+' station '+e.motion+' en '+e.zodiac.sign)+'</li>').join('');
