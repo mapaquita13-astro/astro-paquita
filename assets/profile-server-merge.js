@@ -30,7 +30,7 @@ async function merge(force){
      const a=localStorage.getItem(ACTIVE)||'';if(!a||!merged[a]){const first=Object.keys(merged)[0]||'';if(first)try{localStorage.setItem(ACTIVE,first);}catch(e){/* Stockage plein : le profil reste en mémoire et sur le serveur. */}}
      refresh();
    }
-   lastEmail=expected;return true;
+   lastEmail=expected;window.__AP_PROFILE_MERGE_DONE_EMAIL__=expected;return true;
  }catch(e){return false;}finally{busy=false;}
 }
 window.apMergeServerProfiles=merge;
