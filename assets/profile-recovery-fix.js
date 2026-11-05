@@ -64,7 +64,7 @@ async function recoverFromServer(){
     if(!keys.length||!accountReady()||currentEmail()!==expected)return false;
     if(typeof window.setProfils==='function')window.setProfils(obj);
     else return false;
-    localStorage.setItem(ACTIVE_PROFILE,keys[0]);
+    try{localStorage.setItem(ACTIVE_PROFILE,keys[0]);}catch(e){/* Le serveur conserve le profil même si le quota local est atteint. */}
     refreshSelectors();
     return true;
   }catch(e){return false;}
@@ -81,6 +81,10 @@ function installSyncGuard(){
       if(!restored)return false;
     }
     if(!accountReady())return false;
+    // Lorsque le navigateur n'a plus d'espace, une synchronisation automatique
+    // incomplète pourrait effacer des profils déjà présents sur le serveur.
+    // La sauvegarde vérifiée depuis le formulaire garde sa propre voie serveur.
+    if(window.apProfileStorageState?.().quotaExceeded)return false;
     return previous.apply(this,arguments);
   };
   wrapped.__apRecoveryGuard=true;
