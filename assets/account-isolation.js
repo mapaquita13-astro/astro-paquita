@@ -34,7 +34,12 @@ function stringify(x){try{return JSON.stringify(x&&typeof x==='object'?x:{});}ca
 function currentToken(){return localStorage.getItem('astro-token')||'';}
 function hasAdminBrowserFootprint(){return !!(localStorage.getItem(ADMIN_KEY_LOCAL)||localStorage.getItem(ADMIN_URL_LOCAL)||localStorage.getItem('astro-maintenance-bypass'));}
 function marker(){try{return JSON.parse(localStorage.getItem(ACCOUNT_MARKER)||'null');}catch(e){return null;}}
-function writeMarker(email,r){localStorage.setItem(ACCOUNT_MARKER,JSON.stringify({email:normalEmail(email),role:r,updatedAt:new Date().toISOString()}));}
+function writeMarker(email,r){
+  if(setSafe(ACCOUNT_MARKER,JSON.stringify({email:normalEmail(email),role:r,updatedAt:new Date().toISOString()})))return true;
+  // Sous quota plein, un marqueur déjà lié au même compte reste valable.
+  const previous=marker();
+  return !!previous&&normalEmail(previous.email)===normalEmail(email);
+}
 
 function scopedProfilesRaw(email){return localStorage.getItem(key(email,'profiles'));}
 function scopedProfiles(email){
@@ -68,8 +73,8 @@ function saveAdminConfig(email){
   email=normalEmail(email);if(!email)return;
   const k=localStorage.getItem(ADMIN_KEY_LOCAL)||'';
   const u=localStorage.getItem(ADMIN_URL_LOCAL)||'';
-  if(k)localStorage.setItem(key(email,'admin-key'),k);
-  if(u)localStorage.setItem(key(email,'admin-url'),u);
+  if(k)setSafe(key(email,'admin-key'),k);
+  if(u)setSafe(key(email,'admin-url'),u);
 }
 function removeGlobalAdminConfig(){
   localStorage.removeItem(ADMIN_KEY_LOCAL);
@@ -79,8 +84,8 @@ function removeGlobalAdminConfig(){
 function restoreAdminConfig(email,r){
   if(r!=='admin'){removeGlobalAdminConfig();return;}
   const k=scopedAdminKey(email),u=scopedAdminUrl(email);
-  if(k)localStorage.setItem(ADMIN_KEY_LOCAL,k);else localStorage.removeItem(ADMIN_KEY_LOCAL);
-  if(u)localStorage.setItem(ADMIN_URL_LOCAL,u);else localStorage.removeItem(ADMIN_URL_LOCAL);
+  if(k)setSafe(ADMIN_KEY_LOCAL,k);else localStorage.removeItem(ADMIN_KEY_LOCAL);
+  if(u)setSafe(ADMIN_URL_LOCAL,u);else localStorage.removeItem(ADMIN_URL_LOCAL);
 }
 
 function saveWorkingState(email,r){
@@ -160,7 +165,7 @@ async function ensureAccount(force){
     // d'être retirée de la vue du nouveau compte utilisateur.
     if(prev&&prev.role==='admin'&&prev.email)saveAdminConfig(prev.email);
     restoreWorkingState(email,r,prev);
-    writeMarker(email,r);
+    if(!writeMarker(email,r))return false;
     lastAccount=email;lastRole=r;
     return true;
   }finally{switching=false;}
