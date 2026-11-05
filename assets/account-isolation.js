@@ -16,6 +16,12 @@ const PREFIX='ap-account-scope-v1:';
 let switching=false;
 let lastAccount='';
 let lastRole='';
+let volatileEmail='';
+let volatileProfiles=null;
+let scopedAuthoritativeEmail='';
+function isQuota(e){return !!e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);}
+function setSafe(k,v){try{localStorage.setItem(k,v);return true;}catch(e){if(!isQuota(e))throw e;return false;}}
+
 
 function normalEmail(v){return String(v||'').trim().toLowerCase();}
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
@@ -31,8 +37,27 @@ function marker(){try{return JSON.parse(localStorage.getItem(ACCOUNT_MARKER)||'n
 function writeMarker(email,r){localStorage.setItem(ACCOUNT_MARKER,JSON.stringify({email:normalEmail(email),role:r,updatedAt:new Date().toISOString()}));}
 
 function scopedProfilesRaw(email){return localStorage.getItem(key(email,'profiles'));}
-function scopedProfiles(email){return parseObj(scopedProfilesRaw(email));}
-function saveProfiles(email,obj){localStorage.setItem(key(email,'profiles'),stringify(obj));}
+function scopedProfiles(email){
+  if(volatileEmail===email&&volatileProfiles)return volatileProfiles;
+  return parseObj(scopedProfilesRaw(email));
+}
+function saveProfiles(email,obj){
+  const clean=obj&&typeof obj==='object'&&!Array.isArray(obj)?obj:{};
+  try{
+    localStorage.setItem(key(email,'profiles'),stringify(clean));
+    if(volatileEmail===email){volatileEmail='';volatileProfiles=null;}
+    scopedAuthoritativeEmail=email;
+    return true;
+  }catch(e){
+    if(!isQuota(e))throw e;
+    // Le serveur est la sauvegarde durable. Garder le profil en mémoire
+    // permet son envoi sans effacer les autres données du navigateur.
+    volatileEmail=email;volatileProfiles={...clean};
+    scopedAuthoritativeEmail=email;
+    return false;
+  }
+}
+window.apProfileStorageState=function(){return {quotaExceeded:volatileEmail===account()&&!!volatileProfiles};};
 function scopedActive(email){return localStorage.getItem(key(email,'active-profile'))||'';}
 function saveActive(email,v){if(v)localStorage.setItem(key(email,'active-profile'),v);else localStorage.removeItem(key(email,'active-profile'));}
 function scopedLife(email){return localStorage.getItem(key(email,'life-context'))||'{}';}
@@ -60,10 +85,15 @@ function restoreAdminConfig(email,r){
 
 function saveWorkingState(email,r){
   email=normalEmail(email);if(!email)return;
-  saveProfiles(email,parseObj(localStorage.getItem(LEGACY_PROFILES)));
-  saveActive(email,localStorage.getItem(ACTIVE_PROFILE)||'');
-  saveLife(email,localStorage.getItem(LIFE_CONTEXT)||'{}');
-  if(r==='admin')saveAdminConfig(email);
+  // Ne jamais réécrire une ancienne copie globale sur un profil plus récent,
+  // notamment après dépassement du quota localStorage.
+  const scoped=scopedProfilesRaw(email);
+  const source=(volatileEmail===email&&volatileProfiles)?volatileProfiles:
+    (scopedAuthoritativeEmail===email||scoped!==null)?scopedProfiles(email):parseObj(localStorage.getItem(LEGACY_PROFILES));
+  saveProfiles(email,source);
+  setSafe(key(email,'active-profile'),localStorage.getItem(ACTIVE_PROFILE)||'');
+  setSafe(key(email,'life-context'),localStorage.getItem(LIFE_CONTEXT)||'{}');
+  if(r==='admin')try{saveAdminConfig(email);}catch(e){if(!isQuota(e))throw e;}
 }
 
 function initialProfilesFor(email,r,previous){
@@ -102,10 +132,10 @@ function clearVisibleProfile(){
 
 function restoreWorkingState(email,r,previous){
   const profiles=initialProfilesFor(email,r,previous);
-  localStorage.setItem(LEGACY_PROFILES,stringify(profiles));
+  setSafe(LEGACY_PROFILES,stringify(profiles));
   const active=scopedActive(email);
-  if(active&&profiles[active])localStorage.setItem(ACTIVE_PROFILE,active);else localStorage.removeItem(ACTIVE_PROFILE);
-  localStorage.setItem(LIFE_CONTEXT,scopedLife(email));
+  if(active&&profiles[active])setSafe(ACTIVE_PROFILE,active);else localStorage.removeItem(ACTIVE_PROFILE);
+  setSafe(LIFE_CONTEXT,scopedLife(email));
   restoreAdminConfig(email,r);
   clearVisibleProfile();
   try{if(typeof window.rafraichirSelectProfilsSynastrie==='function')window.rafraichirSelectProfilsSynastrie();}catch(e){}
@@ -121,7 +151,11 @@ async function ensureAccount(force){
   switching=true;
   try{
     const prev=marker();
-    if(prev&&prev.email&&normalEmail(prev.email)!==email)saveWorkingState(prev.email,prev.role==='admin'?'admin':'user');
+    if(prev&&prev.email&&normalEmail(prev.email)!==email){
+      saveWorkingState(prev.email,prev.role==='admin'?'admin':'user');
+      // Isoler aussi le secours temporaire de l'ancien compte.
+      volatileEmail='';volatileProfiles=null;scopedAuthoritativeEmail='';
+    }
     // Si l'ancien compte était admin, sa clé de secours est sauvegardée avant
     // d'être retirée de la vue du nouveau compte utilisateur.
     if(prev&&prev.role==='admin'&&prev.email)saveAdminConfig(prev.email);
@@ -143,8 +177,14 @@ window.setProfils=function(obj){
   const email=account();
   if(!email||!currentToken())return;
   const clean=obj&&typeof obj==='object'&&!Array.isArray(obj)?obj:{};
-  saveProfiles(email,clean);
-  localStorage.setItem(LEGACY_PROFILES,stringify(clean));
+  const persistent=saveProfiles(email,clean);
+  const mirrored=setSafe(LEGACY_PROFILES,stringify(clean));
+  if(!mirrored&&persistent){
+    // La copie du compte est persistante, mais la copie historique n'a pas
+    // pu être mise à jour : conserver la plus récente pendant cette session.
+    volatileEmail=email;volatileProfiles={...clean};
+  }
+  return persistent;
 };
 
 // Historique local isolé par compte ET profil.
@@ -191,10 +231,11 @@ if(typeof window.deconnexionCompte==='function'){
 function mirrorWorkingState(){
   const email=account();if(!email||email!==lastAccount)return;
   const a=localStorage.getItem(ACTIVE_PROFILE)||'';
-  if(a!==scopedActive(email))saveActive(email,a);
+  if(a!==scopedActive(email))setSafe(key(email,'active-profile'),a);
   const lc=localStorage.getItem(LIFE_CONTEXT)||'{}';
-  if(lc!==scopedLife(email))saveLife(email,lc);
-  if(role()==='admin')saveAdminConfig(email);else if(localStorage.getItem(ADMIN_KEY_LOCAL)||localStorage.getItem(ADMIN_URL_LOCAL))removeGlobalAdminConfig();
+  if(lc!==scopedLife(email))setSafe(key(email,'life-context'),lc);
+  if(role()==='admin'){try{saveAdminConfig(email);}catch(e){if(!isQuota(e))throw e;}}
+  else if(localStorage.getItem(ADMIN_KEY_LOCAL)||localStorage.getItem(ADMIN_URL_LOCAL))removeGlobalAdminConfig();
 }
 
 function start(){
