@@ -81,6 +81,13 @@ function installSyncGuard(){
       if(!restored)return false;
     }
     if(!accountReady())return false;
+    // Ne jamais envoyer une liste partielle avant d'avoir relu les profils
+    // du même compte sur le serveur : évite des suppressions involontaires.
+    if(window.__AP_PROFILE_MERGE_DONE_EMAIL__!==currentEmail()){
+      if(typeof window.apMergeServerProfiles!=='function')return false;
+      const merged=await window.apMergeServerProfiles(true);
+      if(!merged||window.__AP_PROFILE_MERGE_DONE_EMAIL__!==currentEmail())return false;
+    }
     // Lorsque le navigateur n'a plus d'espace, une synchronisation automatique
     // incomplète pourrait effacer des profils déjà présents sur le serveur.
     // La sauvegarde vérifiée depuis le formulaire garde sa propre voie serveur.
