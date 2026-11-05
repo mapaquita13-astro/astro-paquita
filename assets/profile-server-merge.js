@@ -14,7 +14,7 @@ function email(){return norm(window.USER_CONNECTE&&window.USER_CONNECTE.email);}
 function marker(){try{return norm(JSON.parse(localStorage.getItem(MARKER)||'null')?.email);}catch(e){return '';}}
 function ready(){const e=email();return !!e&&e===marker()&&!!token();}
 function locals(){try{const p=typeof window.getProfils==='function'?window.getProfils():{};return p&&typeof p==='object'&&!Array.isArray(p)?p:{};}catch(e){return {};}}
-function convert(r){const p={prenom:String(r?.prenom||''),date:String(r?.date||''),heure:String(r?.heure||''),ville:String(r?.ville||''),lat:r?.lat==null?null:Number(r.lat),lon:r?.lon==null?null:Number(r.lon),tz:String(r?.tz||''),genre:String(r?.genre||'')};if(p.heure)p.timeStatus='exact';return p;}
+function convert(r){const p={profileId:String(r?.profile_key||'').startsWith('profile_')?String(r.profile_key).slice(8):undefined,prenom:String(r?.prenom||''),date:String(r?.date||''),heure:String(r?.heure||''),ville:String(r?.ville||''),lat:r?.lat==null?null:Number(r.lat),lon:r?.lon==null?null:Number(r.lon),tz:String(r?.tz||''),genre:String(r?.genre||'')};if(p.heure)p.timeStatus='exact';return p;}
 function refresh(){try{window.v37RafraichirSelectProfil?.();}catch(e){}try{window.v37RafraichirSelectProfils?.();}catch(e){}try{window.rafraichirSelectProfilsSynastrie?.();}catch(e){}}
 async function merge(force){
  if(busy||!ready())return false;
@@ -27,7 +27,7 @@ async function merge(force){
    for(const row of rows){const k=String(row?.profile_key||row?.key||'').trim();if(!k||merged[k])continue;merged[k]=convert(row);added++;}
    if(added&&typeof window.setProfils==='function'){
      window.setProfils(merged);
-     const a=localStorage.getItem(ACTIVE)||'';if(!a||!merged[a]){const first=Object.keys(merged)[0]||'';if(first)localStorage.setItem(ACTIVE,first);}
+     const a=localStorage.getItem(ACTIVE)||'';if(!a||!merged[a]){const first=Object.keys(merged)[0]||'';if(first)try{localStorage.setItem(ACTIVE,first);}catch(e){/* Stockage plein : le profil reste en mémoire et sur le serveur. */}}
      refresh();
    }
    lastEmail=expected;return true;
