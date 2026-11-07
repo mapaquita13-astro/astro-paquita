@@ -16,7 +16,7 @@ function lang(){const a=(document.documentElement.lang||'').slice(0,2).toLowerCa
 function tr(){return WORDS[lang()];}
 function pId(){try{return String(window.AstroTruth.currentProfile()?.profileId||'legacy');}catch(e){return 'legacy';}}
 function current(){return document.querySelector('.ap-route-calendar #ap-page');}
-function color(value){return value==='good'?'#62816a':value==='hard'?'#a35566':value==='mixed'?'#aa957e':'#a8a5a4';}
+function color(value){return value==='good'?'#62816a':value==='hard'?'#a35566':value==='mixed'?'#aa957e':value==='none'?'#a8a5a4':'#e3e3e3';}
 function tone(signals,domain){
  const found=(signals||[]).filter(s=>s&&s.domain===domain);
  if(!found.length)return {value:'none',count:0};
@@ -40,7 +40,7 @@ function scores(iso){
  }catch(e){return DOMAINS.map(()=>({value:'error',count:0}));}
 }
 function status(x){const t=tr();return x.value==='good'?t.good:x.value==='hard'?t.hard:x.value==='mixed'?t.mixed:x.value==='none'?t.none:t.error;}
-function dot(x){const e=document.createElement('i');e.className='ap-v196-dot';e.style.backgroundColor=color(x.value);e.setAttribute('aria-hidden','true');return e;}
+function dot(x){const e=document.createElement('i');e.className='ap-v196-dot';e.style.backgroundColor=color(x.value);if(x.value==='error')e.style.outline='1px dashed #9a8f9c';e.setAttribute('aria-hidden','true');return e;}
 function injectStyles(){
  if(document.getElementById('ap-v196-calendar-style'))return;
  const st=document.createElement('style');st.id='ap-v196-calendar-style';
@@ -71,7 +71,7 @@ function addGuide(page,button){
  t.domains.forEach((name,i)=>{const v=document.createElement('span');v.textContent=(i+1)+'. '+name;domains.appendChild(v);});
  guide.appendChild(domains);
  const colors=document.createElement('div');colors.className='ap-v196-colors';
- ['good','hard','mixed','none'].forEach(value=>{
+ ['good','hard','mixed','none','error'].forEach(value=>{
    const label=document.createElement('span');label.appendChild(dot({value}));
    const x=document.createElement('span');x.textContent=status({value});label.appendChild(x);colors.appendChild(label);
  });guide.appendChild(colors);
