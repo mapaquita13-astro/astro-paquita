@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261105-profile-quota-safe-final-v121';
+const VER='20261107-calendar-v196';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
@@ -45,7 +45,9 @@ function continueInterface(){
                       load('assets/relations-forecast-ui.js?v='+VER,'ap-relations-forecast-ui',function(){
                         load('assets/global-i18n.js?v='+VER,'ap-global-i18n',function(){
                           load('assets/global-i18n-ui-fixes.js?v='+VER,'ap-global-i18n-ui-fixes',function(){
-                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard');
+                            load('assets/v182-free-premium-guard.js?v='+VER,'ap-v182-free-premium-guard',function(){
+                              load('assets/v196-calendar-readable-signals.js?v='+VER,'ap-v196-calendar-readable-signals');
+                            });
                           });
                         });
                       });
