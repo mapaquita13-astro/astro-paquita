@@ -273,6 +273,11 @@ function eventsWithDates(specs,methods,cycle,sky,lunar,wanted,subject){
   const around=signals.filter(s=>s.domain===a.domain&&(s.background?s.month===a.date.slice(0,7):separation(s.date,a.date)<=9));
   const techniques=new Set(around.filter(s=>!s.method.startsWith('zodiacal_releasing_')).map(s=>s.method));
   const hasStructural=around.some(s=>['direction_primaire_placidus','direction_arc_solaire','progression_secondaire','transit_lent','eclipse'].includes(s.method));
+  // Une famille n'a pas un "événement majeur" à chaque retour mensuel :
+  // il faut au moins trois familles de méthodes et un lien natal familial précis.
+  const familyLink=around.some(s=>[4,5,9].includes(Number(s.natalHouse))||
+    (fifth&&canonPlanet(s.target)===canonPlanet(fifth.ruler)));
+  if(a.domain==='famille'&&(!familyLink||techniques.size<3))continue;
   if(techniques.size<2||!hasStructural)continue;
   const anchorsFound=around.filter(s=>!s.background&&s.method!=='revolution_lunaire'&&!s.method.startsWith('zodiacal_releasing_'));
   if(!anchorsFound.length)continue;
@@ -286,7 +291,7 @@ function eventsWithDates(specs,methods,cycle,sky,lunar,wanted,subject){
  const selected=[];
  for(const e of candidates){
   // Long-lived transits create many nearby dates, but not repeated life events.
-  if(selected.some(x=>x.domain===e.domain&&separation(x.date,e.date)<=90))continue;
+  if(selected.some(x=>x.domain===e.domain&&separation(x.date,e.date)<(e.domain==='famille'?900:180)))continue;
   selected.push(e);
  }
  // Birth is treated as an exceptional event and is never repeated in successive
