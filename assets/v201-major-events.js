@@ -146,7 +146,7 @@ function aspectText(a){
  return ({transit_lent:'Transit lent',progression_secondaire:'Progression secondaire',direction_arc_solaire:'Arc solaire',eclipse:'Éclipse'}[a.method]||a.method)+': '+a.source+' '+(a.aspectName||nm[a.aspect]||'aspect')+' '+a.target+(a.orb!=null?' (orbe '+Number(a.orb).toFixed(2)+'°)':'');
 }
 function mood(arr){let hard=0,soft=0;for(const a of arr){if([90,180].includes(a.aspect))hard++;if([60,120].includes(a.aspect))soft++}return hard&&soft?'Enjeux contrastés':hard?'Tensions ou décisions exigeantes':soft?'Ouvertures et appuis':'Activation importante, sans sens favorable ou défavorable automatique'}
-function narr(cat,context){const c=CATS[cat];if(cat==='famille'&&['grossesse','petitenfant'].includes(context))return c.scenes[1];if(cat==='relation'&&context==='separation')return c.scenes[1];if(cat==='relation'&&context==='couple')return c.scenes[2];if(cat==='finances'&&context==='finances')return c.scenes[1];if(cat==='logement'&&context==='immobilier')return c.scenes[1];if(cat==='travail'&&context==='travail')return c.scenes[1];if(cat==='famille'&&context==='deuil')return 'Réorganisation familiale en lien avec le deuil déjà vécu, sans prédiction d’un autre décès.';return c.scenes[0]}
+function narr(cat,context,signals,profection){const c=CATS[cat];if(cat==='famille'&&['grossesse','petitenfant'].includes(context))return c.scenes[1];if(cat==='famille'&&((signals||[]).some(x=>[5,9].includes(Number(x.natalHouse)))||[5,9].includes(profection?.house)))return 'Enfants et descendance : grossesse, naissance, arrivée d’un enfant ou événement important concernant les enfants figurent parmi les manifestations astrologiques de cette période.';if(cat==='relation'&&context==='separation')return c.scenes[1];if(cat==='relation'&&context==='couple')return c.scenes[2];if(cat==='finances'&&context==='finances')return c.scenes[1];if(cat==='logement'&&context==='immobilier')return c.scenes[1];if(cat==='travail'&&context==='travail')return c.scenes[1];if(cat==='famille'&&context==='deuil')return 'Réorganisation familiale en lien avec le deuil déjà vécu, sans prédiction d’un autre décès.';return c.scenes[0]}
 function bucketResult(b,point,cycle,sky,context,selected){
  const all=[];
  for(const k of ['slowTransits','progressions','solarArcDirections'])for(const a of point?.[k]||[])all.push(a);
@@ -179,14 +179,14 @@ function renderEntries(rows,cycle,sky,p,context){
  output+='<p class="muted">Méthodes utilisées : transits lents, progressions secondaires, arc solaire, profections, firdaria, Zodiacal Releasing (L1–L4), directions primaires Placidus en demi-arcs diurnes/nocturnes (directes et converses, in mundo et in zodiaco), éclipses si moteur astronomique disponible. Les variantes par étoiles fixes, antisces et termes ne sont pas activées.</p></div>';
  const keep=rows.filter(r=>r.events.length).sort((a,b)=>a.b.start.localeCompare(b.b.start));
  if(['grossesse','petitenfant'].includes(context)){
-  const term=due(p);output+='<div class="ap-events-card"><h2>♡ Maternité et naissance dans la famille</h2><p><strong>Événement en préparation : arrivée d’un enfant.</strong> Cette information vient du contexte renseigné, pas d’une déduction à partir du thème.</p>'+(term?'<p>Terme annoncé : <strong>'+es(fmt(term))+'</strong>. Ce repère sert à examiner les configurations de la période ; il ne donne pas la date réelle de naissance.</p>':'<p>Renseignez le terme connu pour positionner la période de suivi dans la chronologie.</p>')+'<p class="muted">L’analyse recherche les activations des maisons liées aux enfants et à la famille, ainsi que les directions et progressions exactes.</p></div>';
+  const term=due(p);const familyMonths=rows.filter(x=>x.events.some(y=>y.domain==='famille')).map(x=>x.b.label);output+='<div class="ap-events-card"><h2>♡ Maternité et naissance dans la famille</h2><p><strong>Événement en préparation : arrivée d’un enfant.</strong> Cette information vient du contexte renseigné, pas d’une déduction à partir du thème.</p>'+(familyMonths.length?'<p><strong>Périodes familiales calculées :</strong> '+es(familyMonths.slice(0,12).join(' ; '))+'.</p>':'<p>Aucun regroupement familial de plusieurs techniques n’a été identifié sur la période selon les règles fixées.</p>')+(term?'<p>Terme annoncé : <strong>'+es(fmt(term))+'</strong>. Ce repère sert à examiner les configurations de la période ; il ne donne pas la date réelle de naissance.</p>':'<p>Renseignez le terme connu pour positionner la période de suivi dans la chronologie.</p>')+'<p class="muted">L’analyse recherche les activations des maisons liées aux enfants et à la famille, ainsi que les directions et progressions exactes.</p></div>';
  }
  if(!keep.length)output+='<div class="ap-events-card"><strong>Aucune convergence significative détectée avec ces critères.</strong><p>On ne crée pas artificiellement d’événement quand les calculs ne permettent pas d’en identifier.</p></div>';
  for(const {b,events,point} of keep){
    output+='<div class="ap-events-card"><div class="ap-events-row"><h2>'+es(b.label)+'</h2><span class="ap-events-pill">Profection maison '+es(point?.profection?.house||'?')+'</span></div>';
    for(const v of events){
      output+='<div class="ap-events-lines"><strong>'+es(CATS[v.domain].symbol+' '+CATS[v.domain].name)+'</strong> · <span class="ap-events-pill">'+es(v.relevance)+'</span>'
-       +'<p>'+es(narr(v.domain,context))+'</p><p class="muted">'+es(v.mood)+(v.profection?' · Profection maison '+v.profection.house+' ('+es(v.profection.lord)+')':'')+'</p>'
+       +'<p>'+es(narr(v.domain,context,v.rows,v.profection))+'</p><p class="muted">'+es(v.mood)+(v.profection?' · Profection maison '+v.profection.house+' ('+es(v.profection.lord)+')':'')+'</p>'
        +'<ul>'+v.order.map(x=>'<li>'+es(aspectText(x))+'</li>').join('')+'</ul></div>';
    }
    output+='</div>';
@@ -205,6 +205,7 @@ function loadScript(path,global){return new Promise((resolve,reject)=>{
  })}
 async function getMethods(){if(!window.APForecastMethods)await loadScript('assets/v190-forecast-techniques.js','APForecastMethods');if(!window.APEventCycles)await loadScript('assets/v201-event-cycles.js','APEventCycles');if(!window.APPrimaryDirections)await loadScript('assets/v202-primary-directions.js','APPrimaryDirections')}
 async function analyzeProfile(p,spec,alive){
+ if((p.timeStatus||'exact')!=='exact')throw Error('Heure de naissance exacte nécessaire pour les directions primaires et les angles des maisons.');
  const now=Date.now();const truth={start:spec[0].start,end:spec[spec.length-1].end,points:spec.map(s=>({...s})),months:spec.length};
  const M=window.APForecastMethods;
  const location=window.APForecastSolarLocations?.getLocations?.()||{};
