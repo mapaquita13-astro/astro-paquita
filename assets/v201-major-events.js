@@ -3,7 +3,7 @@
 'use strict';
 if(window.__AP_LIFE_211__)return;
 window.__AP_LIFE_211__=true;
-const V='212-20261115';
+const V='213-20261115';
 const q=(s,r)=>(r||document).querySelector(s);
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=s=>new Date(s+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
@@ -78,7 +78,7 @@ async function run(){
  if(!active||working)return;
  const p=profile(),id=++serial;working=true;
  const btn=q('#ap-life-run');if(btn)btn.disabled=true;
- const key=[account,signature(p),'V212'].join('||');
+ const key=[account,signature(p),'V213'].join('||');
  try{
   text('Analyse de toute la vie en cours…');bar(.02);
   if(memo.has(key)){display(memo.get(key));bar(1);text('Chronologie terminée.');return}
