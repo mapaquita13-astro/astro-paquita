@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V201_EVENTS_UI__)return;
 window.__AP_V201_EVENTS_UI__=true;
-const VERSION='v207-20261115';
+const VERSION='v208-20261115';
 const A=window.AstroTruth;
 const qs=(s,r)=>(r||document).querySelector(s),qsa=(s,r)=>Array.from((r||document).querySelectorAll(s));
 const es=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -247,18 +247,41 @@ function childbirthCandidate(signals,fifth){
  // a repeated monthly Moon/Venus contact can never pass.
  return methods.size>=3 && rulerMethods.size>=2 && structuralHit && slowHit;
 }
-function chooseTitle(domain,arr,birthFlag){
- const tension=arr.some(x=>Number.isFinite(x.aspect)&&[90,180].includes(x.aspect));
- if(domain==='famille'){
-  if(birthFlag)return 'Naissance ou arrivée d’un enfant possible';
-  const childFocus=arr.some(x=>Number(x.natalHouse)===5);
-  return childFocus?'Événement important concernant les enfants':'Changement important dans la famille';
+/* Never turn a generic life-domain activation into a life-changing fact.
+   Only propose an explicit scenario when contacts target relevant houses and
+   the corresponding symbolic signatures agree. Otherwise emit no event. */
+function concreteScenario(domain,arr,birthFlag){
+ const targeted=(h)=>arr.some(s=>Number(s.natalHouse)===h);
+ const names=arr.flatMap(s=>[s.source,s.target]).filter(Boolean).map(canonPlanet);
+ const includes=(name)=>names.includes(canonPlanet(name));
+ const positive=arr.filter(x=>[60,120].includes(x.aspect)).length;
+ const difficult=arr.filter(x=>[90,180].includes(x.aspect)).length;
+ if(domain==='famille')return birthFlag?'Naissance ou arrivée d’un enfant possible':null;
+ if(domain==='relation'){
+  if(!targeted(7))return null;
+  if(difficult>=2&&(includes('Saturne')||includes('Mars')||includes('Uranus')))return 'Séparation ou divorce possible';
+  if(positive>=2&&(includes('Vénus')||includes('Jupiter')))return 'Union ou engagement officiel possible';
+  return null;
  }
- if(domain==='relation')return tension?'Changement décisif dans le couple':'Rencontre ou évolution de la vie sentimentale';
- if(domain==='travail')return tension?'Changement professionnel exigeant':'Évolution professionnelle importante';
- if(domain==='finances')return tension?'Décision financière ou patrimoniale exigeante':'Évolution financière importante';
- if(domain==='logement')return 'Déménagement ou décision immobilière importante';
- return 'Tournant personnel majeur';
+ if(domain==='travail'){
+  if(!targeted(10)&&!arr.some(s=>s.target==='MC'||s.significator==='MC'))return null;
+  if(difficult>=2&&(includes('Saturne')||includes('Uranus')))return 'Rupture ou fin de contrat professionnel possible';
+  if(positive>=2&&(includes('Jupiter')||includes('Soleil')))return 'Promotion ou nomination possible';
+  return null;
+ }
+ if(domain==='finances'){
+  if(!targeted(2)&&!targeted(8))return null;
+  if(difficult>=2&&(includes('Saturne')||includes('Mars')))return 'Dépense ou obligation financière importante possible';
+  if(positive>=2&&includes('Jupiter'))return 'Entrée d’argent importante possible';
+  return null;
+ }
+ if(domain==='logement'){
+  if(!targeted(4)&&!arr.some(s=>s.target==='IC'||s.significator==='IC'))return null;
+  if(positive>=2&&arr.some(s=>Number(s.natalHouse)===2||Number(s.natalHouse)===8))return 'Acquisition immobilière possible';
+  if(difficult>=2&&(includes('Saturne')||includes('Uranus')))return 'Déménagement possible';
+  return null;
+ }
+ return null;
 }
 function eventsWithDates(specs,methods,cycle,sky,lunar,wanted,subject){
  const signals=datedSignals(specs,methods,cycle,sky,lunar);
@@ -282,7 +305,9 @@ function eventsWithDates(specs,methods,cycle,sky,lunar,wanted,subject){
   const aspectSupport=around.filter(s=>!s.background&&s.orb!==null&&Number.isFinite(s.orb)&&s.orb<=0.3).length;
   const rating=techniques.size*4+Math.min(5,aspectSupport)+Math.min(4,anchorsFound.length);
   const birthFlag=a.domain==='famille'&&childbirthCandidate(around,fifth);
-  candidates.push({date:a.date,domain:a.domain,rating,birthFlag,methods:techniques.size,
+  const scenario=concreteScenario(a.domain,around,birthFlag);
+  if(!scenario)continue;
+  candidates.push({date:a.date,domain:a.domain,rating,birthFlag,scenario,methods:techniques.size,
     windowDays:a.precision==='relevé de transit'?5:3,around});
  }
  candidates.sort((a,b)=>b.rating-a.rating||a.date.localeCompare(b.date));
@@ -303,11 +328,11 @@ function eventsWithDates(specs,methods,cycle,sky,lunar,wanted,subject){
  const birthSet=new Set(allowedBirths);
  for(const e of selected){
   e.birthFlag=e.domain==='famille'&&birthSet.has(e);
-  e.title=chooseTitle(e.domain,e.around,e.birthFlag);
+  e.title=e.domain==='famille'&&!e.birthFlag?null:e.scenario;
  }
  // A selective timeline, without a repetitive event for every month.
  const maximum=Math.max(2,Math.ceil(specs.length/12)*4);
- return selected.slice(0,maximum).sort((a,b)=>a.date.localeCompare(b.date));
+ return selected.filter(x=>x.title).slice(0,maximum).sort((a,b)=>a.date.localeCompare(b.date));
 }
 function renderEntries(rows,cycle,sky,p,context,solarReturns,lunar,technical,comparison){
  const holder=qs('#ap-events-output');if(!holder)return;
