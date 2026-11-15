@@ -20,7 +20,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
 <script>
 (()=>{
  'use strict';
- const VERSION='20261110-admin-history-v197';
+ const VERSION='20261115-promo-visible-v198';
  const API_ORIGIN='https://astro-paquita-backend.onrender.com';
  const frame=document.getElementById('ap-preview-frame');
  const boot=document.getElementById('ap-preview-boot');
@@ -88,6 +88,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f7efe5;col
      #ap-final-root{position:fixed!important;inset:0!important;display:block!important;visibility:visible!important;z-index:2147483000!important;overflow:auto!important;background:#f8f1e7!important;}
      #modal-compte,.ap-toast{z-index:2147483647!important;}
      #ap-auth-forgot{display:block;width:100%;margin:10px 0 2px;border:0;background:transparent;color:#6a2a61;font:700 14px/1.3 Lato,Arial,sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:5px;}
+     /* V198 — Bouton de validation du code promo toujours visible. */
+     #modal-compte{box-sizing:border-box!important;max-width:100vw!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;}
+     #modal-compte>div{box-sizing:border-box!important;max-width:min(400px,100%)!important;max-height:calc(100dvh - 28px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;margin:auto!important;}
+     #compte-champ-promo{box-sizing:border-box!important;min-width:0!important;max-width:100%!important;flex:1 1 0%!important;}
+     #compte-champ-promo+button{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;flex:0 0 auto!important;min-width:88px!important;min-height:44px!important;padding:10px 14px!important;background:#653061!important;color:#fff!important;font-weight:700!important;cursor:pointer!important;}
+
    `;d.head.appendChild(s);
  }
  function ensureCss(d){
