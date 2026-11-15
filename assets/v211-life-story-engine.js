@@ -219,31 +219,32 @@ function assemble(hits,birth,now){
  }
  // Balanced coverage of the entire life: choose the most significant
  // chapters in EACH decade rather than keeping only the earliest decades.
- const selected=[],perDecade=new Map();
+ const selected=[],perDecade=new Map(),themeCounts=new Map();
+ const maxTheme=domain=>domain==='ressources'?3:domain==='famille'?3:domain==='enfants'?3:4;
+ const redundant=(a,b)=>[['enfants','creation'],['famille','logement'],
+   ['couple','associations'],['ressources','transmission'],['carriere','travail_quotidien']].some(pair=>pair.includes(a)&&pair.includes(b));
  for(const cluster of kept.sort((a,b)=>rank(b)-rank(a)||a.at-b.at)){
   const decade=Math.max(0,Math.min(9,Math.floor(((cluster.at-birth)/YEAR)/10)));
   if((perDecade.get(decade)||0)>=3)continue;
+  let options=cluster.items.filter(x=>(themeCounts.get(x.domain)||0)<maxTheme(x.domain));
+  if(!options.length)continue;
+  options=options.sort((a,b)=>
+   (b.score-2*(themeCounts.get(b.domain)||0))-(a.score-2*(themeCounts.get(a.domain)||0)));
+  const natalChild=options.find(x=>x.domain==='enfants'&&x.age>=18&&x.age<=49);
+  const main=natalChild||options[0],other=options.find(x=>x!==main&&!redundant(x.domain,main.domain));
+  const themes=other?[main,other]:[main];
+  themes.forEach(x=>themeCounts.set(x.domain,(themeCounts.get(x.domain)||0)+1));
   perDecade.set(decade,(perDecade.get(decade)||0)+1);
-  selected.push(cluster);
+  selected.push({at:cluster.at,items:themes,score:rank(cluster)});
  }
  const out=[];
  for(const cluster of selected.sort((a,b)=>a.at-b.at)){
-  const themes=cluster.items.sort((a,b)=>b.score-a.score);
-  // Childbirth, if sufficiently evidenced, is a primary life chapter;
-  // leave room for one associated area such as housing or career.
-  const children=themes.find(x=>x.domain==='enfants'&&x.age>=18&&x.age<=49);
-  // The same fifth-house event should not also invent an unrelated creative project.
-  const redundant=(a,b)=>[['enfants','creation'],['famille','logement'],
-    ['couple','associations'],['ressources','transmission'],['carriere','travail_quotidien']].some(pair=>pair.includes(a)&&pair.includes(b));
-  const ordered=children?[children,...themes.filter(x=>x!==children&&!redundant(children.domain,x.domain))]:themes;
-  const focused=[ordered[0],...ordered.slice(1).filter(x=>!redundant(ordered[0].domain,x.domain))].slice(0,2);
-  const main=focused[0],time=cluster.at;
+  const focused=cluster.items,main=focused[0],time=cluster.at;
   const title=focused.length===1?main.label:main.label+' — '+focused[1].label.toLowerCase();
   const detail=focused.map(x=>x.detail).join(' ');
   out.push({date:iso(time),from:iso(time-45*DAY),to:iso(time+45*DAY),
    age:Math.floor((time-birth)/YEAR),domain:main.domain,tone:main.tone,
-   title,detail,period:time<now?'passe':'avenir',
-   score:cluster.items.reduce((n,x)=>Math.max(n,x.score),0)});
+   title,detail,period:time<now?'passe':'avenir',score:cluster.score});
  }
  return out.sort((a,b)=>a.date.localeCompare(b.date));
 }
