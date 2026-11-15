@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261115-events-v205';
+const VER='20261115-events-v208';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
