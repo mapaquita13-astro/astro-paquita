@@ -27,10 +27,11 @@ let opened=false,job=0,months=12,category='all',mode='future',latest=null,snapsh
 function email(){return String(window.USER_CONNECTE?.email||'').trim().toLowerCase()}
 function profile(){return A?.currentProfile?.()}
 function storageKey(){return 'ap-major-events-v201:'+encodeURIComponent(email())}
-function loadData(){if(!email())return {events:[],contexts:{}};try{const x=JSON.parse(localStorage.getItem(storageKey())||'{}');return {events:Array.isArray(x.events)?x.events:[],contexts:x.contexts&&typeof x.contexts==='object'?x.contexts:{}}}catch(e){return{events:[],contexts:{}}}}
+function loadData(){if(!email())return {events:[],contexts:{},terms:{}};try{const x=JSON.parse(localStorage.getItem(storageKey())||'{}');return {events:Array.isArray(x.events)?x.events:[],contexts:x.contexts&&typeof x.contexts==='object'?x.contexts:{},terms:x.terms&&typeof x.terms==='object'?x.terms:{}}}catch(e){return{events:[],contexts:{},terms:{}}}}
 function persist(x){if(!email())throw Error('Connexion requise.');localStorage.setItem(storageKey(),JSON.stringify(x))}
 function pkey(p){return String(p?.profileId||p?.legacyKey||'')}
 function ctx(p){return loadData().contexts[pkey(p)]||'aucun'}
+function due(p){return loadData().terms[pkey(p)]||''}
 function ok(p){return !!p&&(!A?.validation||A.validation(p).ok)}
 function premium(){return !!(window.USER_CONNECTE?.role==='admin'||window.USER_CONNECTE?.premium===true||document.body.classList.contains('ap-premium-user'))}
 function addCss(){
@@ -107,13 +108,15 @@ function renderFuture(){
  +'<label>Contexte personnel connu<select id="ap-events-context">'+Object.entries(CTX).map(([k,v])=>'<option value="'+k+'">'+es(v)+'</option>').join('')+'</select></label>'
  +'<label>Domaine à examiner<select id="ap-events-category"><option value="all">Tous les domaines</option>'+Object.entries(CATS).map(([k,v])=>'<option value="'+k+'">'+es(v.name)+'</option>').join('')+'</select></label>'
  +'<label>Lecture familiale facultative<select id="ap-events-family"><option value="">Profil principal uniquement</option>'+A.listProfiles().filter(x=>x.profileId!==p.profileId&&ok(x)).map(x=>'<option value="'+es(pkey(x))+'">Avec '+es(x.prenom||'autre profil')+'</option>').join('')+'</select></label></div>'
+ +'<div style="margin:12px 0"><label>Date de terme connue (facultative, uniquement si grossesse renseignée) <input type="date" id="ap-events-due"></label></div>'
  +'<div class="ap-events-tools"><button class="ap-events-btn primary" id="ap-events-run">Analyser les événements</button><button class="ap-events-btn" id="ap-events-copy" disabled>Copier le résultat</button></div>'
  +'<p class="muted">Les situations difficiles sont analysées au même titre que les événements heureux. Un deuil n’est pas prédit : seuls les deuils déclarés peuvent être abordés comme faits vécus.</p></div>'
  +'<div id="ap-events-progress" aria-live="polite"></div><div id="ap-events-output" class="ap-events-result"></div>';
- qs('#ap-events-horizon').value=String(months);qs('#ap-events-context').value=ctx(p);qs('#ap-events-category').value=category;
+ qs('#ap-events-horizon').value=String(months);qs('#ap-events-context').value=ctx(p);qs('#ap-events-category').value=category;qs('#ap-events-due').value=due(p);
  qs('#ap-events-run').onclick=runForecast;
  qs('#ap-events-copy').onclick=()=>{const t=qs('#ap-events-output')?.innerText||'';if(!t)return; if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));else fallbackCopy(t);};
  qs('#ap-events-context').onchange=e=>{const d=loadData();d.contexts[pkey(p)]=e.target.value;try{persist(d)}catch(err){alert('Enregistrement impossible : '+err.message)}};
+ qs('#ap-events-due').onchange=e=>{const d=loadData();d.terms[pkey(p)]=e.target.value;try{persist(d)}catch(err){alert('Enregistrement impossible : '+err.message)}};
 }
 function fallbackCopy(s){const t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.left='-10000px';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
 function setStatus(s){const n=qs('#ap-events-progress');if(n)n.textContent=s||'';}
@@ -127,17 +130,18 @@ function monthSpecs(total){
  }return out;
 }
 function domainFor(s){
- const a=new Set();const target=s.target||'',house=Number(s.natalHouse)||0;
+ const a=new Set();const target=s.target||s.significator||'',house=Number(s.natalHouse)||0;
  if(target==='MC'||house===10||house===6||target==='Saturne')a.add('travail');
  if(target==='Ascendant'||target==='Soleil'||house===1)a.add('personnel');
- if(target==='Lune'||house===4||house===5||house===9)a.add('famille');
- if(target==='Vénus'||house===7||house===5)a.add('relation');
+ if(target==='Lune'||target==='Fortune'||house===4||house===5||house===9)a.add('famille');
+ if(target==='Vénus'||target==='Descendant'||house===7||house===5)a.add('relation');
  if(house===2||house===8||target==='Jupiter'||target==='Vénus')a.add('finances');
- if(house===4||target==='Lune')a.add('logement');
+ if(house===4||target==='IC'||target==='Lune')a.add('logement');
  if(!a.size)a.add('personnel');return [...a];
 }
 function aspectText(a){
  const nm={0:'conjonction',60:'sextile',90:'carré',120:'trigone',180:'opposition'};
+ if(a.method==='direction_primaire_placidus')return 'Direction primaire Placidus '+(a.kind==='in_mundo'?'in mundo':'in zodiaco')+' '+a.direction+' : '+a.promissor+' '+(nm[a.aspect]||'aspect')+' '+a.significator+' (arc '+a.arc+'° ; '+a.key+')';
  if(a.method==='direction_primaire_meridienne')return 'Direction primaire méridienne '+a.motion+' : MC vers '+a.target+' ('+(nm[a.aspect]||a.aspect)+' ; clé de Naibod)';
  return ({transit_lent:'Transit lent',progression_secondaire:'Progression secondaire',direction_arc_solaire:'Arc solaire',eclipse:'Éclipse'}[a.method]||a.method)+': '+a.source+' '+(a.aspectName||nm[a.aspect]||'aspect')+' '+a.target+(a.orb!=null?' (orbe '+Number(a.orb).toFixed(2)+'°)':'');
 }
@@ -146,19 +150,20 @@ function narr(cat,context){const c=CATS[cat];if(cat==='famille'&&['grossesse','p
 function bucketResult(b,point,cycle,sky,context,selected){
  const all=[];
  for(const k of ['slowTransits','progressions','solarArcDirections'])for(const a of point?.[k]||[])all.push(a);
- for(const a of cycle?.primary||[])if(a.date>=b.start&&a.date<b.end)all.push(a);
+ for(const a of cycle?.fullPrimary?.points||[])if(a.date>=b.start&&a.date<b.end)all.push(a);
  for(const e of sky?.eclipses||[])if(e.dateUtc?.slice(0,10)>=b.start&&e.dateUtc?.slice(0,10)<b.end)for(const a of e.zodiac?.natalContacts||[])all.push({...a,method:'eclipse',source:'Éclipse '+e.type});
  const groups={};for(const a of all)for(const d of domainFor(a)) (groups[d]||(groups[d]=[])).push(a);
  const out=[];for(const [domain,rows] of Object.entries(groups)){
    if(selected!=='all'&&selected!==domain)continue;
    const keys=new Set(rows.map(x=>x.method)),distinct=[...new Set(rows.map(x=>[x.method,x.source,x.target,x.aspect].join('|')))];
-   const primary=rows.filter(x=>['direction_arc_solaire','direction_primaire_meridienne','progression_secondaire'].includes(x.method));
+   const primary=rows.filter(x=>['direction_arc_solaire','direction_primaire_placidus','progression_secondaire'].includes(x.method));
    const long=rows.filter(x=>x.method==='transit_lent');
    const theme=point?.profection?.house;
    const relHouse={famille:[4,5,9],relation:[5,7],travail:[6,10],finances:[2,8],logement:[4],personnel:[1,12]}[domain]||[];
    const profection=relHouse.includes(theme)?point.profection:null;
    const relevance=keys.size>=2&&(primary.length||long.length)?'Convergence de plusieurs techniques':'Signal isolé ou répétitif';
    const order=rows.slice().sort((a,b)=>(a.orb??1)-(b.orb??1)).slice(0,5);
+   if(keys.size<2)continue;
    out.push({domain,distinct,rows,methods:keys.size,rank:(keys.size>=2?12:0)+Math.min(8,distinct.length)+primary.length*2+(profection?2:0),relevance,profection,context,order,mood:mood(rows)});
  }
  return out.sort((a,b)=>b.rank-a.rank).slice(0,selected==='all'?3:5);
@@ -171,8 +176,11 @@ function renderEntries(rows,cycle,sky,p,context){
    const fortune=cycle.current?.fortune?.slice(0,2).map(x=>'L'+x.level+' '+x.sign).join(' · ');
    output+='<p><strong>Zodiacal Releasing :</strong> Esprit '+es(spirit||'—')+' ; Fortune '+es(fortune||'—')+'.</p>';
  }else output+='<p class="muted">Zodiacal Releasing indisponible : '+es(cycle?.reason||'moteur non disponible')+'</p>';
- output+='<p class="muted">Méthodes : transits lents, progressions, arc solaire, profections, firdaria, Zodiacal Releasing, directions primaires méridiennes et éclipses si moteur astronomique disponible. Les directions primaires in-mundo complètes ne sont pas encore calculées.</p></div>';
+ output+='<p class="muted">Méthodes utilisées : transits lents, progressions secondaires, arc solaire, profections, firdaria, Zodiacal Releasing (L1–L4), directions primaires Placidus en demi-arcs diurnes/nocturnes (directes et converses, in mundo et in zodiaco), éclipses si moteur astronomique disponible. Les variantes par étoiles fixes, antisces et termes ne sont pas activées.</p></div>';
  const keep=rows.filter(r=>r.events.length).sort((a,b)=>a.b.start.localeCompare(b.b.start));
+ if(['grossesse','petitenfant'].includes(context)){
+  const term=due(p);output+='<div class="ap-events-card"><h2>♡ Maternité et naissance dans la famille</h2><p><strong>Événement en préparation : arrivée d’un enfant.</strong> Cette information vient du contexte renseigné, pas d’une déduction à partir du thème.</p>'+(term?'<p>Terme annoncé : <strong>'+es(fmt(term))+'</strong>. Ce repère sert à examiner les configurations de la période ; il ne donne pas la date réelle de naissance.</p>':'<p>Renseignez le terme connu pour positionner la période de suivi dans la chronologie.</p>')+'<p class="muted">L’analyse recherche les activations des maisons liées aux enfants et à la famille, ainsi que les directions et progressions exactes.</p></div>';
+ }
  if(!keep.length)output+='<div class="ap-events-card"><strong>Aucune convergence significative détectée avec ces critères.</strong><p>On ne crée pas artificiellement d’événement quand les calculs ne permettent pas d’en identifier.</p></div>';
  for(const {b,events,point} of keep){
    output+='<div class="ap-events-card"><div class="ap-events-row"><h2>'+es(b.label)+'</h2><span class="ap-events-pill">Profection maison '+es(point?.profection?.house||'?')+'</span></div>';
@@ -195,7 +203,7 @@ function loadScript(path,global){return new Promise((resolve,reject)=>{
  if(window[global]){resolve();return}
  const tag=document.createElement('script');tag.src=path+'?v='+VERSION;tag.onload=()=>window[global]?resolve():reject(Error('Module '+global+' absent après chargement'));tag.onerror=()=>reject(Error('Chargement impossible : '+path));document.head.appendChild(tag);
  })}
-async function getMethods(){if(!window.APForecastMethods)await loadScript('assets/v190-forecast-techniques.js','APForecastMethods');if(!window.APEventCycles)await loadScript('assets/v201-event-cycles.js','APEventCycles')}
+async function getMethods(){if(!window.APForecastMethods)await loadScript('assets/v190-forecast-techniques.js','APForecastMethods');if(!window.APEventCycles)await loadScript('assets/v201-event-cycles.js','APEventCycles');if(!window.APPrimaryDirections)await loadScript('assets/v202-primary-directions.js','APPrimaryDirections')}
 async function analyzeProfile(p,spec,alive){
  const now=Date.now();const truth={start:spec[0].start,end:spec[spec.length-1].end,points:spec.map(s=>({...s})),months:spec.length};
  const M=window.APForecastMethods;
@@ -203,6 +211,7 @@ async function analyzeProfile(p,spec,alive){
  const methods=await M.compute({A,profile:p,truth,locations:location,jobActive:alive});
  if(!alive())throw Error('Analyse interrompue');
  const cycle=window.APEventCycles.compute(A,p,truth.start,truth.end);
+ const fullPrimary=window.APPrimaryDirections.compute(A,p,truth.start,truth.end);cycle.fullPrimary=fullPrimary;
  let sky=null;
  try{
    if(!window.APForecastSkyEvents)await loadScript('assets/v191-forecast-eclipses.js','APForecastSkyEvents');
