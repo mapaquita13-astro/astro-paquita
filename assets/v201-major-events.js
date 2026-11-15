@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V201_EVENTS_UI__)return;
 window.__AP_V201_EVENTS_UI__=true;
-const VERSION='v204-20261115';
+const VERSION='v205-20261115';
 const A=window.AstroTruth;
 const qs=(s,r)=>(r||document).querySelector(s),qsa=(s,r)=>Array.from((r||document).querySelectorAll(s));
 const es=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -184,7 +184,7 @@ function datedSignals(specs,methods,cycle,sky,lunar){
  const signals=[];
  const push=(day,domain,a,precision='repère')=>{
    const date=actualDate(day);if(!date||!CATS[domain])return;
-   signals.push({date,domain,method:a.method,source:a.source||a.promissor||'',target:a.target||a.significator||'',aspect:Number(a.aspect),natalHouse:a.natalHouse||0,orb:Number(a.orb)||0,precision});
+   signals.push({date,domain,method:a.method,source:a.source||a.promissor||'',target:a.target||a.significator||'',aspect:a.aspect===null||a.aspect===undefined?NaN:Number(a.aspect),natalHouse:a.natalHouse||0,orb:a.orb===null||a.orb===undefined?null:Number(a.orb),precision});
  };
  for(let i=0;i<specs.length;i++){
   const m=methods?.points?.[i]||{};
@@ -281,7 +281,7 @@ function eventsWithDates(specs,methods,cycle,sky,lunar,wanted,subject){
   if(techniques.size<2||!hasStructural)continue;
   const anchorsFound=around.filter(s=>!s.background&&s.method!=='revolution_lunaire'&&!s.method.startsWith('zodiacal_releasing_'));
   if(!anchorsFound.length)continue;
-  const aspectSupport=around.filter(s=>!s.background&&s.orb<=0.3).length;
+  const aspectSupport=around.filter(s=>!s.background&&s.orb!==null&&Number.isFinite(s.orb)&&s.orb<=0.3).length;
   const rating=techniques.size*4+Math.min(5,aspectSupport)+Math.min(4,anchorsFound.length);
   const birthFlag=a.domain==='famille'&&childbirthCandidate(around,fifth);
   candidates.push({date:a.date,domain:a.domain,rating,birthFlag,methods:techniques.size,
