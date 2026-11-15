@@ -90,6 +90,7 @@ function titleAndCopy(domain,signal,age,past){
  const why=(t)=>({tone:challenging?'difficile':hopeful?'favorable':'mixte',...t});
  switch(domain){
  case 'identite':
+  if(age<9)return null;
   return why({label:'Un tournant dans les choix personnels',detail:pre+
    ' à un changement de priorités, d’autonomie ou de manière de conduire sa vie. Une décision importante a pu modifier les relations, le rythme quotidien ou les objectifs personnels.'});
  case 'ressources':
@@ -98,6 +99,7 @@ function titleAndCopy(domain,signal,age,past){
    (challenging?' à des obligations financières, à un partage, à des dépenses ou à une remise à plat des revenus. Des choix concrets ont pu être nécessaires pour retrouver un équilibre.':
    ' à une évolution des revenus, à une opération patrimoniale ou à un engagement financier de longue durée. Les conditions matérielles ont pu prendre une importance nouvelle.')});
  case 'etudes_entourage':
+  if(age<5)return null;
   return why({label:age<=24?'Une étape importante des études et de la formation':'Un changement autour des proches ou de la communication',
    detail:age<=24?pre+' à un changement de cursus, une orientation, un apprentissage décisif ou à une nouvelle indépendance. Cette étape a pu réorienter le parcours scolaire ou professionnel.':
     pre+' à un changement concernant les frères et sœurs, le voisinage, les déplacements réguliers ou la manière de communiquer avec l’entourage. De nouvelles responsabilités ont pu s’organiser.'});
@@ -120,9 +122,11 @@ function titleAndCopy(domain,signal,age,past){
   return why({label:'Une étape importante concernant les enfants adultes',detail:pre+
    ' à une décision ou à un changement de vie vécu par un enfant, susceptible de transformer l’organisation familiale, les liens ou les responsabilités de chacun.'});
  case 'creation':
+  if(age<10)return null;
   return why({label:'Un projet personnel ou créatif prend de l’ampleur',detail:pre+
    ' à la réalisation d’un projet, au développement d’une passion ou à une nouvelle place donnée à l’expression personnelle. Cette étape peut aussi concerner les loisirs ou les relations affectives.'});
  case 'sante_rythme':
+  if(age<5)return null;
   return why({label:'Une modification importante du rythme de vie',detail:pre+
    ' à une réorganisation des habitudes, des obligations, du repos ou des capacités de récupération. Il ne s’agit pas d’un diagnostic, mais d’une période où le fonctionnement quotidien peut demander des ajustements.'});
  case 'travail_quotidien':
@@ -143,6 +147,7 @@ function titleAndCopy(domain,signal,age,past){
   return why({label:'Une période de transmission et de partage',detail:pre+
    ' à une succession, un partage de biens, une indemnité ou une réorganisation des ressources communes. La question de ce qui se transmet ou se partage peut devenir déterminante, sans impliquer nécessairement un décès.'});
  case 'voyages_etudes':
+  if(age<12)return null;
   return why({label:age<25?'Une ouverture par les études ou les voyages':'Un changement d’horizon important',detail:pre+
    ' à des études approfondies, à un voyage, à une installation plus lointaine ou à un élargissement des perspectives. Cette étape peut modifier durablement la manière de se projeter.'});
  case 'descendance':
@@ -162,9 +167,11 @@ function titleAndCopy(domain,signal,age,past){
    (challenging?' à une restructuration, une rupture de contrat ou une responsabilité devenue plus difficile. Un nouveau choix professionnel peut en avoir découlé.':
    ' à une prise de fonction, une reconnaissance, une promotion ou à un changement durable de situation professionnelle.')});
  case 'projets_amis':
+  if(age<8)return null;
   return why({label:'Une étape importante dans les projets et les relations amicales',detail:pre+
    ' à un nouveau réseau, à un projet collectif, à un engagement associatif ou à un changement significatif dans les amitiés. Les soutiens et les projets de long terme ont pu évoluer.'});
  case 'retrait_transition':
+  if(age<16)return null;
   return why({label:'Une période de retrait ou de réorientation personnelle',detail:pre+
    ' à un besoin de recul, à la fin d’un cycle, à un temps de solitude choisie ou subie, ou à une réorganisation intérieure. Rien ici ne permet de présumer une maladie ou un décès.'});
  default:return null;
@@ -176,7 +183,7 @@ function assemble(hits,birth,now){
  const byArea={};
  for(const h of hits)for(const d of eventArea(h))(byArea[d]||(byArea[d]=[])).push(h);
  for(const anchor of anchors){
-  const age=(anchor.at-birth)/YEAR;if(age<0||age>100)continue;
+  const age=(anchor.at-birth)/YEAR;if(age<3||age>100)continue;
   for(const domain of eventArea(anchor)){
    const nearby=(byArea[domain]||[]).filter(x=>Math.abs(x.at-anchor.at)<=75*DAY);
    const evidence=significance(nearby,age);
@@ -210,13 +217,13 @@ function assemble(hits,birth,now){
   kept.push(x);
  }
  const out=[];
- for(const cluster of kept.sort((a,b)=>a.at-b.at).slice(0,32)){
+ for(const cluster of kept.sort((a,b)=>a.at-b.at).slice(0,26)){
   const themes=cluster.items.sort((a,b)=>b.score-a.score);
   // Childbirth, if sufficiently evidenced, is a primary life chapter;
   // leave room for one associated area such as housing or career.
   const children=themes.find(x=>x.domain==='enfants'&&x.age>=18&&x.age<=49);
   const focused=children?[children,...themes.filter(x=>x!==children)].slice(0,2):themes.slice(0,2);
-  const main=focused[0],time=main.at;
+  const main=focused[0],time=cluster.at;
   const title=focused.length===1?main.label:main.label+' — '+focused[1].label.toLowerCase();
   const detail=focused.map(x=>x.detail).join(' ');
   out.push({date:iso(time),from:iso(time-45*DAY),to:iso(time+45*DAY),
@@ -312,7 +319,8 @@ async function compute({A,profile,alive,progress}){
   }
  }catch(e){console.warn('Directions primaires non disponibles',e)}
  progress?.('Rédaction de la chronologie',.95);isAlive();
- const results=assemble(raw,birth,now);
+ const milestone={date:iso(birth),from:iso(birth),to:iso(birth),age:0,domain:'identite',tone:'neutre',title:'Naissance',detail:'Le début de ce parcours, à partir de la date de naissance enregistrée.',period:'passe',verified:true};
+ const results=[milestone,...assemble(raw,birth,now)];
  progress?.('Terminé',1);
  return {version:'v212',birth:iso(birth),end:iso(stop),events:results,rawCount:raw.length,profileId:profile.profileId||profile.legacyKey,signature:profile.birthDataVersion||''};
 }
