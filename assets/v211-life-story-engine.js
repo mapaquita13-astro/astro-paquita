@@ -217,8 +217,17 @@ function assemble(hits,birth,now){
   if(kept.some(y=>Math.abs(y.at-x.at)<365*DAY))continue;
   kept.push(x);
  }
+ // Balanced coverage of the entire life: choose the most significant
+ // chapters in EACH decade rather than keeping only the earliest decades.
+ const selected=[],perDecade=new Map();
+ for(const cluster of kept.sort((a,b)=>rank(b)-rank(a)||a.at-b.at)){
+  const decade=Math.max(0,Math.min(9,Math.floor(((cluster.at-birth)/YEAR)/10)));
+  if((perDecade.get(decade)||0)>=3)continue;
+  perDecade.set(decade,(perDecade.get(decade)||0)+1);
+  selected.push(cluster);
+ }
  const out=[];
- for(const cluster of kept.sort((a,b)=>a.at-b.at).slice(0,26)){
+ for(const cluster of selected.sort((a,b)=>a.at-b.at)){
   const themes=cluster.items.sort((a,b)=>b.score-a.score);
   // Childbirth, if sufficiently evidenced, is a primary life chapter;
   // leave room for one associated area such as housing or career.
