@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V201_EVENTS_UI__)return;
 window.__AP_V201_EVENTS_UI__=true;
-const VERSION='v205-20261115';
+const VERSION='v206-20261115';
 const A=window.AstroTruth;
 const qs=(s,r)=>(r||document).querySelector(s),qsa=(s,r)=>Array.from((r||document).querySelectorAll(s));
 const es=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,18 +89,16 @@ function header(){
  const p=profile(),panel=qs('#ap-events-panel');
  if(!panel)return;
  panel.innerHTML='<div class="ap-events-top"><span class="muted">ASTRO PAQUITA · GRANDES ÉTAPES DE VIE</span><button class="ap-events-btn" id="ap-events-close" type="button">✕ Fermer</button></div>'
- +'<h1>Événements majeurs</h1><p>Les dates qui ressortent le plus, les événements possibles, sans tableaux de calculs.</p>';
+ +'<h1>Événements majeurs</h1><p>Les grands changements de vie, leurs dates et ce qui pourrait arriver.</p>';
  qs('#ap-events-close').onclick=close;
  if(!ok(p)){panel.insertAdjacentHTML('beforeend','<div class="ap-events-card">Sélectionnez d’abord un profil dont la date, l’heure et le lieu de naissance sont complets.</div>');return false}
  if(!premium()){
   panel.insertAdjacentHTML('beforeend','<div class="ap-events-card"><h2>Fonction Premium</h2><p>Les analyses des événements majeurs sont réservées aux comptes Premium. Vos profils et prévisions existants restent inchangés.</p></div>');return false;
  }
- panel.insertAdjacentHTML('beforeend','<div class="ap-events-card"><div class="ap-events-row"><strong>Profil : '+es(p.prenom||'Profil actif')+'</strong><span class="muted">Heure : '+es(p.heure||'non renseignée')+' · '+es(p.ville||'')+'</span></div></div>'
- +'<div class="ap-events-tools"><button class="ap-events-btn '+(mode==='future'?'selected':'')+'" data-ap-mode="future">Périodes à venir</button><button class="ap-events-btn '+(mode==='history'?'selected':'')+'" data-ap-mode="history">Événements vécus</button></div><div id="ap-events-content"></div>');
- qsa('[data-ap-mode]',panel).forEach(b=>b.onclick=()=>{job++;mode=b.dataset.apMode;render()});
+ panel.insertAdjacentHTML('beforeend','<div class="ap-events-card"><div class="ap-events-row"><strong>Profil : '+es(p.prenom||'Profil actif')+'</strong></div></div><div id="ap-events-content"></div>');
  return true;
 }
-function render(){if(!header())return;if(mode==='history')renderHistory();else renderFuture();}
+function render(){if(!header())return;renderFuture();}
 function renderFuture(){
  const p=profile(),holder=qs('#ap-events-content');
  holder.innerHTML='<div class="ap-events-card"><div class="ap-events-fields">'
@@ -362,7 +360,7 @@ async function runForecast(){
  try{
   await getMethods();if(!alive())return;
   const specs=monthSpecs(months);
-  setStatus('Calcul des transits, progressions, directions et cycles pour '+es(p.prenom||'le profil')+'…');
+  setStatus('Recherche des événements marquants pour '+es(p.prenom||'le profil')+'…');
   const r=await analyzeProfile(p,specs,alive);if(!alive())return;
   const entries=specs.map((b,i)=>({b,point:r.methods.points?.[i],events:bucketResult(b,r.methods.points?.[i],r.cycle,r.sky,selectedContext,category)}));
   renderEntries(entries,r.cycle,r.sky,p,selectedContext,r.methods.solarReturns,r.lunar,r.methods);
@@ -375,26 +373,9 @@ async function runForecast(){
     const dates1=eventsWithDates(specs,r.methods,r.cycle,r.sky,r.lunar,category,p),dates2=eventsWithDates(subset,r2.methods,r2.cycle,r2.sky,r2.lunar,category,other);const overlap=dates1.filter(x=>dates2.some(y=>x.domain===y.domain&&separation(x.date,y.date)<=9)).map(x=>fmt(x.date));
     qs('#ap-events-output').insertAdjacentHTML('beforeend','<div class="ap-events-card"><h2>Comparaison familiale : '+es(other.prenom||'autre profil')+'</h2><p>'+ (overlap.length?'Dates présentant un rapprochement dans les deux profils : '+es(overlap.slice(0,10).join(' ; '))+'.':'Aucune date commune suffisamment marquée pour ce filtre.')+'</p><p class="muted">Deux activations simultanées ne démontrent pas qu’un même événement se produira.</p></div>');
   }
-  setStatus('Recherche terminée. Seules les périodes ayant plusieurs indications concordantes sont présentées.');
+  setStatus('');
  }catch(e){if(alive()){console.error('Événements majeurs :',e);setStatus('Analyse non disponible : '+(e?.message||String(e)));}}
  finally{if(alive())run.disabled=false}
-}
-function renderHistory(){
- const p=profile(),holder=qs('#ap-events-content');
- const rows=loadData().events.filter(e=>e.profile===pkey(p)).sort((a,b)=>a.date.localeCompare(b.date));
- holder.innerHTML='<div class="ap-events-card"><h2>Journal des événements vécus</h2><p>Notez les grands événements positifs ou difficiles avec leurs dates réelles. Ils serviront à comparer les configurations rétrospectives, sans modifier les calculs pour les faire correspondre.</p>'
- +'<div class="ap-events-fields"><label>Date de l’événement<input type="date" id="ap-event-when" required></label><label>Type d’événement<select id="ap-event-type">'+Object.entries(TYPES).map(([k,v])=>'<option value="'+k+'">'+es(v)+'</option>').join('')+'</select></label></div>'
- +'<label style="display:block;margin:12px 0 6px">Description facultative<textarea id="ap-event-note" rows="2" maxlength="350" placeholder="Précisez les circonstances, sans données inutiles sur des tiers"></textarea></label>'
- +'<button class="ap-events-btn primary" id="ap-event-save">Enregistrer l’événement</button><p class="muted">Historique conservé sur cet appareil, dans le compte connecté. Il n’est pas encore synchronisé entre appareils.</p></div>'
- +'<div class="ap-events-card"><h2>Historique de '+es(p.prenom||'ce profil')+'</h2><div id="ap-events-history">'+(rows.length?rows.map(e=>'<div class="ap-events-row" style="border-bottom:1px solid #ead9e3;padding:10px 0"><div><strong>'+es(fmt(e.date))+' · '+es(TYPES[e.type]||e.type)+'</strong><p class="muted">'+es(e.note||'')+'</p></div><button class="ap-events-btn" data-ap-delete="'+es(e.id)+'">Supprimer</button></div>').join(''):'<p>Aucun événement enregistré pour ce profil.</p>')+'</div></div>';
- qs('#ap-event-save').onclick=()=>{
-   const date=qs('#ap-event-when').value,type=qs('#ap-event-type').value,note=qs('#ap-event-note').value.trim();
-   if(!/^\d{4}-\d\d-\d\d$/.test(date)||Number.isNaN(toDate(date).getTime())){alert('Choisissez une date valide.');return}
-   const d=loadData();if(d.events.length>=150){alert('Limite de 150 événements par compte.');return}
-   d.events.push({id:String(Date.now())+'-'+Math.random().toString(36).slice(2,9),profile:pkey(p),date,type,note});
-   try{persist(d);renderHistory()}catch(e){alert('Enregistrement impossible : '+e.message)}
- };
- qsa('[data-ap-delete]',holder).forEach(btn=>btn.onclick=()=>{if(!confirm('Supprimer cet événement du journal ?'))return;const d=loadData();d.events=d.events.filter(x=>x.id!==btn.dataset.apDelete);persist(d);renderHistory()});
 }
 function apply(){
  if(applying)return;pending=false;applying=true;
