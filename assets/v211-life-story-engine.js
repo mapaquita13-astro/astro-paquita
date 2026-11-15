@@ -144,16 +144,16 @@ function assemble(hits,birth,now){
   if(chosen.some(s=>s.domain===e.domain&&Math.abs(s.at-e.at)<hiatus))continue;
   chosen.push(e);
  }
- chosen.sort((a,b)=>a.at-b.at);
+ chosen.sort((a,b)=>b.score-a.score||a.at-b.at);
  const final=[];
  for(const e of chosen){
-  // A single decisive chapter per year across all domains: no stack of
-  // promotions, babies, weddings and money claims for the same date.
-  if(final.some(x=>Math.abs(x.at-e.at)<365*DAY))continue;
-  final.push({date:iso(e.at),from:iso(e.at-21*DAY),to:iso(e.at+21*DAY),age:Math.floor(e.age),domain:e.domain,tone:e.tone,title:e.label,detail:e.detail,period:e.at<now?'passe':'avenir',score:e.score});
+  // Keep only the strongest event within each rolling 12-month window,
+  // even when several themes peak on the same date.
+  if(final.some(x=>Math.abs(x.instant-e.at)<365*DAY))continue;
+  final.push({instant:e.at,date:iso(e.at),from:iso(e.at-21*DAY),to:iso(e.at+21*DAY),age:Math.floor(e.age),domain:e.domain,tone:e.tone,title:e.label,detail:e.detail,period:e.at<now?'passe':'avenir',score:e.score});
  }
- // Prefer a selective life narrative instead of a catalog of yearly events.
- return final.slice(0,30);
+ // Present the strongest chapters in chronological order.
+ return final.sort((a,b)=>a.instant-b.instant).slice(0,30).map(({instant,...item})=>item);
 }
 function tick(out,index,at,method,p,targets,orb){
  for(const [body,longitude] of Object.entries(p)){
