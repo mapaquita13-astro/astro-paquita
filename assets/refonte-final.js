@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261115-life-story-v211';
+const VER='20261115-life-story-v212';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);
