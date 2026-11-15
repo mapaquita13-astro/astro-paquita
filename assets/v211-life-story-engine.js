@@ -89,9 +89,9 @@ function titleAndCopy(domain,window,age,past){
   const x=window.filter(z=>z.houses.includes(age>=40?9:5));
   const ms=new Set(x.map(z=>z.method));
   if(ms.size<3||!x.some(z=>z.targetType==='cusp'))return null;
-  const isGrand=age>=42&&hs.has(9);
-  return {label:isGrand?'Étape importante concernant les petits-enfants':'Étape importante concernant un enfant',tone:'mixte',
-   detail:phrase+(isGrand?' à une naissance dans la descendance, à un événement important vécu par un petit-enfant ou à un changement du rôle de grand-parent.':' à une grossesse, à une naissance ou à une décision marquante concernant les enfants. Cette période concerne la famille mais ne désigne pas à elle seule une naissance certaine.')};
+  const isGrand=age>=42&&hs.has(9)&&!hs.has(5);
+  return {label:isGrand?'Tournant important dans la descendance':'Étape importante concernant un enfant',tone:'mixte',
+   detail:phrase+(isGrand?' à un changement de place au sein de la famille, éventuellement lié aux enfants devenus adultes ou aux petits-enfants.':' à une naissance, à un changement concernant les enfants ou à une responsabilité familiale nouvelle. Cette période ne désigne pas une naissance certaine.')};
  }
  if(domain==='couple'){
   if(age<17)return null;
@@ -100,7 +100,8 @@ function titleAndCopy(domain,window,age,past){
   return null;
  }
  if(domain==='carriere'){
-  if(age<17)return {label:'Étape dans les études ou l’orientation',tone:hard?'difficile':'favorable',detail:phrase+' à une décision scolaire, à un changement de formation ou à une étape décisive pour la construction de l’avenir.'};
+  if(age<6)return null;
+  if(age<17)return {label:'Changement important dans le parcours scolaire',tone:hard?'difficile':'favorable',detail:phrase+' à une évolution marquante de la scolarité, à un changement d’établissement ou à une nouvelle orientation qui a influencé la suite du parcours.'};
   if(age>=68)return null;
   if(age>=56&&/saturne|pluton/.test(sources))return {label:'Réorganisation de la fin de carrière',tone:'mixte',detail:phrase+' à une réduction ou cessation d’activité, à une préparation de la retraite ou à un changement du rythme professionnel.'};
   if(hard&&/saturne|uranus|pluton/.test(sources))return {label:'Changement professionnel sous tension',tone:'difficile',detail:phrase+' à une rupture de contrat, une restructuration, un conflit professionnel ou à l’obligation de trouver une nouvelle place.'};
@@ -139,17 +140,20 @@ function assemble(hits,birth,now){
  raw.sort((a,b)=>b.score-a.score);
  const chosen=[];
  for(const e of raw){
-  const hiatus=e.domain==='enfants'?4*YEAR:e.domain==='famille'?2.5*YEAR:2*YEAR;
+  const hiatus=e.domain==='enfants'?5*YEAR:e.domain==='famille'?4*YEAR:3*YEAR;
   if(chosen.some(s=>s.domain===e.domain&&Math.abs(s.at-e.at)<hiatus))continue;
   chosen.push(e);
  }
  chosen.sort((a,b)=>a.at-b.at);
  const final=[];
  for(const e of chosen){
-  if(final.filter(x=>Math.abs(x.at-e.at)<80*DAY).length>=2)continue;
+  // A single decisive chapter per year across all domains: no stack of
+  // promotions, babies, weddings and money claims for the same date.
+  if(final.some(x=>Math.abs(x.at-e.at)<365*DAY))continue;
   final.push({date:iso(e.at),from:iso(e.at-21*DAY),to:iso(e.at+21*DAY),age:Math.floor(e.age),domain:e.domain,tone:e.tone,title:e.label,detail:e.detail,period:e.at<now?'passe':'avenir',score:e.score});
  }
- return final;
+ // Prefer a selective life narrative instead of a catalog of yearly events.
+ return final.slice(0,30);
 }
 function tick(out,index,at,method,p,targets,orb){
  for(const [body,longitude] of Object.entries(p)){
