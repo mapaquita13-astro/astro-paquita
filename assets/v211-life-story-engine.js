@@ -24,104 +24,153 @@ function houseOf(p,c){
 }
 function makeTargets(n){
  const c=cusps(n);if(!c)return null;
- const t=[];
- for(const h of [2,3,4,5,7,8,9,10,12])t.push({name:'Maison '+h,longitude:c[h-1],house:h,type:'cusp'});
- // Ruler targets only if the natal planet is not already an exact house cusp.
- const rules={};for(const h of [2,3,4,5,7,8,9,10,12])rules[h]=RULERS[Math.floor(norm(c[h-1])/30)];
- for(const [name,lon] of Object.entries(n.positions||{})){
-  const k=name==='Venus'?'Vénus':name;
-  if(!['Soleil','Lune','Mercure','Vénus','Mars','Jupiter','Saturne'].includes(k)||!valid(lon))continue;
-  const groups=Object.keys(rules).map(Number).filter(h=>rules[h]===k);
-  t.push({name:k,longitude:Number(lon),house:houseOf(Number(lon),c),type:'ruler',groups});
+ const targets=[],rules={};
+ for(let h=1;h<=12;h++){
+  rules[h]=RULERS[Math.floor(norm(c[h-1])/30)];
+  targets.push({name:'Maison '+h,longitude:c[h-1],house:h,type:'cusp',groups:[h],roles:{[h]:'cusp'}});
  }
- return {targets:t,rules};
+ const supported=['Soleil','Lune','Mercure','Vénus','Mars','Jupiter','Saturne','Uranus','Neptune','Pluton'];
+ for(const name of supported){
+  const lon=position(n.positions,name);
+  if(lon===null)continue;
+  const occupied=houseOf(lon,c),groups=new Set(),roles={};
+  if(occupied){groups.add(occupied);roles[occupied]='occupant'}
+  for(let h=1;h<=12;h++){
+   if(rules[h]===name){
+    groups.add(h);
+    roles[h]=roles[h]?'occupant+maitre':'maitre';
+   }
+  }
+  if(groups.size)targets.push({name,longitude:lon,house:occupied,type:'planet',groups:[...groups],roles});
+ }
+ return {targets,rules,cusps:c};
 }
-function areas(t){
- if(t.type==='cusp')return [t.house];
- return t.groups||[];
-}
+function areas(t){return t.groups||[];}
+
 function add(h,body,method,at,orb,aspect,t){
  const hs=areas(t);if(!hs.length)return null;
- return {method,at,orb,aspect,body,target:t.name,targetType:t.type,houses:hs,sourceHouse:t.house};
+ return {method,at,orb,aspect,body,target:t.name,targetType:t.type,houses:hs,targetHouse:t.house,
+  roles:t.roles||{},sourceHouse:t.house};
 }
-function eventArea(a){
- const out=[];
- for(const h of a.houses){
-  if([3,4,8,12].includes(h))out.push('famille');
-  if([5,9].includes(h))out.push('enfants');
-  if(h===7)out.push('couple');
-  if(h===10)out.push('carriere');
-  if(h===4)out.push('logement');
-  if([2,8].includes(h))out.push('finances');
- }
- return [...new Set(out)];
+/* All twelve natal houses contribute. Areas overlap only where the underlying
+ * house meanings overlap; house VIII/XII never imply a relative's death. */
+const AREAS={
+ 1:['identite'],2:['ressources'],3:['etudes_entourage'],4:['famille','logement'],
+ 5:['enfants','creation'],6:['sante_rythme','travail_quotidien'],7:['couple','associations'],
+ 8:['transmission','ressources'],9:['voyages_etudes','descendance'],
+ 10:['carriere'],11:['projets_amis'],12:['retrait_transition']
+};
+function eventArea(hit){
+ return [...new Set(hit.houses.flatMap(h=>AREAS[h]||[]))];
 }
+
 function significance(bucket,age){
- const methods=new Set(bucket.map(x=>x.method));
- const structurals=['arc','progression','primaire'].filter(m=>methods.has(m));
- const keyTargets=bucket.filter(x=>x.targetType==='cusp');
- const bodies=new Set(bucket.map(x=>x.body));
- const exact=bucket.filter(x=>x.orb<=0.3).length;
- // Three distinct computational families, at least one long-duration
- // and one structural measurement, an actual house cusp and 2 source bodies.
- const supported=methods.size>=3&&structurals.length>=1&&keyTargets.length>=1&&bodies.size>=2;
- const score=methods.size*3+structurals.length*2+Math.min(4,keyTargets.length)+Math.min(4,exact);
- return {supported,score,methods,bodies,keyTargets};
+ const byMethod=new Set(bucket.map(x=>x.method));
+ const differentSources=new Set(bucket.map(x=>x.method+'|'+x.body));
+ const distinctBodies=new Set(bucket.map(x=>x.body));
+ const direct=bucket.filter(x=>x.targetType==='cusp'||x.roles&&Object.values(x.roles).includes('occupant')||
+  x.roles&&Object.values(x.roles).includes('occupant+maitre'));
+ const structurals=['arc','progression','primaire'].filter(m=>byMethod.has(m));
+ const strict=byMethod.has('transit')&&structurals.length>0&&byMethod.size>=2&&
+  differentSources.size>=3&&distinctBodies.size>=2&&direct.length>=1;
+ const strong=byMethod.size>=3;
+ const score=byMethod.size*4+Math.min(5,direct.length)+Math.min(5,new Set(bucket.map(x=>x.target)).size)+
+  Math.min(4,bucket.filter(x=>x.orb<=.25).length)+ (strong?5:0);
+ return {supported:strict,score,strong,byMethod,direct};
 }
-function titleAndCopy(domain,window,age,past){
- const h=window.filter(x=>x.aspect===90||x.aspect===180),f=window.filter(x=>x.aspect===60||x.aspect===120),hard=h.length>=f.length+2;
- const sources=window.map(x=>x.body).join(' ').toLowerCase();
- const phrase=past?'Cette phase a pu correspondre':'Cette phase pourrait correspondre';
- if(domain==='famille'){
-  const houses=new Set(window.flatMap(x=>x.houses));
-  if(!houses.has(3)&&!houses.has(4)&&!houses.has(8))return null;
-  if(hard&&h.length>=3&&[...houses].filter(x=>[3,4,8,12].includes(x)).length>=2&&/saturne|pluton|uranus/.test(sources)){
-   return {label:'Épreuve majeure dans la famille',tone:'difficile',
-    detail:phrase+' à un bouleversement touchant plusieurs proches, à une rupture familiale ou à un deuil. Les responsabilités, les liens et la vie quotidienne ont pu en être durablement transformés.'};
-  }
-  if(hard&&age>=5)return {label:'Période familiale éprouvante',tone:'difficile',detail:phrase+' à une situation lourde concernant le foyer ou des proches, avec des tensions, une séparation ou des responsabilités nouvelles.'};
-  return null;
- }
- if(domain==='enfants'){
+function titleAndCopy(domain,signal,age,past){
+ const uniq=new Map();
+ for(const s of signal)uniq.set(s.method+'|'+s.body+'|'+s.target+'|'+s.aspect,s);
+ const rows=[...uniq.values()],hard=rows.filter(x=>[90,180].includes(x.aspect)),
+ soft=rows.filter(x=>[60,120].includes(x.aspect));
+ const challenging=hard.length>=soft.length+2,hopeful=soft.length>=hard.length+2;
+ const pre=past?'Cette période a pu correspondre':'Cette période pourrait correspondre';
+ const subs=new Set(rows.flatMap(x=>x.houses)),source=new Set(rows.map(x=>x.body));
+ const has=(h)=>subs.has(h);
+ const why=(t)=>({tone:challenging?'difficile':hopeful?'favorable':'mixte',...t});
+ switch(domain){
+ case 'identite':
+  return why({label:'Un tournant dans les choix personnels',detail:pre+
+   ' à un changement de priorités, d’autonomie ou de manière de conduire sa vie. Une décision importante a pu modifier les relations, le rythme quotidien ou les objectifs personnels.'});
+ case 'ressources':
   if(age<18)return null;
-  const hs=new Set(window.flatMap(x=>x.houses));
-  if(!hs.has(5)&&!hs.has(9))return null;
-  const x=window.filter(z=>z.houses.includes(age>=40?9:5));
-  const ms=new Set(x.map(z=>z.method));
-  if(ms.size<3||!x.some(z=>z.targetType==='cusp'))return null;
-  const isGrand=age>=42&&hs.has(9)&&!hs.has(5);
-  return {label:isGrand?'Tournant important dans la descendance':'Étape importante concernant un enfant',tone:'mixte',
-   detail:phrase+(isGrand?' à un changement de place au sein de la famille, éventuellement lié aux enfants devenus adultes ou aux petits-enfants.':' à une naissance, à un changement concernant les enfants ou à une responsabilité familiale nouvelle. Cette période ne désigne pas une naissance certaine.')};
- }
- if(domain==='couple'){
+  return why({label:'Réorganisation des ressources et du patrimoine',detail:pre+
+   (challenging?' à des obligations financières, à un partage, à des dépenses ou à une remise à plat des revenus. Des choix concrets ont pu être nécessaires pour retrouver un équilibre.':
+   ' à une évolution des revenus, à une opération patrimoniale ou à un engagement financier de longue durée. Les conditions matérielles ont pu prendre une importance nouvelle.')});
+ case 'etudes_entourage':
+  return why({label:age<=24?'Une étape importante des études et de la formation':'Un changement autour des proches ou de la communication',
+   detail:age<=24?pre+' à un changement de cursus, une orientation, un apprentissage décisif ou à une nouvelle indépendance. Cette étape a pu réorienter le parcours scolaire ou professionnel.':
+    pre+' à un changement concernant les frères et sœurs, le voisinage, les déplacements réguliers ou la manière de communiquer avec l’entourage. De nouvelles responsabilités ont pu s’organiser.'});
+ case 'famille':
+  if(!has(4))return null;
+  if(challenging)return why({label:'Une période de changement familial exigeante',detail:pre+
+   ' à une réorganisation du foyer, des relations avec les parents ou de la vie familiale. Un éloignement, une responsabilité nouvelle ou une épreuve vécue par un proche peut faire partie des manifestations possibles, sans permettre de conclure à un décès.'});
+  if(hopeful)return why({label:'Une évolution favorable du foyer et de la famille',detail:pre+
+   ' à une installation, un rapprochement familial ou à une nouvelle étape de vie partagée. Les liens et la stabilité du cadre de vie ont pu prendre une place particulière.'});
+  return null;
+ case 'logement':
+  if(age<16)return null;
+  return why({label:'Un changement du lieu ou du cadre de vie',detail:pre+
+   ' à un déménagement, des travaux, un projet immobilier ou une réorganisation du foyer. La question du lieu de résidence et de la stabilité matérielle a pu devenir centrale.'});
+ case 'enfants':
   if(age<17)return null;
-  if(hard&&/saturne|uranus|pluton/.test(sources))return {label:'Tournant difficile dans la vie affective',tone:'difficile',detail:phrase+' à une crise de couple, une mise à distance, une séparation ou une refonte profonde d’un engagement. La question centrale porte sur la continuité du lien et les choix personnels.'};
-  if(!hard&&f.length>=3)return {label:'Engagement ou évolution du couple',tone:'favorable',detail:phrase+' à une rencontre importante, une officialisation, un mariage ou une décision donnant davantage de place à une relation durable.'};
-  return null;
- }
- if(domain==='carriere'){
+  if(!has(5))return null;
+  if(age<=49)return why({label:'Une étape majeure autour des enfants',detail:pre+
+   ' à une grossesse, à une naissance ou à un événement modifiant la place des enfants dans la vie quotidienne. Une parentalité nouvelle peut s’inscrire dans cette période, sans qu’une naissance soit la seule interprétation possible.'});
+  return why({label:'Une étape importante concernant les enfants adultes',detail:pre+
+   ' à une décision ou à un changement de vie vécu par un enfant, susceptible de transformer l’organisation familiale, les liens ou les responsabilités de chacun.'});
+ case 'creation':
+  return why({label:'Un projet personnel ou créatif prend de l’ampleur',detail:pre+
+   ' à la réalisation d’un projet, au développement d’une passion ou à une nouvelle place donnée à l’expression personnelle. Cette étape peut aussi concerner les loisirs ou les relations affectives.'});
+ case 'sante_rythme':
+  return why({label:'Une modification importante du rythme de vie',detail:pre+
+   ' à une réorganisation des habitudes, des obligations, du repos ou des capacités de récupération. Il ne s’agit pas d’un diagnostic, mais d’une période où le fonctionnement quotidien peut demander des ajustements.'});
+ case 'travail_quotidien':
+  if(age<16||age>73)return null;
+  return why({label:'Une transformation du quotidien professionnel',detail:pre+
+   ' à un changement d’horaires, de conditions de travail, d’équipe ou de responsabilités concrètes. Les contraintes matérielles et l’organisation des journées ont pu être particulièrement importantes.'});
+ case 'couple':
+  if(age<17)return null;
+  return why({label:'Un tournant dans la vie affective ou conjugale',detail:pre+
+   (challenging?' à une remise en question d’un engagement, à des désaccords ou à une nouvelle distance dans le couple. Il peut être question de renégocier le lien, sans que cela annonce automatiquement un divorce.':
+    ' à une relation qui prend une place nouvelle, à un engagement, à une vie commune ou à une redéfinition du fonctionnement du couple.')});
+ case 'associations':
+  if(age<18)return null;
+  return why({label:'Un changement dans les engagements et partenariats',detail:pre+
+   ' à la signature, à la fin ou à la transformation d’un accord important, professionnel ou personnel. Une association, une collaboration ou une décision contractuelle a pu peser sur la suite.'});
+ case 'transmission':
+  if(age<16)return null;
+  return why({label:'Une période de transmission et de partage',detail:pre+
+   ' à une succession, un partage de biens, une indemnité ou une réorganisation des ressources communes. La question de ce qui se transmet ou se partage peut devenir déterminante, sans impliquer nécessairement un décès.'});
+ case 'voyages_etudes':
+  return why({label:age<25?'Une ouverture par les études ou les voyages':'Un changement d’horizon important',detail:pre+
+   ' à des études approfondies, à un voyage, à une installation plus lointaine ou à un élargissement des perspectives. Cette étape peut modifier durablement la manière de se projeter.'});
+ case 'descendance':
+  if(age<38)return null;
+  if(!has(9))return null;
+  return why({label:'Un tournant autour de la descendance',detail:pre+
+   ' à une évolution importante chez les enfants devenus adultes ou les petits-enfants. Une arrivée dans la famille fait partie des possibilités, sans pouvoir être déterminée par ce seul secteur.'});
+ case 'carriere':
   if(age<6)return null;
-  if(age<17)return {label:'Changement important dans le parcours scolaire',tone:hard?'difficile':'favorable',detail:phrase+' à une évolution marquante de la scolarité, à un changement d’établissement ou à une nouvelle orientation qui a influencé la suite du parcours.'};
-  if(age>=68)return null;
-  if(age>=56&&/saturne|pluton/.test(sources))return {label:'Réorganisation de la fin de carrière',tone:'mixte',detail:phrase+' à une réduction ou cessation d’activité, à une préparation de la retraite ou à un changement du rythme professionnel.'};
-  if(hard&&/saturne|uranus|pluton/.test(sources))return {label:'Changement professionnel sous tension',tone:'difficile',detail:phrase+' à une rupture de contrat, une restructuration, un conflit professionnel ou à l’obligation de trouver une nouvelle place.'};
-  if(!hard&&f.length>=3)return {label:'Progression professionnelle importante',tone:'favorable',detail:phrase+' à une promotion, une nomination, un nouveau poste ou une responsabilité qui améliore durablement la situation professionnelle.'};
-  return null;
+  if(age<17)return why({label:'Une évolution de la scolarité ou de l’orientation',detail:pre+
+   ' à un changement d’établissement ou à une décision qui oriente les apprentissages et les possibilités futures.'});
+  if(age>=70)return why({label:'Une nouvelle place dans la vie sociale',detail:pre+
+   ' à la reconnaissance d’un parcours, à un engagement associatif ou à une redéfinition du rôle dans la société, indépendamment de l’emploi.'});
+  if(age>=57)return why({label:'Un tournant dans la fin de carrière ou la retraite',detail:pre+
+   ' à une évolution des responsabilités, à une diminution d’activité, à une cessation d’emploi ou à la préparation d’une retraite.'});
+  return why({label:'Une étape marquante de la carrière et du statut',detail:pre+
+   (challenging?' à une restructuration, une rupture de contrat ou une responsabilité devenue plus difficile. Un nouveau choix professionnel peut en avoir découlé.':
+   ' à une prise de fonction, une reconnaissance, une promotion ou à un changement durable de situation professionnelle.')});
+ case 'projets_amis':
+  return why({label:'Une étape importante dans les projets et les relations amicales',detail:pre+
+   ' à un nouveau réseau, à un projet collectif, à un engagement associatif ou à un changement significatif dans les amitiés. Les soutiens et les projets de long terme ont pu évoluer.'});
+ case 'retrait_transition':
+  return why({label:'Une période de retrait ou de réorientation personnelle',detail:pre+
+   ' à un besoin de recul, à la fin d’un cycle, à un temps de solitude choisie ou subie, ou à une réorganisation intérieure. Rien ici ne permet de présumer une maladie ou un décès.'});
+ default:return null;
  }
- if(domain==='logement'){
-  if(age<18)return null;
-  if(hard&&/saturne|uranus|pluton/.test(sources))return {label:'Changement imposé du cadre de vie',tone:'difficile',detail:phrase+' à un déménagement difficile, à une séparation du foyer ou à des travaux et décisions matérielles contraignantes.'};
-  if(!hard&&f.length>=3)return {label:'Changement important de logement',tone:'favorable',detail:phrase+' à une installation durable, à un achat immobilier, à une vente ou à un déménagement choisi.'};
-  return null;
- }
- if(domain==='finances'){
-  if(age<18)return null;
-  if(hard&&/saturne|pluton/.test(sources))return {label:'Réorganisation financière importante',tone:'difficile',detail:phrase+' à une perte de revenus, un endettement, un partage patrimonial ou à des dépenses inhabituelles demandant des décisions concrètes.'};
-  if(!hard&&f.length>=3)return {label:'Évolution favorable du patrimoine',tone:'favorable',detail:phrase+' à une augmentation de ressources, à une opération patrimoniale ou à une amélioration financière durable.'};
-  return null;
- }
- return null;
 }
+
 function assemble(hits,birth,now){
  const raw=[];
  const anchors=hits.filter(x=>x.method==='arc'||x.method==='progression'||x.method==='primaire');
