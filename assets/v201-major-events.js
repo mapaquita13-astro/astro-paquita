@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V201_EVENTS_UI__)return;
 window.__AP_V201_EVENTS_UI__=true;
-const VERSION='v206-20261115';
+const VERSION='v207-20261115';
 const A=window.AstroTruth;
 const qs=(s,r)=>(r||document).querySelector(s),qsa=(s,r)=>Array.from((r||document).querySelectorAll(s));
 const es=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,7 +89,7 @@ function header(){
  const p=profile(),panel=qs('#ap-events-panel');
  if(!panel)return;
  panel.innerHTML='<div class="ap-events-top"><span class="muted">ASTRO PAQUITA · GRANDES ÉTAPES DE VIE</span><button class="ap-events-btn" id="ap-events-close" type="button">✕ Fermer</button></div>'
- +'<h1>Événements majeurs</h1><p>Les grands changements de vie, leurs dates et ce qui pourrait arriver.</p>';
+ +'<h1>Événements majeurs</h1><p>Les événements qui ressortent le plus, avec leurs périodes.</p>';
  qs('#ap-events-close').onclick=close;
  if(!ok(p)){panel.insertAdjacentHTML('beforeend','<div class="ap-events-card">Sélectionnez d’abord un profil dont la date, l’heure et le lieu de naissance sont complets.</div>');return false}
  if(!premium()){
@@ -313,13 +313,12 @@ function renderEntries(rows,cycle,sky,p,context,solarReturns,lunar,technical,com
  const holder=qs('#ap-events-output');if(!holder)return;
  const events=eventsWithDates(rows.map(r=>r.b),technical,cycle,sky,lunar,category,p);
  let output='<div class="ap-events-card"><h2>Dates des événements majeurs</h2><p>Profil : <strong>'+es(p.prenom||'Profil actif')+'</strong></p></div>';
- if(!events.length)output+='<div class="ap-events-card"><h2>Aucun événement majeur suffisamment marqué</h2><p>Il n’y a pas de date justifiable à afficher pour la période choisie.</p></div>';
+ if(!events.length)output+='<div class="ap-events-card"><h2>Aucun événement majeur identifié</h2><p>Aucune période ne ressort assez nettement pour annoncer un événement précis.</p></div>';
  for(const x of events){
   const from=nearby(x.date,-x.windowDays),to=nearby(x.date,x.windowDays);
   output+='<div class="ap-events-card ap-major-dated"><span class="ap-events-pill">'+es(CATS[x.domain].name)+'</span>'
    +'<h2 style="margin:12px 0 8px">'+es(x.title)+'</h2>'
-   +'<p style="font-size:19px;font-weight:700;margin:8px 0">Autour du '+es(fmt(x.date))+'</p>'
-   +'<p>Fenêtre à examiner : du '+es(fmt(from))+' au '+es(fmt(to))+'.</p>'
+   +'<p style="font-size:19px;font-weight:700;margin:8px 0">Du '+es(fmt(from))+' au '+es(fmt(to))+'</p>'
    +'</div>';
  }
  holder.innerHTML=output;
@@ -374,7 +373,7 @@ async function runForecast(){
     qs('#ap-events-output').insertAdjacentHTML('beforeend','<div class="ap-events-card"><h2>Comparaison familiale : '+es(other.prenom||'autre profil')+'</h2><p>'+ (overlap.length?'Dates présentant un rapprochement dans les deux profils : '+es(overlap.slice(0,10).join(' ; '))+'.':'Aucune date commune suffisamment marquée pour ce filtre.')+'</p><p class="muted">Deux activations simultanées ne démontrent pas qu’un même événement se produira.</p></div>');
   }
   setStatus('');
- }catch(e){if(alive()){console.error('Événements majeurs :',e);setStatus('Analyse non disponible : '+(e?.message||String(e)));}}
+ }catch(e){if(alive()){console.error('Événements majeurs :',e);setStatus('Recherche impossible pour ce profil. Vérifie la date, l’heure et le lieu de naissance, puis réessaie.');}}
  finally{if(alive())run.disabled=false}
 }
 function apply(){
