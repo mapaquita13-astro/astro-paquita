@@ -339,7 +339,7 @@ async function compute({A,profile,alive,progress}){
  const milestone={date:birthDay,from:birthDay,to:birthDay,age:0,domain:'identite',tone:'neutre',title:'Naissance',detail:'Le début de ce parcours, à partir de la date de naissance enregistrée.',period:'passe',verified:true};
  const results=[milestone,...assemble(raw,birth,now)];
  progress?.('Terminé',1);
- return {version:'v212',birth:iso(birth),end:iso(stop),events:results,rawCount:raw.length,profileId:profile.profileId||profile.legacyKey,signature:profile.birthDataVersion||''};
+ return {version:'v213',birth:iso(birth),end:iso(stop),events:results,rawCount:raw.length,profileId:profile.profileId||profile.legacyKey,signature:profile.birthDataVersion||''};
 }
-window.APLifeStory={version:'v212',compute,_test:{cusps,houseOf,makeTargets,eventArea,significance,titleAndCopy,assemble}};
+window.APLifeStory={version:'v213',compute,_test:{cusps,houseOf,makeTargets,eventArea,significance,titleAndCopy,assemble}};
 })();
