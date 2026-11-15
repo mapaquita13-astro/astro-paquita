@@ -1,4 +1,4 @@
-/* Astro Paquita V211 — Chronologie complète de vie.
+/* Astro Paquita V212 — Chronologie complète de vie.
  * Calcul astronomique local, sans IA ni appels réseau, depuis la naissance
  * jusqu'à 100 ans. Tous les domaines examinés automatiquement.
  * Les événements proposés sont des INTERPRÉTATIONS (y compris dans le passé),
@@ -172,37 +172,59 @@ function titleAndCopy(domain,signal,age,past){
 }
 
 function assemble(hits,birth,now){
- const raw=[];
- const anchors=hits.filter(x=>x.method==='arc'||x.method==='progression'||x.method==='primaire');
- const byArea={};for(const h of hits)for(const d of eventArea(h))(byArea[d]||(byArea[d]=[])).push(h);
+ const raw=[],anchors=hits.filter(x=>x.method==='arc'||x.method==='progression'||x.method==='primaire');
+ const byArea={};
+ for(const h of hits)for(const d of eventArea(h))(byArea[d]||(byArea[d]=[])).push(h);
  for(const anchor of anchors){
   const age=(anchor.at-birth)/YEAR;if(age<0||age>100)continue;
   for(const domain of eventArea(anchor)){
-   const group=(byArea[domain]||[]).filter(x=>Math.abs(x.at-anchor.at)<=60*DAY);
-   const info=significance(group,age);
-   if(!info.supported)continue;
-   const typed=titleAndCopy(domain,group,age,anchor.at<now);
-   if(!typed)continue;
-   raw.push({at:anchor.at,age,domain,...typed,score:info.score});
+   const nearby=(byArea[domain]||[]).filter(x=>Math.abs(x.at-anchor.at)<=75*DAY);
+   const evidence=significance(nearby,age);
+   if(!evidence.supported)continue;
+   const entry=titleAndCopy(domain,nearby,age,anchor.at<now);
+   if(!entry)continue;
+   raw.push({at:anchor.at,age,domain,...entry,score:evidence.score});
   }
  }
- raw.sort((a,b)=>b.score-a.score);
- const chosen=[];
- for(const e of raw){
-  const hiatus=e.domain==='enfants'?5*YEAR:e.domain==='famille'?4*YEAR:3*YEAR;
-  if(chosen.some(s=>s.domain===e.domain&&Math.abs(s.at-e.at)<hiatus))continue;
-  chosen.push(e);
+ // Independent qualitative chapter selection: the birth of a child is not
+ // hidden just because a generic money trigger has a slightly higher score.
+ raw.sort((a,b)=>b.score-a.score||a.at-b.at);
+ const distinct=[];
+ for(const x of raw){
+  if(distinct.some(y=>y.domain===x.domain&&Math.abs(y.at-x.at)<(x.domain==='enfants'?4:2.5)*YEAR))continue;
+  distinct.push(x);
  }
- chosen.sort((a,b)=>b.score-a.score||a.at-b.at);
- const final=[];
- for(const e of chosen){
-  // Keep only the strongest event within each rolling 12-month window,
-  // even when several themes peak on the same date.
-  if(final.some(x=>Math.abs(x.instant-e.at)<365*DAY))continue;
-  final.push({instant:e.at,date:iso(e.at),from:iso(e.at-21*DAY),to:iso(e.at+21*DAY),age:Math.floor(e.age),domain:e.domain,tone:e.tone,title:e.label,detail:e.detail,period:e.at<now?'passe':'avenir',score:e.score});
+ // Merge concurrent themes into one chapter; never print several unrelated
+ // headlines on the same day, or repeat the same scenario in adjacent months.
+ const clusters=[];
+ for(const x of distinct.sort((a,b)=>a.at-b.at)){
+  let near=clusters.find(z=>Math.abs(z.at-x.at)<=120*DAY);
+  if(!near){near={at:x.at,items:[]};clusters.push(near)}
+  if(!near.items.some(z=>z.domain===x.domain))near.items.push(x);
  }
- // Present the strongest chapters in chronological order.
- return final.sort((a,b)=>a.instant-b.instant).slice(0,30).map(({instant,...item})=>item);
+ const rank=cluster=>Math.max(...cluster.items.map(x=>x.score))+
+   Math.min(4,new Set(cluster.items.map(x=>x.domain)).size);
+ const kept=[];
+ for(const x of clusters.sort((a,b)=>rank(b)-rank(a)||a.at-b.at)){
+  if(kept.some(y=>Math.abs(y.at-x.at)<365*DAY))continue;
+  kept.push(x);
+ }
+ const out=[];
+ for(const cluster of kept.sort((a,b)=>a.at-b.at).slice(0,32)){
+  const themes=cluster.items.sort((a,b)=>b.score-a.score);
+  // Childbirth, if sufficiently evidenced, is a primary life chapter;
+  // leave room for one associated area such as housing or career.
+  const children=themes.find(x=>x.domain==='enfants'&&x.age>=18&&x.age<=49);
+  const focused=children?[children,...themes.filter(x=>x!==children)].slice(0,2):themes.slice(0,2);
+  const main=focused[0],time=main.at;
+  const title=focused.length===1?main.label:main.label+' — '+focused[1].label.toLowerCase();
+  const detail=focused.map(x=>x.detail).join(' ');
+  out.push({date:iso(time),from:iso(time-45*DAY),to:iso(time+45*DAY),
+   age:Math.floor((time-birth)/YEAR),domain:main.domain,tone:main.tone,
+   title,detail,period:time<now?'passe':'avenir',
+   score:cluster.items.reduce((n,x)=>Math.max(n,x.score),0)});
+ }
+ return out.sort((a,b)=>a.date.localeCompare(b.date));
 }
 function tick(out,index,at,method,p,targets,orb){
  for(const [body,longitude] of Object.entries(p)){
@@ -292,7 +314,7 @@ async function compute({A,profile,alive,progress}){
  progress?.('Rédaction de la chronologie',.95);isAlive();
  const results=assemble(raw,birth,now);
  progress?.('Terminé',1);
- return {version:'v211',birth:iso(birth),end:iso(stop),events:results,rawCount:raw.length,profileId:profile.profileId||profile.legacyKey,signature:profile.birthDataVersion||''};
+ return {version:'v212',birth:iso(birth),end:iso(stop),events:results,rawCount:raw.length,profileId:profile.profileId||profile.legacyKey,signature:profile.birthDataVersion||''};
 }
-window.APLifeStory={version:'v211',compute,_test:{cusps,houseOf,makeTargets,eventArea,significance,titleAndCopy,assemble}};
+window.APLifeStory={version:'v212',compute,_test:{cusps,houseOf,makeTargets,eventArea,significance,titleAndCopy,assemble}};
 })();
