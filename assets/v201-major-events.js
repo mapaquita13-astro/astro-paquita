@@ -168,7 +168,7 @@ function bucketResult(b,point,cycle,sky,context,selected){
  }
  return out.sort((a,b)=>b.rank-a.rank).slice(0,selected==='all'?3:5);
 }
-function renderEntries(rows,cycle,sky,p,context){
+function renderEntries(rows,cycle,sky,p,context,solarReturns){
  const holder=qs('#ap-events-output');if(!holder)return;
  let output='<div class="ap-events-card"><h2>Chronologie pour '+es(p.prenom||'le profil')+'</h2><p class="muted">Orbe 1° maximum. Une configuration répétée n’est pas plusieurs événements. Les associations de maisons et de planètes expriment des domaines possibles, pas des faits.</p>';
  if(cycle?.available){
@@ -194,6 +194,9 @@ function renderEntries(rows,cycle,sky,p,context){
  if(cycle?.available){
    const changes=[...(cycle.transitions?.spirit||[]).filter(x=>x.level<=2).map(x=>({...x,lot:'Esprit'})),...(cycle.transitions?.fortune||[]).filter(x=>x.level<=2).map(x=>({...x,lot:'Fortune'}))].sort((a,b)=>a.date.localeCompare(b.date));
    output+='<div class="ap-events-card"><h2>Changements de chapitres (Zodiacal Releasing)</h2>'+(changes.length?'<ul>'+changes.slice(0,24).map(x=>'<li>'+es(fmt(x.date))+' : '+es(x.lot)+' niveau '+x.level+' en '+es(x.sign)+(x.loosingBond?' — rupture de liaison':'')+(x.peak?' — période angulaire':'')+'</li>').join('')+'</ul>':'<p>Aucune transition L1/L2 dans cet horizon.</p>')+'</div>';
+ }
+ if(solarReturns?.length){
+  output+='<div class="ap-events-card"><h2>Révolutions solaires calculées</h2><ul>'+solarReturns.map(s=>'<li><strong>'+es(String(s.year))+'</strong> — retour du Soleil le '+es(s.localDate||s.instantUtc)+' ; '+(s.houseCusps?'maisons calculées pour '+es(s.location?.city||'le lieu de présence'):'maisons non calculées sans lieu de présence confirmé')+'. '+(s.houseCusps?'Planètes en maison V : '+es(s.planets?.filter(x=>x.house===5).map(x=>x.name).join(', ')||'aucune')+' ; en maison X : '+es(s.planets?.filter(x=>x.house===10).map(x=>x.name).join(', ')||'aucune')+'.':'')+'</li>').join('')+'</ul></div>';
  }
  if(sky?.eclipses?.length)output+='<div class="ap-events-card"><h2>Éclipses et contacts natals</h2><ul>'+sky.eclipses.map(x=>'<li>'+es(fmt(x.dateUtc.slice(0,10)))+' : éclipse '+es(x.type)+' ; '+es(x.zodiac?.natalContacts?.map(y=>y.target+' '+y.aspectName+' ('+y.orb+'°)').join(', ')||'aucun contact natal à 1°')+'</li>').join('')+'</ul></div>';
  holder.innerHTML=output;
@@ -232,7 +235,7 @@ async function runForecast(){
   setStatus('Calcul des transits, progressions, directions et cycles pour '+es(p.prenom||'le profil')+'…');
   const r=await analyzeProfile(p,specs,alive);if(!alive())return;
   const entries=specs.map((b,i)=>({b,point:r.methods.points?.[i],events:bucketResult(b,r.methods.points?.[i],r.cycle,r.sky,selectedContext,category)}));
-  renderEntries(entries,r.cycle,r.sky,p,selectedContext);
+  renderEntries(entries,r.cycle,r.sky,p,selectedContext,r.methods.solarReturns);
   if(other&&ok(other)){
     if(months>24){qs('#ap-events-output').insertAdjacentHTML('beforeend','<div class="ap-events-card">Le croisement familial est limité à 24 mois pour éviter des calculs excessifs. Le profil principal reste analysé sur l’horizon choisi.</div>')}
     const subset=specs.slice(0,months>24?8:specs.length);
