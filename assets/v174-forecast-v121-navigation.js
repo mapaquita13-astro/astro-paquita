@@ -40,7 +40,10 @@ function syncNav(forceToday){
   }
   n.dataset.v174Anchor=iso(start);
   n.dataset.v174Days=String(span(period));
-  const label=q('.ap-forecast-range-label',n);if(label)label.textContent=rangeText(start,span(period));
+  // Le MutationObserver surveille les enfants de cette zone : ne jamais réécrire
+  // le même texte, sinon une nouvelle mutation relance syncNav en boucle.
+  const label=q('.ap-forecast-range-label',n),nextText=rangeText(start,span(period));
+  if(label&&label.textContent!==nextText)label.textContent=nextText;
 }
 function shift(dir){
   const period=activePeriod(),days=span(period),start=currentAnchor(period);
