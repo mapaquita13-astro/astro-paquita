@@ -64,12 +64,13 @@ function eventArea(hit){
  return [...new Set(hit.houses.flatMap(h=>AREAS[h]||[]))];
 }
 
-function significance(bucket,age){
+function significance(bucket,age,domain){
  const byMethod=new Set(bucket.map(x=>x.method));
  const differentSources=new Set(bucket.map(x=>x.method+'|'+x.body));
  const distinctBodies=new Set(bucket.map(x=>x.body));
- const direct=bucket.filter(x=>x.targetType==='cusp'||x.roles&&Object.values(x.roles).includes('occupant')||
-  x.roles&&Object.values(x.roles).includes('occupant+maitre'));
+ const relevantHouses=Object.entries(AREAS).filter(([h,names])=>names.includes(domain)).map(([h])=>Number(h));
+ const direct=bucket.filter(x=>x.houses.some(h=>relevantHouses.includes(h)&&
+  ['cusp','occupant','occupant+maitre'].includes(x.roles?.[h])));
  const structurals=['arc','progression','primaire'].filter(m=>byMethod.has(m));
  const strict=byMethod.has('transit')&&structurals.length>0&&byMethod.size>=2&&
   differentSources.size>=3&&distinctBodies.size>=2&&direct.length>=1;
@@ -186,7 +187,7 @@ function assemble(hits,birth,now){
   const age=(anchor.at-birth)/YEAR;if(age<3||age>100)continue;
   for(const domain of eventArea(anchor)){
    const nearby=(byArea[domain]||[]).filter(x=>Math.abs(x.at-anchor.at)<=75*DAY);
-   const evidence=significance(nearby,age);
+   const evidence=significance(nearby,age,domain);
    if(!evidence.supported)continue;
    const entry=titleAndCopy(domain,nearby,age,anchor.at<now);
    if(!entry)continue;
@@ -222,7 +223,11 @@ function assemble(hits,birth,now){
   // Childbirth, if sufficiently evidenced, is a primary life chapter;
   // leave room for one associated area such as housing or career.
   const children=themes.find(x=>x.domain==='enfants'&&x.age>=18&&x.age<=49);
-  const focused=children?[children,...themes.filter(x=>x!==children)].slice(0,2):themes.slice(0,2);
+  // The same fifth-house event should not also invent an unrelated creative project.
+  const redundant=(a,b)=>[['enfants','creation'],['famille','logement'],
+    ['couple','associations'],['ressources','transmission'],['carriere','travail_quotidien']].some(pair=>pair.includes(a)&&pair.includes(b));
+  const ordered=children?[children,...themes.filter(x=>x!==children&&!redundant(children.domain,x.domain))]:themes;
+  const focused=[ordered[0],...ordered.slice(1).filter(x=>!redundant(ordered[0].domain,x.domain))].slice(0,2);
   const main=focused[0],time=cluster.at;
   const title=focused.length===1?main.label:main.label+' — '+focused[1].label.toLowerCase();
   const detail=focused.map(x=>x.detail).join(' ');
@@ -319,7 +324,9 @@ async function compute({A,profile,alive,progress}){
   }
  }catch(e){console.warn('Directions primaires non disponibles',e)}
  progress?.('Rédaction de la chronologie',.95);isAlive();
- const milestone={date:iso(birth),from:iso(birth),to:iso(birth),age:0,domain:'identite',tone:'neutre',title:'Naissance',detail:'Le début de ce parcours, à partir de la date de naissance enregistrée.',period:'passe',verified:true};
+ const localBirth=/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/.exec(String(profile.date||''));
+ const birthDay=localBirth?localBirth[3]+'-'+localBirth[2].padStart(2,'0')+'-'+localBirth[1].padStart(2,'0'):/^\d{4}-\d{2}-\d{2}$/.test(String(profile.date||''))?profile.date:iso(birth);
+ const milestone={date:birthDay,from:birthDay,to:birthDay,age:0,domain:'identite',tone:'neutre',title:'Naissance',detail:'Le début de ce parcours, à partir de la date de naissance enregistrée.',period:'passe',verified:true};
  const results=[milestone,...assemble(raw,birth,now)];
  progress?.('Terminé',1);
  return {version:'v212',birth:iso(birth),end:iso(stop),events:results,rawCount:raw.length,profileId:profile.profileId||profile.legacyKey,signature:profile.birthDataVersion||''};
