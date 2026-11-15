@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V201_EVENTS_UI__)return;
 window.__AP_V201_EVENTS_UI__=true;
-const VERSION='v201-20261115';
+const VERSION='v204-20261115';
 const A=window.AstroTruth;
 const qs=(s,r)=>(r||document).querySelector(s),qsa=(s,r)=>Array.from((r||document).querySelectorAll(s));
 const es=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,8 +89,7 @@ function header(){
  const p=profile(),panel=qs('#ap-events-panel');
  if(!panel)return;
  panel.innerHTML='<div class="ap-events-top"><span class="muted">ASTRO PAQUITA · GRANDES ÉTAPES DE VIE</span><button class="ap-events-btn" id="ap-events-close" type="button">✕ Fermer</button></div>'
- +'<h1>Événements majeurs</h1><p>Chronologie des périodes activées dans tous les domaines, avec lecture des tensions comme des possibilités favorables.</p>'
- +'<p class="muted">Les configurations sont calculées et vérifiables ; leur traduction en événement dépend du contexte réel. Aucun décès, divorce ou accouchement n’est annoncé comme un fait.</p>';
+ +'<h1>Événements majeurs</h1><p>Les dates qui ressortent le plus, les événements possibles, sans tableaux de calculs.</p>';
  qs('#ap-events-close').onclick=close;
  if(!ok(p)){panel.insertAdjacentHTML('beforeend','<div class="ap-events-card">Sélectionnez d’abord un profil dont la date, l’heure et le lieu de naissance sont complets.</div>');return false}
  if(!premium()){
@@ -104,30 +103,27 @@ function header(){
 function render(){if(!header())return;if(mode==='history')renderHistory();else renderFuture();}
 function renderFuture(){
  const p=profile(),holder=qs('#ap-events-content');
- holder.innerHTML='<div class="ap-events-card"><div class="ap-events-fields"><label>Horizon de recherche<select id="ap-events-horizon"><option value="12">12 prochains mois</option><option value="24">24 prochains mois</option><option value="60">5 prochaines années</option><option value="120">10 prochaines années</option></select></label>'
- +'<label>Contexte personnel connu<select id="ap-events-context">'+Object.entries(CTX).map(([k,v])=>'<option value="'+k+'">'+es(v)+'</option>').join('')+'</select></label>'
- +'<label>Domaine à examiner<select id="ap-events-category"><option value="all">Tous les domaines</option>'+Object.entries(CATS).map(([k,v])=>'<option value="'+k+'">'+es(v.name)+'</option>').join('')+'</select></label>'
- +'<label>Lecture familiale facultative<select id="ap-events-family"><option value="">Profil principal uniquement</option>'+A.listProfiles().filter(x=>x.profileId!==p.profileId&&ok(x)).map(x=>'<option value="'+es(pkey(x))+'">Avec '+es(x.prenom||'autre profil')+'</option>').join('')+'</select></label></div>'
- +'<div style="margin:12px 0"><label>Date de terme connue (facultative, uniquement si grossesse renseignée) <input type="date" id="ap-events-due"></label></div>'
- +'<div class="ap-events-tools"><button class="ap-events-btn primary" id="ap-events-run">Analyser les événements</button><button class="ap-events-btn" id="ap-events-copy" disabled>Copier le résultat</button></div>'
- +'<p class="muted">Les situations difficiles sont analysées au même titre que les événements heureux. Un deuil n’est pas prédit : seuls les deuils déclarés peuvent être abordés comme faits vécus.</p></div>'
- +'<div id="ap-events-progress" aria-live="polite"></div><div id="ap-events-output" class="ap-events-result"></div>';
- qs('#ap-events-horizon').value=String(months);qs('#ap-events-context').value=ctx(p);qs('#ap-events-category').value=category;qs('#ap-events-due').value=due(p);
+ holder.innerHTML='<div class="ap-events-card"><div class="ap-events-fields">'
+ +'<label>Période à examiner<select id="ap-events-horizon"><option value="12">12 prochains mois</option><option value="24">24 prochains mois</option><option value="60">5 prochaines années</option><option value="120">10 prochaines années</option></select></label>'
+ +'<label>Événements recherchés<select id="ap-events-category"><option value="all">Tous les événements majeurs</option>'+Object.entries(CATS).filter(([k])=>k!=='personnel').map(([k,v])=>'<option value="'+k+'">'+es(v.name)+'</option>').join('')+'</select></label>'
+ +'<label>Comparer avec un proche (facultatif)<select id="ap-events-family"><option value="">Seulement ce profil</option>'+A.listProfiles().filter(x=>x.profileId!==p.profileId&&ok(x)).map(x=>'<option value="'+es(pkey(x))+'">'+es(x.prenom||'Autre profil')+'</option>').join('')+'</select></label>'
+ +'</div><div class="ap-events-tools"><button class="ap-events-btn primary" id="ap-events-run">Rechercher les événements</button><button class="ap-events-btn" id="ap-events-copy" disabled>Copier les résultats</button></div></div>'
+ +'<div id="ap-events-progress" aria-live="polite" class="muted"></div><div id="ap-events-output" class="ap-events-result"></div>';
+ qs('#ap-events-horizon').value=String(months);
+ qs('#ap-events-category').value=category;
  qs('#ap-events-run').onclick=runForecast;
- qs('#ap-events-copy').onclick=()=>{const t=qs('#ap-events-output')?.innerText||'';if(!t)return; if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));else fallbackCopy(t);};
- qs('#ap-events-context').onchange=e=>{const d=loadData();d.contexts[pkey(p)]=e.target.value;try{persist(d)}catch(err){alert('Enregistrement impossible : '+err.message)}};
- qs('#ap-events-due').onchange=e=>{const d=loadData();d.terms[pkey(p)]=e.target.value;try{persist(d)}catch(err){alert('Enregistrement impossible : '+err.message)}};
+ qs('#ap-events-copy').onclick=()=>{const t=qs('#ap-events-output')?.innerText||'';if(!t)return;if(navigator.clipboard?.writeText)navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));else fallbackCopy(t)};
 }
 function fallbackCopy(s){const t=document.createElement('textarea');t.value=s;t.style.position='fixed';t.style.left='-10000px';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
 function setStatus(s){const n=qs('#ap-events-progress');if(n)n.textContent=s||'';}
 function monthSpecs(total){
  const n=new Date(),begin=new Date(Date.UTC(n.getFullYear(),n.getMonth(),1,12));
- const segment=total<=24?1:total===60?3:6;
- const out=[];for(let m=0;m<total;m+=segment){
-  const from=new Date(Date.UTC(begin.getUTCFullYear(),begin.getUTCMonth()+m,1,12));
-  const finish=new Date(Date.UTC(begin.getUTCFullYear(),begin.getUTCMonth()+Math.min(total,m+segment),1,12));
-  out.push({start:iso(from),end:iso(finish),label:fmonth(iso(from))+(segment===1?'':' — '+fmonth(iso(new Date(finish.getTime()-86400000))))});
- }return out;
+ const out=[];
+ for(let m=0;m<total;m++){
+  const from=new Date(Date.UTC(begin.getUTCFullYear(),begin.getUTCMonth()+m,1,12)),finish=new Date(Date.UTC(begin.getUTCFullYear(),begin.getUTCMonth()+m+1,1,12));
+  out.push({start:iso(from),end:iso(finish),label:fmonth(iso(from))});
+ }
+ return out;
 }
 function domainFor(s){
  const a=new Set();const target=s.target||s.significator||'',house=Number(s.natalHouse)||0;
@@ -175,45 +171,117 @@ function bucketResult(b,point,cycle,sky,context,selected){
  }
  return out.sort((a,b)=>b.rank-a.rank).slice(0,selected==='all'?3:5);
 }
-function renderEntries(rows,cycle,sky,p,context,solarReturns){
- const holder=qs('#ap-events-output');if(!holder)return;
- let output='<div class="ap-events-card"><h2>Chronologie pour '+es(p.prenom||'le profil')+'</h2><p class="muted">Orbe 1° maximum. Une configuration répétée n’est pas plusieurs événements. Les associations de maisons et de planètes expriment des domaines possibles, pas des faits.</p>';
- if(cycle?.available){
-   const spirit=cycle.current?.spirit?.slice(0,2).map(x=>'L'+x.level+' '+x.sign).join(' · ');
-   const fortune=cycle.current?.fortune?.slice(0,2).map(x=>'L'+x.level+' '+x.sign).join(' · ');
-   output+='<p><strong>Zodiacal Releasing :</strong> Esprit '+es(spirit||'—')+' ; Fortune '+es(fortune||'—')+'.</p>';
- }else output+='<p class="muted">Zodiacal Releasing indisponible : '+es(cycle?.reason||'moteur non disponible')+'</p>';
- output+='<p class="muted">Méthodes utilisées : transits lents, progressions secondaires, arc solaire, profections, firdaria, Zodiacal Releasing (L1–L4), directions primaires Placidus en demi-arcs diurnes/nocturnes (directes et converses, in mundo et in zodiaco), éclipses si moteur astronomique disponible. Les variantes par étoiles fixes, antisces et termes ne sont pas activées.</p></div>';
- const keep=rows.filter(r=>r.events.length).sort((a,b)=>a.b.start.localeCompare(b.b.start));
- if(['grossesse','petitenfant'].includes(context)){
-  const term=due(p);const familyMonths=rows.filter(x=>x.events.some(y=>y.domain==='famille')).map(x=>x.b.label);output+='<div class="ap-events-card"><h2>♡ Maternité et naissance dans la famille</h2><p><strong>Événement en préparation : arrivée d’un enfant.</strong> Cette information vient du contexte renseigné, pas d’une déduction à partir du thème.</p>'+(familyMonths.length?'<p><strong>Périodes familiales calculées :</strong> '+es(familyMonths.slice(0,12).join(' ; '))+'.</p>':'<p>Aucun regroupement familial de plusieurs techniques n’a été identifié sur la période selon les règles fixées.</p>')+(term?'<p>Terme annoncé : <strong>'+es(fmt(term))+'</strong>. Ce repère sert à examiner les configurations de la période ; il ne donne pas la date réelle de naissance.</p>':'<p>Renseignez le terme connu pour positionner la période de suivi dans la chronologie.</p>')+'<p class="muted">L’analyse recherche les activations des maisons liées aux enfants et à la famille, ainsi que les directions et progressions exactes.</p></div>';
- }
- if(!keep.length)output+='<div class="ap-events-card"><strong>Aucune convergence significative détectée avec ces critères.</strong><p>On ne crée pas artificiellement d’événement quand les calculs ne permettent pas d’en identifier.</p></div>';
- for(const {b,events,point} of keep){
-   output+='<div class="ap-events-card"><div class="ap-events-row"><h2>'+es(b.label)+'</h2><span class="ap-events-pill">Profection maison '+es(point?.profection?.house||'?')+'</span></div>';
-   for(const v of events){
-     output+='<div class="ap-events-lines"><strong>'+es(CATS[v.domain].symbol+' '+CATS[v.domain].name)+'</strong> · <span class="ap-events-pill">'+es(v.relevance)+'</span>'
-       +'<p>'+es(narr(v.domain,context,v.rows,v.profection))+'</p><p class="muted">'+es(v.mood)+(v.profection?' · Profection maison '+v.profection.house+' ('+es(v.profection.lord)+')':'')+'</p>'
-       +'<ul>'+v.order.map(x=>'<li>'+es(aspectText(x))+'</li>').join('')+'</ul></div>';
+/* Independent technical indicators are combined in memory; no astrology jargon is
+   printed in the public report. Every displayed date is an astronomical timing
+   anchor, never an invented exact date of a future life event. */
+function actualDate(s){
+ const x=String(s||'').slice(0,10);
+ return /^\d{4}-\d{2}-\d{2}$/.test(x)&&!isNaN(Date.parse(x+'T12:00:00Z'))?x:null;
+}
+function separation(a,b){return Math.abs((Date.parse(a+'T12:00:00Z')-Date.parse(b+'T12:00:00Z'))/86400000)}
+function nearby(d,n){return iso(new Date(Date.parse(d+'T12:00:00Z')+n*86400000))}
+function datedSignals(specs,methods,cycle,sky,lunar){
+ const signals=[];
+ const push=(day,domain,a,precision='repère')=>{
+   const date=actualDate(day);if(!date||!CATS[domain])return;
+   signals.push({date,domain,method:a.method,source:a.source||a.promissor||'',target:a.target||a.significator||'',aspect:Number(a.aspect),natalHouse:a.natalHouse||0,orb:Number(a.orb)||0,precision});
+ };
+ for(let i=0;i<specs.length;i++){
+  const m=methods?.points?.[i]||{};
+  for(const s of m.slowTransits||[]){
+   const date=actualDate(s.observedDate);if(!date)continue;
+   for(const d of domainFor(s))push(date,d,s,'relevé de transit');
+  }
+  for(const key of ['progressions','solarArcDirections']){
+   for(const s of m[key]||[]){
+     // Monthly midpoints are *not* exact aspect dates and cannot anchor a dated result.
+     // They are admitted only as corroboration inside the same month.
+     for(const d of domainFor(s))signals.push({date:specs[i].start,domain:d,method:s.method,background:true,month:specs[i].start.slice(0,7),source:s.source,target:s.target,aspect:Number(s.aspect),orb:Number(s.orb)});
    }
-   output+='</div>';
+  }
  }
- if(cycle?.available){
-   const changes=[...(cycle.transitions?.spirit||[]).filter(x=>x.level<=2).map(x=>({...x,lot:'Esprit'})),...(cycle.transitions?.fortune||[]).filter(x=>x.level<=2).map(x=>({...x,lot:'Fortune'}))].sort((a,b)=>a.date.localeCompare(b.date));
-   output+='<div class="ap-events-card"><h2>Changements de chapitres (Zodiacal Releasing)</h2>'+(changes.length?'<ul>'+changes.slice(0,24).map(x=>'<li>'+es(fmt(x.date))+' : '+es(x.lot)+' niveau '+x.level+' en '+es(x.sign)+(x.loosingBond?' — rupture de liaison':'')+(x.peak?' — période angulaire':'')+'</li>').join('')+'</ul>':'<p>Aucune transition L1/L2 dans cet horizon.</p>')+'</div>';
+ for(const x of cycle?.fullPrimary?.points||[])for(const d of domainFor(x))push(x.date,d,x,'direction');
+ for(const kind of ['spirit','fortune']){
+  for(const x of cycle?.transitions?.[kind]||[]){
+   if(x.level>2)continue;
+   const a={method:'zodiacal_releasing_'+kind,source:kind,aspect:null};
+   for(const d of ['travail','famille','relation','logement','finances'])push(x.date,d,a,'changement de période');
+  }
  }
- if(solarReturns?.length){
-  output+='<div class="ap-events-card"><h2>Révolutions solaires calculées</h2><ul>'+solarReturns.map(s=>'<li><strong>'+es(String(s.year))+'</strong> — retour du Soleil le '+es(s.localDate||s.instantUtc)+' ; '+(s.houseCusps?'maisons calculées pour '+es(s.location?.city||'le lieu de présence'):'maisons non calculées sans lieu de présence confirmé')+'. '+(s.houseCusps?'Planètes en maison V : '+es(s.planets?.filter(x=>x.house===5).map(x=>x.name).join(', ')||'aucune')+' ; en maison X : '+es(s.planets?.filter(x=>x.house===10).map(x=>x.name).join(', ')||'aucune')+'.':'')+'</li>').join('')+'</ul></div>';
+ for(const e of sky?.eclipses||[]){
+   for(const x of e.zodiac?.natalContacts||[]){
+    const a={...x,method:'eclipse',source:'éclipse'};
+    for(const d of domainFor(a))push(e.dateUtc,d,a,'éclipse');
+   }
  }
- if(sky?.eclipses?.length)output+='<div class="ap-events-card"><h2>Éclipses et contacts natals</h2><ul>'+sky.eclipses.map(x=>'<li>'+es(fmt(x.dateUtc.slice(0,10)))+' : éclipse '+es(x.type)+' ; '+es(x.zodiac?.natalContacts?.map(y=>y.target+' '+y.aspectName+' ('+y.orb+'°)').join(', ')||'aucun contact natal à 1°')+'</li>').join('')+'</ul></div>';
+ for(const x of lunar?.returns||[]){
+   if(!x.housesAvailable)continue;
+   if(x.houseV?.length)push(x.date,'famille',{method:'revolution_lunaire',source:'retour lunaire',aspect:null},'retour');
+   if(x.houseIX?.length)push(x.date,'famille',{method:'revolution_lunaire',source:'retour lunaire',aspect:null},'retour');
+ }
+ return signals;
+}
+function chooseTitle(domain,arr){
+ const tension=arr.some(x=>[90,180].includes(x.aspect));
+ const child=arr.some(x=>Number(x.natalHouse)===5||x.target==='Vénus'||x.target==='Lune');
+ if(domain==='famille')return child?'Naissance ou événement majeur concernant un enfant':'Événement important dans la famille';
+ if(domain==='relation')return tension?'Séparation ou changement décisif dans le couple':'Rencontre, union ou engagement sentimental';
+ if(domain==='travail')return tension?'Rupture ou changement professionnel important':'Promotion, nouveau poste ou changement de carrière';
+ if(domain==='finances')return tension?'Difficulté financière ou décision patrimoniale':'Évolution financière ou opération importante';
+ if(domain==='logement')return 'Déménagement, achat ou vente d’un logement';
+ return 'Tournant personnel majeur';
+}
+function eventsWithDates(specs,methods,cycle,sky,lunar,wanted){
+ const signals=datedSignals(specs,methods,cycle,sky,lunar);
+ const anchors=signals.filter(s=>!s.background&&s.method!=='zodiacal_releasing_spirit'&&s.method!=='zodiacal_releasing_fortune');
+ const candidates=[];
+ for(const a of anchors){
+   if(wanted!=='all'&&a.domain!==wanted)continue;
+   if(a.domain==='personnel')continue;
+   const around=signals.filter(s=>s.domain===a.domain&&(s.background?s.month===a.date.slice(0,7):separation(s.date,a.date)<=9));
+   const methodsSet=new Set(around.map(s=>s.method));
+   const independently=[...methodsSet].filter(s=>!s.startsWith('zodiacal_releasing_'));
+   const strong=around.some(s=>['direction_primaire_placidus','direction_arc_solaire','progression_secondaire','transit_lent','eclipse'].includes(s.method));
+   if(independently.length<2||!strong)continue;
+   const structural=around.filter(s=>!s.background&&s.method!=='revolution_lunaire'&&!s.method.startsWith('zodiacal_releasing'));
+   if(!structural.length)continue;
+   const orbBonus=around.reduce((n,x)=>n+(x.orb<=0.3?1:0),0);
+   const rating=independently.length*4+Math.min(5,orbBonus)+Math.min(4,structural.length);
+   const title=chooseTitle(a.domain,around);
+   candidates.push({date:a.date,domain:a.domain,title,rating,methods:independently.length,windowDays:a.precision==='relevé de transit'?5:3,around});
+ }
+ candidates.sort((a,b)=>b.rating-a.rating||a.date.localeCompare(b.date));
+ const selected=[];
+ for(const e of candidates){
+   if(selected.some(x=>x.domain===e.domain&&separation(x.date,e.date)<=12))continue;
+   selected.push(e);
+ }
+ // A sparse event timeline: filter to major clusters rather than printing each month.
+ const cap=specs.length<=12?12:specs.length<=24?18:specs.length<=60?28:40;
+ return selected.slice(0,cap).sort((a,b)=>a.date.localeCompare(b.date));
+}
+function renderEntries(rows,cycle,sky,p,context,solarReturns,lunar,technical,comparison){
+ const holder=qs('#ap-events-output');if(!holder)return;
+ const events=eventsWithDates(rows.map(r=>r.b),technical,cycle,sky,lunar,category);
+ let output='<div class="ap-events-card"><h2>Dates des événements majeurs</h2><p>Profil : <strong>'+es(p.prenom||'Profil actif')+'</strong></p></div>';
+ if(!events.length)output+='<div class="ap-events-card"><h2>Aucun événement majeur suffisamment marqué</h2><p>Il n’y a pas de date justifiable à afficher pour la période choisie.</p></div>';
+ for(const x of events){
+  const from=nearby(x.date,-x.windowDays),to=nearby(x.date,x.windowDays);
+  output+='<div class="ap-events-card ap-major-dated"><span class="ap-events-pill">'+es(CATS[x.domain].name)+'</span>'
+   +'<h2 style="margin:12px 0 8px">'+es(x.title)+'</h2>'
+   +'<p style="font-size:19px;font-weight:700;margin:8px 0">Autour du '+es(fmt(x.date))+'</p>'
+   +'<p>Fenêtre à examiner : du '+es(fmt(from))+' au '+es(fmt(to))+'.</p>'
+   +'</div>';
+ }
  holder.innerHTML=output;
  latest=output;qs('#ap-events-copy').disabled=false;
+ return events;
 }
 function loadScript(path,global){return new Promise((resolve,reject)=>{
  if(window[global]){resolve();return}
  const tag=document.createElement('script');tag.src=path+'?v='+VERSION;tag.onload=()=>window[global]?resolve():reject(Error('Module '+global+' absent après chargement'));tag.onerror=()=>reject(Error('Chargement impossible : '+path));document.head.appendChild(tag);
  })}
-async function getMethods(){if(!window.APForecastMethods)await loadScript('assets/v190-forecast-techniques.js','APForecastMethods');if(!window.APEventCycles)await loadScript('assets/v201-event-cycles.js','APEventCycles');if(!window.APPrimaryDirections)await loadScript('assets/v202-primary-directions.js','APPrimaryDirections')}
+async function getMethods(){if(!window.APForecastMethods)await loadScript('assets/v190-forecast-techniques.js','APForecastMethods');if(!window.APEventCycles)await loadScript('assets/v201-event-cycles.js','APEventCycles');if(!window.APPrimaryDirections)await loadScript('assets/v202-primary-directions.js','APPrimaryDirections');if(!window.APLunarReturns)await loadScript('assets/v203-lunar-returns.js','APLunarReturns')}
 async function analyzeProfile(p,spec,alive){
  if((p.timeStatus||'exact')!=='exact')throw Error('Heure de naissance exacte nécessaire pour les directions primaires et les angles des maisons.');
  const now=Date.now();const truth={start:spec[0].start,end:spec[spec.length-1].end,points:spec.map(s=>({...s})),months:spec.length};
@@ -228,13 +296,17 @@ async function analyzeProfile(p,spec,alive){
    if(!window.APForecastSkyEvents)await loadScript('assets/v191-forecast-eclipses.js','APForecastSkyEvents');
    if(window.Astronomy)sky=await window.APForecastSkyEvents.compute({truth,natal:A.natal(p),jobActive:alive});
  }catch(e){console.warn('Éclipses non disponibles :',e?.message||e)}
- return {methods,cycle,sky,finishedAt:now};
+ let lunar=null;
+ try{
+  lunar=await window.APLunarReturns.compute({A,profile:p,start:truth.start,end:truth.end,jobActive:alive});
+ }catch(e){console.warn('Révolutions lunaires non disponibles',e?.message||e)}
+ return {methods,cycle,sky,lunar,finishedAt:now};
 }
 async function runForecast(){
  const p=profile();if(!ok(p))return;
  months=Number(qs('#ap-events-horizon').value)||12;category=qs('#ap-events-category').value;
  const target=qs('#ap-events-family').value;const other=target?A.listProfiles().find(x=>pkey(x)===target):null;
- const selectedContext=ctx(p),myJob=++job,alive=()=>opened&&job===myJob&&baseAccount===email();
+ const selectedContext='aucun',myJob=++job,alive=()=>opened&&job===myJob&&baseAccount===email();
  const run=qs('#ap-events-run');run.disabled=true;qs('#ap-events-output').innerHTML='';qs('#ap-events-copy').disabled=true;
  try{
   await getMethods();if(!alive())return;
@@ -242,17 +314,17 @@ async function runForecast(){
   setStatus('Calcul des transits, progressions, directions et cycles pour '+es(p.prenom||'le profil')+'…');
   const r=await analyzeProfile(p,specs,alive);if(!alive())return;
   const entries=specs.map((b,i)=>({b,point:r.methods.points?.[i],events:bucketResult(b,r.methods.points?.[i],r.cycle,r.sky,selectedContext,category)}));
-  renderEntries(entries,r.cycle,r.sky,p,selectedContext,r.methods.solarReturns);
+  renderEntries(entries,r.cycle,r.sky,p,selectedContext,r.methods.solarReturns,r.lunar,r.methods);
   if(other&&ok(other)){
     if(months>24){qs('#ap-events-output').insertAdjacentHTML('beforeend','<div class="ap-events-card">Le croisement familial est limité à 24 mois pour éviter des calculs excessifs. Le profil principal reste analysé sur l’horizon choisi.</div>')}
     const subset=specs.slice(0,months>24?8:specs.length);
     setStatus('Croisement avec le profil '+es(other.prenom||'secondaire')+'…');
     const r2=await analyzeProfile(other,subset,alive);if(!alive())return;
     const rows=subset.map((b,i)=>({b,point:r2.methods.points?.[i],events:bucketResult(b,r2.methods.points?.[i],r2.cycle,r2.sky,ctx(other),category)}));
-    const overlap=entries.filter(e=>e.events.length&&rows.some(x=>x.b.start===e.b.start&&x.events.length)).map(e=>e.b.label);
-    qs('#ap-events-output').insertAdjacentHTML('beforeend','<div class="ap-events-card"><h2>Comparaison familiale : '+es(other.prenom||'autre profil')+'</h2><p>'+ (overlap.length?'Périodes comportant des activations dans les deux thèmes : '+es(overlap.slice(0,10).join(' ; '))+'.':'Pas de période présentant des activations communes selon ce filtre.')+'</p><p class="muted">Deux activations simultanées ne démontrent pas qu’un même événement se produira.</p></div>');
+    const dates1=eventsWithDates(specs,r.methods,r.cycle,r.sky,r.lunar,category),dates2=eventsWithDates(subset,r2.methods,r2.cycle,r2.sky,r2.lunar,category);const overlap=dates1.filter(x=>dates2.some(y=>x.domain===y.domain&&separation(x.date,y.date)<=9)).map(x=>fmt(x.date));
+    qs('#ap-events-output').insertAdjacentHTML('beforeend','<div class="ap-events-card"><h2>Comparaison familiale : '+es(other.prenom||'autre profil')+'</h2><p>'+ (overlap.length?'Dates présentant un rapprochement dans les deux profils : '+es(overlap.slice(0,10).join(' ; '))+'.':'Aucune date commune suffisamment marquée pour ce filtre.')+'</p><p class="muted">Deux activations simultanées ne démontrent pas qu’un même événement se produira.</p></div>');
   }
-  setStatus('Analyse terminée. Les données restent liées au profil et au contexte sélectionnés.');
+  setStatus('Recherche terminée. Seules les périodes ayant plusieurs indications concordantes sont présentées.');
  }catch(e){if(alive()){console.error('Événements majeurs :',e);setStatus('Analyse non disponible : '+(e?.message||String(e)));}}
  finally{if(alive())run.disabled=false}
 }
