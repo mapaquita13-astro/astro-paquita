@@ -8,7 +8,7 @@ const A=window.AstroTruth;
 if(!A)return;
 window.__AP_V162D_RUNTIME_FIX__=true;
 
-const ADAPTER_VERSION='v162d-adapter-20260927';
+const ADAPTER_VERSION='v162d-adapter-20261124';
 const CACHE_PREFIX='ap:v162d:';
 const UI_DOMAINS=['amour','travail','argent','bienetre','famille','voyage'];
 
@@ -101,7 +101,7 @@ function fixedDay(date,domain){
   if(isNaN(d))throw Object.assign(new Error('Invalid date'),{kind:'data'});
   const iso=A.isoDate(d), wanted=(domain&&domain!=='all')?String(domain):null;
   const key=cacheKey('day',[...profileCacheParts(),iso,wanted||'all',ADAPTER_VERSION]);
-  const cached=readCache(key);if(cached)return cached;
+  const cached=readCache(key);if(cached&&Array.isArray(cached.signals)&&cached.signals.length)return cached;
 
   let majorRows=[];
   try{majorRows=(typeof apV51Signals==='function'?apV51Signals(d,'marque'):[])||[];}catch(e){}
@@ -134,7 +134,7 @@ function fixedDay(date,domain){
     polarity:signed>.75?'positive':signed<-.75?'difficult':signals.length?'mixed':'calm',
     intensity:Math.min(100,Math.round(avgIntensity))
   };
-  return writeCache(key,out);
+  return signals.length?writeCache(key,out):out;
 }
 function emptyScores(){return {amour:0,travail:0,argent:0,bienetre:0,famille:0,voyage:0};}
 function scoreSignals(signals){
