@@ -131,9 +131,31 @@ async function calculatedFallback(start,days,domain,out,signature){
     }
     if(!chosen.length)continue;
     chosen.sort((x,y)=>x.date.localeCompare(y.date));
-    groups.push('<section style="margin:14px 0"><h3>'+esc(fullRangeText(a,Math.min(size,days-offset)))+'</h3>'+chosen.map(x=>'<p><strong>'+esc(fmtLong(fromIso(x.date)))+' · '+esc(labels[x.domain]||x.domain||'Général')+'</strong>'+ (polarity[x.polarity]?' — '+esc(polarity[x.polarity]):'')+'<br>'+esc(x.scenarios.length?x.scenarios.slice(0,3).join(' ; '):x.label)+'</p>').join('')+'</section>');
+    groups.push('<section style="margin:14px 0"><h3>'+esc(fullRangeText(a,Math.min(size,days-offset)))+'</h3>'+chosen.map(x=>'<p><strong>'+esc(fmtLong(fromIso(x.date)))+' · '+esc(labels[x.domain]||(x.domain==='general'?'Général':x.domain)||'Général')+'</strong>'+ (polarity[x.polarity]?' — '+esc(polarity[x.polarity]):'')+'<br>'+esc(x.scenarios.length?x.scenarios.slice(0,3).join(' ; '):x.label)+'</p>').join('')+'</section>');
   }
   return '<p>Le rapport complet n’a pas pu être généré. Voici les tendances personnalisées effectivement calculées pour cette période.</p>'+ (failures?'<p>Calcul partiel : '+completed+' jour(s) sur '+days+'.</p>':'')+groups.join('')+'<p class="ap-muted">Ces indications relèvent de l’interprétation astrologique et ne garantissent pas un événement.</p>';
+}
+// The legacy API explicitly recognizes "aujourdhui", not the modern UI "jour".
+function legacyPeriodFor(period,start,days){
+ const parisToday=new Intl.DateTimeFormat('fr-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const part=k=>parisToday.find(x=>x.type===k)?.value;
+ const todayIso=[part('year'),part('month'),part('day')].join('-');
+ if(period==='jour'&&days===1&&iso(start)===todayIso)return 'aujourdhui';
+ if(period==='date')return 'jour';
+ return period;
+}
+function reportErrorText(raw){
+ const x=String(raw||'').trim();
+ if(!x)return 'Le moteur n’a renvoyé aucun rapport.';
+ if(/crédit|credit|insufficient|payment required|balance|\b402\b/i.test(x))return 'Le fournisseur IA signale un problème de crédits ou de paiement.';
+ if(/OPENROUTER_API_KEY|api.key|clé API|unauthorized|invalid.*key/i.test(x))return 'La configuration du fournisseur IA doit être vérifiée.';
+ if(/premium|accès gratuit|free access/i.test(x))return 'Le serveur a refusé l’accès à cette période (droits du compte).';
+ if(/rate.limit|too many|trop de|\b429\b/i.test(x))return 'La limite temporaire de requêtes du service IA a été atteinte.';
+ if(/connecte-toi|session|authentification|\b401\b/i.test(x))return 'La session du compte doit être vérifiée.';
+ if(/timeout|timed out|délai|\b504\b/i.test(x))return 'Le service IA a dépassé son délai de réponse.';
+ if(/failed to fetch|load failed|network|connexion au backend|connexion à l.api/i.test(x))return 'La connexion au service de génération a échoué.';
+ if(/mod[eè]le|model|provider|fournisseur|openrouter|\b50[023]\b/i.test(x))return 'Le fournisseur IA n’a pas pu générer le texte demandé.';
+ return 'Le moteur de rapport a signalé une erreur. Le détail technique est disponible dans la console.';
 }
 function setLegacySelection(domain,period){
   const map={all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',famille:'famille',voyage:'voyage'};
@@ -154,21 +176,29 @@ async function generate(){
     const {profile}=ensureLegacyProfile();
     const signature=profileSignature(profile);
     if(document.body.classList.contains('ap-free-user')&&period!=='jour')throw new Error('Cette période est réservée aux comptes Premium.');
-    setLegacySelection(domain,period);
+    const legacyPeriod=legacyPeriodFor(period,start,days);
+    setLegacySelection(domain,legacyPeriod);
     out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse complète de la période sélectionnée…</p></div>';
-    let html='';
+    let html='',reportFailure='';
     try{
-      const previous=q('#p-rapport');
+      const previous=q('#p-rapport'),legacyError=q('#p-err');
       if(previous)previous.innerHTML='';
+      if(legacyError){legacyError.textContent='';legacyError.style.display='none';}
       if(typeof window.lancerPrevDepuis!=='function')throw new Error('Moteur du rapport indisponible.');
-      await window.lancerPrevDepuis(new Date(start),days,period);
+      await window.lancerPrevDepuis(new Date(start),days,legacyPeriod);
       if(!isCurrent(out,signature))return;
       html=usableReport(q('#p-rapport'));
-    }catch(e){console.warn('Astro Paquita — rapport détaillé indisponible',e);}
+      if(!html)reportFailure=(q('#p-err')?.textContent||'').trim();
+    }catch(e){reportFailure=String(e?.message||e);}
     if(!isCurrent(out,signature))return;
     if(!html){
+      const reason=reportErrorText(reportFailure);
+      console.warn('Astro Paquita — rapport détaillé indisponible',reportFailure||'empty report');
+      // Preserve the true failure in the visible result rather than silently presenting a fallback.
       out.innerHTML='<div class="ap-card"><h3>'+esc(title)+'</h3><p id="ap-v174-recovery-progress" class="ap-muted">Récupération des tendances calculées…</p></div>';
-      html=await calculatedFallback(start,days,domain,out,signature);
+      try{html=await calculatedFallback(start,days,domain,out,signature);}
+      catch(e){throw new Error(reason+' '+String(e?.message||''));}
+      if(html)html='<div class="ap-muted" role="status" style="padding:10px 12px;border:1px solid #ded2c4;border-radius:10px;margin-bottom:14px"><strong>Rapport détaillé indisponible</strong><p style="margin:5px 0 0">'+esc(reason)+'</p></div>'+html;
     }
     if(!html||!isCurrent(out,signature))return;
     out.innerHTML='<div class="ap-card ap-forecast-v174"><div class="ap-eyebrow">Prévision personnalisée</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2><div class="ap-report">'+html+'</div></div>';
