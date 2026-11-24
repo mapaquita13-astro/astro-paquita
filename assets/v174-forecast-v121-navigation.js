@@ -85,6 +85,56 @@ function ensureLegacyProfile(){
   }
   return {profile:p,activated};
 }
+// Keep the original V121 report as first choice. A failed/empty report is not a calm forecast.
+function profileSignature(p){return JSON.stringify([p?.profileId||p?.legacyKey,p?.birthDataVersion,p?.date,p?.heure,p?.lat,p?.lon,p?.tz]);}
+function isCurrent(out,signature){return out.isConnected&&q('#ap-forecast-result')===out&&document.body.classList.contains('ap-route-forecast')&&profileSignature(A.currentProfile())===signature;}
+function usableReport(node){
+  const txt=(node?.textContent||'').trim();
+  if(!txt||/^(calcul en cours|analyse en cours|chargement|loading|calculating|analysis in progress)/i.test(txt))return '';
+  if(/^(aucun élément suffisamment marqué|la prévision n.a pas pu|erreur|error|prévisions momentanément indisponibles)/i.test(txt))return '';
+  return node.innerHTML.trim();
+}
+async function calculatedFallback(start,days,domain,out,signature){
+  if(typeof A?.day!=='function')throw new Error('Le moteur de calcul des prévisions est indisponible.');
+  const rows=[];let failures=0,completed=0;
+  for(let i=0;i<days;i++){
+    if(!isCurrent(out,signature))return null;
+    const d=new Date(start);d.setDate(d.getDate()+i);
+    try{
+      const result=A.day(d,domain);
+      if(!Array.isArray(result?.signals))throw new Error('Résultat de calcul invalide');
+      if(result.profileId&&result.profileId!==A.currentProfile()?.profileId)throw new Error('Profil différent');
+      completed++;
+      for(const s of result.signals){
+        if(!s||(domain!=='all'&&s.domain!==domain))continue;
+        const scenarios=(Array.isArray(s.scenarios)?s.scenarios:[]).filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim());
+        const label=String(s.label||'').trim()||[s.source,s.aspect==null?'':s.aspect+'°',s.target].filter(Boolean).join(' ');
+        if(!scenarios.length&&!label)continue;
+        rows.push({date:iso(d),domain:s.domain,label,scenarios,polarity:s.polarity,weight:Math.abs(Number(s.score)||Number(s.force)||0)});
+      }
+    }catch(e){failures++;console.warn('Astro Paquita — calcul journalier',e);}
+    if(i%7===6){const progress=q('#ap-v174-recovery-progress',out);if(progress)progress.textContent='Calcul des tendances : '+(i+1)+' / '+days;await new Promise(r=>setTimeout(r,0));}
+  }
+  if(!rows.length)throw new Error('Le rapport détaillé est indisponible et aucun signal exploitable n’a pu être récupéré. Ce résultat ne permet pas de conclure que la période est calme.');
+  const labels=A.labels?.()||{};
+  const polarity={positive:'Favorable',difficile:'Vigilance',difficult:'Vigilance',mixte:'Contrastée',mixed:'Contrastée'};
+  const size=days<=7?1:days<=31?7:days<=92?30:31;
+  const groups=[];
+  for(let offset=0;offset<days;offset+=size){
+    const a=new Date(start),b=new Date(start);a.setDate(a.getDate()+offset);b.setDate(b.getDate()+Math.min(days-1,offset+size-1));
+    const selected=rows.filter(x=>x.date>=iso(a)&&x.date<=iso(b)).sort((x,y)=>y.weight-x.weight);
+    const seen=new Set(),chosen=[];
+    for(const x of selected){
+      const key=[x.domain,x.label,x.scenarios.join('|')].join('|');
+      if(seen.has(key))continue;seen.add(key);chosen.push(x);
+      if(chosen.length>=Math.min(8,domain==='all'?8:5))break;
+    }
+    if(!chosen.length)continue;
+    chosen.sort((x,y)=>x.date.localeCompare(y.date));
+    groups.push('<section style="margin:14px 0"><h3>'+esc(fullRangeText(a,Math.min(size,days-offset)))+'</h3>'+chosen.map(x=>'<p><strong>'+esc(fmtLong(fromIso(x.date)))+' · '+esc(labels[x.domain]||x.domain||'Général')+'</strong>'+ (polarity[x.polarity]?' — '+esc(polarity[x.polarity]):'')+'<br>'+esc(x.scenarios.length?x.scenarios.slice(0,3).join(' ; '):x.label)+'</p>').join('')+'</section>');
+  }
+  return '<p>Le rapport complet n’a pas pu être généré. Voici les tendances personnalisées effectivement calculées pour cette période.</p>'+ (failures?'<p>Calcul partiel : '+completed+' jour(s) sur '+days+'.</p>':'')+groups.join('')+'<p class="ap-muted">Ces indications relèvent de l’interprétation astrologique et ne garantissent pas un événement.</p>';
+}
 function setLegacySelection(domain,period){
   const map={all:'general',amour:'amour',travail:'travail',argent:'finances',bienetre:'sante',famille:'famille',voyage:'voyage'};
   const d=map[domain]||'general';
@@ -101,21 +151,34 @@ async function generate(){
   running=true;setBusy(true);setError('');
   const title=fullRangeText(start,days);
   try{
-    ensureLegacyProfile();
-    if(typeof window.lancerPrevDepuis!=='function')throw new Error('Les prévisions sont momentanément indisponibles.');
+    const {profile}=ensureLegacyProfile();
+    const signature=profileSignature(profile);
+    if(document.body.classList.contains('ap-free-user')&&period!=='jour')throw new Error('Cette période est réservée aux comptes Premium.');
     setLegacySelection(domain,period);
     out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse complète de la période sélectionnée…</p></div>';
-    await window.lancerPrevDepuis(new Date(start),days,period);
-    const legacy=q('#p-rapport');
-    const html=legacy&&legacy.innerHTML?legacy.innerHTML.trim():'';
-    out.innerHTML='<div class="ap-card ap-forecast-v174"><div class="ap-eyebrow">Prévision personnalisée</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2><div class="ap-report">'+(html||'<p>Aucun élément suffisamment marqué ne ressort sur cette période.</p>')+'</div></div>';
+    let html='';
+    try{
+      const previous=q('#p-rapport');
+      if(previous)previous.innerHTML='';
+      if(typeof window.lancerPrevDepuis!=='function')throw new Error('Moteur du rapport indisponible.');
+      await window.lancerPrevDepuis(new Date(start),days,period);
+      if(!isCurrent(out,signature))return;
+      html=usableReport(q('#p-rapport'));
+    }catch(e){console.warn('Astro Paquita — rapport détaillé indisponible',e);}
+    if(!isCurrent(out,signature))return;
+    if(!html){
+      out.innerHTML='<div class="ap-card"><h3>'+esc(title)+'</h3><p id="ap-v174-recovery-progress" class="ap-muted">Récupération des tendances calculées…</p></div>';
+      html=await calculatedFallback(start,days,domain,out,signature);
+    }
+    if(!html||!isCurrent(out,signature))return;
+    out.innerHTML='<div class="ap-card ap-forecast-v174"><div class="ap-eyebrow">Prévision personnalisée</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2><div class="ap-report">'+html+'</div></div>';
   }catch(e){
     console.error('Astro Paquita — génération prévisions :',e);
     const raw=String(e&&e.message||'');
     const msg=/Cannot read properties of null|reading ['\"]prenom['\"]/i.test(raw)
       ?'Le profil actif n’a pas été correctement chargé. Recharge la page puis relance la prévision.'
       :(raw||'La prévision n’a pas pu être générée.');
-    setError(msg);out.innerHTML='';
+    if(out.isConnected&&q('#ap-forecast-result')===out){setError(msg);out.innerHTML='';}
   }finally{running=false;setBusy(false);}
 }
 
