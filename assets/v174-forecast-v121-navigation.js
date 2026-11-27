@@ -8,7 +8,8 @@ window.__AP_V174_FORECAST_NAV__=true;
 
 const A=window.AstroTruth;
 const META={fr:'fr-FR',en:'en-GB',es:'es-ES',ar:'ar'};
-let running=false;
+// A visible job belongs to a specific profile and screen; the legacy engine itself remains single-flight.
+let activeJob=null,legacyFlight=null;
 const q=(s,r)=> (r||document).querySelector(s);
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 function lang(){return String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2);}
@@ -87,18 +88,27 @@ function ensureLegacyProfile(){
 }
 // Keep the original V121 report as first choice. A failed/empty report is not a calm forecast.
 function profileSignature(p){return JSON.stringify([p?.profileId||p?.legacyKey,p?.birthDataVersion,p?.date,p?.heure,p?.lat,p?.lon,p?.tz]);}
-function isCurrent(out,signature){return out.isConnected&&q('#ap-forecast-result')===out&&document.body.classList.contains('ap-route-forecast')&&profileSignature(A.currentProfile())===signature;}
+function isCurrent(out,signature,job){return activeJob===job&&out.isConnected&&q('#ap-forecast-result')===out&&document.body.classList.contains('ap-route-forecast')&&profileSignature(A.currentProfile())===signature;}
+function retireStaleJob(){const j=activeJob;if(j&&!isCurrent(j.out,j.signature,j)){activeJob=null;if(j.out.isConnected&&q('#ap-forecast-result')===j.out){j.out.innerHTML='';setBusy(false);setError('');}}}
+async function legacyReport(start,days,period){
+  if(legacyFlight)throw new Error('Une génération précédente est encore en cours.');
+  const flight=Promise.resolve().then(()=>window.lancerPrevDepuis(new Date(start),days,period));
+  legacyFlight=flight;
+  const release=()=>{if(legacyFlight===flight)legacyFlight=null;};
+  flight.then(release,release);
+  let timer;try{return await Promise.race([flight,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Timeout du rapport détaillé')),120000);})]);}finally{clearTimeout(timer);}
+}
 function usableReport(node){
   const txt=(node?.textContent||'').trim();
   if(!txt||/^(calcul en cours|analyse en cours|chargement|loading|calculating|analysis in progress)/i.test(txt))return '';
   if(/^(aucun élément suffisamment marqué|la prévision n.a pas pu|erreur|error|prévisions momentanément indisponibles)/i.test(txt))return '';
   return node.innerHTML.trim();
 }
-async function calculatedFallback(start,days,domain,out,signature){
+async function calculatedFallback(start,days,domain,out,signature,job){
   if(typeof A?.day!=='function')throw new Error('Le moteur de calcul des prévisions est indisponible.');
   const rows=[];let failures=0,completed=0;
   for(let i=0;i<days;i++){
-    if(!isCurrent(out,signature))return null;
+    if(!isCurrent(out,signature,job))return null;
     const d=new Date(start);d.setDate(d.getDate()+i);
     try{
       const result=A.day(d,domain);
@@ -147,6 +157,7 @@ function legacyPeriodFor(period,start,days){
 function reportErrorText(raw){
  const x=String(raw||'').trim();
  if(!x)return 'Le moteur n’a renvoyé aucun rapport.';
+ if(/génération précédente/i.test(x))return 'Un rapport précédent est encore en cours. Les tendances de ce profil sont calculées séparément.';
  if(/crédit|credit|insufficient|payment required|balance|\b402\b/i.test(x))return 'Le fournisseur IA signale un problème de crédits ou de paiement.';
  if(/OPENROUTER_API_KEY|api.key|clé API|unauthorized|invalid.*key/i.test(x))return 'La configuration du fournisseur IA doit être vérifiée.';
  if(/premium|accès gratuit|free access/i.test(x))return 'Le serveur a refusé l’accès à cette période (droits du compte).';
@@ -166,41 +177,45 @@ function setLegacySelection(domain,period){
 function setBusy(on){const l=q('#ap-forecast-loader');if(l)l.classList.toggle('show',!!on);const b=q('#ap-run-forecast');if(b)b.disabled=!!on;}
 function setError(msg){const e=q('#ap-forecast-error');if(e){e.textContent=msg||'';e.classList.toggle('show',!!msg);}}
 async function generate(){
-  if(running)return;
+  retireStaleJob();
+  if(activeJob)return;
   const out=q('#ap-forecast-result');if(!out)return;
+  const job={out,signature:profileSignature(A.currentProfile())};activeJob=job;
   const period=activePeriod(),domain=activeDomain(),days=span(period),start=currentAnchor(period);
   const n=nav();if(n){n.dataset.v174Anchor=iso(start);n.dataset.v174Days=String(days);}
-  running=true;setBusy(true);setError('');
+  setBusy(true);setError('');
   const title=fullRangeText(start,days);
   try{
     const {profile}=ensureLegacyProfile();
-    const signature=profileSignature(profile);
+    const signature=profileSignature(profile);job.signature=signature;
+    if(!isCurrent(out,signature,job))return;
     if(document.body.classList.contains('ap-free-user')&&period!=='jour')throw new Error('Cette période est réservée aux comptes Premium.');
     const legacyPeriod=legacyPeriodFor(period,start,days);
     setLegacySelection(domain,legacyPeriod);
     out.innerHTML='<div class="ap-card"><h3>Prévisions · '+esc(title)+'</h3><p class="ap-muted">Analyse complète de la période sélectionnée…</p></div>';
     let html='',reportFailure='';
     try{
+      if(legacyFlight)throw new Error('Une génération précédente est encore en cours.');
       const previous=q('#p-rapport'),legacyError=q('#p-err');
       if(previous)previous.innerHTML='';
       if(legacyError){legacyError.textContent='';legacyError.style.display='none';}
       if(typeof window.lancerPrevDepuis!=='function')throw new Error('Moteur du rapport indisponible.');
-      await window.lancerPrevDepuis(new Date(start),days,legacyPeriod);
-      if(!isCurrent(out,signature))return;
+      await legacyReport(start,days,legacyPeriod);
+      if(!isCurrent(out,signature,job))return;
       html=usableReport(q('#p-rapport'));
       if(!html)reportFailure=(q('#p-err')?.textContent||'').trim();
     }catch(e){reportFailure=String(e?.message||e);}
-    if(!isCurrent(out,signature))return;
+    if(!isCurrent(out,signature,job))return;
     if(!html){
       const reason=reportErrorText(reportFailure);
       console.warn('Astro Paquita — rapport détaillé indisponible',reportFailure||'empty report');
       // Preserve the true failure in the visible result rather than silently presenting a fallback.
       out.innerHTML='<div class="ap-card"><h3>'+esc(title)+'</h3><p id="ap-v174-recovery-progress" class="ap-muted">Récupération des tendances calculées…</p></div>';
-      try{html=await calculatedFallback(start,days,domain,out,signature);}
+      try{html=await calculatedFallback(start,days,domain,out,signature,job);}
       catch(e){throw new Error(reason+' '+String(e?.message||''));}
       if(html)html='<div class="ap-muted" role="status" style="padding:10px 12px;border:1px solid #ded2c4;border-radius:10px;margin-bottom:14px"><strong>Rapport détaillé indisponible</strong><p style="margin:5px 0 0">'+esc(reason)+'</p></div>'+html;
     }
-    if(!html||!isCurrent(out,signature))return;
+    if(!html||!isCurrent(out,signature,job))return;
     out.innerHTML='<div class="ap-card ap-forecast-v174"><div class="ap-eyebrow">Prévision personnalisée</div><h2 style="margin:6px 0 14px">'+esc(title)+'</h2><div class="ap-report">'+html+'</div></div>';
   }catch(e){
     console.error('Astro Paquita — génération prévisions :',e);
@@ -208,8 +223,8 @@ async function generate(){
     const msg=/Cannot read properties of null|reading ['\"]prenom['\"]/i.test(raw)
       ?'Le profil actif n’a pas été correctement chargé. Recharge la page puis relance la prévision.'
       :(raw||'La prévision n’a pas pu être générée.');
-    if(out.isConnected&&q('#ap-forecast-result')===out){setError(msg);out.innerHTML='';}
-  }finally{running=false;setBusy(false);}
+    if(isCurrent(out,job.signature,job)){setError(msg);out.innerHTML='';}
+  }finally{if(activeJob===job){const visible=isCurrent(out,job.signature,job);activeJob=null;if(visible)setBusy(false);}}
 }
 
 document.addEventListener('click',function(ev){
@@ -229,7 +244,7 @@ document.addEventListener('change',function(ev){
 },true);
 
 let pending=false;
-const obs=new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;if(document.body.classList.contains('ap-route-forecast'))syncNav(false);});});
+const obs=new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;retireStaleJob();if(document.body.classList.contains('ap-route-forecast'))syncNav(false);});});
 obs.observe(document.getElementById('ap-final-root')||document.body,{childList:true,subtree:true});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>syncNav(false),{once:true});else syncNav(false);
 })();

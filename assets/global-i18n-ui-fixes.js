@@ -13,7 +13,7 @@ const T={
 const MONTHS={fr:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],en:['January','February','March','April','May','June','July','August','September','October','November','December'],es:['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],ar:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']};
 function lang(){const x=String(localStorage.getItem('astro-lang')||window.AP_LANG||'fr').toLowerCase().slice(0,2);return T[x]?x:'fr';}
 function months(s,l){let out=s;MONTHS.fr.forEach((m,i)=>{out=out.replace(new RegExp(m,'gi'),MONTHS[l][i]);});return out;}
-function setText(sel,html){const e=document.querySelector(sel);if(e)e.innerHTML=html;}
+function setText(sel,html){const e=document.querySelector(sel);if(e&&e.innerHTML!==html)e.innerHTML=html;}
 function fixNav(l){
   setText('.ap-mob-btn[data-route="home"] span',T[l].home);
   setText('.ap-mob-btn[data-route="natal"] span',T[l].portrait);
@@ -26,8 +26,8 @@ function fixNav(l){
   setText('.ap-home-shortcuts [data-route="child"] span',T[l].child);
   setText('.ap-home-shortcuts [data-route="calendar"] span',T[l].calendar);
 }
-function fixRelationOptions(l){const s=document.getElementById('ap-rel-type');if(!s)return;const a=[["couple",T[l].couple],["famille",T[l].family],["pro",T[l].work],["amitie",T[l].friend]];Array.from(s.options).forEach((o,i)=>{if(!a[i])return;o.value=a[i][0];o.textContent=a[i][1];});}
-function fixRelationPeriods(l){const s=document.getElementById('ap-rel-forecast-period');if(!s)return;const labels={fr:['30 prochains jours','3 prochains mois','6 prochains mois','12 prochains mois','2 prochaines années','3 prochaines années','5 prochaines années','Autour d’une date précise'],en:['Next 30 days','Next 3 months','Next 6 months','Next 12 months','Next 2 years','Next 3 years','Next 5 years','Around a specific date'],es:['Próximos 30 días','Próximos 3 meses','Próximos 6 meses','Próximos 12 meses','Próximos 2 años','Próximos 3 años','Próximos 5 años','Alrededor de una fecha concreta'],ar:['الأيام الثلاثون القادمة','الأشهر الثلاثة القادمة','الأشهر الستة القادمة','الأشهر الاثنا عشر القادمة','السنتان القادمتان','السنوات الثلاث القادمة','السنوات الخمس القادمة','حول تاريخ محدد']};Array.from(s.options).forEach((o,i)=>{if(labels[l][i])o.textContent=labels[l][i];});}
+function fixRelationOptions(l){const s=document.getElementById('ap-rel-type');if(!s)return;const a=[["couple",T[l].couple],["famille",T[l].family],["pro",T[l].work],["amitie",T[l].friend]];Array.from(s.options).forEach((o,i)=>{if(!a[i])return;if(o.value!==a[i][0])o.value=a[i][0];if(o.textContent!==a[i][1])o.textContent=a[i][1];});}
+function fixRelationPeriods(l){const s=document.getElementById('ap-rel-forecast-period');if(!s)return;const labels={fr:['30 prochains jours','3 prochains mois','6 prochains mois','12 prochains mois','2 prochaines années','3 prochaines années','5 prochaines années','Autour d’une date précise'],en:['Next 30 days','Next 3 months','Next 6 months','Next 12 months','Next 2 years','Next 3 years','Next 5 years','Around a specific date'],es:['Próximos 30 días','Próximos 3 meses','Próximos 6 meses','Próximos 12 meses','Próximos 2 años','Próximos 3 años','Próximos 5 años','Alrededor de una fecha concreta'],ar:['الأيام الثلاثون القادمة','الأشهر الثلاثة القادمة','الأشهر الستة القادمة','الأشهر الاثنا عشر القادمة','السنتان القادمتان','السنوات الثلاث القادمة','السنوات الخمس القادمة','حول تاريخ محدد']};Array.from(s.options).forEach((o,i)=>{if(labels[l][i]&&o.textContent!==labels[l][i])o.textContent=labels[l][i];});}
 function fixDynamic(l){
   const root=document.getElementById('ap-final-root')||document.body;if(!root)return;
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(w.nextNode())nodes.push(w.currentNode);

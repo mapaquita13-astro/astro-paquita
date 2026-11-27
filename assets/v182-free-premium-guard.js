@@ -41,7 +41,7 @@ function goHome(){
 }
 function addLock(el){
   if(!el)return;
-  el.classList.add('ap-premium-locked');
+  if(!el.classList.contains('ap-premium-locked'))el.classList.add('ap-premium-locked');
   el.setAttribute('aria-disabled','true');
   el.setAttribute('title','Réservé aux comptes Premium');
   if(!el.querySelector(':scope > .ap-lock-badge')){
@@ -81,8 +81,8 @@ function applyFree(){
   if(applying)return;
   applying=true;
   try{
-    document.body.classList.remove('ap-access-checking','ap-premium-user');
-    document.body.classList.add('ap-free-user');
+    if(document.body.classList.contains('ap-access-checking'))document.body.classList.remove('ap-access-checking');if(document.body.classList.contains('ap-premium-user'))document.body.classList.remove('ap-premium-user');
+    if(!document.body.classList.contains('ap-free-user'))document.body.classList.add('ap-free-user');
 
     const route=currentRoute();
     if(PREMIUM_ROUTES.has(route)){
@@ -104,19 +104,19 @@ function applyFree(){
       addLock(document.getElementById('ap-forecast-next'));
       document.querySelectorAll('.ap-route-forecast [data-route="calendar"],.ap-forecast-screen [data-route="calendar"]').forEach(addLock);
       const note=document.querySelector('.ap-forecast-note');
-      if(note)note.textContent="Compte gratuit : la prévision d’aujourd’hui est incluse. Les autres périodes portent un cadenas Premium.";
+      if(note&&note.dataset.v182FreeNote!=="1"){note.dataset.v182FreeNote="1";note.textContent="Compte gratuit : la prévision d’aujourd’hui est incluse. Les autres périodes portent un cadenas Premium.";}
     }
 
     document.querySelectorAll('[data-route="forecast"] p').forEach(p=>{
-      if(/jour|semaine|mois|trimestre|année|date précise/i.test(p.textContent||'')){
+      if(p.dataset.v182FreeCopy!=="1"&&/jour|semaine|mois|trimestre|année|date précise/i.test(p.textContent||'')){p.dataset.v182FreeCopy="1";
         p.textContent="Aujourd’hui inclus · autres périodes 🔒 Premium.";
       }
     });
   }finally{applying=false;}
 }
 function applyPremium(){
-  document.body.classList.remove('ap-access-checking','ap-free-user');
-  document.body.classList.add('ap-premium-user');
+  if(document.body.classList.contains('ap-access-checking'))document.body.classList.remove('ap-access-checking');if(document.body.classList.contains('ap-free-user'))document.body.classList.remove('ap-free-user');
+  if(!document.body.classList.contains('ap-premium-user'))document.body.classList.add('ap-premium-user');
   removeLocks();
 }
 function apply(){

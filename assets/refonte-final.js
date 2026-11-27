@@ -5,7 +5,7 @@
 'use strict';
 if(window.__AP_V161_BOOTSTRAP__)return;
 window.__AP_V161_BOOTSTRAP__=true;
-const VER='20261124-report-diagnostic-v216';
+const VER='20261127-profile-switch-v217';
 let attempts=0;
 function load(src,id,onload){
   const existing=document.getElementById(id);

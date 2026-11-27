@@ -305,15 +305,15 @@ function translateAttrs(root,l){
 function fixRelationSelect(l){
   const sel=document.getElementById('ap-rel-type');if(!sel)return;
   const rows=[['couple','Amour','Love','Amor','الحب'],['famille','Famille','Family','Familia','العائلة'],['pro','Travail','Work','Trabajo','العمل'],['amitie','Amitié','Friendship','Amistad','الصداقة']];
-  Array.from(sel.options).forEach((o,i)=>{const r=rows[i];if(!r)return;o.setAttribute('value',r[0]);o.textContent=l==='fr'?r[1]:l==='en'?r[2]:l==='es'?r[3]:r[4];});
+  Array.from(sel.options).forEach((o,i)=>{const r=rows[i];if(!r)return;if(o.value!==r[0])o.value=r[0];const label=l==='fr'?r[1]:l==='en'?r[2]:l==='es'?r[3]:r[4];if(o.textContent!==label)o.textContent=label;});
 }
 function fixWeekdays(l){
   const map={fr:['L','M','M','J','V','S','D'],en:['M','T','W','T','F','S','S'],es:['L','M','X','J','V','S','D'],ar:['ن','ث','ر','خ','ج','س','ح']};
-  document.querySelectorAll('.ap-cal-head').forEach((e,i)=>{if(map[l][i])e.textContent=map[l][i];});
+  document.querySelectorAll('.ap-cal-head').forEach((e,i)=>{if(map[l][i]&&e.textContent!==map[l][i])e.textContent=map[l][i];});
 }
 function syncLegacy(l){
-  try{if(typeof window.apSetLang==='function')window.apSetLang(l,false);else{window.AP_LANG=l;document.documentElement.lang=l;document.documentElement.dir=META[l].dir;}}catch(e){window.AP_LANG=l;}
-  document.documentElement.lang=l;document.documentElement.dir=META[l].dir;document.body?.classList.toggle('ap-rtl',l==='ar');
+  try{if(typeof window.apSetLang==='function'){if(window.AP_LANG!==l)window.apSetLang(l,false);}else{window.AP_LANG=l;document.documentElement.lang=l;document.documentElement.dir=META[l].dir;}}catch(e){window.AP_LANG=l;}
+  document.documentElement.lang=l;document.documentElement.dir=META[l].dir;if(document.body&&document.body.classList.contains('ap-rtl')!==(l==='ar'))document.body.classList.toggle('ap-rtl',l==='ar');
   document.querySelectorAll('#ap-lang,#ap-profile-lang,.ap-lang-select').forEach(s=>{if(s.value!==l)s.value=l;});
 }
 function translateAll(){

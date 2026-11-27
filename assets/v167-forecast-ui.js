@@ -21,9 +21,9 @@ function apply(){
     };
   }
   const domainTitle=q('#ap-domain-anchor',screen);
-  if(domainTitle)domainTitle.textContent='Choisissez un domaine';
+  if(domainTitle&&!domainTitle.dataset.v167Label){domainTitle.dataset.v167Label='1';domainTitle.textContent='Choisissez un domaine';}
   const note=q('.ap-forecast-note',screen);
-  if(note)note.textContent='Choisissez d’abord quand vous voulez regarder, puis le domaine concerné. Les deux critères sont analysés ensemble.';
+  if(note&&!note.dataset.v167Label){note.dataset.v167Label='1';if(!document.body.classList.contains('ap-free-user'))note.textContent='Choisissez d’abord quand vous voulez regarder, puis le domaine concerné. Les deux critères sont analysés ensemble.';}
   const title=qa('[data-per]',screen);
   if(!q('.v167-forecast-explain',screen)){
     const h=screen.querySelector('.ap-forecast-form > h3');
