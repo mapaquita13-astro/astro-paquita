@@ -167,6 +167,7 @@ async function ensureAccount(force){
     restoreWorkingState(email,r,prev);
     if(!writeMarker(email,r))return false;
     lastAccount=email;lastRole=r;
+    if(pendingBackup.get(email)?.size)scheduleBackup();
     return true;
   }finally{switching=false;}
 }
@@ -178,10 +179,43 @@ window.getProfils=function(){
   if(raw===null)initialProfilesFor(email,role(),marker());
   return scopedProfiles(email);
 };
+// Sauvegarde additive des profils nouveaux/modifiés, isolée par compte.
+const pendingBackup=new Map();
+let backupRunning=false,backupTimer=null;
+function scheduleBackup(delay=350){if(backupTimer!==null)clearTimeout(backupTimer);backupTimer=setTimeout(()=>{backupTimer=null;flushBackup();},delay);}
+function queueProfileBackup(email,previous,clean){
+  if(normalEmail(marker()?.email)!==email||!currentToken())return;
+  let queue=pendingBackup.get(email);if(!queue){queue=new Map();pendingBackup.set(email,queue);}
+  for(const k of queue.keys())if(!Object.prototype.hasOwnProperty.call(clean,k))queue.delete(k);
+  for(const [k,p] of Object.entries(clean)){
+    if(!p||typeof p!=='object'||!p.prenom||JSON.stringify(previous[k])===JSON.stringify(p))continue;
+    queue.set(k,{key:k,prenom:p.prenom,date:p.date,heure:p.heure,ville:p.ville,lat:p.lat,lon:p.lon,tz:p.tz||p.timezone,genre:p.genre});
+  }
+  if(queue.size)scheduleBackup();
+}
+async function flushBackup(){
+  if(backupRunning)return;
+  const email=account(),t=currentToken(),queue=pendingBackup.get(email);
+  if(!email||!t||normalEmail(marker()?.email)!==email||!queue?.size)return;
+  const current=scopedProfiles(email);
+  for(const k of queue.keys())if(!Object.prototype.hasOwnProperty.call(current,k))queue.delete(k);
+  if(!queue.size)return;
+  const batch=[...queue.entries()].slice(0,60);
+  backupRunning=true;
+  try{
+    const res=await fetch('https://astro-paquita-backend.onrender.com/api/me/profiles/upsert',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({profiles:batch.map(x=>x[1])})});
+    if(!res.ok)throw Error('Sauvegarde serveur indisponible');
+    for(const [k,p] of batch)if(queue.get(k)===p)queue.delete(k);
+  }catch(e){/* Retry only while the same account is active. */}
+  finally{backupRunning=false;if(pendingBackup.get(account())?.size)scheduleBackup(5000);}
+}
+window.addEventListener('online',()=>scheduleBackup(0));
+
 window.setProfils=function(obj){
   const email=account();
   if(!email||!currentToken())return;
   const clean=obj&&typeof obj==='object'&&!Array.isArray(obj)?obj:{};
+  const previous=scopedProfiles(email);
   const persistent=saveProfiles(email,clean);
   const mirrored=setSafe(LEGACY_PROFILES,stringify(clean));
   if(!mirrored&&persistent){
@@ -189,6 +223,7 @@ window.setProfils=function(obj){
     // pu être mise à jour : conserver la plus récente pendant cette session.
     volatileEmail=email;volatileProfiles={...clean};
   }
+  queueProfileBackup(email,previous,clean);
   return persistent;
 };
 
@@ -205,7 +240,7 @@ if(typeof window.getHistoriqueKey==='function'){
 // Empêche la synchronisation de données laissées par un autre compte.
 if(typeof window.apSyncProfilesV94==='function'){
   const oldSync=window.apSyncProfilesV94;
-  window.apSyncProfilesV94=async function(){await ensureAccount(true);return oldSync.apply(this,arguments);};
+  window.apSyncProfilesV94=async function(){if(!await ensureAccount(false))return false;return oldSync.apply(this,arguments);};
 }
 
 // Déconnexion : sauvegarde du compte courant puis aucune donnée privée/admin ne
