@@ -203,7 +203,7 @@ async function flushBackup(){
   const batch=[...queue.entries()].slice(0,60);
   backupRunning=true;
   try{
-    const res=await fetch('https://astro-paquita-backend.onrender.com/api/me/profiles/upsert',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({profiles:batch.map(x=>x[1])})});
+    const res=await fetch('https://astro-paquita-backend.onrender.com/api/me/profiles/upsert',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({account_email:email,profiles:batch.map(x=>x[1])})});
     if(!res.ok)throw Error('Sauvegarde serveur indisponible');
     for(const [k,p] of batch)if(queue.get(k)===p)queue.delete(k);
   }catch(e){/* Retry only while the same account is active. */}
